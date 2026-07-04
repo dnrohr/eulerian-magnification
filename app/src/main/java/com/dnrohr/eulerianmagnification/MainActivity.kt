@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
+import android.opengl.GLSurfaceView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -63,6 +64,8 @@ import com.dnrohr.eulerianmagnification.analysis.PulseRoiAnalyzer
 import com.dnrohr.eulerianmagnification.analysis.ViewMode
 import com.dnrohr.eulerianmagnification.capabilities.CapabilityReportStore
 import com.dnrohr.eulerianmagnification.capabilities.CapabilityReporter
+import com.dnrohr.eulerianmagnification.gl.GlDebugRenderer
+import com.dnrohr.eulerianmagnification.gl.GlFrameStats
 import com.dnrohr.eulerianmagnification.quality.ArtifactSuppressor
 import com.dnrohr.eulerianmagnification.quality.LightingFlickerDetector
 import com.dnrohr.eulerianmagnification.quality.QualityEvaluator
@@ -110,6 +113,8 @@ private fun MainScreen() {
     var recordingSession by remember { mutableStateOf<ProcessedRecordingSession?>(null) }
     var lastRecordingPath by remember { mutableStateOf<String?>(null) }
     var cameraControlsLocked by remember { mutableStateOf(false) }
+    var showGlDebug by remember { mutableStateOf(false) }
+    var glFrameStats by remember { mutableStateOf(GlFrameStats()) }
     val qualityEvaluator = remember { QualityEvaluator() }
     val lightingFlickerDetector = remember { LightingFlickerDetector() }
     val artifactSuppressor = remember { ArtifactSuppressor() }
@@ -124,6 +129,12 @@ private fun MainScreen() {
 
     Box(modifier = Modifier.fillMaxSize()) {
         if (hasCameraPermission) {
+            if (showGlDebug) {
+                GlDebugPreview(
+                    onStats = { glFrameStats = it },
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
             key(analysisSettings.mode, cameraControlsLocked) {
                 CameraPreview(
                     settings = analysisSettings,
@@ -163,6 +174,9 @@ private fun MainScreen() {
             onSettingsChanged = { analysisSettings = it },
             cameraControlsLocked = cameraControlsLocked,
             onCameraControlsLockedChanged = { cameraControlsLocked = it },
+            showGlDebug = showGlDebug,
+            onShowGlDebugChanged = { showGlDebug = it },
+            glFrameStats = glFrameStats,
             isRecording = recordingSession != null,
             recordingElapsedMillis = recordingSession?.elapsedMillis ?: 0L,
             lastRecordingPath = lastRecordingPath,
@@ -195,6 +209,25 @@ private fun MainScreen() {
                 .fillMaxWidth(),
         )
     }
+}
+
+@Composable
+private fun GlDebugPreview(
+    onStats: (GlFrameStats) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    AndroidView(
+        modifier = modifier,
+        factory = { viewContext ->
+            GLSurfaceView(viewContext).apply {
+                setEGLContextClientVersion(3)
+                setEGLConfigChooser(8, 8, 8, 8, 16, 0)
+                setRenderer(GlDebugRenderer(onStats))
+                renderMode = GLSurfaceView.RENDERMODE_CONTINUOUSLY
+                setZOrderOnTop(false)
+            }
+        },
+    )
 }
 
 private fun recordingsRoot(context: Context): File {
@@ -426,6 +459,9 @@ private fun StatusOverlay(
     onSettingsChanged: (AnalysisSettings) -> Unit,
     cameraControlsLocked: Boolean,
     onCameraControlsLockedChanged: (Boolean) -> Unit,
+    showGlDebug: Boolean,
+    onShowGlDebugChanged: (Boolean) -> Unit,
+    glFrameStats: GlFrameStats,
     isRecording: Boolean,
     recordingElapsedMillis: Long,
     lastRecordingPath: String?,
@@ -467,6 +503,13 @@ private fun StatusOverlay(
             text = "Translation: dx ${"%+.3f".format(sample.translation.dx)} dy ${"%+.3f".format(sample.translation.dy)}",
             color = Color.White,
         )
+        if (showGlDebug) {
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "GL: ${"%.1f".format(glFrameStats.averageFps)} fps / ${"%.2f".format(glFrameStats.averageFrameMillis)} ms",
+                color = Color.White,
+            )
+        }
         Spacer(modifier = Modifier.height(4.dp))
         QualityStatusRow(qualityStatuses)
         Spacer(modifier = Modifier.height(8.dp))
@@ -475,6 +518,8 @@ private fun StatusOverlay(
             onSettingsChanged = onSettingsChanged,
             cameraControlsLocked = cameraControlsLocked,
             onCameraControlsLockedChanged = onCameraControlsLockedChanged,
+            showGlDebug = showGlDebug,
+            onShowGlDebugChanged = onShowGlDebugChanged,
         )
         Spacer(modifier = Modifier.height(8.dp))
         RecordingControls(
@@ -554,6 +599,8 @@ private fun ModeControls(
     onSettingsChanged: (AnalysisSettings) -> Unit,
     cameraControlsLocked: Boolean,
     onCameraControlsLockedChanged: (Boolean) -> Unit,
+    showGlDebug: Boolean,
+    onShowGlDebugChanged: (Boolean) -> Unit,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -601,6 +648,10 @@ private fun ModeControls(
     Spacer(modifier = Modifier.height(8.dp))
     Button(onClick = { onCameraControlsLockedChanged(!cameraControlsLocked) }) {
         Text(if (cameraControlsLocked) "Unlock AE/AWB" else "Lock AE/AWB")
+    }
+    Spacer(modifier = Modifier.height(8.dp))
+    Button(onClick = { onShowGlDebugChanged(!showGlDebug) }) {
+        Text(if (showGlDebug) "Hide GL Debug" else "Show GL Debug")
     }
 }
 

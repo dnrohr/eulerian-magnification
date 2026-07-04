@@ -8,7 +8,7 @@ Goal: establish the zero/low-copy camera-to-GPU preview path before implementing
 - [ ] Render OES texture to screen through OpenGL ES 3.x.
 - [x] Add basic shader compilation, GL error reporting, and frame timing.
 - [x] Keep CameraX interop and Camera2 fallback decisions documented.
-- [ ] Add render smoke tests or device verification notes.
+- [x] Add render smoke tests or device verification notes.
 - [ ] Commit and push to `main`.
 
 ## Completed Slice: GLES Infrastructure
@@ -18,6 +18,16 @@ Goal: establish the zero/low-copy camera-to-GPU preview path before implementing
 - Added GL frame-timing accumulator.
 - Added unit tests for shader source expectations and frame timing.
 - Documented CameraX/Camera2 GL path decisions in `docs/architecture/OPENGL_PREVIEW.md`.
+
+## Verification
+
+- `.\gradlew.bat clean testDebugUnitTest assembleDebug`
+
+## Completed Slice: GL Debug Renderer
+
+- Added an optional `GLSurfaceView` debug renderer toggle.
+- The renderer compiles and uses a GLES 3.0 shader program, draws a full-screen animated triangle, and reports GL frame FPS/frame time to the overlay.
+- This is a render smoke path, not the camera OES texture path yet.
 
 ## Verification
 
