@@ -14,10 +14,13 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
+import androidx.camera.camera2.interop.Camera2Interop
+import androidx.camera.camera2.interop.ExperimentalCamera2Interop
 import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
+import android.hardware.camera2.CaptureRequest
 import androidx.compose.foundation.background
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
@@ -106,6 +109,7 @@ private fun MainScreen() {
     var analysisSettings by remember { mutableStateOf(AnalysisSettings()) }
     var recordingSession by remember { mutableStateOf<ProcessedRecordingSession?>(null) }
     var lastRecordingPath by remember { mutableStateOf<String?>(null) }
+    var cameraControlsLocked by remember { mutableStateOf(false) }
     val qualityEvaluator = remember { QualityEvaluator() }
     val lightingFlickerDetector = remember { LightingFlickerDetector() }
     val artifactSuppressor = remember { ArtifactSuppressor() }
@@ -120,9 +124,10 @@ private fun MainScreen() {
 
     Box(modifier = Modifier.fillMaxSize()) {
         if (hasCameraPermission) {
-            key(analysisSettings.mode) {
+            key(analysisSettings.mode, cameraControlsLocked) {
                 CameraPreview(
                     settings = analysisSettings,
+                    cameraControlsLocked = cameraControlsLocked,
                     modifier = Modifier.fillMaxSize(),
                     onSample = {
                         analysisSample = it
@@ -156,6 +161,8 @@ private fun MainScreen() {
             signalHistory = signalHistory,
             settings = analysisSettings,
             onSettingsChanged = { analysisSettings = it },
+            cameraControlsLocked = cameraControlsLocked,
+            onCameraControlsLockedChanged = { cameraControlsLocked = it },
             isRecording = recordingSession != null,
             recordingElapsedMillis = recordingSession?.elapsedMillis ?: 0L,
             lastRecordingPath = lastRecordingPath,
@@ -294,6 +301,7 @@ private fun RoiOverlay(
 @Composable
 private fun CameraPreview(
     settings: AnalysisSettings,
+    cameraControlsLocked: Boolean,
     modifier: Modifier = Modifier,
     onSample: (AnalysisSample) -> Unit,
 ) {
@@ -318,10 +326,8 @@ private fun CameraPreview(
                 providerFuture.addListener(
                     {
                         val cameraProvider = providerFuture.get()
-                        val preview = Preview.Builder().build().also {
-                            it.surfaceProvider = surfaceProvider
-                        }
-                        val analysis = ImageAnalysis.Builder()
+                        val previewBuilder = Preview.Builder()
+                        val analysisBuilder = ImageAnalysis.Builder()
                             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                             .setResolutionSelector(
                                 ResolutionSelector.Builder()
@@ -333,7 +339,14 @@ private fun CameraPreview(
                                     )
                                     .build(),
                             )
-                            .build()
+
+                        applyPreviewCameraLocks(previewBuilder, cameraControlsLocked)
+                        applyAnalysisCameraLocks(analysisBuilder, cameraControlsLocked)
+
+                        val preview = previewBuilder.build().also {
+                            it.surfaceProvider = surfaceProvider
+                        }
+                        val analysis = analysisBuilder.build()
                             .also {
                                 it.setAnalyzer(
                                     analysisExecutor,
@@ -359,6 +372,28 @@ private fun CameraPreview(
             // Camera binding is intentionally created once in factory; frame analysis drives recomposition.
         },
     )
+}
+
+@androidx.annotation.OptIn(ExperimentalCamera2Interop::class)
+private fun applyPreviewCameraLocks(
+    builder: Preview.Builder,
+    locked: Boolean,
+) {
+    if (!locked) return
+    Camera2Interop.Extender(builder)
+        .setCaptureRequestOption(CaptureRequest.CONTROL_AE_LOCK, true)
+        .setCaptureRequestOption(CaptureRequest.CONTROL_AWB_LOCK, true)
+}
+
+@androidx.annotation.OptIn(ExperimentalCamera2Interop::class)
+private fun applyAnalysisCameraLocks(
+    builder: ImageAnalysis.Builder,
+    locked: Boolean,
+) {
+    if (!locked) return
+    Camera2Interop.Extender(builder)
+        .setCaptureRequestOption(CaptureRequest.CONTROL_AE_LOCK, true)
+        .setCaptureRequestOption(CaptureRequest.CONTROL_AWB_LOCK, true)
 }
 
 @Composable
@@ -389,6 +424,8 @@ private fun StatusOverlay(
     signalHistory: List<Double>,
     settings: AnalysisSettings,
     onSettingsChanged: (AnalysisSettings) -> Unit,
+    cameraControlsLocked: Boolean,
+    onCameraControlsLockedChanged: (Boolean) -> Unit,
     isRecording: Boolean,
     recordingElapsedMillis: Long,
     lastRecordingPath: String?,
@@ -436,6 +473,8 @@ private fun StatusOverlay(
         ModeControls(
             settings = settings,
             onSettingsChanged = onSettingsChanged,
+            cameraControlsLocked = cameraControlsLocked,
+            onCameraControlsLockedChanged = onCameraControlsLockedChanged,
         )
         Spacer(modifier = Modifier.height(8.dp))
         RecordingControls(
@@ -513,6 +552,8 @@ private fun formatElapsed(elapsedMillis: Long): String {
 private fun ModeControls(
     settings: AnalysisSettings,
     onSettingsChanged: (AnalysisSettings) -> Unit,
+    cameraControlsLocked: Boolean,
+    onCameraControlsLockedChanged: (Boolean) -> Unit,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -557,6 +598,10 @@ private fun ModeControls(
         text = "Band ${"%.1f".format(settings.lowCutHz)}-${"%.1f".format(settings.highCutHz)} Hz",
         color = Color.White,
     )
+    Spacer(modifier = Modifier.height(8.dp))
+    Button(onClick = { onCameraControlsLockedChanged(!cameraControlsLocked) }) {
+        Text(if (cameraControlsLocked) "Unlock AE/AWB" else "Lock AE/AWB")
+    }
 }
 
 @Composable

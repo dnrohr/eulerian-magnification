@@ -7,7 +7,7 @@ Goal: reduce false amplification caused by camera motion, exposure shifts, and p
 - [x] Smooth face ROI and reject sudden detector jumps.
 - [x] Track ROI between detections.
 - [x] Add simple global translation estimate.
-- [ ] Add AE/AWB lock attempts after convergence.
+- [x] Add AE/AWB lock attempts after convergence.
 - [x] Add lighting flicker and low-light warnings.
 - [x] Add saturation/noise suppression and amplification caps.
 - [x] Add quality/status overlay.
@@ -20,6 +20,16 @@ Goal: reduce false amplification caused by camera motion, exposure shifts, and p
 - Added live quality row to the overlay.
 - Added unit tests for stable, unstable, and weak-signal cases.
 - Documented the quality/status behavior in `docs/architecture/QUALITY_STATUS.md`.
+
+## Verification
+
+- `.\gradlew.bat clean testDebugUnitTest assembleDebug`
+
+## Completed Slice: AE/AWB Lock Toggle
+
+- Added a live overlay toggle for AE/AWB locking.
+- CameraX preview and analysis use cases are rebound with Camera2 interop options for `CONTROL_AE_LOCK` and `CONTROL_AWB_LOCK` when enabled.
+- This is an explicit lock attempt; Pixel 8a behavior still needs device verification under stable lighting.
 
 ## Verification
 

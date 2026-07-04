@@ -32,7 +32,7 @@ The live ROI tint and debug MP4 renderer both use this same suppressor, so previ
 
 ## Next Work
 
-- Add AE/AWB lock state once camera controls are exposed.
+- Verify AE/AWB lock behavior on Pixel 8a under stable lighting.
 - Add thermal throttling status from the power service.
 - Replace the simple flicker heuristic with 50/60 Hz-aware frequency analysis when timestamp history is mature enough.
 - Add more robust signal-quality metrics over a rolling window.
