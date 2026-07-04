@@ -10,7 +10,9 @@ Milestone D now has the first GLES infrastructure pieces:
 
 This is infrastructure only. The app still uses CameraX `PreviewView` for the live camera image. The next Milestone D slice should attach a `GLSurfaceView` or equivalent EGL surface, create an OES texture, connect it to `SurfaceTexture`, and bind CameraX/Camera2 output to that surface.
 
-The app also includes an optional GL debug renderer toggle. It creates a `GLSurfaceView`, compiles a GLES 3.0 shader program, renders an animated full-screen triangle, and reports GL frame timing in the overlay. This proves the render loop and timing plumbing compile and can be device-smoke-tested without changing the active CameraX preview path.
+The app also includes an optional GL preview toggle. It creates a `GLSurfaceView`, allocates an OES external texture, connects it to `SurfaceTexture`, gives that surface to CameraX `Preview`, and renders the camera texture with GLES. CameraX `ImageAnalysis` stays bound beside the GL preview so the CPU ROI analysis and overlay controls continue to work during GL preview testing.
+
+The earlier animated debug renderer remains useful as a reference pattern, but the active toggle now targets the camera OES path.
 
 ## Verification
 
@@ -19,8 +21,6 @@ The app also includes an optional GL debug renderer toggle. It creates a `GLSurf
 
 ## Next Work
 
-- Create a GLSurfaceView renderer.
-- Allocate camera OES texture and `SurfaceTexture`.
-- Bind the camera stream to the GL surface.
-- Render the OES texture full-screen.
-- Surface GL frame timing in the app overlay.
+- Run Pixel 8a device verification for the GL preview path.
+- Fix orientation/aspect handling once device screenshots show the exact framing.
+- Use the same GL output as the source for processed encoder rendering.

@@ -64,7 +64,7 @@ import com.dnrohr.eulerianmagnification.analysis.PulseRoiAnalyzer
 import com.dnrohr.eulerianmagnification.analysis.ViewMode
 import com.dnrohr.eulerianmagnification.capabilities.CapabilityReportStore
 import com.dnrohr.eulerianmagnification.capabilities.CapabilityReporter
-import com.dnrohr.eulerianmagnification.gl.GlDebugRenderer
+import com.dnrohr.eulerianmagnification.gl.CameraOesRenderer
 import com.dnrohr.eulerianmagnification.gl.GlFrameStats
 import com.dnrohr.eulerianmagnification.quality.ArtifactSuppressor
 import com.dnrohr.eulerianmagnification.quality.LightingFlickerDetector
@@ -130,12 +130,22 @@ private fun MainScreen() {
     Box(modifier = Modifier.fillMaxSize()) {
         if (hasCameraPermission) {
             if (showGlDebug) {
-                GlDebugPreview(
+                CameraGlPreview(
+                    settings = analysisSettings,
+                    cameraControlsLocked = cameraControlsLocked,
                     onStats = { glFrameStats = it },
                     modifier = Modifier.fillMaxSize(),
+                    onSample = {
+                        analysisSample = it
+                        lightingFlickerLikely = lightingFlickerDetector.update(it.averageGreen)
+                        recordingSession?.record(it, analysisSettings)
+                        signalHistory.add(it.bandpassedGreen)
+                        if (signalHistory.size > SIGNAL_HISTORY_SIZE) {
+                            signalHistory.removeAt(0)
+                        }
+                    },
                 )
-            }
-            key(analysisSettings.mode, cameraControlsLocked) {
+            } else key(analysisSettings.mode, cameraControlsLocked) {
                 CameraPreview(
                     settings = analysisSettings,
                     cameraControlsLocked = cameraControlsLocked,
@@ -212,20 +222,87 @@ private fun MainScreen() {
 }
 
 @Composable
-private fun GlDebugPreview(
+private fun CameraGlPreview(
+    settings: AnalysisSettings,
+    cameraControlsLocked: Boolean,
     onStats: (GlFrameStats) -> Unit,
     modifier: Modifier = Modifier,
+    onSample: (AnalysisSample) -> Unit,
 ) {
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val analysisExecutor = remember { Executors.newSingleThreadExecutor() }
+    val mainExecutor = remember(context) { ContextCompat.getMainExecutor(context) }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            analysisExecutor.shutdown()
+        }
+    }
+
     AndroidView(
         modifier = modifier,
         factory = { viewContext ->
-            GLSurfaceView(viewContext).apply {
+            lateinit var glView: GLSurfaceView
+            lateinit var renderer: CameraOesRenderer
+            glView = GLSurfaceView(viewContext).apply {
                 setEGLContextClientVersion(3)
                 setEGLConfigChooser(8, 8, 8, 8, 16, 0)
-                setRenderer(GlDebugRenderer(onStats))
-                renderMode = GLSurfaceView.RENDERMODE_CONTINUOUSLY
+                renderer = CameraOesRenderer(
+                    requestRender = { glView.requestRender() },
+                    onStats = onStats,
+                )
+                setRenderer(renderer)
+                renderMode = GLSurfaceView.RENDERMODE_WHEN_DIRTY
                 setZOrderOnTop(false)
+
+                val providerFuture = ProcessCameraProvider.getInstance(context)
+                providerFuture.addListener(
+                    {
+                        val cameraProvider = providerFuture.get()
+                        val previewBuilder = Preview.Builder()
+                        val analysisBuilder = ImageAnalysis.Builder()
+                            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                            .setResolutionSelector(
+                                ResolutionSelector.Builder()
+                                    .setResolutionStrategy(
+                                        ResolutionStrategy(
+                                            android.util.Size(640, 480),
+                                            ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER_THEN_LOWER,
+                                        ),
+                                    )
+                                    .build(),
+                            )
+
+                        applyPreviewCameraLocks(previewBuilder, cameraControlsLocked)
+                        applyAnalysisCameraLocks(analysisBuilder, cameraControlsLocked)
+
+                        val preview = previewBuilder.build().also {
+                            it.setSurfaceProvider { request ->
+                                renderer.setSurfaceRequest(request, mainExecutor)
+                            }
+                        }
+                        val analysis = analysisBuilder.build().also {
+                            it.setAnalyzer(
+                                analysisExecutor,
+                                PulseRoiAnalyzer(settings) { sample ->
+                                    mainExecutor.execute { onSample(sample) }
+                                },
+                            )
+                        }
+
+                        cameraProvider.unbindAll()
+                        cameraProvider.bindToLifecycle(
+                            lifecycleOwner,
+                            CameraSelector.DEFAULT_FRONT_CAMERA,
+                            preview,
+                            analysis,
+                        )
+                    },
+                    mainExecutor,
+                )
             }
+            glView
         },
     )
 }
@@ -651,7 +728,7 @@ private fun ModeControls(
     }
     Spacer(modifier = Modifier.height(8.dp))
     Button(onClick = { onShowGlDebugChanged(!showGlDebug) }) {
-        Text(if (showGlDebug) "Hide GL Debug" else "Show GL Debug")
+        Text(if (showGlDebug) "Use CameraX Preview" else "Use GL Preview")
     }
 }
 
