@@ -21,6 +21,7 @@ class PulseRoiAnalyzer(
         highCutHz = settings.highCutHz,
     )
     private val roiSmoother = RoiSmoother()
+    private val roiTracker = RoiTracker()
     private val timestampTracker = TimestampTracker()
     private val detectorBusy = AtomicBoolean(false)
     private var latestFaceBounds: NormalizedRect? = null
@@ -39,6 +40,7 @@ class PulseRoiAnalyzer(
         val timestamp = imageProxy.imageInfo.timestamp
         val timestampStatus = timestampTracker.record(timestamp)
         fpsMeter.recordFrame(timestamp)
+        latestFaceBounds = roiTracker.predict() ?: latestFaceBounds
         val roi = latestFaceBounds
             ?.toRect(imageProxy.width, imageProxy.height)
             ?.let { skinSubregion(it, imageProxy.width, imageProxy.height) }
@@ -69,6 +71,7 @@ class PulseRoiAnalyzer(
                         ?.clamped(imageProxy.width, imageProxy.height)
                         ?.toNormalized(imageProxy.width, imageProxy.height)
                         ?.let(roiSmoother::update)
+                        ?.let(roiTracker::updateDetection)
                 }
                 .addOnCompleteListener {
                     detectorBusy.set(false)

@@ -5,7 +5,7 @@ Goal: reduce false amplification caused by camera motion, exposure shifts, and p
 ## Tasks
 
 - [x] Smooth face ROI and reject sudden detector jumps.
-- [ ] Track ROI between detections.
+- [x] Track ROI between detections.
 - [ ] Add simple global translation estimate.
 - [ ] Add AE/AWB lock attempts after convergence.
 - [ ] Add lighting flicker and low-light warnings.
@@ -20,6 +20,17 @@ Goal: reduce false amplification caused by camera motion, exposure shifts, and p
 - Added live quality row to the overlay.
 - Added unit tests for stable, unstable, and weak-signal cases.
 - Documented the quality/status behavior in `docs/architecture/QUALITY_STATUS.md`.
+
+## Verification
+
+- `.\gradlew.bat clean testDebugUnitTest assembleDebug`
+
+## Completed Slice: ROI Tracking Between Detections
+
+- Added `RoiTracker` to predict smoothed face-box movement between sparse ML Kit detections.
+- Tracker damps motion over repeated predictions and clamps predicted boxes inside frame bounds.
+- `PulseRoiAnalyzer` now uses predicted face bounds between detector results.
+- Added unit tests for prediction, damping, and clamping.
 
 ## Verification
 

@@ -10,7 +10,7 @@ For each frame, the analyzer samples a 16x16 grid inside the ROI, converts YUV v
 
 The face box is smoothed before ROI extraction. Small detector movement is interpolated to reduce flicker; large jumps reset the smoother so a new face position can be adopted quickly.
 
-This smoothing is intentionally limited to the detector box. The app does not yet track facial landmarks or optical flow between detections; it reuses the latest smoothed face bounds until the next sparse detector result arrives.
+This smoothing is intentionally limited to the detector box. The app now adds lightweight ROI tracking between sparse detector results: `RoiTracker` estimates short-term box motion from the most recent detections, damps that motion over time, and clamps predictions to the frame. It does not yet track facial landmarks or optical flow.
 
 The preview now includes a debug tint over the ROI, driven by the bandpassed signal, plus a compact waveform history. Raw, amplified, and difference display modes are available. This is a visualization overlay, not true per-pixel color EVM yet.
 
