@@ -2,6 +2,7 @@ package com.dnrohr.eulerianmagnification.quality
 
 import com.dnrohr.eulerianmagnification.analysis.AnalysisSample
 import com.dnrohr.eulerianmagnification.analysis.NormalizedRect
+import com.dnrohr.eulerianmagnification.analysis.TranslationEstimate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -67,5 +68,20 @@ class QualityEvaluatorTest {
         )
 
         assertTrue(QualityStatus.LightingFlicker in statuses)
+    }
+
+    @Test
+    fun detectsCameraMotionFromTranslationEstimate() {
+        val statuses = QualityEvaluator().evaluate(
+            sample = AnalysisSample(
+                roi = NormalizedRect(0.1f, 0.1f, 0.3f, 0.3f),
+                averageGreen = 120.0,
+                bandpassedGreen = 0.2,
+                analysisFps = 30.0,
+                translation = TranslationEstimate(dx = 0.03f, dy = 0.0f),
+            ),
+        )
+
+        assertTrue(QualityStatus.CameraMotion in statuses)
     }
 }

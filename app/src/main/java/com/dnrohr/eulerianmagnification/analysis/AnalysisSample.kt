@@ -7,6 +7,7 @@ data class AnalysisSample(
     val bandpassedGreen: Double = 0.0,
     val latencyMillis: Double = 0.0,
     val timestampMonotonic: Boolean = true,
+    val translation: TranslationEstimate = TranslationEstimate(),
     val frameTimestampNanos: Long = 0L,
 )
 

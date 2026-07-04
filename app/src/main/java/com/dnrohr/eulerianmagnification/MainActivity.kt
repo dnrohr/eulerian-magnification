@@ -426,6 +426,11 @@ private fun StatusOverlay(
             )
         }
         Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = "Translation: dx ${"%+.3f".format(sample.translation.dx)} dy ${"%+.3f".format(sample.translation.dy)}",
+            color = Color.White,
+        )
+        Spacer(modifier = Modifier.height(4.dp))
         QualityStatusRow(qualityStatuses)
         Spacer(modifier = Modifier.height(8.dp))
         ModeControls(

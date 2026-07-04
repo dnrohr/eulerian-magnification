@@ -23,6 +23,7 @@ class PulseRoiAnalyzer(
     private val roiSmoother = RoiSmoother()
     private val roiTracker = RoiTracker()
     private val timestampTracker = TimestampTracker()
+    private val translationEstimator = TranslationEstimator()
     private val detectorBusy = AtomicBoolean(false)
     private var latestFaceBounds: NormalizedRect? = null
     private var frameIndex = 0
@@ -47,15 +48,18 @@ class PulseRoiAnalyzer(
             ?: centeredRoi(imageProxy.width, imageProxy.height)
         val averageGreen = averageGreen(imageProxy, roi)
         val bandpassed = bandpassFilter.update(averageGreen, timestamp)
+        val normalizedRoi = roi.toNormalized(imageProxy.width, imageProxy.height)
+        val translation = translationEstimator.update(normalizedRoi)
 
         onSample(
             AnalysisSample(
                 analysisFps = fpsMeter.framesPerSecond(),
-                roi = roi.toNormalized(imageProxy.width, imageProxy.height),
+                roi = normalizedRoi,
                 averageGreen = averageGreen,
                 bandpassedGreen = bandpassed,
                 latencyMillis = (System.nanoTime() - timestamp).coerceAtLeast(0L) / NANOS_PER_MILLISECOND,
                 timestampMonotonic = timestampStatus.isMonotonic,
+                translation = translation,
                 frameTimestampNanos = timestamp,
             ),
         )

@@ -6,7 +6,7 @@ Goal: reduce false amplification caused by camera motion, exposure shifts, and p
 
 - [x] Smooth face ROI and reject sudden detector jumps.
 - [x] Track ROI between detections.
-- [ ] Add simple global translation estimate.
+- [x] Add simple global translation estimate.
 - [ ] Add AE/AWB lock attempts after convergence.
 - [x] Add lighting flicker and low-light warnings.
 - [x] Add saturation/noise suppression and amplification caps.
@@ -20,6 +20,19 @@ Goal: reduce false amplification caused by camera motion, exposure shifts, and p
 - Added live quality row to the overlay.
 - Added unit tests for stable, unstable, and weak-signal cases.
 - Documented the quality/status behavior in `docs/architecture/QUALITY_STATUS.md`.
+
+## Verification
+
+- `.\gradlew.bat clean testDebugUnitTest assembleDebug`
+
+## Completed Slice: Simple Translation Estimate
+
+- Added `TranslationEstimator` to estimate normalized frame-to-frame ROI center movement.
+- Analyzer now includes translation in each `AnalysisSample`.
+- Overlay displays `dx`/`dy`, and quality status warns on large camera motion.
+- Added unit tests for zero initial state, translation estimation, smoothing, and quality warning behavior.
+
+This is an ROI-derived translation proxy, not optical-flow global motion compensation yet.
 
 ## Verification
 
