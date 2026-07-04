@@ -4,15 +4,20 @@ Goal: create the native Android base, capture the first research decisions, and 
 
 ## Tasks
 
-- [ ] Create Android project scaffold with Kotlin, Jetpack Compose, CameraX, and ML Kit dependencies.
-- [ ] Add app permission flow and a booting camera preview shell.
-- [ ] Add device, camera, encoder, battery, and thermal capability logging utilities.
-- [ ] Add `docs/research/VIDEO_MAGNIFICATION_SURVEY.md`.
-- [ ] Add `docs/research/ANDROID_PIPELINE_SURVEY.md`.
-- [ ] Add `docs/experiments/pixel8a_camera_notes.md`.
-- [ ] Add placeholder `docs/experiments/pixel8a_camera_capabilities.json` format.
-- [ ] Verify with a local Gradle build/test check.
-- [ ] Commit and push to `main`.
+- [x] Create Android project scaffold with Kotlin, Jetpack Compose, CameraX, and ML Kit dependencies.
+- [x] Add app permission flow and a booting camera preview shell.
+- [x] Add device, camera, encoder, battery, and thermal capability logging utilities.
+- [x] Add `docs/research/VIDEO_MAGNIFICATION_SURVEY.md`.
+- [x] Add `docs/research/ANDROID_PIPELINE_SURVEY.md`.
+- [x] Add `docs/experiments/pixel8a_camera_notes.md`.
+- [x] Add placeholder `docs/experiments/pixel8a_camera_capabilities.json` format.
+- [x] Verify with a local Gradle build/test check.
+- [x] Commit and push to `main`.
+
+## Verification
+
+- `.\gradlew.bat testDebugUnitTest`
+- `.\gradlew.bat assembleDebug`
 
 ## Success Criteria
 

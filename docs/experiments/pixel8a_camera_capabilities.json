@@ -1,0 +1,8 @@
+{
+  "status": "pending_device_run",
+  "capture_instructions": "Run the debug app on Pixel 8a, filter Logcat for CapabilityReporter, and replace this file with the emitted JSON.",
+  "device": {},
+  "cameras": [],
+  "encoders": [],
+  "power": {}
+}
