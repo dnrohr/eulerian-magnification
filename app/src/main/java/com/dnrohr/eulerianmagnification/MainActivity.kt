@@ -196,6 +196,7 @@ private fun MainScreen() {
             lastRecordingPath = lastRecordingPath,
             qualityStatuses = qualityEvaluator.evaluate(
                 sample = analysisSample,
+                settings = analysisSettings,
                 lightingFlickerLikely = lightingFlickerLikely,
             ),
             onToggleRecording = {

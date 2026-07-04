@@ -1,6 +1,8 @@
 package com.dnrohr.eulerianmagnification.quality
 
 import com.dnrohr.eulerianmagnification.analysis.AnalysisSample
+import com.dnrohr.eulerianmagnification.analysis.AnalysisSettings
+import com.dnrohr.eulerianmagnification.analysis.MagnificationMode
 import com.dnrohr.eulerianmagnification.analysis.NormalizedRect
 import com.dnrohr.eulerianmagnification.analysis.TranslationEstimate
 import org.junit.Assert.assertEquals
@@ -83,5 +85,56 @@ class QualityEvaluatorTest {
         )
 
         assertTrue(QualityStatus.CameraMotion in statuses)
+    }
+
+    @Test
+    fun warnsWhenHighFrequencyModeHasSubtleCameraMotion() {
+        val statuses = QualityEvaluator().evaluate(
+            sample = AnalysisSample(
+                roi = NormalizedRect(0.1f, 0.1f, 0.3f, 0.3f),
+                averageGreen = 120.0,
+                bandpassedGreen = 0.2,
+                analysisFps = 30.0,
+                translation = TranslationEstimate(dx = 0.009f, dy = 0.0f),
+            ),
+            settings = AnalysisSettings(mode = MagnificationMode.Tremor),
+        )
+
+        assertTrue(QualityStatus.ModeMotionRisk in statuses)
+    }
+
+    @Test
+    fun doesNotWarnPulseModeForHighFrequencyMotionThreshold() {
+        val statuses = QualityEvaluator().evaluate(
+            sample = AnalysisSample(
+                roi = NormalizedRect(0.1f, 0.1f, 0.3f, 0.3f),
+                averageGreen = 120.0,
+                bandpassedGreen = 0.2,
+                analysisFps = 30.0,
+                translation = TranslationEstimate(dx = 0.009f, dy = 0.0f),
+            ),
+            settings = AnalysisSettings(mode = MagnificationMode.Pulse),
+        )
+
+        assertTrue(QualityStatus.ModeMotionRisk !in statuses)
+        assertTrue(QualityStatus.CameraMotion !in statuses)
+    }
+
+    @Test
+    fun warnsWhenHighFrequencyModeUsesLargeAmplification() {
+        val statuses = QualityEvaluator().evaluate(
+            sample = AnalysisSample(
+                roi = NormalizedRect(0.1f, 0.1f, 0.3f, 0.3f),
+                averageGreen = 120.0,
+                bandpassedGreen = 0.2,
+                analysisFps = 30.0,
+            ),
+            settings = AnalysisSettings(
+                mode = MagnificationMode.ObjectVibration,
+                amplification = 24.0f,
+            ),
+        )
+
+        assertTrue(QualityStatus.AmplificationRisk in statuses)
     }
 }

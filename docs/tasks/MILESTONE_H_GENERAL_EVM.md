@@ -8,9 +8,24 @@ Goal: implement simple linear Eulerian magnification with a Laplacian pyramid.
 - [ ] Add per-level temporal bandpass filters.
 - [ ] Amplify selected levels and reconstruct frame.
 - [x] Add presets for pulse, breathing, tremor, and object vibration.
-- [ ] Warn for invalid amplification, frequency, and camera-motion combinations.
+- [x] Warn for invalid amplification, frequency, and camera-motion combinations.
 - [ ] Add controlled synthetic video tests.
 - [ ] Commit and push to `main`.
+
+## Completed Slice: High-Frequency Mode Warnings
+
+- Quality evaluation now receives the active analysis settings.
+- Tremor and Object Vibration modes warn on subtle camera motion before the general camera-motion threshold.
+- Tremor and Object Vibration modes warn when amplification is above 18x.
+- Warnings show through the existing quality overlay as `Mode motion risk` and `Amplification risk`.
+- Added tests for high-frequency motion risk, pulse-mode non-triggering, and high-amplification risk.
+
+These warnings are conservative guardrails. They do not replace measured device validation.
+
+## Verification
+
+- `.\gradlew.bat testDebugUnitTest --tests "com.dnrohr.eulerianmagnification.quality.QualityEvaluatorTest"`
+- `.\gradlew.bat clean testDebugUnitTest assembleDebug`
 
 ## Completed Slice: General EVM Presets
 
