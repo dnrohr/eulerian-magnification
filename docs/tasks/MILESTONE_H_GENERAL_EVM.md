@@ -4,7 +4,7 @@ Goal: implement simple linear Eulerian magnification with a Laplacian pyramid.
 
 ## Tasks
 
-- [ ] Add full-frame downsampled pyramid.
+- [x] Add full-frame downsampled pyramid.
 - [ ] Add per-level temporal bandpass filters.
 - [ ] Amplify selected levels and reconstruct frame.
 - [x] Add presets for pulse, breathing, tremor, and object vibration.
@@ -25,6 +25,20 @@ These warnings are conservative guardrails. They do not replace measured device 
 ## Verification
 
 - `.\gradlew.bat testDebugUnitTest --tests "com.dnrohr.eulerianmagnification.quality.QualityEvaluatorTest"`
+- `.\gradlew.bat clean testDebugUnitTest assembleDebug`
+
+## Completed Slice: CPU Reference Downsample Pyramid
+
+- Added `RgbFramePyramidBuilder` for full-frame RGB downsample pyramids.
+- The builder preserves frame timestamps across levels.
+- Downsampling uses deterministic 2x2 RGB channel averaging with clamping at one-pixel dimensions.
+- Added tests for requested level counts, pixel averaging, odd dimensions, timestamp preservation, and invalid level counts.
+
+This is a CPU/reference pyramid. GPU pyramid allocation already exists in Milestone E, but temporal filtering and reconstruction remain pending here.
+
+## Verification
+
+- `.\gradlew.bat testDebugUnitTest --tests "com.dnrohr.eulerianmagnification.analysis.RgbFramePyramidBuilderTest"`
 - `.\gradlew.bat clean testDebugUnitTest assembleDebug`
 
 ## Completed Slice: General EVM Presets
