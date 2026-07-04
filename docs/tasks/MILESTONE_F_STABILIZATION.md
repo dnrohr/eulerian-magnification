@@ -8,7 +8,7 @@ Goal: reduce false amplification caused by camera motion, exposure shifts, and p
 - [x] Track ROI between detections.
 - [ ] Add simple global translation estimate.
 - [ ] Add AE/AWB lock attempts after convergence.
-- [ ] Add lighting flicker and low-light warnings.
+- [x] Add lighting flicker and low-light warnings.
 - [x] Add saturation/noise suppression and amplification caps.
 - [x] Add quality/status overlay.
 - [x] Document artifact controls.
@@ -20,6 +20,16 @@ Goal: reduce false amplification caused by camera motion, exposure shifts, and p
 - Added live quality row to the overlay.
 - Added unit tests for stable, unstable, and weak-signal cases.
 - Documented the quality/status behavior in `docs/architecture/QUALITY_STATUS.md`.
+
+## Verification
+
+- `.\gradlew.bat clean testDebugUnitTest assembleDebug`
+
+## Completed Slice: Lighting Flicker Warning
+
+- Added `LightingFlickerDetector` with a rolling brightness-delta alternation heuristic.
+- Quality overlay now includes `Lighting flicker` when recent ROI brightness alternates strongly.
+- Added tests for alternating brightness, smooth drift, and tiny below-threshold alternations.
 
 ## Verification
 

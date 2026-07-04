@@ -61,6 +61,7 @@ import com.dnrohr.eulerianmagnification.analysis.ViewMode
 import com.dnrohr.eulerianmagnification.capabilities.CapabilityReportStore
 import com.dnrohr.eulerianmagnification.capabilities.CapabilityReporter
 import com.dnrohr.eulerianmagnification.quality.ArtifactSuppressor
+import com.dnrohr.eulerianmagnification.quality.LightingFlickerDetector
 import com.dnrohr.eulerianmagnification.quality.QualityEvaluator
 import com.dnrohr.eulerianmagnification.quality.QualityStatus
 import com.dnrohr.eulerianmagnification.recording.DebugProcessedMp4Recorder
@@ -106,7 +107,9 @@ private fun MainScreen() {
     var recordingSession by remember { mutableStateOf<ProcessedRecordingSession?>(null) }
     var lastRecordingPath by remember { mutableStateOf<String?>(null) }
     val qualityEvaluator = remember { QualityEvaluator() }
+    val lightingFlickerDetector = remember { LightingFlickerDetector() }
     val artifactSuppressor = remember { ArtifactSuppressor() }
+    var lightingFlickerLikely by remember { mutableStateOf(false) }
     val signalHistory = remember { mutableStateListOf<Double>() }
 
     LaunchedEffect(Unit) {
@@ -123,6 +126,7 @@ private fun MainScreen() {
                     modifier = Modifier.fillMaxSize(),
                     onSample = {
                         analysisSample = it
+                        lightingFlickerLikely = lightingFlickerDetector.update(it.averageGreen)
                         recordingSession?.record(it, analysisSettings)
                         signalHistory.add(it.bandpassedGreen)
                         if (signalHistory.size > SIGNAL_HISTORY_SIZE) {
@@ -155,7 +159,10 @@ private fun MainScreen() {
             isRecording = recordingSession != null,
             recordingElapsedMillis = recordingSession?.elapsedMillis ?: 0L,
             lastRecordingPath = lastRecordingPath,
-            qualityStatuses = qualityEvaluator.evaluate(analysisSample),
+            qualityStatuses = qualityEvaluator.evaluate(
+                sample = analysisSample,
+                lightingFlickerLikely = lightingFlickerLikely,
+            ),
             onToggleRecording = {
                 val activeSession = recordingSession
                 if (activeSession == null) {

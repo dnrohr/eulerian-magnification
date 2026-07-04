@@ -11,9 +11,12 @@ Current statuses:
 - `Too dark`
 - `Low FPS`
 - `Timing unstable`
+- `Lighting flicker`
 - `Signal weak`
 
 The evaluator is intentionally conservative. It does not decide whether the visualization is medically meaningful; it only flags capture and timing conditions that commonly produce poor Eulerian magnification output.
+
+Lighting flicker detection uses a rolling average-green heuristic. It looks for repeated, above-threshold alternation in brightness deltas, which catches obvious unstable LED/light-source behavior. It is not yet a 50/60 Hz frequency-domain detector.
 
 ## Artifact Suppression
 
@@ -28,5 +31,5 @@ The live ROI tint and debug MP4 renderer both use this same suppressor, so previ
 
 - Add AE/AWB lock state once camera controls are exposed.
 - Add thermal throttling status from the power service.
-- Add lighting flicker detection.
+- Replace the simple flicker heuristic with 50/60 Hz-aware frequency analysis when timestamp history is mature enough.
 - Add more robust signal-quality metrics over a rolling window.

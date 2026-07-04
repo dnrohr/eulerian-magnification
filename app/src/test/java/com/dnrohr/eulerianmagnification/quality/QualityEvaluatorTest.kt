@@ -53,4 +53,19 @@ class QualityEvaluatorTest {
 
         assertTrue(QualityStatus.SignalWeak in statuses)
     }
+
+    @Test
+    fun includesLightingFlickerWarning() {
+        val statuses = QualityEvaluator().evaluate(
+            sample = AnalysisSample(
+                roi = NormalizedRect(0.1f, 0.1f, 0.3f, 0.3f),
+                averageGreen = 120.0,
+                bandpassedGreen = 0.2,
+                analysisFps = 30.0,
+            ),
+            lightingFlickerLikely = true,
+        )
+
+        assertTrue(QualityStatus.LightingFlicker in statuses)
+    }
 }
