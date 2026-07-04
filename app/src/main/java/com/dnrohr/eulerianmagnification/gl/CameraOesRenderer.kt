@@ -31,6 +31,7 @@ class CameraOesRenderer(
     private var rgbInputTextureLocation = -1
     private var rgbRenderTarget: GlRenderTarget? = null
     private var downsamplePyramid: GlPyramid? = null
+    private var temporalState: GlTemporalState? = null
     private var surfaceSize = GlTextureSize(1, 1)
     private var hasNewFrame = false
 
@@ -66,6 +67,7 @@ class CameraOesRenderer(
         surfaceSize = GlTextureSize(width, height)
         rgbRenderTarget?.release()
         downsamplePyramid?.release()
+        temporalState?.release()
         rgbRenderTarget = GlRenderTarget(surfaceSize)
         downsamplePyramid = GlPyramid(
             baseSize = GlTextureSize(
@@ -73,7 +75,9 @@ class CameraOesRenderer(
                 height = (height / 2).coerceAtLeast(1),
             ),
             levelCount = DOWNSAMPLE_LEVELS,
-        )
+        ).also { pyramid ->
+            temporalState = GlTemporalState(GlTemporalStateLayout.levelSizesFor(pyramid))
+        }
         GLES30.glViewport(0, 0, width, height)
     }
 
@@ -87,6 +91,7 @@ class CameraOesRenderer(
             hasNewFrame = false
         }
         renderCameraTextureToRgb()
+        temporalState?.swap()
         drawRgbTextureToScreen()
         providePendingSurfaceIfReady()
         onStats(timer.endFrame(System.nanoTime()))
@@ -106,6 +111,8 @@ class CameraOesRenderer(
         rgbRenderTarget = null
         downsamplePyramid?.release()
         downsamplePyramid = null
+        temporalState?.release()
+        temporalState = null
     }
 
     private fun providePendingSurfaceIfReady() {

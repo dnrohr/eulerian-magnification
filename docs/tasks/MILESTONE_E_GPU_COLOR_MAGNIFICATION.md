@@ -6,7 +6,7 @@ Goal: move color magnification from CPU analysis toward texture processing.
 
 - [x] Render camera OES texture to internal RGB texture.
 - [x] Add downsample pyramid textures.
-- [ ] Add temporal filter state textures.
+- [x] Add temporal filter state textures.
 - [x] Implement color amplification shader pass.
 - [x] Add ROI-limited processing when possible.
 - [ ] Render processed output to display and encoder surfaces.
@@ -21,6 +21,18 @@ Goal: move color magnification from CPU analysis toward texture processing.
 - Added parameter mapping from `AnalysisSample` and `AnalysisSettings` to shader-style uniforms.
 - Reuses `ArtifactSuppressor` for low-signal suppression and amplification caps.
 - Added tests for shader source expectations and uniform mapping.
+
+## Verification
+
+- `.\gradlew.bat clean testDebugUnitTest assembleDebug`
+
+## Completed Slice: Temporal State Texture Foundation
+
+- Added ping-pong temporal state render targets for each pyramid level.
+- Camera GL renderer now allocates temporal state alongside the downsample pyramid and swaps state each frame.
+- Added tests for temporal state sizing and two-target-per-level planning.
+
+This allocates state textures only; the actual temporal filter shader update pass is still pending.
 
 ## Verification
 

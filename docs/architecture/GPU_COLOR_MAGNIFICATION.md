@@ -19,6 +19,8 @@ The camera GL renderer now renders the OES camera texture into a framebuffer-bac
 
 The renderer also allocates a three-level reduced-resolution pyramid using `GlPyramid`. These are framebuffer-backed texture levels sized from half resolution downward. They are allocation scaffolding only; the downsample shader pass is not wired yet.
 
+`GlTemporalState` now allocates ping-pong render targets for each pyramid level. The renderer swaps the temporal state each frame, but the shader pass that updates lowpass/bandpass state is not wired yet.
+
 The color magnification pass is not wired into the camera GL renderer yet. The next GPU color slice should run this pass over the internal RGB texture and display the processed result.
 
 ## Verification
