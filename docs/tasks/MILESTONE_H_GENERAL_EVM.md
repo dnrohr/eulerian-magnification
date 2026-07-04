@@ -50,6 +50,7 @@ Invalid-combination warnings for high-frequency modes remain pending.
 - Added `RecordedVideoAnalysisRunner` to aggregate recorded-frame reports with FPS, green-channel, bandpassed-energy, max-magnitude, and timestamp-monotonicity metrics.
 - Added `RecordedVideoFrameDecoder` to sample local Android-readable video files into timestamped `RgbFrame` inputs.
 - Added `RecordedVideoValidator` to run local-video decode and report generation as one validation step.
+- Added an in-app `Validate Video` picker that runs the recorded-video validator against a selected local video and displays summary metrics.
 - Documented the recorded-video validation workflow and public sample plan in `docs/testing/RECORDED_VIDEO_VALIDATION.md`.
 
 This is recorded-frame analysis and decode plumbing only. Public sample execution and full-frame EVM reconstruction tests are still pending, so the broader controlled-video checklist item remains open.

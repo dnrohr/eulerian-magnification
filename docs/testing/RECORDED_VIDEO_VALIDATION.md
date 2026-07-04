@@ -28,13 +28,17 @@ The decoder preserves planned timestamps in nanoseconds before frames are passed
 ## Validation Flow
 
 1. Place a public sample in `sample-videos/`.
-2. Decode a bounded frame set with `RecordedVideoFrameDecoder`.
-3. Run `RecordedVideoValidator` with the intended `AnalysisSettings`.
-4. Record the summary metrics in notes or a future benchmark artifact.
+2. Build and open the app.
+3. Set the intended mode and amplification.
+4. Tap `Validate Video` in the recording controls.
+5. Pick the local sample video from the system picker.
+6. Record the displayed summary metrics in notes or a future benchmark artifact.
+
+The app copies the selected video into cache, decodes a bounded frame set, runs `RecordedVideoValidator`, and displays the summary in the overlay.
 
 ## Next Sample Step
 
-Download one public clip into `sample-videos/`, decode a short bounded frame sequence, and compare the recorded-video report against expected pulse or EVM behavior. Keep the media file local and uncommitted. A thin UI or instrumentation entry point is still needed to run Android media decoding without manual code changes.
+Download one public clip into `sample-videos/`, run the in-app validation flow, and compare the recorded-video report against expected pulse or EVM behavior. Keep the media file local and uncommitted.
 
 ## Public Sample Plan
 

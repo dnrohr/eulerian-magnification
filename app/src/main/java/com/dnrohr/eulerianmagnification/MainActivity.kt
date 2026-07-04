@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
@@ -61,6 +62,8 @@ import com.dnrohr.eulerianmagnification.analysis.AnalysisSample
 import com.dnrohr.eulerianmagnification.analysis.AnalysisSettings
 import com.dnrohr.eulerianmagnification.analysis.MagnificationMode
 import com.dnrohr.eulerianmagnification.analysis.PulseRoiAnalyzer
+import com.dnrohr.eulerianmagnification.analysis.RecordedVideoDecodeOptions
+import com.dnrohr.eulerianmagnification.analysis.RecordedVideoValidator
 import com.dnrohr.eulerianmagnification.analysis.ViewMode
 import com.dnrohr.eulerianmagnification.capabilities.CapabilityReportStore
 import com.dnrohr.eulerianmagnification.capabilities.CapabilityReporter
@@ -110,10 +113,13 @@ private fun MainScreen() {
     ) { granted ->
         hasCameraPermission = granted
     }
+    val validationExecutor = remember { Executors.newSingleThreadExecutor() }
     var analysisSample by remember { mutableStateOf(AnalysisSample()) }
     var analysisSettings by remember { mutableStateOf(AnalysisSettings()) }
     var recordingSession by remember { mutableStateOf<ProcessedRecordingSession?>(null) }
     var lastRecordingPath by remember { mutableStateOf<String?>(null) }
+    var validationSummary by remember { mutableStateOf<String?>(null) }
+    var validationRunning by remember { mutableStateOf(false) }
     var cameraControlsLocked by remember { mutableStateOf(false) }
     var showGlDebug by remember { mutableStateOf(false) }
     var glFrameStats by remember { mutableStateOf(GlFrameStats()) }
@@ -122,6 +128,37 @@ private fun MainScreen() {
     val artifactSuppressor = remember { ArtifactSuppressor() }
     var lightingFlickerLikely by remember { mutableStateOf(false) }
     val signalHistory = remember { mutableStateListOf<Double>() }
+    val videoPickerLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.GetContent(),
+    ) { uri: Uri? ->
+        if (uri != null) {
+            validationRunning = true
+            validationSummary = "Recorded validation: running"
+            val settings = analysisSettings
+            validationExecutor.execute {
+                val summary = runCatching {
+                    val inputFile = copyUriToCacheFile(context, uri)
+                    RecordedVideoValidator().validate(
+                        file = inputFile,
+                        settings = settings,
+                        decodeOptions = RecordedVideoDecodeOptions(maxFrames = 300),
+                    ).summary()
+                }.getOrElse { error ->
+                    "Recorded validation failed: ${error.message ?: error::class.java.simpleName}"
+                }
+                ContextCompat.getMainExecutor(context).execute {
+                    validationSummary = summary
+                    validationRunning = false
+                }
+            }
+        }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            validationExecutor.shutdown()
+        }
+    }
 
     LaunchedEffect(Unit) {
         if (!hasCameraPermission) {
@@ -194,6 +231,8 @@ private fun MainScreen() {
             isRecording = recordingSession != null,
             recordingElapsedMillis = recordingSession?.elapsedMillis ?: 0L,
             lastRecordingPath = lastRecordingPath,
+            validationSummary = validationSummary,
+            validationRunning = validationRunning,
             qualityStatuses = qualityEvaluator.evaluate(
                 sample = analysisSample,
                 settings = analysisSettings,
@@ -218,6 +257,9 @@ private fun MainScreen() {
             },
             onShareRecording = {
                 lastRecordingPath?.let { shareRecordingMetadata(context, File(it)) }
+            },
+            onValidateVideo = {
+                videoPickerLauncher.launch("video/*")
             },
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -550,9 +592,12 @@ private fun StatusOverlay(
     isRecording: Boolean,
     recordingElapsedMillis: Long,
     lastRecordingPath: String?,
+    validationSummary: String?,
+    validationRunning: Boolean,
     qualityStatuses: List<QualityStatus>,
     onToggleRecording: () -> Unit,
     onShareRecording: () -> Unit,
+    onValidateVideo: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -617,6 +662,9 @@ private fun StatusOverlay(
             lastRecordingPath = lastRecordingPath,
             onToggleRecording = onToggleRecording,
             onShareRecording = onShareRecording,
+            validationSummary = validationSummary,
+            validationRunning = validationRunning,
+            onValidateVideo = onValidateVideo,
         )
         Spacer(modifier = Modifier.height(8.dp))
         SignalWaveform(
@@ -644,6 +692,9 @@ private fun RecordingControls(
     lastRecordingPath: String?,
     onToggleRecording: () -> Unit,
     onShareRecording: () -> Unit,
+    validationSummary: String?,
+    validationRunning: Boolean,
+    onValidateVideo: () -> Unit,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -660,6 +711,20 @@ private fun RecordingControls(
                 "Recorder idle"
             },
             color = if (isRecording) Color(0xFFFF6B6B) else Color.White,
+        )
+    }
+    Spacer(modifier = Modifier.height(4.dp))
+    Button(
+        onClick = onValidateVideo,
+        enabled = !validationRunning,
+    ) {
+        Text(if (validationRunning) "Validating Video" else "Validate Video")
+    }
+    if (!validationSummary.isNullOrBlank()) {
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = validationSummary,
+            color = Color.White,
         )
     }
     if (!lastRecordingPath.isNullOrBlank()) {
@@ -680,6 +745,17 @@ private fun formatElapsed(elapsedMillis: Long): String {
     val minutes = totalSeconds / 60L
     val seconds = totalSeconds % 60L
     return "%02d:%02d".format(minutes, seconds)
+}
+
+private fun copyUriToCacheFile(context: Context, uri: Uri): File {
+    val outputFile = File(context.cacheDir, "recorded-validation-input.mp4")
+    context.contentResolver.openInputStream(uri).use { input ->
+        requireNotNull(input) { "Could not open selected video" }
+        outputFile.outputStream().use { output ->
+            input.copyTo(output)
+        }
+    }
+    return outputFile
 }
 
 @Composable

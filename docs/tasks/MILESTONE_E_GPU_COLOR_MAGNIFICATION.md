@@ -32,6 +32,7 @@ The actual CPU MVP comparison still needs a Pixel 8a runtime pass, so the benchm
 - Added a report runner for repeatable recorded-frame FPS and signal-energy metrics.
 - Added Android local-video frame decoding into the recorded-frame input format.
 - Added a validator facade that combines local-video decode and recorded-frame reporting.
+- Added an in-app local-video picker that runs the validator before phone-camera testing.
 - This gives CPU/GPU benchmark work a repeatable pre-device input path before phone testing.
 - See `docs/testing/RECORDED_VIDEO_VALIDATION.md` for the sample-video workflow.
 
