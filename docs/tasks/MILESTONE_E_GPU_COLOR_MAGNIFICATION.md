@@ -26,6 +26,12 @@ The actual CPU MVP comparison still needs a Pixel 8a runtime pass, so the benchm
 
 - `.\gradlew.bat clean testDebugUnitTest assembleDebug`
 
+## Supporting Slice: Recorded-Frame Analysis Fixture
+
+- Added a synthetic recorded-frame analyzer and tests under the analysis package.
+- This gives CPU/GPU benchmark work a repeatable pre-device input path before phone testing.
+- See `docs/testing/RECORDED_VIDEO_VALIDATION.md` for the sample-video workflow.
+
 ## Completed Slice: GL Raw/Amplified Split View
 
 - Added a `Split` view mode alongside Raw, Amplified, and Difference.
