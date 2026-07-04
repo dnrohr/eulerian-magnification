@@ -60,6 +60,7 @@ import com.dnrohr.eulerianmagnification.analysis.PulseRoiAnalyzer
 import com.dnrohr.eulerianmagnification.analysis.ViewMode
 import com.dnrohr.eulerianmagnification.capabilities.CapabilityReportStore
 import com.dnrohr.eulerianmagnification.capabilities.CapabilityReporter
+import com.dnrohr.eulerianmagnification.quality.ArtifactSuppressor
 import com.dnrohr.eulerianmagnification.quality.QualityEvaluator
 import com.dnrohr.eulerianmagnification.quality.QualityStatus
 import com.dnrohr.eulerianmagnification.recording.DebugProcessedMp4Recorder
@@ -105,6 +106,7 @@ private fun MainScreen() {
     var recordingSession by remember { mutableStateOf<ProcessedRecordingSession?>(null) }
     var lastRecordingPath by remember { mutableStateOf<String?>(null) }
     val qualityEvaluator = remember { QualityEvaluator() }
+    val artifactSuppressor = remember { ArtifactSuppressor() }
     val signalHistory = remember { mutableStateListOf<Double>() }
 
     LaunchedEffect(Unit) {
@@ -132,6 +134,7 @@ private fun MainScreen() {
             AmplifiedTintOverlay(
                 sample = analysisSample,
                 settings = analysisSettings,
+                artifactSuppressor = artifactSuppressor,
                 modifier = Modifier.fillMaxSize(),
             )
             RoiOverlay(
@@ -222,14 +225,15 @@ private fun shareRecordingMetadata(context: Context, metadataFile: File) {
 private fun AmplifiedTintOverlay(
     sample: AnalysisSample,
     settings: AnalysisSettings,
+    artifactSuppressor: ArtifactSuppressor,
     modifier: Modifier = Modifier,
 ) {
     val roi = sample.roi ?: return
     if (settings.viewMode == ViewMode.Raw) return
 
-    val amplifiedSignal = sample.bandpassedGreen * settings.amplification
-    val intensity = (abs(amplifiedSignal) / 64.0).coerceIn(0.0, 1.0).toFloat()
-    val tint = if (sample.bandpassedGreen >= 0.0) {
+    val signal = artifactSuppressor.amplify(sample.bandpassedGreen, settings.amplification)
+    val intensity = signal.normalizedMagnitude.toFloat()
+    val tint = if (signal.value >= 0.0) {
         Color(0xFFFF6B6B).copy(alpha = overlayAlpha(settings.viewMode, intensity))
     } else {
         Color(0xFF3A86FF).copy(alpha = overlayAlpha(settings.viewMode, intensity))

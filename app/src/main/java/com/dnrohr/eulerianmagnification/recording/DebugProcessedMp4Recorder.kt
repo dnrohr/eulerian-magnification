@@ -11,8 +11,8 @@ import android.view.Surface
 import com.dnrohr.eulerianmagnification.analysis.AnalysisSample
 import com.dnrohr.eulerianmagnification.analysis.AnalysisSettings
 import com.dnrohr.eulerianmagnification.analysis.ViewMode
+import com.dnrohr.eulerianmagnification.quality.ArtifactSuppressor
 import java.io.File
-import kotlin.math.abs
 
 class DebugProcessedMp4Recorder(
     override val outputFile: File,
@@ -111,6 +111,7 @@ class DebugProcessedMp4Recorder(
         private val width: Int,
         private val height: Int,
     ) {
+        private val artifactSuppressor = ArtifactSuppressor()
         private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = Color.WHITE
             textSize = 34.0f
@@ -150,9 +151,9 @@ class DebugProcessedMp4Recorder(
             val right = roi.right * width
             val bottom = roi.bottom * height
             if (settings.viewMode != ViewMode.Raw) {
-                val signal = sample.bandpassedGreen * settings.amplification
-                val alpha = ((abs(signal) / 64.0).coerceIn(0.12, 0.70) * 255.0).toInt()
-                tintPaint.color = if (signal >= 0.0) {
+                val signal = artifactSuppressor.amplify(sample.bandpassedGreen, settings.amplification)
+                val alpha = (signal.normalizedMagnitude.coerceIn(0.12, 0.70) * 255.0).toInt()
+                tintPaint.color = if (signal.value >= 0.0) {
                     Color.argb(alpha, 255, 107, 107)
                 } else {
                     Color.argb(alpha, 58, 134, 255)
@@ -182,7 +183,11 @@ class DebugProcessedMp4Recorder(
             val centerX = width / 2.0f
             val centerY = height - 96.0f
             val maxWidth = width * 0.42f
-            val signal = (sample.bandpassedGreen * settings.amplification / 64.0).coerceIn(-1.0, 1.0).toFloat()
+            val signal = artifactSuppressor.amplify(sample.bandpassedGreen, settings.amplification)
+                .value
+                .div(ArtifactSuppressor.DEFAULT_MAX_AMPLIFIED_MAGNITUDE)
+                .coerceIn(-1.0, 1.0)
+                .toFloat()
             val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 color = Color.rgb(255, 200, 87)
                 strokeWidth = 12.0f
