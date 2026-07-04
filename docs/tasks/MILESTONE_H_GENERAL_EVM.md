@@ -5,7 +5,7 @@ Goal: implement simple linear Eulerian magnification with a Laplacian pyramid.
 ## Tasks
 
 - [x] Add full-frame downsampled pyramid.
-- [ ] Add per-level temporal bandpass filters.
+- [x] Add per-level temporal bandpass filters.
 - [ ] Amplify selected levels and reconstruct frame.
 - [x] Add presets for pulse, breathing, tremor, and object vibration.
 - [x] Warn for invalid amplification, frequency, and camera-motion combinations.
@@ -39,6 +39,21 @@ This is a CPU/reference pyramid. GPU pyramid allocation already exists in Milest
 ## Verification
 
 - `.\gradlew.bat testDebugUnitTest --tests "com.dnrohr.eulerianmagnification.analysis.RgbFramePyramidBuilderTest"`
+- `.\gradlew.bat clean testDebugUnitTest assembleDebug`
+
+## Completed Slice: CPU Reference Pyramid Temporal Bandpass
+
+- Added `RgbPyramidTemporalBandpass` for per-level RGB temporal filtering.
+- The filter keeps independent low/high-pass state for every RGB channel at every pyramid level.
+- First frames and pyramid-shape changes reset state and emit zero bandpass output.
+- Bandpass output preserves each level's dimensions and timestamp.
+- Added tests for first-frame reset, level sizing, shape reset, and stronger pulse-band response than slow drift.
+
+This produces filtered pyramid levels only. Amplification and frame reconstruction remain pending.
+
+## Verification
+
+- `.\gradlew.bat testDebugUnitTest --tests "com.dnrohr.eulerianmagnification.analysis.RgbPyramidTemporalBandpassTest"`
 - `.\gradlew.bat clean testDebugUnitTest assembleDebug`
 
 ## Completed Slice: General EVM Presets
