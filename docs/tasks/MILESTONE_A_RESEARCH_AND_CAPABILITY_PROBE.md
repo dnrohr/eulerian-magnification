@@ -19,6 +19,16 @@ Goal: create the native Android base, capture the first research decisions, and 
 - `.\gradlew.bat testDebugUnitTest`
 - `.\gradlew.bat assembleDebug`
 
+## Completed Slice: Capability Report Export
+
+- Added app-specific JSON export for the capability report.
+- The app writes `capabilities/pixel8a_camera_capabilities.json` on launch and logs the device path.
+- Updated Pixel 8a experiment notes with pull instructions.
+
+## Verification
+
+- `.\gradlew.bat clean testDebugUnitTest assembleDebug`
+
 ## Success Criteria
 
 - App can build and launch from Android Studio.

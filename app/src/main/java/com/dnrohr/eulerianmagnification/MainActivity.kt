@@ -53,6 +53,7 @@ import com.dnrohr.eulerianmagnification.analysis.AnalysisSettings
 import com.dnrohr.eulerianmagnification.analysis.MagnificationMode
 import com.dnrohr.eulerianmagnification.analysis.PulseRoiAnalyzer
 import com.dnrohr.eulerianmagnification.analysis.ViewMode
+import com.dnrohr.eulerianmagnification.capabilities.CapabilityReportStore
 import com.dnrohr.eulerianmagnification.capabilities.CapabilityReporter
 import com.dnrohr.eulerianmagnification.ui.AppTheme
 import java.util.concurrent.Executors
@@ -61,7 +62,9 @@ import kotlin.math.abs
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        CapabilityReporter(this).logSummary()
+        val capabilityReporter = CapabilityReporter(this)
+        capabilityReporter.logSummary()
+        CapabilityReportStore(this).writeLatestReport(capabilityReporter)
 
         setContent {
             AppTheme {
