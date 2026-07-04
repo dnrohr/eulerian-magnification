@@ -14,6 +14,18 @@ Goal: move color magnification from CPU analysis toward texture processing.
 - [ ] Benchmark against CPU MVP.
 - [ ] Commit and push to `main`.
 
+## Completed Slice: CPU/GL Benchmark Readout Foundation
+
+- Added a `PerformanceBenchmark` model that compares CPU analysis FPS/latency with GL render FPS/frame time.
+- GL preview overlay now shows a benchmark summary with the 30 fps target status and CPU/GL FPS delta.
+- Added unit tests for benchmark mapping, target detection, and summary formatting.
+
+The actual CPU MVP comparison still needs a Pixel 8a runtime pass, so the benchmark checklist item remains open until measured values are recorded.
+
+## Verification
+
+- `.\gradlew.bat clean testDebugUnitTest assembleDebug`
+
 ## Completed Slice: GL Raw/Amplified Split View
 
 - Added a `Split` view mode alongside Raw, Amplified, and Difference.

@@ -67,6 +67,7 @@ import com.dnrohr.eulerianmagnification.capabilities.CapabilityReporter
 import com.dnrohr.eulerianmagnification.gl.CameraOesRenderer
 import com.dnrohr.eulerianmagnification.gl.ColorMagnificationParameters
 import com.dnrohr.eulerianmagnification.gl.GlFrameStats
+import com.dnrohr.eulerianmagnification.profiling.PerformanceBenchmark
 import com.dnrohr.eulerianmagnification.quality.ArtifactSuppressor
 import com.dnrohr.eulerianmagnification.quality.LightingFlickerDetector
 import com.dnrohr.eulerianmagnification.quality.QualityEvaluator
@@ -590,6 +591,10 @@ private fun StatusOverlay(
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = "GL: ${"%.1f".format(glFrameStats.averageFps)} fps / ${"%.2f".format(glFrameStats.averageFrameMillis)} ms",
+                color = Color.White,
+            )
+            Text(
+                text = PerformanceBenchmark.from(sample, glFrameStats).summary(),
                 color = Color.White,
             )
         }
