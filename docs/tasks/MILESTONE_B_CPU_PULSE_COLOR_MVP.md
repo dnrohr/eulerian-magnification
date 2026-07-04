@@ -8,11 +8,11 @@ Goal: prove real-time color magnification using CameraX `ImageAnalysis` and a fa
 - [x] Run face detection every 5-15 frames.
 - [x] Choose forehead/cheek ROI and stabilize the box.
 - [x] Extract average green/chrominance signal from YUV ROI.
-- [ ] Add temporal bandpass filters for pulse and breathing bands.
-- [ ] Add amplified ROI preview, difference view, debug waveform, and FPS/latency overlay.
-- [ ] Add unit tests for temporal filters, timestamp monotonicity, and ROI smoothing.
+- [x] Add temporal bandpass filters for pulse and breathing bands.
+- [x] Add amplified ROI preview, difference view, debug waveform, and FPS/latency overlay.
+- [x] Add unit tests for temporal filters, timestamp monotonicity, and ROI smoothing.
 - [x] Document algorithm choices and limits.
-- [ ] Commit and push to `main`.
+- [x] Commit and push to `main`.
 
 ## Completed Slice: CPU ROI Signal Probe
 
@@ -30,6 +30,18 @@ Goal: prove real-time color magnification using CameraX `ImageAnalysis` and a fa
 - Added a bandpassed-signal waveform overlay.
 - Added a debug ROI tint driven by the bandpassed signal.
 - Routed analyzer callbacks back to the main executor before mutating Compose state.
+
+## Verification
+
+- `.\gradlew.bat clean testDebugUnitTest assembleDebug`
+
+## Completed Slice: Mode Controls And Timing Tests
+
+- Added Pulse and Breathing presets with separate frequency bands.
+- Added Raw, Amplified, and Difference display modes.
+- Added amplification slider.
+- Added latency and timestamp-monotonicity status to the overlay.
+- Added tests for preset bands, breathing-band response, and timestamp monotonicity.
 
 ## Verification
 

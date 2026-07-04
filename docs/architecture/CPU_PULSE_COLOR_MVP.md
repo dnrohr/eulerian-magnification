@@ -10,7 +10,9 @@ For each frame, the analyzer samples a 16x16 grid inside the ROI, converts YUV v
 
 The face box is smoothed before ROI extraction. Small detector movement is interpolated to reduce flicker; large jumps reset the smoother so a new face position can be adopted quickly.
 
-The preview now includes a debug tint over the ROI, driven by the bandpassed signal, plus a compact waveform history. This is a visualization overlay, not true per-pixel color EVM yet.
+The preview now includes a debug tint over the ROI, driven by the bandpassed signal, plus a compact waveform history. Raw, amplified, and difference display modes are available. This is a visualization overlay, not true per-pixel color EVM yet.
+
+The analyzer can be rebound with either the pulse band, 0.7-3.0 Hz, or the breathing band, 0.1-0.6 Hz. The UI exposes these presets along with an amplification slider. Latency is estimated from the frame timestamp and shown next to analysis FPS. A timestamp tracker flags repeated or decreasing timestamps.
 
 ## Why This Shape
 
@@ -19,9 +21,9 @@ The preview now includes a debug tint over the ROI, driven by the bandpassed sig
 - A grid sample is enough for signal debugging while avoiding full ROI conversion cost.
 - The first filter is unit-tested separately from camera plumbing.
 - Compose state is updated on the main executor because frame analysis runs on a background executor.
+- Pulse and breathing presets are explicit because later modes need different temporal bands and user expectations.
 
 ## Next Work
 
-- Add raw/amplified/difference views.
 - Apply the bandpassed signal back onto the preview ROI.
-- Add timestamp monotonicity and ROI smoothing tests.
+- Add a true processed bitmap/texture output instead of an overlay tint.

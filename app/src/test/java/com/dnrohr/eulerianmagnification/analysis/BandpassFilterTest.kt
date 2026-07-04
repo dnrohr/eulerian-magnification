@@ -32,4 +32,23 @@ class BandpassFilterTest {
 
         assertTrue(pulseEnergy > driftEnergy * 1.8)
     }
+
+    @Test
+    fun breathingBandPassesSlowBreathingMoreThanPulse() {
+        val breathingFilter = BandpassFilter(lowCutHz = 0.1, highCutHz = 0.6)
+        val pulseFilter = BandpassFilter(lowCutHz = 0.1, highCutHz = 0.6)
+        var breathingEnergy = 0.0
+        var pulseEnergy = 0.0
+
+        for (frame in 0 until 900) {
+            val seconds = frame / 30.0
+            val timestamp = (seconds * 1_000_000_000L).toLong()
+            val breathing = 128.0 + 8.0 * sin(2.0 * PI * 0.25 * seconds)
+            val pulse = 128.0 + 8.0 * sin(2.0 * PI * 1.2 * seconds)
+            breathingEnergy += kotlin.math.abs(breathingFilter.update(breathing, timestamp))
+            pulseEnergy += kotlin.math.abs(pulseFilter.update(pulse, timestamp))
+        }
+
+        assertTrue(breathingEnergy > pulseEnergy * 1.5)
+    }
 }

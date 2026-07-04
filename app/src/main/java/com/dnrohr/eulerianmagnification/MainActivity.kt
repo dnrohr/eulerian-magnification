@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -37,6 +38,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -47,7 +49,10 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.dnrohr.eulerianmagnification.analysis.AnalysisSample
+import com.dnrohr.eulerianmagnification.analysis.AnalysisSettings
+import com.dnrohr.eulerianmagnification.analysis.MagnificationMode
 import com.dnrohr.eulerianmagnification.analysis.PulseRoiAnalyzer
+import com.dnrohr.eulerianmagnification.analysis.ViewMode
 import com.dnrohr.eulerianmagnification.capabilities.CapabilityReporter
 import com.dnrohr.eulerianmagnification.ui.AppTheme
 import java.util.concurrent.Executors
@@ -83,6 +88,7 @@ private fun MainScreen() {
         hasCameraPermission = granted
     }
     var analysisSample by remember { mutableStateOf(AnalysisSample()) }
+    var analysisSettings by remember { mutableStateOf(AnalysisSettings()) }
     val signalHistory = remember { mutableStateListOf<Double>() }
 
     LaunchedEffect(Unit) {
@@ -93,18 +99,22 @@ private fun MainScreen() {
 
     Box(modifier = Modifier.fillMaxSize()) {
         if (hasCameraPermission) {
-            CameraPreview(
-                modifier = Modifier.fillMaxSize(),
-                onSample = {
-                    analysisSample = it
-                    signalHistory.add(it.bandpassedGreen)
-                    if (signalHistory.size > SIGNAL_HISTORY_SIZE) {
-                        signalHistory.removeAt(0)
-                    }
-                },
-            )
+            key(analysisSettings.mode) {
+                CameraPreview(
+                    settings = analysisSettings,
+                    modifier = Modifier.fillMaxSize(),
+                    onSample = {
+                        analysisSample = it
+                        signalHistory.add(it.bandpassedGreen)
+                        if (signalHistory.size > SIGNAL_HISTORY_SIZE) {
+                            signalHistory.removeAt(0)
+                        }
+                    },
+                )
+            }
             AmplifiedTintOverlay(
                 sample = analysisSample,
+                settings = analysisSettings,
                 modifier = Modifier.fillMaxSize(),
             )
             RoiOverlay(
@@ -120,6 +130,8 @@ private fun MainScreen() {
         StatusOverlay(
             sample = analysisSample,
             signalHistory = signalHistory,
+            settings = analysisSettings,
+            onSettingsChanged = { analysisSettings = it },
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth(),
@@ -130,14 +142,18 @@ private fun MainScreen() {
 @Composable
 private fun AmplifiedTintOverlay(
     sample: AnalysisSample,
+    settings: AnalysisSettings,
     modifier: Modifier = Modifier,
 ) {
     val roi = sample.roi ?: return
-    val intensity = (abs(sample.bandpassedGreen) / 6.0).coerceIn(0.0, 1.0).toFloat()
+    if (settings.viewMode == ViewMode.Raw) return
+
+    val amplifiedSignal = sample.bandpassedGreen * settings.amplification
+    val intensity = (abs(amplifiedSignal) / 64.0).coerceIn(0.0, 1.0).toFloat()
     val tint = if (sample.bandpassedGreen >= 0.0) {
-        Color(0xFFFF6B6B).copy(alpha = 0.08f + intensity * 0.20f)
+        Color(0xFFFF6B6B).copy(alpha = overlayAlpha(settings.viewMode, intensity))
     } else {
-        Color(0xFF3A86FF).copy(alpha = 0.08f + intensity * 0.16f)
+        Color(0xFF3A86FF).copy(alpha = overlayAlpha(settings.viewMode, intensity))
     }
 
     Canvas(modifier = modifier) {
@@ -152,6 +168,14 @@ private fun AmplifiedTintOverlay(
                 height = roi.height * size.height,
             ),
         )
+    }
+}
+
+private fun overlayAlpha(viewMode: ViewMode, intensity: Float): Float {
+    return when (viewMode) {
+        ViewMode.Raw -> 0.0f
+        ViewMode.Amplified -> 0.08f + intensity * 0.28f
+        ViewMode.Difference -> 0.16f + intensity * 0.42f
     }
 }
 
@@ -179,6 +203,7 @@ private fun RoiOverlay(
 
 @Composable
 private fun CameraPreview(
+    settings: AnalysisSettings,
     modifier: Modifier = Modifier,
     onSample: (AnalysisSample) -> Unit,
 ) {
@@ -222,7 +247,7 @@ private fun CameraPreview(
                             .also {
                                 it.setAnalyzer(
                                     analysisExecutor,
-                                    PulseRoiAnalyzer { sample ->
+                                    PulseRoiAnalyzer(settings) { sample ->
                                         mainExecutor.execute { onSample(sample) }
                                     },
                                 )
@@ -272,6 +297,8 @@ private fun PermissionPane(onRequestPermission: () -> Unit) {
 private fun StatusOverlay(
     sample: AnalysisSample,
     signalHistory: List<Double>,
+    settings: AnalysisSettings,
+    onSettingsChanged: (AnalysisSettings) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -284,8 +311,11 @@ private fun StatusOverlay(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text("Mode: Pulse ROI probe", color = Color.White)
-            Text("Analysis: ${"%.1f".format(sample.analysisFps)} fps", color = Color.White)
+            Text("Mode: ${settings.mode.label}", color = Color.White)
+            Text(
+                "Analysis: ${"%.1f".format(sample.analysisFps)} fps / ${"%.0f".format(sample.latencyMillis)} ms",
+                color = Color.White,
+            )
         }
         Spacer(modifier = Modifier.height(4.dp))
         Row(
@@ -294,8 +324,16 @@ private fun StatusOverlay(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text("Green: ${"%.1f".format(sample.averageGreen)}", color = Color.White)
-            Text("Band: ${"%+.3f".format(sample.bandpassedGreen)}", color = Color.White)
+            Text(
+                "Band: ${"%+.3f".format(sample.bandpassedGreen)} / ${if (sample.timestampMonotonic) "Timing OK" else "Timing jump"}",
+                color = Color.White,
+            )
         }
+        Spacer(modifier = Modifier.height(8.dp))
+        ModeControls(
+            settings = settings,
+            onSettingsChanged = onSettingsChanged,
+        )
         Spacer(modifier = Modifier.height(8.dp))
         SignalWaveform(
             values = signalHistory,
@@ -304,6 +342,56 @@ private fun StatusOverlay(
                 .height(44.dp),
         )
     }
+}
+
+@Composable
+private fun ModeControls(
+    settings: AnalysisSettings,
+    onSettingsChanged: (AnalysisSettings) -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        MagnificationMode.entries.forEach { mode ->
+            Button(
+                onClick = { onSettingsChanged(settings.copy(mode = mode)) },
+                enabled = settings.mode != mode,
+                modifier = Modifier.weight(1.0f),
+            ) {
+                Text(mode.label)
+            }
+        }
+    }
+    Spacer(modifier = Modifier.height(8.dp))
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        ViewMode.entries.forEach { viewMode ->
+            Button(
+                onClick = { onSettingsChanged(settings.copy(viewMode = viewMode)) },
+                enabled = settings.viewMode != viewMode,
+                modifier = Modifier.weight(1.0f),
+            ) {
+                Text(viewMode.label)
+            }
+        }
+    }
+    Spacer(modifier = Modifier.height(8.dp))
+    Text(
+        text = "Amplification ${"%.1f".format(settings.amplification)}x",
+        color = Color.White,
+    )
+    Slider(
+        value = settings.amplification,
+        onValueChange = { onSettingsChanged(settings.copy(amplification = it)) },
+        valueRange = 1.0f..30.0f,
+    )
+    Text(
+        text = "Band ${"%.1f".format(settings.lowCutHz)}-${"%.1f".format(settings.highCutHz)} Hz",
+        color = Color.White,
+    )
 }
 
 @Composable

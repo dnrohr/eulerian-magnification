@@ -12,11 +12,16 @@ import java.nio.ByteBuffer
 import java.util.concurrent.atomic.AtomicBoolean
 
 class PulseRoiAnalyzer(
+    settings: AnalysisSettings,
     private val onSample: (AnalysisSample) -> Unit,
 ) : ImageAnalysis.Analyzer {
     private val fpsMeter = FpsMeter()
-    private val bandpassFilter = BandpassFilter(lowCutHz = 0.7, highCutHz = 3.0)
+    private val bandpassFilter = BandpassFilter(
+        lowCutHz = settings.lowCutHz,
+        highCutHz = settings.highCutHz,
+    )
     private val roiSmoother = RoiSmoother()
+    private val timestampTracker = TimestampTracker()
     private val detectorBusy = AtomicBoolean(false)
     private var latestFaceBounds: NormalizedRect? = null
     private var frameIndex = 0
@@ -32,6 +37,7 @@ class PulseRoiAnalyzer(
     @androidx.annotation.OptIn(ExperimentalGetImage::class)
     override fun analyze(imageProxy: ImageProxy) {
         val timestamp = imageProxy.imageInfo.timestamp
+        val timestampStatus = timestampTracker.record(timestamp)
         fpsMeter.recordFrame(timestamp)
         val roi = latestFaceBounds
             ?.toRect(imageProxy.width, imageProxy.height)
@@ -46,6 +52,8 @@ class PulseRoiAnalyzer(
                 roi = roi.toNormalized(imageProxy.width, imageProxy.height),
                 averageGreen = averageGreen,
                 bandpassedGreen = bandpassed,
+                latencyMillis = (System.nanoTime() - timestamp).coerceAtLeast(0L) / NANOS_PER_MILLISECOND,
+                timestampMonotonic = timestampStatus.isMonotonic,
                 frameTimestampNanos = timestamp,
             ),
         )
@@ -177,5 +185,6 @@ class PulseRoiAnalyzer(
     companion object {
         private const val DETECTION_INTERVAL_FRAMES = 10
         private const val SAMPLE_GRID = 16
+        private const val NANOS_PER_MILLISECOND = 1_000_000.0
     }
 }
