@@ -8,6 +8,8 @@ Recorded-video validation comes before phone testing. It gives the signal path r
 
 `RecordedVideoAnalysisRunner` consumes a sequence of `RgbFrame` inputs and returns a report with frame count, average FPS, average green, total bandpassed energy, max bandpassed magnitude, and timestamp monotonicity. This is the metric layer that synthetic fixtures, public samples, and future local phone recordings can share.
 
+`RecordedVideoValidator` ties the decode and report steps together for a local video file. It returns a concise summary string that includes the source name, selected mode/band, frame count, FPS, energy, peak bandpassed magnitude, and timing status.
+
 The JVM tests generate synthetic 30 fps RGB frame sequences with known green-channel changes:
 
 - pulse-band signal at 1.2 Hz
@@ -23,9 +25,16 @@ This proves the offline analysis fixture can detect the intended pulse-band ener
 
 The decoder preserves planned timestamps in nanoseconds before frames are passed to `RecordedVideoAnalysisRunner`. JVM tests cover the timestamp plan; full Android builds verify the media decoder code compiles. Real sample-video decoding still needs an on-device or instrumented Android runtime because JVM unit tests cannot execute Android media APIs.
 
+## Validation Flow
+
+1. Place a public sample in `sample-videos/`.
+2. Decode a bounded frame set with `RecordedVideoFrameDecoder`.
+3. Run `RecordedVideoValidator` with the intended `AnalysisSettings`.
+4. Record the summary metrics in notes or a future benchmark artifact.
+
 ## Next Sample Step
 
-Download one public clip into `sample-videos/`, decode a short bounded frame sequence, and compare the recorded-video report against expected pulse or EVM behavior. Keep the media file local and uncommitted.
+Download one public clip into `sample-videos/`, decode a short bounded frame sequence, and compare the recorded-video report against expected pulse or EVM behavior. Keep the media file local and uncommitted. A thin UI or instrumentation entry point is still needed to run Android media decoding without manual code changes.
 
 ## Public Sample Plan
 
