@@ -2,7 +2,9 @@ package com.dnrohr.eulerianmagnification
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import android.os.PowerManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -55,7 +57,9 @@ import com.dnrohr.eulerianmagnification.analysis.PulseRoiAnalyzer
 import com.dnrohr.eulerianmagnification.analysis.ViewMode
 import com.dnrohr.eulerianmagnification.capabilities.CapabilityReportStore
 import com.dnrohr.eulerianmagnification.capabilities.CapabilityReporter
+import com.dnrohr.eulerianmagnification.recording.ProcessedRecordingSession
 import com.dnrohr.eulerianmagnification.ui.AppTheme
+import java.io.File
 import java.util.concurrent.Executors
 import kotlin.math.abs
 
@@ -92,6 +96,8 @@ private fun MainScreen() {
     }
     var analysisSample by remember { mutableStateOf(AnalysisSample()) }
     var analysisSettings by remember { mutableStateOf(AnalysisSettings()) }
+    var recordingSession by remember { mutableStateOf<ProcessedRecordingSession?>(null) }
+    var lastRecordingPath by remember { mutableStateOf<String?>(null) }
     val signalHistory = remember { mutableStateListOf<Double>() }
 
     LaunchedEffect(Unit) {
@@ -108,6 +114,7 @@ private fun MainScreen() {
                     modifier = Modifier.fillMaxSize(),
                     onSample = {
                         analysisSample = it
+                        recordingSession?.record(it)
                         signalHistory.add(it.bandpassedGreen)
                         if (signalHistory.size > SIGNAL_HISTORY_SIZE) {
                             signalHistory.removeAt(0)
@@ -135,10 +142,50 @@ private fun MainScreen() {
             signalHistory = signalHistory,
             settings = analysisSettings,
             onSettingsChanged = { analysisSettings = it },
+            isRecording = recordingSession != null,
+            recordingElapsedMillis = recordingSession?.elapsedMillis ?: 0L,
+            lastRecordingPath = lastRecordingPath,
+            onToggleRecording = {
+                val activeSession = recordingSession
+                if (activeSession == null) {
+                    recordingSession = ProcessedRecordingSession(recordingsRoot(context))
+                    lastRecordingPath = null
+                } else {
+                    val output = activeSession.stop(
+                        settings = analysisSettings,
+                        thermalStatus = thermalStatus(context),
+                    )
+                    lastRecordingPath = output.absolutePath
+                    recordingSession = null
+                }
+            },
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth(),
         )
+    }
+}
+
+private fun recordingsRoot(context: android.content.Context): File {
+    val root = context.getExternalFilesDir(null) ?: context.filesDir
+    return File(root, "recordings")
+}
+
+private fun thermalStatus(context: android.content.Context): String {
+    val power = context.getSystemService(PowerManager::class.java)
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        when (power.currentThermalStatus) {
+            PowerManager.THERMAL_STATUS_NONE -> "none"
+            PowerManager.THERMAL_STATUS_LIGHT -> "light"
+            PowerManager.THERMAL_STATUS_MODERATE -> "moderate"
+            PowerManager.THERMAL_STATUS_SEVERE -> "severe"
+            PowerManager.THERMAL_STATUS_CRITICAL -> "critical"
+            PowerManager.THERMAL_STATUS_EMERGENCY -> "emergency"
+            PowerManager.THERMAL_STATUS_SHUTDOWN -> "shutdown"
+            else -> "unknown"
+        }
+    } else {
+        "unavailable"
     }
 }
 
@@ -302,6 +349,10 @@ private fun StatusOverlay(
     signalHistory: List<Double>,
     settings: AnalysisSettings,
     onSettingsChanged: (AnalysisSettings) -> Unit,
+    isRecording: Boolean,
+    recordingElapsedMillis: Long,
+    lastRecordingPath: String?,
+    onToggleRecording: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -338,6 +389,13 @@ private fun StatusOverlay(
             onSettingsChanged = onSettingsChanged,
         )
         Spacer(modifier = Modifier.height(8.dp))
+        RecordingControls(
+            isRecording = isRecording,
+            elapsedMillis = recordingElapsedMillis,
+            lastRecordingPath = lastRecordingPath,
+            onToggleRecording = onToggleRecording,
+        )
+        Spacer(modifier = Modifier.height(8.dp))
         SignalWaveform(
             values = signalHistory,
             modifier = Modifier
@@ -345,6 +403,46 @@ private fun StatusOverlay(
                 .height(44.dp),
         )
     }
+}
+
+@Composable
+private fun RecordingControls(
+    isRecording: Boolean,
+    elapsedMillis: Long,
+    lastRecordingPath: String?,
+    onToggleRecording: () -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Button(onClick = onToggleRecording) {
+            Text(if (isRecording) "Stop Recording" else "Start Recording")
+        }
+        Text(
+            text = if (isRecording) {
+                "REC ${formatElapsed(elapsedMillis)}"
+            } else {
+                "Recorder idle"
+            },
+            color = if (isRecording) Color(0xFFFF6B6B) else Color.White,
+        )
+    }
+    if (!lastRecordingPath.isNullOrBlank()) {
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = "Metadata saved: $lastRecordingPath",
+            color = Color.White,
+        )
+    }
+}
+
+private fun formatElapsed(elapsedMillis: Long): String {
+    val totalSeconds = elapsedMillis / 1000L
+    val minutes = totalSeconds / 60L
+    val seconds = totalSeconds % 60L
+    return "%02d:%02d".format(minutes, seconds)
 }
 
 @Composable

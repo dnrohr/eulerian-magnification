@@ -4,15 +4,27 @@ Goal: record processed output, not the raw camera feed.
 
 ## Tasks
 
-- [ ] Add start/stop recording controls.
+- [x] Add start/stop recording controls.
 - [ ] Encode composited processed frames with monotonic timestamps.
 - [ ] Save MP4 to app-specific media storage.
-- [ ] Save sidecar metadata JSON with FPS, resolution, algorithm settings, ROI, dropped frames, and thermal state.
-- [ ] Add recording indicator and elapsed time.
+- [x] Save sidecar metadata JSON with FPS, resolution, algorithm settings, ROI, dropped frames, and thermal state.
+- [x] Add recording indicator and elapsed time.
 - [ ] Add export/share affordance.
 - [ ] Add encoder output validity checks.
-- [ ] Document recording architecture.
+- [x] Document recording architecture.
 - [ ] Commit and push to `main`.
+
+## Completed Slice: Metadata Recording Prototype
+
+- Added start/stop recording controls to the overlay.
+- Added elapsed recording indicator.
+- Added app-specific metadata JSON output under `recordings/processed-*/metadata.json`.
+- Captures mode, band, amplification, thermal state, sample count, dropped-frame estimate, ROI, FPS, latency, average green, and bandpassed signal.
+- Added unit tests for metadata writing and dropped-frame estimate.
+
+## Verification
+
+- `.\gradlew.bat clean testDebugUnitTest assembleDebug`
 
 ## Success Criteria
 
