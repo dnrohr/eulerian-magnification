@@ -10,6 +10,8 @@ For each frame, the analyzer samples a 16x16 grid inside the ROI, converts YUV v
 
 The face box is smoothed before ROI extraction. Small detector movement is interpolated to reduce flicker; large jumps reset the smoother so a new face position can be adopted quickly.
 
+This smoothing is intentionally limited to the detector box. The app does not yet track facial landmarks or optical flow between detections; it reuses the latest smoothed face bounds until the next sparse detector result arrives.
+
 The preview now includes a debug tint over the ROI, driven by the bandpassed signal, plus a compact waveform history. Raw, amplified, and difference display modes are available. This is a visualization overlay, not true per-pixel color EVM yet.
 
 The analyzer can be rebound with either the pulse band, 0.7-3.0 Hz, or the breathing band, 0.1-0.6 Hz. The UI exposes these presets along with an amplification slider. Latency is estimated from the frame timestamp and shown next to analysis FPS. A timestamp tracker flags repeated or decreasing timestamps.

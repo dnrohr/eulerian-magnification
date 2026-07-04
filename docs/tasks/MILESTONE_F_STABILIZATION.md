@@ -4,7 +4,7 @@ Goal: reduce false amplification caused by camera motion, exposure shifts, and p
 
 ## Tasks
 
-- [ ] Smooth face ROI and reject sudden detector jumps.
+- [x] Smooth face ROI and reject sudden detector jumps.
 - [ ] Track ROI between detections.
 - [ ] Add simple global translation estimate.
 - [ ] Add AE/AWB lock attempts after convergence.
@@ -20,6 +20,16 @@ Goal: reduce false amplification caused by camera motion, exposure shifts, and p
 - Added live quality row to the overlay.
 - Added unit tests for stable, unstable, and weak-signal cases.
 - Documented the quality/status behavior in `docs/architecture/QUALITY_STATUS.md`.
+
+## Verification
+
+- `.\gradlew.bat clean testDebugUnitTest assembleDebug`
+
+## Completed Slice: Face ROI Smoothing
+
+- `RoiSmoother` smooths small detector movements and resets after large jumps.
+- `PulseRoiAnalyzer` applies the smoother to detected face bounds before deriving the skin ROI.
+- `RoiSmootherTest` covers small movement smoothing and large-jump reset behavior.
 
 ## Verification
 
