@@ -9,7 +9,7 @@ Goal: record processed output, not the raw camera feed.
 - [ ] Save MP4 to app-specific media storage.
 - [x] Save sidecar metadata JSON with FPS, resolution, algorithm settings, ROI, dropped frames, and thermal state.
 - [x] Add recording indicator and elapsed time.
-- [ ] Add export/share affordance.
+- [x] Add export/share affordance.
 - [ ] Add encoder output validity checks.
 - [x] Document recording architecture.
 - [ ] Commit and push to `main`.
@@ -21,6 +21,17 @@ Goal: record processed output, not the raw camera feed.
 - Added app-specific metadata JSON output under `recordings/processed-*/metadata.json`.
 - Captures mode, band, amplification, thermal state, sample count, dropped-frame estimate, ROI, FPS, latency, average green, and bandpassed signal.
 - Added unit tests for metadata writing and dropped-frame estimate.
+
+## Verification
+
+- `.\gradlew.bat clean testDebugUnitTest assembleDebug`
+
+## Completed Slice: Metadata Share And Encoder Gate Scaffold
+
+- Added a `FileProvider` for app-specific recording artifacts.
+- Added a share button for the latest recording metadata JSON.
+- Added an `EncodedOutputValidator` scaffold for future MP4 output checks.
+- Added unit tests for missing, empty, and non-empty `.mp4` output candidates.
 
 ## Verification
 

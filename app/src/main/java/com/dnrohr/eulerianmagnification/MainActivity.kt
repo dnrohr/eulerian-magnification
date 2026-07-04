@@ -1,6 +1,8 @@
 package com.dnrohr.eulerianmagnification
 
 import android.Manifest
+import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -49,6 +51,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.dnrohr.eulerianmagnification.analysis.AnalysisSample
 import com.dnrohr.eulerianmagnification.analysis.AnalysisSettings
@@ -159,6 +162,9 @@ private fun MainScreen() {
                     recordingSession = null
                 }
             },
+            onShareRecording = {
+                lastRecordingPath?.let { shareRecordingMetadata(context, File(it)) }
+            },
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth(),
@@ -166,12 +172,12 @@ private fun MainScreen() {
     }
 }
 
-private fun recordingsRoot(context: android.content.Context): File {
+private fun recordingsRoot(context: Context): File {
     val root = context.getExternalFilesDir(null) ?: context.filesDir
     return File(root, "recordings")
 }
 
-private fun thermalStatus(context: android.content.Context): String {
+private fun thermalStatus(context: Context): String {
     val power = context.getSystemService(PowerManager::class.java)
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
         when (power.currentThermalStatus) {
@@ -187,6 +193,21 @@ private fun thermalStatus(context: android.content.Context): String {
     } else {
         "unavailable"
     }
+}
+
+private fun shareRecordingMetadata(context: Context, metadataFile: File) {
+    if (!metadataFile.exists()) return
+    val uri = FileProvider.getUriForFile(
+        context,
+        "${context.packageName}.files",
+        metadataFile,
+    )
+    val intent = Intent(Intent.ACTION_SEND).apply {
+        type = "application/json"
+        putExtra(Intent.EXTRA_STREAM, uri)
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    }
+    context.startActivity(Intent.createChooser(intent, "Share recording metadata"))
 }
 
 @Composable
@@ -353,6 +374,7 @@ private fun StatusOverlay(
     recordingElapsedMillis: Long,
     lastRecordingPath: String?,
     onToggleRecording: () -> Unit,
+    onShareRecording: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -394,6 +416,7 @@ private fun StatusOverlay(
             elapsedMillis = recordingElapsedMillis,
             lastRecordingPath = lastRecordingPath,
             onToggleRecording = onToggleRecording,
+            onShareRecording = onShareRecording,
         )
         Spacer(modifier = Modifier.height(8.dp))
         SignalWaveform(
@@ -411,6 +434,7 @@ private fun RecordingControls(
     elapsedMillis: Long,
     lastRecordingPath: String?,
     onToggleRecording: () -> Unit,
+    onShareRecording: () -> Unit,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -430,6 +454,10 @@ private fun RecordingControls(
         )
     }
     if (!lastRecordingPath.isNullOrBlank()) {
+        Spacer(modifier = Modifier.height(4.dp))
+        Button(onClick = onShareRecording) {
+            Text("Share Metadata")
+        }
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = "Metadata saved: $lastRecordingPath",

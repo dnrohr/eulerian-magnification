@@ -14,7 +14,11 @@ The metadata captures:
 - dropped-frame estimate from non-monotonic timestamps
 - per-sample analysis FPS, latency, ROI, average green, and bandpassed green values
 
+The latest metadata JSON can be shared through an Android `FileProvider` using the overlay's share button after a recording stops.
+
 This does not encode an MP4 yet. It is the first recording contract for the processed-output pipeline and gives the encoder path a concrete metadata format to preserve.
+
+An `EncodedOutputValidator` now exists as the first local gate for future MP4 work. It currently verifies basic file presence, non-empty output, and `.mp4` naming. Once `MediaCodec` output exists, this should grow into container and track validation.
 
 ## Next Work
 
