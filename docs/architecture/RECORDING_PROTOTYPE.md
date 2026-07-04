@@ -18,7 +18,7 @@ The latest metadata JSON can be shared through an Android `FileProvider` using t
 
 This does not encode an MP4 yet. It is the first recording contract for the processed-output pipeline and gives the encoder path a concrete metadata format to preserve.
 
-An `EncodedOutputValidator` now exists as the first local gate for future MP4 work. It currently verifies basic file presence, non-empty output, and `.mp4` naming. Once `MediaCodec` output exists, this should grow into container and track validation.
+An `EncodedOutputValidator` now exists as the first local gate for future MP4 work. It verifies file presence, non-empty output, `.mp4` naming, and top-level `ftyp`, `moov`, and `mdat` atoms. Once `MediaCodec` output exists, this should grow into track-level validation.
 
 ## Next Work
 
