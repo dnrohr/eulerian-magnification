@@ -14,7 +14,7 @@ This smoothing is intentionally limited to the detector box. The app now adds li
 
 The preview now includes a debug tint over the ROI, driven by the bandpassed signal, plus a compact waveform history. Raw, amplified, and difference display modes are available. This is a visualization overlay, not true per-pixel color EVM yet.
 
-The analyzer can be rebound with either the pulse band, 0.7-3.0 Hz, or the breathing band, 0.1-0.6 Hz. The UI exposes these presets along with an amplification slider. Latency is estimated from the frame timestamp and shown next to analysis FPS. A timestamp tracker flags repeated or decreasing timestamps.
+The analyzer can be rebound with either the pulse band, 0.7-3.0 Hz, or the breathing band, 0.1-0.6 Hz. The UI exposes these presets along with an amplification slider. Recording metadata and the debug MP4 overlay preserve the selected mode and band, so early breathing-mode captures can be traced back to their filter settings. Latency is estimated from the frame timestamp and shown next to analysis FPS. A timestamp tracker flags repeated or decreasing timestamps.
 
 ## Why This Shape
 
