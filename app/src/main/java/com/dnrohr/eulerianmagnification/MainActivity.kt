@@ -33,6 +33,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -50,6 +51,7 @@ import com.dnrohr.eulerianmagnification.analysis.PulseRoiAnalyzer
 import com.dnrohr.eulerianmagnification.capabilities.CapabilityReporter
 import com.dnrohr.eulerianmagnification.ui.AppTheme
 import java.util.concurrent.Executors
+import kotlin.math.abs
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -81,6 +83,7 @@ private fun MainScreen() {
         hasCameraPermission = granted
     }
     var analysisSample by remember { mutableStateOf(AnalysisSample()) }
+    val signalHistory = remember { mutableStateListOf<Double>() }
 
     LaunchedEffect(Unit) {
         if (!hasCameraPermission) {
@@ -92,7 +95,17 @@ private fun MainScreen() {
         if (hasCameraPermission) {
             CameraPreview(
                 modifier = Modifier.fillMaxSize(),
-                onSample = { analysisSample = it },
+                onSample = {
+                    analysisSample = it
+                    signalHistory.add(it.bandpassedGreen)
+                    if (signalHistory.size > SIGNAL_HISTORY_SIZE) {
+                        signalHistory.removeAt(0)
+                    }
+                },
+            )
+            AmplifiedTintOverlay(
+                sample = analysisSample,
+                modifier = Modifier.fillMaxSize(),
             )
             RoiOverlay(
                 sample = analysisSample,
@@ -106,9 +119,38 @@ private fun MainScreen() {
 
         StatusOverlay(
             sample = analysisSample,
+            signalHistory = signalHistory,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth(),
+        )
+    }
+}
+
+@Composable
+private fun AmplifiedTintOverlay(
+    sample: AnalysisSample,
+    modifier: Modifier = Modifier,
+) {
+    val roi = sample.roi ?: return
+    val intensity = (abs(sample.bandpassedGreen) / 6.0).coerceIn(0.0, 1.0).toFloat()
+    val tint = if (sample.bandpassedGreen >= 0.0) {
+        Color(0xFFFF6B6B).copy(alpha = 0.08f + intensity * 0.20f)
+    } else {
+        Color(0xFF3A86FF).copy(alpha = 0.08f + intensity * 0.16f)
+    }
+
+    Canvas(modifier = modifier) {
+        drawRect(
+            color = tint,
+            topLeft = androidx.compose.ui.geometry.Offset(
+                x = roi.left * size.width,
+                y = roi.top * size.height,
+            ),
+            size = androidx.compose.ui.geometry.Size(
+                width = roi.width * size.width,
+                height = roi.height * size.height,
+            ),
         )
     }
 }
@@ -143,6 +185,7 @@ private fun CameraPreview(
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val analysisExecutor = remember { Executors.newSingleThreadExecutor() }
+    val mainExecutor = remember(context) { ContextCompat.getMainExecutor(context) }
 
     DisposableEffect(Unit) {
         onDispose {
@@ -177,7 +220,12 @@ private fun CameraPreview(
                             )
                             .build()
                             .also {
-                                it.setAnalyzer(analysisExecutor, PulseRoiAnalyzer(onSample))
+                                it.setAnalyzer(
+                                    analysisExecutor,
+                                    PulseRoiAnalyzer { sample ->
+                                        mainExecutor.execute { onSample(sample) }
+                                    },
+                                )
                             }
 
                         cameraProvider.unbindAll()
@@ -188,7 +236,7 @@ private fun CameraPreview(
                             analysis,
                         )
                     },
-                    ContextCompat.getMainExecutor(context),
+                    mainExecutor,
                 )
             }
         },
@@ -223,6 +271,7 @@ private fun PermissionPane(onRequestPermission: () -> Unit) {
 @Composable
 private fun StatusOverlay(
     sample: AnalysisSample,
+    signalHistory: List<Double>,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -247,5 +296,44 @@ private fun StatusOverlay(
             Text("Green: ${"%.1f".format(sample.averageGreen)}", color = Color.White)
             Text("Band: ${"%+.3f".format(sample.bandpassedGreen)}", color = Color.White)
         }
+        Spacer(modifier = Modifier.height(8.dp))
+        SignalWaveform(
+            values = signalHistory,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(44.dp),
+        )
     }
 }
+
+@Composable
+private fun SignalWaveform(
+    values: List<Double>,
+    modifier: Modifier = Modifier,
+) {
+    Canvas(modifier = modifier) {
+        if (values.size < 2) return@Canvas
+        val maxMagnitude = values.maxOf { abs(it) }.coerceAtLeast(0.001)
+        val centerY = size.height / 2.0f
+        val stepX = size.width / (values.size - 1).coerceAtLeast(1)
+
+        for (index in 1 until values.size) {
+            val previous = values[index - 1]
+            val current = values[index]
+            drawLine(
+                color = Color(0xFFFFC857),
+                start = androidx.compose.ui.geometry.Offset(
+                    x = (index - 1) * stepX,
+                    y = centerY - (previous / maxMagnitude).toFloat() * centerY,
+                ),
+                end = androidx.compose.ui.geometry.Offset(
+                    x = index * stepX,
+                    y = centerY - (current / maxMagnitude).toFloat() * centerY,
+                ),
+                strokeWidth = 2.dp.toPx(),
+            )
+        }
+    }
+}
+
+private const val SIGNAL_HISTORY_SIZE = 120

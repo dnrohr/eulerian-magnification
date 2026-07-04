@@ -6,7 +6,7 @@ Goal: prove real-time color magnification using CameraX `ImageAnalysis` and a fa
 
 - [x] Add CameraX `ImageAnalysis` stream at 480x360 or 640x480.
 - [x] Run face detection every 5-15 frames.
-- [ ] Choose forehead/cheek ROI and stabilize the box.
+- [x] Choose forehead/cheek ROI and stabilize the box.
 - [x] Extract average green/chrominance signal from YUV ROI.
 - [ ] Add temporal bandpass filters for pulse and breathing bands.
 - [ ] Add amplified ROI preview, difference view, debug waveform, and FPS/latency overlay.
@@ -23,10 +23,17 @@ Goal: prove real-time color magnification using CameraX `ImageAnalysis` and a fa
 - Added live ROI rectangle plus analysis FPS, average green, and bandpassed value overlay.
 - Added unit tests for FPS and bandpass filter behavior.
 
+## Completed Slice: ROI Smoothing And Signal Visualization
+
+- Added ROI smoothing with large-jump reset behavior.
+- Added unit tests for ROI smoothing.
+- Added a bandpassed-signal waveform overlay.
+- Added a debug ROI tint driven by the bandpassed signal.
+- Routed analyzer callbacks back to the main executor before mutating Compose state.
+
 ## Verification
 
-- `.\gradlew.bat testDebugUnitTest`
-- `.\gradlew.bat assembleDebug`
+- `.\gradlew.bat clean testDebugUnitTest assembleDebug`
 
 ## Success Criteria
 

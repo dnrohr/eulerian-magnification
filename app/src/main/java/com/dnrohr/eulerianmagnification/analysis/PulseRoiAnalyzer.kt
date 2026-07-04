@@ -16,8 +16,9 @@ class PulseRoiAnalyzer(
 ) : ImageAnalysis.Analyzer {
     private val fpsMeter = FpsMeter()
     private val bandpassFilter = BandpassFilter(lowCutHz = 0.7, highCutHz = 3.0)
+    private val roiSmoother = RoiSmoother()
     private val detectorBusy = AtomicBoolean(false)
-    private var latestFaceRoi: Rect? = null
+    private var latestFaceBounds: NormalizedRect? = null
     private var frameIndex = 0
 
     private val detector = FaceDetection.getClient(
@@ -32,7 +33,9 @@ class PulseRoiAnalyzer(
     override fun analyze(imageProxy: ImageProxy) {
         val timestamp = imageProxy.imageInfo.timestamp
         fpsMeter.recordFrame(timestamp)
-        val roi = latestFaceRoi?.let { skinSubregion(it, imageProxy.width, imageProxy.height) }
+        val roi = latestFaceBounds
+            ?.toRect(imageProxy.width, imageProxy.height)
+            ?.let { skinSubregion(it, imageProxy.width, imageProxy.height) }
             ?: centeredRoi(imageProxy.width, imageProxy.height)
         val averageGreen = averageGreen(imageProxy, roi)
         val bandpassed = bandpassFilter.update(averageGreen, timestamp)
@@ -53,9 +56,11 @@ class PulseRoiAnalyzer(
             val input = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
             detector.process(input)
                 .addOnSuccessListener { faces ->
-                    latestFaceRoi = faces.maxByOrNull { it.boundingBox.width() * it.boundingBox.height() }
+                    latestFaceBounds = faces.maxByOrNull { it.boundingBox.width() * it.boundingBox.height() }
                         ?.boundingBox
                         ?.clamped(imageProxy.width, imageProxy.height)
+                        ?.toNormalized(imageProxy.width, imageProxy.height)
+                        ?.let(roiSmoother::update)
                 }
                 .addOnCompleteListener {
                     detectorBusy.set(false)
@@ -158,6 +163,15 @@ class PulseRoiAnalyzer(
             right = right / width.toFloat(),
             bottom = bottom / height.toFloat(),
         )
+    }
+
+    private fun NormalizedRect.toRect(width: Int, height: Int): Rect {
+        return Rect(
+            (left * width).toInt(),
+            (top * height).toInt(),
+            (right * width).toInt(),
+            (bottom * height).toInt(),
+        ).clamped(width, height)
     }
 
     companion object {
