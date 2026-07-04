@@ -18,14 +18,16 @@ Goal: implement simple linear Eulerian magnification with a Laplacian pyramid.
 - The analyzer reuses `AnalysisSettings`, `BandpassFilter`, `FpsMeter`, and `TimestampTracker` from the live path.
 - Added synthetic recorded-clip tests for fixed ROI green extraction, pulse-band energy, and non-monotonic timestamps.
 - Added `RecordedVideoAnalysisRunner` to aggregate recorded-frame reports with FPS, green-channel, bandpassed-energy, max-magnitude, and timestamp-monotonicity metrics.
+- Added `RecordedVideoFrameDecoder` to sample local Android-readable video files into timestamped `RgbFrame` inputs.
 - Documented the recorded-video validation workflow and public sample plan in `docs/testing/RECORDED_VIDEO_VALIDATION.md`.
 
-This is a recorded-frame analysis fixture only. Real MP4 decoding and full-frame EVM reconstruction tests are still pending, so the broader controlled-video checklist item remains open.
+This is recorded-frame analysis and decode plumbing only. Public sample execution and full-frame EVM reconstruction tests are still pending, so the broader controlled-video checklist item remains open.
 
 ## Verification
 
 - `.\gradlew.bat testDebugUnitTest --tests "com.dnrohr.eulerianmagnification.analysis.RecordedVideoAnalyzerTest"`
 - `.\gradlew.bat testDebugUnitTest --tests "com.dnrohr.eulerianmagnification.analysis.RecordedVideoAnalysisRunnerTest"`
+- `.\gradlew.bat testDebugUnitTest --tests "com.dnrohr.eulerianmagnification.analysis.RecordedVideoDecodePlanTest"`
 - `.\gradlew.bat clean testDebugUnitTest assembleDebug`
 
 ## Success Criteria

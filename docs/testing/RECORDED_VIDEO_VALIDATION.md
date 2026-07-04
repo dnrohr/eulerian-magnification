@@ -15,11 +15,17 @@ The JVM tests generate synthetic 30 fps RGB frame sequences with known green-cha
 - non-monotonic timestamp input
 - fixed-ROI average-green extraction
 
-This proves the offline analysis fixture can detect the intended pulse-band energy from recorded-frame-style input. It does not yet decode real MP4 files.
+This proves the offline analysis fixture can detect the intended pulse-band energy from recorded-frame-style input.
 
-## Next Decoder Step
+## Local MP4 Decoder
 
-Add a decoder that turns a local sample video into timestamped `RgbFrame` instances, then feed those frames into `RecordedVideoAnalysisRunner`. The decoder should preserve frame timestamps so monotonicity and FPS checks stay meaningful.
+`RecordedVideoFrameDecoder` uses Android `MediaMetadataRetriever` to sample a local video file into timestamped `RgbFrame` instances. `RecordedVideoDecodeOptions` controls target FPS and max frame count so long public samples can be bounded during early runs.
+
+The decoder preserves planned timestamps in nanoseconds before frames are passed to `RecordedVideoAnalysisRunner`. JVM tests cover the timestamp plan; full Android builds verify the media decoder code compiles. Real sample-video decoding still needs an on-device or instrumented Android runtime because JVM unit tests cannot execute Android media APIs.
+
+## Next Sample Step
+
+Download one public clip into `sample-videos/`, decode a short bounded frame sequence, and compare the recorded-video report against expected pulse or EVM behavior. Keep the media file local and uncommitted.
 
 ## Public Sample Plan
 
