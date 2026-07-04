@@ -60,6 +60,8 @@ import com.dnrohr.eulerianmagnification.analysis.PulseRoiAnalyzer
 import com.dnrohr.eulerianmagnification.analysis.ViewMode
 import com.dnrohr.eulerianmagnification.capabilities.CapabilityReportStore
 import com.dnrohr.eulerianmagnification.capabilities.CapabilityReporter
+import com.dnrohr.eulerianmagnification.quality.QualityEvaluator
+import com.dnrohr.eulerianmagnification.quality.QualityStatus
 import com.dnrohr.eulerianmagnification.recording.DebugProcessedMp4Recorder
 import com.dnrohr.eulerianmagnification.recording.ProcessedRecordingSession
 import com.dnrohr.eulerianmagnification.ui.AppTheme
@@ -102,6 +104,7 @@ private fun MainScreen() {
     var analysisSettings by remember { mutableStateOf(AnalysisSettings()) }
     var recordingSession by remember { mutableStateOf<ProcessedRecordingSession?>(null) }
     var lastRecordingPath by remember { mutableStateOf<String?>(null) }
+    val qualityEvaluator = remember { QualityEvaluator() }
     val signalHistory = remember { mutableStateListOf<Double>() }
 
     LaunchedEffect(Unit) {
@@ -149,6 +152,7 @@ private fun MainScreen() {
             isRecording = recordingSession != null,
             recordingElapsedMillis = recordingSession?.elapsedMillis ?: 0L,
             lastRecordingPath = lastRecordingPath,
+            qualityStatuses = qualityEvaluator.evaluate(analysisSample),
             onToggleRecording = {
                 val activeSession = recordingSession
                 if (activeSession == null) {
@@ -377,6 +381,7 @@ private fun StatusOverlay(
     isRecording: Boolean,
     recordingElapsedMillis: Long,
     lastRecordingPath: String?,
+    qualityStatuses: List<QualityStatus>,
     onToggleRecording: () -> Unit,
     onShareRecording: () -> Unit,
     modifier: Modifier = Modifier,
@@ -409,6 +414,8 @@ private fun StatusOverlay(
                 color = Color.White,
             )
         }
+        Spacer(modifier = Modifier.height(4.dp))
+        QualityStatusRow(qualityStatuses)
         Spacer(modifier = Modifier.height(8.dp))
         ModeControls(
             settings = settings,
@@ -430,6 +437,15 @@ private fun StatusOverlay(
                 .height(44.dp),
         )
     }
+}
+
+@Composable
+private fun QualityStatusRow(statuses: List<QualityStatus>) {
+    val isGood = statuses == listOf(QualityStatus.Good)
+    Text(
+        text = "Quality: ${statuses.joinToString { it.label }}",
+        color = if (isGood) Color(0xFF00BFA5) else Color(0xFFFFC857),
+    )
 }
 
 @Composable

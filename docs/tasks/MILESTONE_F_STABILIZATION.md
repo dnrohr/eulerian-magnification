@@ -10,9 +10,20 @@ Goal: reduce false amplification caused by camera motion, exposure shifts, and p
 - [ ] Add AE/AWB lock attempts after convergence.
 - [ ] Add lighting flicker and low-light warnings.
 - [ ] Add saturation/noise suppression and amplification caps.
-- [ ] Add quality/status overlay.
-- [ ] Document artifact controls.
+- [x] Add quality/status overlay.
+- [x] Document artifact controls.
 - [ ] Commit and push to `main`.
+
+## Completed Slice: Basic Quality Status Overlay
+
+- Added `QualityEvaluator` for missing ROI, low light, low FPS, timestamp instability, and weak signal.
+- Added live quality row to the overlay.
+- Added unit tests for stable, unstable, and weak-signal cases.
+- Documented the quality/status behavior in `docs/architecture/QUALITY_STATUS.md`.
+
+## Verification
+
+- `.\gradlew.bat clean testDebugUnitTest assembleDebug`
 
 ## Success Criteria
 
