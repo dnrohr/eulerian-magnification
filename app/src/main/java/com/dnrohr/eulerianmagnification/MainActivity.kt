@@ -60,6 +60,7 @@ import com.dnrohr.eulerianmagnification.analysis.PulseRoiAnalyzer
 import com.dnrohr.eulerianmagnification.analysis.ViewMode
 import com.dnrohr.eulerianmagnification.capabilities.CapabilityReportStore
 import com.dnrohr.eulerianmagnification.capabilities.CapabilityReporter
+import com.dnrohr.eulerianmagnification.recording.DebugProcessedMp4Recorder
 import com.dnrohr.eulerianmagnification.recording.ProcessedRecordingSession
 import com.dnrohr.eulerianmagnification.ui.AppTheme
 import java.io.File
@@ -117,7 +118,7 @@ private fun MainScreen() {
                     modifier = Modifier.fillMaxSize(),
                     onSample = {
                         analysisSample = it
-                        recordingSession?.record(it)
+                        recordingSession?.record(it, analysisSettings)
                         signalHistory.add(it.bandpassedGreen)
                         if (signalHistory.size > SIGNAL_HISTORY_SIZE) {
                             signalHistory.removeAt(0)
@@ -151,7 +152,10 @@ private fun MainScreen() {
             onToggleRecording = {
                 val activeSession = recordingSession
                 if (activeSession == null) {
-                    recordingSession = ProcessedRecordingSession(recordingsRoot(context))
+                    recordingSession = ProcessedRecordingSession(
+                        rootDirectory = recordingsRoot(context),
+                        videoRecorderFactory = { outputFile -> DebugProcessedMp4Recorder(outputFile) },
+                    )
                     lastRecordingPath = null
                 } else {
                     val output = activeSession.stop(

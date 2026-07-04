@@ -10,7 +10,10 @@ import java.util.Locale
 class ProcessedRecordingSession(
     private val rootDirectory: File,
     private val startedAtMillis: Long = System.currentTimeMillis(),
+    videoRecorderFactory: ((File) -> ProcessedVideoRecorder)? = null,
 ) {
+    private val sessionDirectory = File(rootDirectory, sessionName()).apply { mkdirs() }
+    private val videoRecorder = videoRecorderFactory?.invoke(File(sessionDirectory, "debug_processed.mp4"))
     private val samples = mutableListOf<RecordingSample>()
     private var lastTimestampNanos: Long? = null
     var droppedFrameEstimate: Int = 0
@@ -28,12 +31,19 @@ class ProcessedRecordingSession(
         samples += RecordingSample.from(sample)
     }
 
+    fun record(
+        sample: AnalysisSample,
+        settings: AnalysisSettings,
+    ) {
+        record(sample)
+        videoRecorder?.record(sample, settings)
+    }
+
     fun stop(
         settings: AnalysisSettings,
         thermalStatus: String,
     ): File {
-        val sessionDirectory = File(rootDirectory, sessionName())
-        sessionDirectory.mkdirs()
+        videoRecorder?.stop()
         val output = File(sessionDirectory, "metadata.json")
         output.writeText(toJson(settings, thermalStatus))
         return output
@@ -60,6 +70,7 @@ class ProcessedRecordingSession(
             appendLine("  \"amplification\": ${settings.amplification},")
             appendLine("  \"lowCutHz\": ${settings.lowCutHz},")
             appendLine("  \"highCutHz\": ${settings.highCutHz},")
+            appendLine("  \"debugVideoPath\": ${videoRecorder?.outputFile?.absolutePath?.quoteJson() ?: "null"},")
             appendLine("  \"sampleCount\": ${samples.size},")
             appendLine("  \"droppedFrameEstimate\": $droppedFrameEstimate,")
             appendLine("  \"samples\": [")
@@ -71,6 +82,10 @@ class ProcessedRecordingSession(
             appendLine("  ]")
             appendLine("}")
         }
+    }
+
+    private fun String.quoteJson(): String {
+        return "\"" + replace("\\", "\\\\").replace("\"", "\\\"") + "\""
     }
 }
 

@@ -6,7 +6,7 @@ Goal: record processed output, not the raw camera feed.
 
 - [x] Add start/stop recording controls.
 - [ ] Encode composited processed frames with monotonic timestamps.
-- [ ] Save MP4 to app-specific media storage.
+- [x] Save MP4 to app-specific media storage.
 - [x] Save sidecar metadata JSON with FPS, resolution, algorithm settings, ROI, dropped frames, and thermal state.
 - [x] Add recording indicator and elapsed time.
 - [x] Add export/share affordance.
@@ -21,6 +21,20 @@ Goal: record processed output, not the raw camera feed.
 - Added app-specific metadata JSON output under `recordings/processed-*/metadata.json`.
 - Captures mode, band, amplification, thermal state, sample count, dropped-frame estimate, ROI, FPS, latency, average green, and bandpassed signal.
 - Added unit tests for metadata writing and dropped-frame estimate.
+
+## Verification
+
+- `.\gradlew.bat clean testDebugUnitTest assembleDebug`
+
+## Completed Slice: Debug Processed MP4 Recorder
+
+- Added a `ProcessedVideoRecorder` interface and `DebugProcessedMp4Recorder` implementation.
+- Uses `MediaCodec` H.264 surface input and `MediaMuxer` to write `debug_processed.mp4` in each app-specific recording session folder.
+- Encodes the processed debug visualization: ROI tint, mode, band, amplification, FPS, latency, green value, and bandpassed signal.
+- Metadata now includes the debug video path.
+- Added unit coverage that recording sessions forward samples to the video recorder and stop it.
+
+This is not the final camera-preview MP4. It proves the app-owned MP4 encoder/muxer path and records processed state, while the final preview-matching recording still needs the Camera/GPU texture path.
 
 ## Verification
 

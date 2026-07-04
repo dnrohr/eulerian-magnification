@@ -4,8 +4,10 @@ import com.dnrohr.eulerianmagnification.analysis.AnalysisSample
 import com.dnrohr.eulerianmagnification.analysis.AnalysisSettings
 import com.dnrohr.eulerianmagnification.analysis.MagnificationMode
 import com.dnrohr.eulerianmagnification.analysis.NormalizedRect
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.io.File
 import java.nio.file.Files
 
 class ProcessedRecordingSessionTest {
@@ -46,5 +48,47 @@ class ProcessedRecordingSessionTest {
         session.record(AnalysisSample(frameTimestampNanos = 100L))
 
         assertTrue(session.droppedFrameEstimate == 1)
+    }
+
+    @Test
+    fun forwardsSamplesToVideoRecorderAndStopsIt() {
+        val directory = Files.createTempDirectory("recording-session").toFile()
+        val fakeRecorder = FakeVideoRecorder(File(directory, "debug_processed.mp4"))
+        val session = ProcessedRecordingSession(
+            rootDirectory = directory,
+            videoRecorderFactory = { fakeRecorder },
+        )
+
+        session.record(
+            sample = AnalysisSample(frameTimestampNanos = 300L),
+            settings = AnalysisSettings(),
+        )
+        session.stop(
+            settings = AnalysisSettings(),
+            thermalStatus = "none",
+        )
+
+        assertEquals(1, fakeRecorder.recordedSamples)
+        assertTrue(fakeRecorder.stopped)
+    }
+
+    private class FakeVideoRecorder(
+        override val outputFile: File,
+    ) : ProcessedVideoRecorder {
+        var recordedSamples = 0
+            private set
+        var stopped = false
+            private set
+
+        override fun record(
+            sample: AnalysisSample,
+            settings: AnalysisSettings,
+        ) {
+            recordedSamples++
+        }
+
+        override fun stop() {
+            stopped = true
+        }
     }
 }
