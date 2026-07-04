@@ -22,7 +22,7 @@ Use public samples before asking for a phone recording:
 - MIT Eulerian Video Magnification examples for qualitative EVM sanity checks: <https://people.csail.mit.edu/mrub/evm/>
 - UBFC-rPPG for face pulse clips with pulse-ox ground truth: <https://sites.google.com/view/ybenezeth/ubfcrppg>
 
-Do not commit sample videos to the repository. Keep downloaded videos in a local ignored folder such as `sample-videos/` or pass them through a future command-line decoder.
+Do not commit sample videos to the repository. Keep downloaded videos in the ignored `sample-videos/` folder or pass them through a future command-line decoder. See `docs/testing/SAMPLE_VIDEO_SOURCES.md`.
 
 ## Device Testing Gate
 

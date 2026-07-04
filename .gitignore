@@ -8,4 +8,5 @@ build/
 .cxx/
 .externalNativeBuild/
 captures/
+sample-videos/
 app/release/
