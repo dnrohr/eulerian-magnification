@@ -21,7 +21,9 @@ The renderer also allocates a three-level reduced-resolution pyramid using `GlPy
 
 `GlTemporalState` now allocates ping-pong render targets for each pyramid level. The renderer swaps the temporal state each frame, but the shader pass that updates lowpass/bandpass state is not wired yet.
 
-The color magnification pass is not wired into the camera GL renderer yet. The next GPU color slice should run this pass over the internal RGB texture and display the processed result.
+The color magnification pass is now wired into the camera GL renderer's display path. The renderer runs OES camera frames into an internal RGB texture, applies the ROI color magnification shader to a processed render target, then displays that processed texture.
+
+For now, CPU analysis still supplies the ROI and bandpassed signal uniforms. Encoder-surface rendering and true GPU temporal-filter updates are still pending.
 
 ## Verification
 

@@ -26,6 +26,18 @@ Goal: move color magnification from CPU analysis toward texture processing.
 
 - `.\gradlew.bat clean testDebugUnitTest assembleDebug`
 
+## Completed Slice: Color Pass Display Wiring
+
+- Camera GL renderer now runs the ROI color magnification shader over the internal RGB texture.
+- The processed texture is rendered to the display path in GL preview mode.
+- CPU analysis still supplies the ROI and bandpassed signal uniforms while temporal filtering is being moved toward GPU state.
+
+Encoder-surface rendering is still pending, so the combined display/encoder checklist item remains open.
+
+## Verification
+
+- `.\gradlew.bat clean testDebugUnitTest assembleDebug`
+
 ## Completed Slice: Temporal State Texture Foundation
 
 - Added ping-pong temporal state render targets for each pyramid level.

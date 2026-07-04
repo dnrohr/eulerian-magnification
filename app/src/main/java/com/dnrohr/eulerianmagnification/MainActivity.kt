@@ -65,6 +65,7 @@ import com.dnrohr.eulerianmagnification.analysis.ViewMode
 import com.dnrohr.eulerianmagnification.capabilities.CapabilityReportStore
 import com.dnrohr.eulerianmagnification.capabilities.CapabilityReporter
 import com.dnrohr.eulerianmagnification.gl.CameraOesRenderer
+import com.dnrohr.eulerianmagnification.gl.ColorMagnificationParameters
 import com.dnrohr.eulerianmagnification.gl.GlFrameStats
 import com.dnrohr.eulerianmagnification.quality.ArtifactSuppressor
 import com.dnrohr.eulerianmagnification.quality.LightingFlickerDetector
@@ -130,22 +131,24 @@ private fun MainScreen() {
     Box(modifier = Modifier.fillMaxSize()) {
         if (hasCameraPermission) {
             if (showGlDebug) {
-                CameraGlPreview(
-                    settings = analysisSettings,
-                    cameraControlsLocked = cameraControlsLocked,
-                    onStats = { glFrameStats = it },
-                    modifier = Modifier.fillMaxSize(),
-                    onSample = {
-                        analysisSample = it
-                        lightingFlickerLikely = lightingFlickerDetector.update(it.averageGreen)
-                        recordingSession?.record(it, analysisSettings)
-                        signalHistory.add(it.bandpassedGreen)
-                        if (signalHistory.size > SIGNAL_HISTORY_SIZE) {
-                            signalHistory.removeAt(0)
-                        }
-                    },
-                )
-            } else key(analysisSettings.mode, cameraControlsLocked) {
+                key(analysisSettings, cameraControlsLocked) {
+                    CameraGlPreview(
+                        settings = analysisSettings,
+                        cameraControlsLocked = cameraControlsLocked,
+                        onStats = { glFrameStats = it },
+                        modifier = Modifier.fillMaxSize(),
+                        onSample = {
+                            analysisSample = it
+                            lightingFlickerLikely = lightingFlickerDetector.update(it.averageGreen)
+                            recordingSession?.record(it, analysisSettings)
+                            signalHistory.add(it.bandpassedGreen)
+                            if (signalHistory.size > SIGNAL_HISTORY_SIZE) {
+                                signalHistory.removeAt(0)
+                            }
+                        },
+                    )
+                }
+            } else key(analysisSettings, cameraControlsLocked) {
                 CameraPreview(
                     settings = analysisSettings,
                     cameraControlsLocked = cameraControlsLocked,
@@ -233,6 +236,7 @@ private fun CameraGlPreview(
     val lifecycleOwner = LocalLifecycleOwner.current
     val analysisExecutor = remember { Executors.newSingleThreadExecutor() }
     val mainExecutor = remember(context) { ContextCompat.getMainExecutor(context) }
+    val colorParameters = remember { ColorMagnificationParameters() }
 
     DisposableEffect(Unit) {
         onDispose {
@@ -286,6 +290,7 @@ private fun CameraGlPreview(
                             it.setAnalyzer(
                                 analysisExecutor,
                                 PulseRoiAnalyzer(settings) { sample ->
+                                    renderer.setColorMagnificationUniforms(colorParameters.from(sample, settings))
                                     mainExecutor.execute { onSample(sample) }
                                 },
                             )

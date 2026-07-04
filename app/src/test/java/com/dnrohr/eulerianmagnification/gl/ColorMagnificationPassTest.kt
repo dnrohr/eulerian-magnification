@@ -49,4 +49,20 @@ class ColorMagnificationPassTest {
 
         assertTrue(uniforms.differenceMode)
     }
+
+    @Test
+    fun rawModeSuppressesAmplifiedSignal() {
+        val uniforms = ColorMagnificationParameters().from(
+            sample = AnalysisSample(
+                roi = NormalizedRect(0.1f, 0.2f, 0.3f, 0.4f),
+                bandpassedGreen = 0.5,
+            ),
+            settings = AnalysisSettings(
+                amplification = 8.0f,
+                viewMode = ViewMode.Raw,
+            ),
+        )
+
+        assertEquals(0.0f, uniforms.amplifiedSignal, 0.0f)
+    }
 }

@@ -3,6 +3,7 @@ package com.dnrohr.eulerianmagnification.gl
 import com.dnrohr.eulerianmagnification.analysis.AnalysisSample
 import com.dnrohr.eulerianmagnification.analysis.AnalysisSettings
 import com.dnrohr.eulerianmagnification.analysis.NormalizedRect
+import com.dnrohr.eulerianmagnification.analysis.ViewMode
 import com.dnrohr.eulerianmagnification.quality.ArtifactSuppressor
 
 object ColorMagnificationShaderSource {
@@ -57,12 +58,17 @@ class ColorMagnificationParameters(
         settings: AnalysisSettings,
     ): ColorMagnificationUniforms {
         val signal = artifactSuppressor.amplify(sample.bandpassedGreen, settings.amplification)
+        val amplifiedSignal = if (settings.viewMode == ViewMode.Raw) {
+            0.0
+        } else {
+            signal.value / ArtifactSuppressor.DEFAULT_MAX_AMPLIFIED_MAGNITUDE
+        }
         return ColorMagnificationUniforms(
             roi = sample.roi ?: NormalizedRect(0.0f, 0.0f, 0.0f, 0.0f),
-            amplifiedSignal = (signal.value / ArtifactSuppressor.DEFAULT_MAX_AMPLIFIED_MAGNITUDE)
+            amplifiedSignal = amplifiedSignal
                 .coerceIn(-1.0, 1.0)
                 .toFloat(),
-            differenceMode = settings.viewMode.name == "Difference",
+            differenceMode = settings.viewMode == ViewMode.Difference,
         )
     }
 }

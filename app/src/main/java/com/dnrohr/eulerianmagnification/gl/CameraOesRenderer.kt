@@ -27,13 +27,24 @@ class CameraOesRenderer(
     private var cameraSurface: Surface? = null
     private var oesProgram = 0
     private var rgbProgram = 0
+    private var colorProgram = 0
     private var oesTexTransformLocation = -1
     private var rgbInputTextureLocation = -1
+    private var colorInputTextureLocation = -1
+    private var colorRoiLocation = -1
+    private var colorSignalLocation = -1
+    private var colorDifferenceModeLocation = -1
     private var rgbRenderTarget: GlRenderTarget? = null
+    private var processedRenderTarget: GlRenderTarget? = null
     private var downsamplePyramid: GlPyramid? = null
     private var temporalState: GlTemporalState? = null
     private var surfaceSize = GlTextureSize(1, 1)
     private var hasNewFrame = false
+    @Volatile private var colorUniforms = ColorMagnificationUniforms(
+        roi = com.dnrohr.eulerianmagnification.analysis.NormalizedRect(0.0f, 0.0f, 0.0f, 0.0f),
+        amplifiedSignal = 0.0f,
+        differenceMode = false,
+    )
 
     fun setSurfaceRequest(
         request: SurfaceRequest,
@@ -47,11 +58,21 @@ class CameraOesRenderer(
         requestRender()
     }
 
+    fun setColorMagnificationUniforms(uniforms: ColorMagnificationUniforms) {
+        colorUniforms = uniforms
+        requestRender()
+    }
+
     override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
         oesProgram = GlProgram.compileProgram(OesShaderSource.VERTEX, OesShaderSource.FRAGMENT)
         rgbProgram = GlProgram.compileProgram(RgbTextureShaderSource.VERTEX, RgbTextureShaderSource.FRAGMENT)
+        colorProgram = GlProgram.compileProgram(ColorMagnificationShaderSource.VERTEX, ColorMagnificationShaderSource.FRAGMENT)
         oesTexTransformLocation = GLES30.glGetUniformLocation(oesProgram, "uTexTransform")
         rgbInputTextureLocation = GLES30.glGetUniformLocation(rgbProgram, "uInputTexture")
+        colorInputTextureLocation = GLES30.glGetUniformLocation(colorProgram, "uInputTexture")
+        colorRoiLocation = GLES30.glGetUniformLocation(colorProgram, "uRoi")
+        colorSignalLocation = GLES30.glGetUniformLocation(colorProgram, "uAmplifiedSignal")
+        colorDifferenceModeLocation = GLES30.glGetUniformLocation(colorProgram, "uDifferenceMode")
         oesTextureId = createOesTexture()
         surfaceTexture = SurfaceTexture(oesTextureId).apply {
             setOnFrameAvailableListener {
@@ -68,7 +89,9 @@ class CameraOesRenderer(
         rgbRenderTarget?.release()
         downsamplePyramid?.release()
         temporalState?.release()
+        processedRenderTarget?.release()
         rgbRenderTarget = GlRenderTarget(surfaceSize)
+        processedRenderTarget = GlRenderTarget(surfaceSize)
         downsamplePyramid = GlPyramid(
             baseSize = GlTextureSize(
                 width = (width / 2).coerceAtLeast(1),
@@ -92,7 +115,8 @@ class CameraOesRenderer(
         }
         renderCameraTextureToRgb()
         temporalState?.swap()
-        drawRgbTextureToScreen()
+        renderColorMagnification()
+        drawTextureToScreen(processedRenderTarget ?: rgbRenderTarget ?: return)
         providePendingSurfaceIfReady()
         onStats(timer.endFrame(System.nanoTime()))
     }
@@ -109,6 +133,8 @@ class CameraOesRenderer(
         surfaceTexture = null
         rgbRenderTarget?.release()
         rgbRenderTarget = null
+        processedRenderTarget?.release()
+        processedRenderTarget = null
         downsamplePyramid?.release()
         downsamplePyramid = null
         temporalState?.release()
@@ -160,6 +186,41 @@ class CameraOesRenderer(
 
     private fun drawRgbTextureToScreen() {
         val target = rgbRenderTarget ?: return
+        drawTextureToScreen(target)
+    }
+
+    private fun renderColorMagnification() {
+        val input = rgbRenderTarget ?: return
+        val output = processedRenderTarget ?: return
+        val uniforms = colorUniforms
+        output.bind()
+        GLES30.glUseProgram(colorProgram)
+        GLES30.glUniform1i(colorInputTextureLocation, 0)
+        GLES30.glUniform4f(
+            colorRoiLocation,
+            uniforms.roi.left,
+            uniforms.roi.top,
+            uniforms.roi.right,
+            uniforms.roi.bottom,
+        )
+        GLES30.glUniform1f(colorSignalLocation, uniforms.amplifiedSignal)
+        GLES30.glUniform1i(colorDifferenceModeLocation, if (uniforms.differenceMode) 1 else 0)
+        GLES30.glActiveTexture(GLES30.GL_TEXTURE0)
+        GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, input.textureId)
+        GLES30.glEnableVertexAttribArray(0)
+        GLES30.glEnableVertexAttribArray(1)
+        vertexBuffer.position(0)
+        GLES30.glVertexAttribPointer(0, 2, GLES30.GL_FLOAT, false, VERTEX_STRIDE_BYTES, vertexBuffer)
+        vertexBuffer.position(2)
+        GLES30.glVertexAttribPointer(1, 2, GLES30.GL_FLOAT, false, VERTEX_STRIDE_BYTES, vertexBuffer)
+        GLES30.glDrawArrays(GLES30.GL_TRIANGLE_STRIP, 0, 4)
+        GLES30.glDisableVertexAttribArray(0)
+        GLES30.glDisableVertexAttribArray(1)
+        GLES30.glBindFramebuffer(GLES30.GL_FRAMEBUFFER, 0)
+        GlProgram.checkNoGlError("renderColorMagnification")
+    }
+
+    private fun drawTextureToScreen(target: GlRenderTarget) {
         GLES30.glViewport(0, 0, surfaceSize.width, surfaceSize.height)
         GLES30.glUseProgram(rgbProgram)
         GLES30.glUniform1i(rgbInputTextureLocation, 0)
