@@ -6,7 +6,7 @@ Goal: implement simple linear Eulerian magnification with a Laplacian pyramid.
 
 - [x] Add full-frame downsampled pyramid.
 - [x] Add per-level temporal bandpass filters.
-- [ ] Amplify selected levels and reconstruct frame.
+- [x] Amplify selected levels and reconstruct frame.
 - [x] Add presets for pulse, breathing, tremor, and object vibration.
 - [x] Warn for invalid amplification, frequency, and camera-motion combinations.
 - [ ] Add controlled synthetic video tests.
@@ -54,6 +54,21 @@ This produces filtered pyramid levels only. Amplification and frame reconstructi
 ## Verification
 
 - `.\gradlew.bat testDebugUnitTest --tests "com.dnrohr.eulerianmagnification.analysis.RgbPyramidTemporalBandpassTest"`
+- `.\gradlew.bat clean testDebugUnitTest assembleDebug`
+
+## Completed Slice: CPU Reference Pyramid Reconstruction
+
+- Added `RgbPyramidReconstructor` to amplify filtered pyramid levels and add them back to the base RGB frame.
+- Coarser filtered levels are nearest-neighbor upsampled to base-frame coordinates.
+- Reconstruction clamps output channels to displayable 0-255 values.
+- Supports skipping fine levels with `startLevel`.
+- Added tests for no-op amplification, amplified output, coarse-level upsampling, channel clamping, and start-level selection.
+
+This is a CPU/reference reconstruction path. It is not yet connected to live preview, recording output, or GPU shaders.
+
+## Verification
+
+- `.\gradlew.bat testDebugUnitTest --tests "com.dnrohr.eulerianmagnification.analysis.RgbPyramidReconstructorTest"`
 - `.\gradlew.bat clean testDebugUnitTest assembleDebug`
 
 ## Completed Slice: General EVM Presets
