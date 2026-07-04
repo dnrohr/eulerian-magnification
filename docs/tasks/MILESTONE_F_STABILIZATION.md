@@ -12,7 +12,7 @@ Goal: reduce false amplification caused by camera motion, exposure shifts, and p
 - [x] Add saturation/noise suppression and amplification caps.
 - [x] Add quality/status overlay.
 - [x] Document artifact controls.
-- [ ] Commit and push to `main`.
+- [x] Commit and push to `main`.
 
 ## Completed Slice: Basic Quality Status Overlay
 
