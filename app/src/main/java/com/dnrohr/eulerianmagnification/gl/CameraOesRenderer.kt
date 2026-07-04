@@ -30,6 +30,7 @@ class CameraOesRenderer(
     private var oesTexTransformLocation = -1
     private var rgbInputTextureLocation = -1
     private var rgbRenderTarget: GlRenderTarget? = null
+    private var downsamplePyramid: GlPyramid? = null
     private var surfaceSize = GlTextureSize(1, 1)
     private var hasNewFrame = false
 
@@ -64,7 +65,15 @@ class CameraOesRenderer(
     override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
         surfaceSize = GlTextureSize(width, height)
         rgbRenderTarget?.release()
+        downsamplePyramid?.release()
         rgbRenderTarget = GlRenderTarget(surfaceSize)
+        downsamplePyramid = GlPyramid(
+            baseSize = GlTextureSize(
+                width = (width / 2).coerceAtLeast(1),
+                height = (height / 2).coerceAtLeast(1),
+            ),
+            levelCount = DOWNSAMPLE_LEVELS,
+        )
         GLES30.glViewport(0, 0, width, height)
     }
 
@@ -95,6 +104,8 @@ class CameraOesRenderer(
         surfaceTexture = null
         rgbRenderTarget?.release()
         rgbRenderTarget = null
+        downsamplePyramid?.release()
+        downsamplePyramid = null
     }
 
     private fun providePendingSurfaceIfReady() {
@@ -174,6 +185,7 @@ class CameraOesRenderer(
     companion object {
         private const val FLOAT_BYTES = 4
         private const val VERTEX_STRIDE_BYTES = 4 * FLOAT_BYTES
+        private const val DOWNSAMPLE_LEVELS = 3
         private val FULLSCREEN_QUAD = floatArrayOf(
             -1.0f, -1.0f, 0.0f, 1.0f,
             1.0f, -1.0f, 1.0f, 1.0f,

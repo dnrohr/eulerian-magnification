@@ -5,7 +5,7 @@ Goal: move color magnification from CPU analysis toward texture processing.
 ## Tasks
 
 - [x] Render camera OES texture to internal RGB texture.
-- [ ] Add downsample pyramid textures.
+- [x] Add downsample pyramid textures.
 - [ ] Add temporal filter state textures.
 - [x] Implement color amplification shader pass.
 - [x] Add ROI-limited processing when possible.
@@ -21,6 +21,18 @@ Goal: move color magnification from CPU analysis toward texture processing.
 - Added parameter mapping from `AnalysisSample` and `AnalysisSettings` to shader-style uniforms.
 - Reuses `ArtifactSuppressor` for low-signal suppression and amplification caps.
 - Added tests for shader source expectations and uniform mapping.
+
+## Verification
+
+- `.\gradlew.bat clean testDebugUnitTest assembleDebug`
+
+## Completed Slice: Downsample Pyramid Texture Foundation
+
+- Added `GlPyramid` for framebuffer-backed reduced-resolution texture levels.
+- Camera GL renderer now allocates a three-level downsample pyramid beside the internal RGB target.
+- Added tests for pyramid sizing, one-pixel clamping, and invalid level counts.
+
+This allocates pyramid textures only; the actual downsample shader pass is still pending.
 
 ## Verification
 
