@@ -35,6 +35,7 @@ class ColorMagnificationPassTest {
         assertEquals(0.1f, uniforms.roi.left, 0.0f)
         assertEquals(0.0625f, uniforms.amplifiedSignal, 0.0001f)
         assertFalse(uniforms.differenceMode)
+        assertFalse(uniforms.splitMode)
     }
 
     @Test
@@ -48,6 +49,20 @@ class ColorMagnificationPassTest {
         )
 
         assertTrue(uniforms.differenceMode)
+    }
+
+    @Test
+    fun mapsSplitModeFlag() {
+        val uniforms = ColorMagnificationParameters().from(
+            sample = AnalysisSample(
+                roi = NormalizedRect(0.1f, 0.2f, 0.3f, 0.4f),
+                bandpassedGreen = 0.5,
+            ),
+            settings = AnalysisSettings(viewMode = ViewMode.Split),
+        )
+
+        assertTrue(uniforms.splitMode)
+        assertFalse(uniforms.differenceMode)
     }
 
     @Test

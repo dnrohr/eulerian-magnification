@@ -23,9 +23,11 @@ The renderer also allocates a three-level reduced-resolution pyramid using `GlPy
 
 The color magnification pass is now wired into the camera GL renderer's display path. The renderer runs OES camera frames into an internal RGB texture, applies the ROI color magnification shader to a processed render target, then displays that processed texture.
 
+The `Split` view mode reuses those two render targets for visual comparison: raw RGB is drawn into the left half of the GL surface and the processed texture is drawn into the right half. The split is implemented with deterministic viewport layout logic so odd-width and tiny surfaces remain drawable.
+
 For now, CPU analysis still supplies the ROI and bandpassed signal uniforms. Encoder-surface rendering and true GPU temporal-filter updates are still pending.
 
 ## Verification
 
-- Unit tests verify ROI-limited shader source expectations, difference-mode source expectations, and uniform mapping from analysis/settings.
+- Unit tests verify ROI-limited shader source expectations, difference-mode source expectations, split-mode uniform mapping, viewport layout, and uniform mapping from analysis/settings.
 - Android build verifies the shader/pass Kotlin code compiles into the debug APK.

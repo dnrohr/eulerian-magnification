@@ -69,6 +69,7 @@ class ColorMagnificationParameters(
                 .coerceIn(-1.0, 1.0)
                 .toFloat(),
             differenceMode = settings.viewMode == ViewMode.Difference,
+            splitMode = settings.viewMode == ViewMode.Split,
         )
     }
 }
@@ -77,4 +78,5 @@ data class ColorMagnificationUniforms(
     val roi: NormalizedRect,
     val amplifiedSignal: Float,
     val differenceMode: Boolean,
+    val splitMode: Boolean,
 )

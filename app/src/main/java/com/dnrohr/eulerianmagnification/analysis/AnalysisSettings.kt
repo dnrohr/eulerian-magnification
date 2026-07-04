@@ -22,4 +22,5 @@ enum class ViewMode(val label: String) {
     Raw("Raw"),
     Amplified("Amplified"),
     Difference("Difference"),
+    Split("Split"),
 }

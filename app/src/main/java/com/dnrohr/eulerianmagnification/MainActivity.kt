@@ -388,6 +388,7 @@ private fun overlayAlpha(viewMode: ViewMode, intensity: Float): Float {
         ViewMode.Raw -> 0.0f
         ViewMode.Amplified -> 0.08f + intensity * 0.28f
         ViewMode.Difference -> 0.16f + intensity * 0.42f
+        ViewMode.Split -> 0.08f + intensity * 0.28f
     }
 }
 

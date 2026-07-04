@@ -10,9 +10,22 @@ Goal: move color magnification from CPU analysis toward texture processing.
 - [x] Implement color amplification shader pass.
 - [x] Add ROI-limited processing when possible.
 - [ ] Render processed output to display and encoder surfaces.
-- [ ] Add side-by-side raw/amplified view.
+- [x] Add side-by-side raw/amplified view.
 - [ ] Benchmark against CPU MVP.
 - [ ] Commit and push to `main`.
+
+## Completed Slice: GL Raw/Amplified Split View
+
+- Added a `Split` view mode alongside Raw, Amplified, and Difference.
+- GL preview split mode draws the raw RGB render target on the left and the processed color-magnified render target on the right.
+- Added a viewport layout helper for deterministic full-screen and horizontal split viewport sizing.
+- Added unit tests for split-mode uniform mapping and odd/tiny split viewport behavior.
+
+The split view is display-only. Encoder-surface rendering remains pending.
+
+## Verification
+
+- `.\gradlew.bat clean testDebugUnitTest assembleDebug`
 
 ## Completed Slice: ROI Color Amplification Shader
 

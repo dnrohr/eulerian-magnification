@@ -44,6 +44,7 @@ class CameraOesRenderer(
         roi = com.dnrohr.eulerianmagnification.analysis.NormalizedRect(0.0f, 0.0f, 0.0f, 0.0f),
         amplifiedSignal = 0.0f,
         differenceMode = false,
+        splitMode = false,
     )
 
     fun setSurfaceRequest(
@@ -116,7 +117,7 @@ class CameraOesRenderer(
         renderCameraTextureToRgb()
         temporalState?.swap()
         renderColorMagnification()
-        drawTextureToScreen(processedRenderTarget ?: rgbRenderTarget ?: return)
+        drawOutputToScreen()
         providePendingSurfaceIfReady()
         onStats(timer.endFrame(System.nanoTime()))
     }
@@ -184,11 +185,6 @@ class CameraOesRenderer(
         GlProgram.checkNoGlError("renderCameraTextureToRgb")
     }
 
-    private fun drawRgbTextureToScreen() {
-        val target = rgbRenderTarget ?: return
-        drawTextureToScreen(target)
-    }
-
     private fun renderColorMagnification() {
         val input = rgbRenderTarget ?: return
         val output = processedRenderTarget ?: return
@@ -220,8 +216,20 @@ class CameraOesRenderer(
         GlProgram.checkNoGlError("renderColorMagnification")
     }
 
-    private fun drawTextureToScreen(target: GlRenderTarget) {
-        GLES30.glViewport(0, 0, surfaceSize.width, surfaceSize.height)
+    private fun drawOutputToScreen() {
+        val rawTarget = rgbRenderTarget ?: return
+        val processedTarget = processedRenderTarget ?: rawTarget
+        if (colorUniforms.splitMode) {
+            val (left, right) = GlViewportLayout.splitHorizontal(surfaceSize)
+            drawTextureToScreen(rawTarget, left)
+            drawTextureToScreen(processedTarget, right)
+        } else {
+            drawTextureToScreen(processedTarget, GlViewportLayout.full(surfaceSize))
+        }
+    }
+
+    private fun drawTextureToScreen(target: GlRenderTarget, viewport: GlViewport) {
+        GLES30.glViewport(viewport.x, viewport.y, viewport.width, viewport.height)
         GLES30.glUseProgram(rgbProgram)
         GLES30.glUniform1i(rgbInputTextureLocation, 0)
         GLES30.glActiveTexture(GLES30.GL_TEXTURE0)
