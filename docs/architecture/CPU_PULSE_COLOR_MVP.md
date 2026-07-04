@@ -14,7 +14,7 @@ This smoothing is intentionally limited to the detector box. The app now adds li
 
 The preview now includes a debug tint over the ROI, driven by the bandpassed signal, plus a compact waveform history. Raw, amplified, and difference display modes are available. This is a visualization overlay, not true per-pixel color EVM yet.
 
-The analyzer can be rebound with either the pulse band, 0.7-3.0 Hz, or the breathing band, 0.1-0.6 Hz. The UI exposes these presets along with an amplification slider. Recording metadata and the debug MP4 overlay preserve the selected mode and band, so early breathing-mode captures can be traced back to their filter settings. Latency is estimated from the frame timestamp and shown next to analysis FPS. A timestamp tracker flags repeated or decreasing timestamps.
+The analyzer can be rebound with pulse, breathing, tremor, or object-vibration bands. Pulse uses 0.7-3.0 Hz, breathing uses 0.1-0.6 Hz, tremor uses 4.0-12.0 Hz, and object vibration uses 3.0-12.0 Hz. The UI exposes these presets along with an amplification slider. Recording metadata and the debug MP4 overlay preserve the selected mode and band, so early captures can be traced back to their filter settings. Latency is estimated from the frame timestamp and shown next to analysis FPS. A timestamp tracker flags repeated or decreasing timestamps.
 
 ## Why This Shape
 
@@ -23,7 +23,7 @@ The analyzer can be rebound with either the pulse band, 0.7-3.0 Hz, or the breat
 - A grid sample is enough for signal debugging while avoiding full ROI conversion cost.
 - The first filter is unit-tested separately from camera plumbing.
 - Compose state is updated on the main executor because frame analysis runs on a background executor.
-- Pulse and breathing presets are explicit because later modes need different temporal bands and user expectations.
+- Pulse, breathing, tremor, and object-vibration presets are explicit because each mode needs different temporal bands and user expectations.
 
 ## Next Work
 

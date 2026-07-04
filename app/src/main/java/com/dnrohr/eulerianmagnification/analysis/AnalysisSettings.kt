@@ -16,6 +16,8 @@ enum class MagnificationMode(
 ) {
     Pulse("Pulse", 0.7, 3.0),
     Breathing("Breathing", 0.1, 0.6),
+    Tremor("Tremor", 4.0, 12.0),
+    ObjectVibration("Object", 3.0, 12.0),
 }
 
 enum class ViewMode(val label: String) {

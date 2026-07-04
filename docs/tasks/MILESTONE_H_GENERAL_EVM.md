@@ -7,10 +7,25 @@ Goal: implement simple linear Eulerian magnification with a Laplacian pyramid.
 - [ ] Add full-frame downsampled pyramid.
 - [ ] Add per-level temporal bandpass filters.
 - [ ] Amplify selected levels and reconstruct frame.
-- [ ] Add presets for pulse, breathing, tremor, and object vibration.
+- [x] Add presets for pulse, breathing, tremor, and object vibration.
 - [ ] Warn for invalid amplification, frequency, and camera-motion combinations.
 - [ ] Add controlled synthetic video tests.
 - [ ] Commit and push to `main`.
+
+## Completed Slice: General EVM Presets
+
+- Added Tremor and Object Vibration modes alongside the existing Pulse and Breathing modes.
+- Tremor uses a 4.0-12.0 Hz band.
+- Object Vibration uses a 3.0-12.0 Hz band.
+- Mode controls, metadata recording, debug MP4 labels, and recorded-video analysis all read the shared `MagnificationMode` settings.
+- Added tests for preset band exposure and high-frequency bandpass behavior.
+
+Invalid-combination warnings for high-frequency modes remain pending.
+
+## Verification
+
+- `.\gradlew.bat testDebugUnitTest --tests "com.dnrohr.eulerianmagnification.analysis.AnalysisSettingsTest" --tests "com.dnrohr.eulerianmagnification.analysis.BandpassFilterTest"`
+- `.\gradlew.bat clean testDebugUnitTest assembleDebug`
 
 ## Completed Slice: Recorded-Frame Synthetic Analysis Fixture
 

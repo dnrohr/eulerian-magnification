@@ -19,4 +19,20 @@ class AnalysisSettingsTest {
         assertEquals(0.1, settings.lowCutHz, 0.0)
         assertEquals(0.6, settings.highCutHz, 0.0)
     }
+
+    @Test
+    fun exposesTremorBand() {
+        val settings = AnalysisSettings(mode = MagnificationMode.Tremor)
+
+        assertEquals(4.0, settings.lowCutHz, 0.0)
+        assertEquals(12.0, settings.highCutHz, 0.0)
+    }
+
+    @Test
+    fun exposesObjectVibrationBand() {
+        val settings = AnalysisSettings(mode = MagnificationMode.ObjectVibration)
+
+        assertEquals(3.0, settings.lowCutHz, 0.0)
+        assertEquals(12.0, settings.highCutHz, 0.0)
+    }
 }
