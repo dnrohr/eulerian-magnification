@@ -29,6 +29,7 @@ The actual CPU MVP comparison still needs a Pixel 8a runtime pass, so the benchm
 ## Supporting Slice: Recorded-Frame Analysis Fixture
 
 - Added a synthetic recorded-frame analyzer and tests under the analysis package.
+- Added a report runner for repeatable recorded-frame FPS and signal-energy metrics.
 - This gives CPU/GPU benchmark work a repeatable pre-device input path before phone testing.
 - See `docs/testing/RECORDED_VIDEO_VALIDATION.md` for the sample-video workflow.
 

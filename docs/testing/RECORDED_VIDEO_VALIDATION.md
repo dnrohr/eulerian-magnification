@@ -6,6 +6,8 @@ Recorded-video validation comes before phone testing. It gives the signal path r
 
 `RecordedVideoAnalyzer` accepts timestamped RGB frames and a fixed normalized ROI. It uses the same analysis settings, bandpass filter, FPS meter, and timestamp tracker as the live analysis path.
 
+`RecordedVideoAnalysisRunner` consumes a sequence of `RgbFrame` inputs and returns a report with frame count, average FPS, average green, total bandpassed energy, max bandpassed magnitude, and timestamp monotonicity. This is the metric layer that synthetic fixtures, public samples, and future local phone recordings can share.
+
 The JVM tests generate synthetic 30 fps RGB frame sequences with known green-channel changes:
 
 - pulse-band signal at 1.2 Hz
@@ -14,6 +16,10 @@ The JVM tests generate synthetic 30 fps RGB frame sequences with known green-cha
 - fixed-ROI average-green extraction
 
 This proves the offline analysis fixture can detect the intended pulse-band energy from recorded-frame-style input. It does not yet decode real MP4 files.
+
+## Next Decoder Step
+
+Add a decoder that turns a local sample video into timestamped `RgbFrame` instances, then feed those frames into `RecordedVideoAnalysisRunner`. The decoder should preserve frame timestamps so monotonicity and FPS checks stay meaningful.
 
 ## Public Sample Plan
 
