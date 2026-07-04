@@ -25,8 +25,12 @@ class CameraOesRenderer(
     private var oesTextureId = 0
     private var surfaceTexture: SurfaceTexture? = null
     private var cameraSurface: Surface? = null
-    private var program = 0
-    private var texTransformLocation = -1
+    private var oesProgram = 0
+    private var rgbProgram = 0
+    private var oesTexTransformLocation = -1
+    private var rgbInputTextureLocation = -1
+    private var rgbRenderTarget: GlRenderTarget? = null
+    private var surfaceSize = GlTextureSize(1, 1)
     private var hasNewFrame = false
 
     fun setSurfaceRequest(
@@ -42,8 +46,10 @@ class CameraOesRenderer(
     }
 
     override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
-        program = GlProgram.compileProgram(OesShaderSource.VERTEX, OesShaderSource.FRAGMENT)
-        texTransformLocation = GLES30.glGetUniformLocation(program, "uTexTransform")
+        oesProgram = GlProgram.compileProgram(OesShaderSource.VERTEX, OesShaderSource.FRAGMENT)
+        rgbProgram = GlProgram.compileProgram(RgbTextureShaderSource.VERTEX, RgbTextureShaderSource.FRAGMENT)
+        oesTexTransformLocation = GLES30.glGetUniformLocation(oesProgram, "uTexTransform")
+        rgbInputTextureLocation = GLES30.glGetUniformLocation(rgbProgram, "uInputTexture")
         oesTextureId = createOesTexture()
         surfaceTexture = SurfaceTexture(oesTextureId).apply {
             setOnFrameAvailableListener {
@@ -56,6 +62,9 @@ class CameraOesRenderer(
     }
 
     override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
+        surfaceSize = GlTextureSize(width, height)
+        rgbRenderTarget?.release()
+        rgbRenderTarget = GlRenderTarget(surfaceSize)
         GLES30.glViewport(0, 0, width, height)
     }
 
@@ -68,7 +77,8 @@ class CameraOesRenderer(
             texture.getTransformMatrix(transformMatrix)
             hasNewFrame = false
         }
-        drawCameraTexture()
+        renderCameraTextureToRgb()
+        drawRgbTextureToScreen()
         providePendingSurfaceIfReady()
         onStats(timer.endFrame(System.nanoTime()))
     }
@@ -83,6 +93,8 @@ class CameraOesRenderer(
         cameraSurface = null
         surfaceTexture?.release()
         surfaceTexture = null
+        rgbRenderTarget?.release()
+        rgbRenderTarget = null
     }
 
     private fun providePendingSurfaceIfReady() {
@@ -108,9 +120,11 @@ class CameraOesRenderer(
         }
     }
 
-    private fun drawCameraTexture() {
-        GLES30.glUseProgram(program)
-        GLES30.glUniformMatrix4fv(texTransformLocation, 1, false, transformMatrix, 0)
+    private fun renderCameraTextureToRgb() {
+        val target = rgbRenderTarget ?: return
+        target.bind()
+        GLES30.glUseProgram(oesProgram)
+        GLES30.glUniformMatrix4fv(oesTexTransformLocation, 1, false, transformMatrix, 0)
         GLES30.glActiveTexture(GLES30.GL_TEXTURE0)
         GLES30.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, oesTextureId)
         GLES30.glEnableVertexAttribArray(0)
@@ -122,7 +136,27 @@ class CameraOesRenderer(
         GLES30.glDrawArrays(GLES30.GL_TRIANGLE_STRIP, 0, 4)
         GLES30.glDisableVertexAttribArray(0)
         GLES30.glDisableVertexAttribArray(1)
-        GlProgram.checkNoGlError("drawCameraTexture")
+        GLES30.glBindFramebuffer(GLES30.GL_FRAMEBUFFER, 0)
+        GlProgram.checkNoGlError("renderCameraTextureToRgb")
+    }
+
+    private fun drawRgbTextureToScreen() {
+        val target = rgbRenderTarget ?: return
+        GLES30.glViewport(0, 0, surfaceSize.width, surfaceSize.height)
+        GLES30.glUseProgram(rgbProgram)
+        GLES30.glUniform1i(rgbInputTextureLocation, 0)
+        GLES30.glActiveTexture(GLES30.GL_TEXTURE0)
+        GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, target.textureId)
+        GLES30.glEnableVertexAttribArray(0)
+        GLES30.glEnableVertexAttribArray(1)
+        vertexBuffer.position(0)
+        GLES30.glVertexAttribPointer(0, 2, GLES30.GL_FLOAT, false, VERTEX_STRIDE_BYTES, vertexBuffer)
+        vertexBuffer.position(2)
+        GLES30.glVertexAttribPointer(1, 2, GLES30.GL_FLOAT, false, VERTEX_STRIDE_BYTES, vertexBuffer)
+        GLES30.glDrawArrays(GLES30.GL_TRIANGLE_STRIP, 0, 4)
+        GLES30.glDisableVertexAttribArray(0)
+        GLES30.glDisableVertexAttribArray(1)
+        GlProgram.checkNoGlError("drawRgbTextureToScreen")
     }
 
     private fun createOesTexture(): Int {

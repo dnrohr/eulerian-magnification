@@ -15,7 +15,9 @@ Milestone E now has the first shader-level building block for GPU color magnific
 
 ## Current Limit
 
-This pass is not wired into the camera GL renderer yet. The app still renders the OES camera texture directly to screen in GL preview mode. The next GPU color slice should render OES to an internal RGB texture, run this pass over that texture, and display the processed result.
+The camera GL renderer now renders the OES camera texture into a framebuffer-backed RGBA texture before drawing to the screen. This creates the internal RGB texture needed for later shader passes.
+
+The color magnification pass is not wired into the camera GL renderer yet. The next GPU color slice should run this pass over the internal RGB texture and display the processed result.
 
 ## Verification
 

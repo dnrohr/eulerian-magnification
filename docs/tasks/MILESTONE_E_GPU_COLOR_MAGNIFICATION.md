@@ -4,7 +4,7 @@ Goal: move color magnification from CPU analysis toward texture processing.
 
 ## Tasks
 
-- [ ] Render camera OES texture to internal RGB texture.
+- [x] Render camera OES texture to internal RGB texture.
 - [ ] Add downsample pyramid textures.
 - [ ] Add temporal filter state textures.
 - [x] Implement color amplification shader pass.
@@ -21,6 +21,19 @@ Goal: move color magnification from CPU analysis toward texture processing.
 - Added parameter mapping from `AnalysisSample` and `AnalysisSettings` to shader-style uniforms.
 - Reuses `ArtifactSuppressor` for low-signal suppression and amplification caps.
 - Added tests for shader source expectations and uniform mapping.
+
+## Verification
+
+- `.\gradlew.bat clean testDebugUnitTest assembleDebug`
+
+## Completed Slice: OES To RGB Render Target
+
+- Added framebuffer-backed RGBA render target support.
+- Added RGB texture display shader source.
+- Camera GL renderer now renders the OES camera texture into an internal RGBA texture before displaying it.
+- Added tests for render-target sizing and RGB shader source expectations.
+
+Device runtime verification is still needed to confirm the OES-to-RGB path renders correctly on Pixel 8a.
 
 ## Verification
 
