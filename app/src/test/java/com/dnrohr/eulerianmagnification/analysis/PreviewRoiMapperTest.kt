@@ -56,6 +56,40 @@ class PreviewRoiMapperTest {
         assertRect(0.0833f, 0.25f, 0.9167f, 0.75f, mapped, tolerance = 0.0002f)
     }
 
+    @Test
+    fun mapsPreviewSelectionBackToAnalysisCoordinates() {
+        val mapped = PreviewRoiMapper.mapPreviewToAnalysis(
+            roi = NormalizedRect(0.7f, 0.2f, 0.9f, 0.4f),
+            frameSize = PreviewSize(640, 480),
+            previewSize = PreviewSize(640, 480),
+            rotationDegrees = 0,
+            mirrorHorizontally = true,
+        )
+
+        assertRect(0.1f, 0.2f, 0.3f, 0.4f, mapped)
+    }
+
+    @Test
+    fun roundTripsThroughPortraitRotationMirrorAndCrop() {
+        val original = NormalizedRect(0.18f, 0.24f, 0.42f, 0.58f)
+        val preview = PreviewRoiMapper.mapAnalysisToPreview(
+            roi = original,
+            frameSize = PreviewSize(640, 480),
+            previewSize = PreviewSize(1080, 2400),
+            rotationDegrees = 90,
+            mirrorHorizontally = true,
+        )
+        val roundTripped = PreviewRoiMapper.mapPreviewToAnalysis(
+            roi = preview,
+            frameSize = PreviewSize(640, 480),
+            previewSize = PreviewSize(1080, 2400),
+            rotationDegrees = 90,
+            mirrorHorizontally = true,
+        )
+
+        assertRect(original.left, original.top, original.right, original.bottom, roundTripped, tolerance = 0.0002f)
+    }
+
     private fun assertRect(
         left: Float,
         top: Float,

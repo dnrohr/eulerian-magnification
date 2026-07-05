@@ -6,9 +6,9 @@ Goal: fix the trust-breaking mismatch where automatic ROI can be drawn away from
 
 - [x] Identify the coordinate spaces for analysis frames, CameraX preview, GL preview, rotation, mirroring, and aspect-fill crop.
 - [x] Add a tested mapper from analysis-normalized ROI to preview-normalized ROI.
-- [ ] Use the mapper for both automatic ROI drawing and manual ROI input.
+- [x] Use the mapper for both automatic ROI drawing and manual ROI input.
 - [ ] Verify portrait/front-camera behavior on device.
-- [ ] Document the coordinate-space assumptions and any remaining limitations.
+- [x] Document the coordinate-space assumptions and any remaining limitations.
 
 ## Completed Slice: Preview Mapper Foundation
 
@@ -20,9 +20,24 @@ Goal: fix the trust-breaking mismatch where automatic ROI can be drawn away from
 
 ## Remaining Work
 
-- Add reverse mapping for manual ROI input so touch-selected preview regions map back into analysis coordinates.
 - Verify the front-camera mirror assumption on the Pixel 8a with screenshots.
 - Decide whether GL preview and CameraX preview need separate mapping flags.
+
+## Completed Slice: Manual ROI Reverse Mapping
+
+- Added `PreviewRoiMapper.mapPreviewToAnalysis`.
+- Manual ROI drag input now converts preview-space rectangles back to analysis-space rectangles before rebinding the analyzer.
+- Manual ROI drawing maps the stored analysis ROI back through the same preview transform used by automatic ROI drawing.
+- Added round-trip tests for preview-to-analysis mapping with rotation, mirroring, and aspect-fill crop.
+- Installed and launched the updated debug APK on the connected Pixel as a smoke test; visual face/target alignment verification remains open.
+
+## Coordinate Assumptions
+
+- `AnalysisSample.roi` is normalized to the `ImageProxy` analysis buffer.
+- `AnalysisSample.rotationDegrees` is the CameraX rotation needed to orient analysis coordinates for display.
+- The front camera is mirrored horizontally for the user-facing preview.
+- The preview uses aspect-fill behavior, so mapped ROI coordinates can be affected by horizontal or vertical crop.
+- GL preview and CameraX preview currently share the same mapper flags; this still needs device verification.
 
 ## Done When
 

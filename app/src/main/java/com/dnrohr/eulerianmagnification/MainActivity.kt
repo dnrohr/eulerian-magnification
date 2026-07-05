@@ -278,6 +278,7 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
             }
             ManualRoiOverlay(
                 roi = manualRoi,
+                sample = analysisSample,
                 onRoiChanged = { manualRoi = it },
                 modifier = Modifier.fillMaxSize(),
             )
@@ -572,26 +573,38 @@ private fun RoiOverlay(
 @Composable
 private fun ManualRoiOverlay(
     roi: NormalizedRect?,
+    sample: AnalysisSample,
     onRoiChanged: (NormalizedRect?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var dragStart by remember { mutableStateOf<Offset?>(null) }
     Canvas(
-        modifier = modifier.pointerInput(Unit) {
+        modifier = modifier.pointerInput(sample.frameWidth, sample.frameHeight, sample.rotationDegrees) {
             detectDragGestures(
                 onDragStart = { start ->
                     dragStart = start
                 },
                 onDrag = { change, _ ->
                     val start = dragStart ?: change.position
-                    ManualRoiSelector.fromDrag(
+                    val previewRoi = ManualRoiSelector.fromDrag(
                         startX = start.x,
                         startY = start.y,
                         endX = change.position.x,
                         endY = change.position.y,
                         width = size.width.toFloat(),
                         height = size.height.toFloat(),
-                    )?.let(onRoiChanged)
+                    )
+                    if (previewRoi != null) {
+                        onRoiChanged(
+                            PreviewRoiMapper.mapPreviewToAnalysis(
+                                roi = previewRoi,
+                                frameSize = PreviewSize(sample.frameWidth, sample.frameHeight),
+                                previewSize = PreviewSize(size.width, size.height),
+                                rotationDegrees = sample.rotationDegrees,
+                                mirrorHorizontally = true,
+                            )
+                        )
+                    }
                 },
                 onDragEnd = {
                     dragStart = null
@@ -603,15 +616,22 @@ private fun ManualRoiOverlay(
         },
     ) {
         val selected = roi ?: return@Canvas
+        val displayRoi = PreviewRoiMapper.mapAnalysisToPreview(
+            roi = selected,
+            frameSize = PreviewSize(sample.frameWidth, sample.frameHeight),
+            previewSize = PreviewSize(size.width.toInt(), size.height.toInt()),
+            rotationDegrees = sample.rotationDegrees,
+            mirrorHorizontally = true,
+        )
         drawRect(
             color = Color(0xFFFFC857),
             topLeft = androidx.compose.ui.geometry.Offset(
-                x = selected.left * size.width,
-                y = selected.top * size.height,
+                x = displayRoi.left * size.width,
+                y = displayRoi.top * size.height,
             ),
             size = androidx.compose.ui.geometry.Size(
-                width = selected.width * size.width,
-                height = selected.height * size.height,
+                width = displayRoi.width * size.width,
+                height = displayRoi.height * size.height,
             ),
             style = Stroke(width = 3.dp.toPx()),
         )

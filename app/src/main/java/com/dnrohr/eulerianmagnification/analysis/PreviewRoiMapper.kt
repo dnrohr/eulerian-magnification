@@ -30,6 +30,28 @@ object PreviewRoiMapper {
         )
     }
 
+    fun mapPreviewToAnalysis(
+        roi: NormalizedRect,
+        frameSize: PreviewSize,
+        previewSize: PreviewSize,
+        rotationDegrees: Int,
+        mirrorHorizontally: Boolean,
+    ): NormalizedRect {
+        if (frameSize.width <= 0 || frameSize.height <= 0 || previewSize.width <= 0 || previewSize.height <= 0) {
+            return roi
+        }
+        val contentSize = orientedContentSize(frameSize, rotationDegrees)
+        val viewport = aspectFillViewport(previewSize, contentSize)
+        val oriented = NormalizedRect(
+            left = ((roi.left * previewSize.width) - viewport.x) / viewport.width,
+            top = ((roi.top * previewSize.height) - viewport.y) / viewport.height,
+            right = ((roi.right * previewSize.width) - viewport.x) / viewport.width,
+            bottom = ((roi.bottom * previewSize.height) - viewport.y) / viewport.height,
+        ).normalized()
+        val unmirrored = if (mirrorHorizontally) oriented.mirroredHorizontally() else oriented
+        return unmirrored.rotated(-rotationDegrees).normalized()
+    }
+
     private fun NormalizedRect.rotated(rotationDegrees: Int): NormalizedRect {
         return when (rotationDegrees.floorToRightAngle()) {
             90 -> NormalizedRect(
@@ -61,6 +83,14 @@ object PreviewRoiMapper {
             right = 1.0f - left,
             bottom = bottom,
         )
+    }
+
+    private fun NormalizedRect.normalized(): NormalizedRect {
+        val normalizedLeft = minOf(left, right).coerceIn(0.0f, 1.0f)
+        val normalizedRight = maxOf(left, right).coerceIn(0.0f, 1.0f)
+        val normalizedTop = minOf(top, bottom).coerceIn(0.0f, 1.0f)
+        val normalizedBottom = maxOf(top, bottom).coerceIn(0.0f, 1.0f)
+        return NormalizedRect(normalizedLeft, normalizedTop, normalizedRight, normalizedBottom)
     }
 
     private fun orientedContentSize(size: PreviewSize, rotationDegrees: Int): PreviewSize {
