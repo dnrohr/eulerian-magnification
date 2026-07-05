@@ -9,8 +9,25 @@ Goal: add a low-frequency motion mode for torso/chest breathing visualization.
 - [x] Add low-frequency temporal motion filter.
 - [x] Add amplified motion, heatmap, or waveform display.
 - [x] Record output video and metadata.
-- [ ] Add device verification notes.
-- [ ] Commit and push to `main`.
+- [x] Add device verification notes.
+- [x] Commit and push to `main`.
+
+## Completed Slice: Pixel 8a Breathing Device Verification
+
+- Installed and launched the debug app on a connected Pixel 8a.
+- Pulled the generated camera capability report into `docs/experiments/pixel8a_camera_capabilities.json`.
+- Verified live Breathing mode on-device with the 0.1-0.6 Hz band, breathing-motion waveform/value, and camera preview running.
+- Captured a short Breathing recording in Amplified view.
+- Pulled recording metadata into `docs/experiments/pixel8a_latest_breathing_metadata.json`.
+- Confirmed recording metadata includes breathing settings, ROI, dx/dy translation, zero dropped-frame estimate, and monotonic presentation timestamps.
+- Added Pixel 8a preview, recording, encoder, camera capability, performance, and thermal notes.
+
+## Verification
+
+- `.\gradlew.bat clean testDebugUnitTest assembleDebug`
+- `adb install -r app\build\outputs\apk\debug\app-debug.apk`
+- Pixel 8a live preview screenshots for Pulse and Breathing modes
+- Pixel 8a short Breathing recording metadata pull
 
 ## Completed Slice: Breathing Recording Metadata
 

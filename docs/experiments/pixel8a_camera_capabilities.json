@@ -1,8 +1,302 @@
 {
-  "status": "pending_device_run",
-  "capture_instructions": "Run the debug app on Pixel 8a, filter Logcat for CapabilityReporter, and replace this file with the emitted JSON.",
-  "device": {},
-  "cameras": [],
-  "encoders": [],
-  "power": {}
+  "device": {
+    "manufacturer": "Google",
+    "model": "Pixel 8a",
+    "device": "akita",
+    "sdk": 36,
+    "release": "16"
+  },
+  "cameras": [
+    {
+      "id": "0",
+      "lensFacing": "back",
+      "previewSizes": [
+        "176x144",
+        "320x240",
+        "352x288",
+        "640x360",
+        "640x480",
+        "720x480",
+        "800x600",
+        "1024x576",
+        "1024x768",
+        "1080x1080",
+        "1280x720",
+        "1280x960",
+        "1344x1008",
+        "1440x1080",
+        "1600x1200",
+        "1792x1008",
+        "1920x960",
+        "1920x1080",
+        "1920x1440",
+        "1920x1920",
+        "2048x1536",
+        "2560x1280",
+        "2560x1920",
+        "2688x1512",
+        "3264x1836",
+        "3264x2448",
+        "3840x2160",
+        "4000x2000",
+        "4000x3000",
+        "4032x2268",
+        "4032x3024",
+        "4624x3472"
+      ],
+      "fpsRanges": [
+        "15-15",
+        "15-24",
+        "24-24",
+        "15-30",
+        "24-30",
+        "30-30",
+        "15-60",
+        "60-60"
+      ],
+      "highSpeedVideoSizes": [
+        "1920x1080"
+      ],
+      "stabilizationModes": [
+        0,
+        1,
+        2
+      ]
+    },
+    {
+      "id": "1",
+      "lensFacing": "front",
+      "previewSizes": [
+        "176x144",
+        "320x240",
+        "352x288",
+        "640x360",
+        "640x480",
+        "720x480",
+        "800x600",
+        "1024x576",
+        "1024x768",
+        "1080x1080",
+        "1280x720",
+        "1280x960",
+        "1344x1008",
+        "1440x1080",
+        "1600x1200",
+        "1792x1008",
+        "1920x960",
+        "1920x1080",
+        "1920x1440",
+        "1920x1920",
+        "2048x1536",
+        "2560x1280",
+        "2560x1920",
+        "2688x1512",
+        "3264x1836",
+        "3264x2448",
+        "3840x2160",
+        "4000x2000",
+        "4000x3000",
+        "4032x2268",
+        "4032x3024",
+        "4208x3072"
+      ],
+      "fpsRanges": [
+        "15-15",
+        "15-24",
+        "24-24",
+        "15-30",
+        "24-30",
+        "30-30",
+        "15-60",
+        "60-60"
+      ],
+      "highSpeedVideoSizes": [],
+      "stabilizationModes": [
+        0,
+        1,
+        2
+      ]
+    }
+  ],
+  "encoders": [
+    {
+      "name": "c2.android.aac.encoder",
+      "types": [
+        "audio\/mp4a-latm"
+      ]
+    },
+    {
+      "name": "OMX.google.aac.encoder",
+      "types": [
+        "audio\/mp4a-latm"
+      ]
+    },
+    {
+      "name": "c2.android.amrnb.encoder",
+      "types": [
+        "audio\/3gpp"
+      ]
+    },
+    {
+      "name": "OMX.google.amrnb.encoder",
+      "types": [
+        "audio\/3gpp"
+      ]
+    },
+    {
+      "name": "c2.android.amrwb.encoder",
+      "types": [
+        "audio\/amr-wb"
+      ]
+    },
+    {
+      "name": "OMX.google.amrwb.encoder",
+      "types": [
+        "audio\/amr-wb"
+      ]
+    },
+    {
+      "name": "c2.android.flac.encoder",
+      "types": [
+        "audio\/flac"
+      ]
+    },
+    {
+      "name": "OMX.google.flac.encoder",
+      "types": [
+        "audio\/flac"
+      ]
+    },
+    {
+      "name": "c2.android.opus.encoder",
+      "types": [
+        "audio\/opus"
+      ]
+    },
+    {
+      "name": "c2.exynos.h263.encoder",
+      "types": [
+        "video\/3gpp"
+      ]
+    },
+    {
+      "name": "c2.exynos.h264.encoder",
+      "types": [
+        "video\/avc"
+      ]
+    },
+    {
+      "name": "c2.exynos.hevc.encoder",
+      "types": [
+        "video\/hevc"
+      ]
+    },
+    {
+      "name": "c2.exynos.mpeg4.encoder",
+      "types": [
+        "video\/mp4v-es"
+      ]
+    },
+    {
+      "name": "c2.exynos.vp8.encoder",
+      "types": [
+        "video\/x-vnd.on2.vp8"
+      ]
+    },
+    {
+      "name": "c2.exynos.vp9.encoder",
+      "types": [
+        "video\/x-vnd.on2.vp9"
+      ]
+    },
+    {
+      "name": "c2.google.av1.encoder",
+      "types": [
+        "video\/av01"
+      ]
+    },
+    {
+      "name": "c2.android.apv.encoder",
+      "types": [
+        "video\/apv"
+      ]
+    },
+    {
+      "name": "c2.android.av1.encoder",
+      "types": [
+        "video\/av01"
+      ]
+    },
+    {
+      "name": "c2.android.avc.encoder",
+      "types": [
+        "video\/avc"
+      ]
+    },
+    {
+      "name": "OMX.google.h264.encoder",
+      "types": [
+        "video\/avc"
+      ]
+    },
+    {
+      "name": "c2.android.h263.encoder",
+      "types": [
+        "video\/3gpp"
+      ]
+    },
+    {
+      "name": "OMX.google.h263.encoder",
+      "types": [
+        "video\/3gpp"
+      ]
+    },
+    {
+      "name": "c2.android.hevc.encoder",
+      "types": [
+        "video\/hevc"
+      ]
+    },
+    {
+      "name": "c2.android.mpeg4.encoder",
+      "types": [
+        "video\/mp4v-es"
+      ]
+    },
+    {
+      "name": "OMX.google.mpeg4.encoder",
+      "types": [
+        "video\/mp4v-es"
+      ]
+    },
+    {
+      "name": "c2.android.vp8.encoder",
+      "types": [
+        "video\/x-vnd.on2.vp8"
+      ]
+    },
+    {
+      "name": "OMX.google.vp8.encoder",
+      "types": [
+        "video\/x-vnd.on2.vp8"
+      ]
+    },
+    {
+      "name": "c2.android.vp9.encoder",
+      "types": [
+        "video\/x-vnd.on2.vp9"
+      ]
+    },
+    {
+      "name": "OMX.google.vp9.encoder",
+      "types": [
+        "video\/x-vnd.on2.vp9"
+      ]
+    }
+  ],
+  "power": {
+    "batteryPercent": 100,
+    "powerSaveMode": false,
+    "thermalStatus": "none"
+  }
 }

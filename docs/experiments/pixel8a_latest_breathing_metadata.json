@@ -1,0 +1,1915 @@
+{
+  "startedAtMillis": 1783248742936,
+  "durationMillis": 7236,
+  "thermalStatus": "none",
+  "mode": "Breathing",
+  "viewMode": "Amplified",
+  "amplification": 12.0,
+  "lowCutHz": 0.1,
+  "highCutHz": 0.6,
+  "debugVideoPath": "/storage/emulated/0/Android/data/com.dnrohr.eulerianmagnification/files/recordings/processed-2026-07-05t10-52-22-936z/debug_processed.mp4",
+  "sampleCount": 190,
+  "droppedFrameEstimate": 0,
+  "samples": [
+    {
+      "timestampNanos": 1981621787679276,
+      "presentationTimestampNanos": 0,
+      "analysisFps": 22.368681,
+      "latencyMillis": 0.000000,
+      "averageGreen": 139.366914,
+      "bandpassedGreen": 0.809258,
+      "translation": {"dx": -0.042165, "dy": 0.000017},
+      "roi": {"left": 0.204688, "top": 0.618750, "right": 0.423438, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981621821626868,
+      "presentationTimestampNanos": 33947592,
+      "analysisFps": 22.368682,
+      "latencyMillis": 0.000000,
+      "averageGreen": 137.627348,
+      "bandpassedGreen": 0.103635,
+      "translation": {"dx": -0.037015, "dy": 0.000012},
+      "roi": {"left": 0.181250, "top": 0.618750, "right": 0.396875, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981621855574540,
+      "presentationTimestampNanos": 67895264,
+      "analysisFps": 22.368682,
+      "latencyMillis": 0.000000,
+      "averageGreen": 136.511028,
+      "bandpassedGreen": -0.614926,
+      "translation": {"dx": -0.031536, "dy": 0.000008},
+      "roi": {"left": 0.160938, "top": 0.618750, "right": 0.379687, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981621889522172,
+      "presentationTimestampNanos": 101842896,
+      "analysisFps": 22.368682,
+      "latencyMillis": 0.000000,
+      "averageGreen": 135.982367,
+      "bandpassedGreen": -1.284616,
+      "translation": {"dx": -0.025825, "dy": 0.000006},
+      "roi": {"left": 0.150000, "top": 0.618750, "right": 0.365625, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981621931799638,
+      "presentationTimestampNanos": 144120362,
+      "analysisFps": 22.226124,
+      "latencyMillis": 0.000000,
+      "averageGreen": 135.296223,
+      "bandpassedGreen": -2.068703,
+      "translation": {"dx": -0.020890, "dy": 0.000004},
+      "roi": {"left": 0.140625, "top": 0.618750, "right": 0.356250, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981621974077104,
+      "presentationTimestampNanos": 186397828,
+      "analysisFps": 22.225879,
+      "latencyMillis": 0.000000,
+      "averageGreen": 134.337048,
+      "bandpassedGreen": -2.827926,
+      "translation": {"dx": -0.016967, "dy": 0.000003},
+      "roi": {"left": 0.131250, "top": 0.618750, "right": 0.350000, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981622016354569,
+      "presentationTimestampNanos": 228675293,
+      "analysisFps": 22.084470,
+      "latencyMillis": 0.000000,
+      "averageGreen": 134.028504,
+      "bandpassedGreen": -3.484770,
+      "translation": {"dx": -0.012814, "dy": 0.000002},
+      "roi": {"left": 0.129688, "top": 0.618750, "right": 0.345313, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981622058632035,
+      "presentationTimestampNanos": 270952759,
+      "analysisFps": 21.945675,
+      "latencyMillis": 0.000000,
+      "averageGreen": 133.973092,
+      "bandpassedGreen": -4.023413,
+      "translation": {"dx": -0.008970, "dy": 0.000001},
+      "roi": {"left": 0.129688, "top": 0.618750, "right": 0.345313, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981622100909461,
+      "presentationTimestampNanos": 313230185,
+      "analysisFps": 21.808206,
+      "latencyMillis": 0.000000,
+      "averageGreen": 133.785198,
+      "bandpassedGreen": -4.477876,
+      "translation": {"dx": -0.006279, "dy": 0.000001},
+      "roi": {"left": 0.129688, "top": 0.618750, "right": 0.345313, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981622143186926,
+      "presentationTimestampNanos": 355507650,
+      "analysisFps": 22.379531,
+      "latencyMillis": 0.000000,
+      "averageGreen": 133.688032,
+      "bandpassedGreen": -4.849699,
+      "translation": {"dx": -0.004395, "dy": 0.000001},
+      "roi": {"left": 0.129688, "top": 0.618750, "right": 0.345313, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981622185464392,
+      "presentationTimestampNanos": 397785116,
+      "analysisFps": 22.379530,
+      "latencyMillis": 0.000000,
+      "averageGreen": 145.741917,
+      "bandpassedGreen": -3.679787,
+      "translation": {"dx": 0.040986, "dy": -0.000625},
+      "roi": {"left": 0.275000, "top": 0.616667, "right": 0.493750, "bottom": 0.725000}
+    },
+    {
+      "timestampNanos": 1981622227741858,
+      "presentationTimestampNanos": 440062582,
+      "analysisFps": 22.379530,
+      "latencyMillis": 0.000000,
+      "averageGreen": 148.397344,
+      "bandpassedGreen": -2.372562,
+      "translation": {"dx": 0.036190, "dy": -0.000437},
+      "roi": {"left": 0.300000, "top": 0.616667, "right": 0.518750, "bottom": 0.725000}
+    },
+    {
+      "timestampNanos": 1981622270019323,
+      "presentationTimestampNanos": 482340047,
+      "analysisFps": 22.380379,
+      "latencyMillis": 0.000000,
+      "averageGreen": 151.354050,
+      "bandpassedGreen": -0.919882,
+      "translation": {"dx": 0.030958, "dy": -0.000306},
+      "roi": {"left": 0.318750, "top": 0.616667, "right": 0.537500, "bottom": 0.725000}
+    },
+    {
+      "timestampNanos": 1981622312296789,
+      "presentationTimestampNanos": 524617513,
+      "analysisFps": 22.379530,
+      "latencyMillis": 0.000000,
+      "averageGreen": 154.195586,
+      "bandpassedGreen": 0.634012,
+      "translation": {"dx": 0.025421, "dy": -0.000214},
+      "roi": {"left": 0.331250, "top": 0.616667, "right": 0.550000, "bottom": 0.725000}
+    },
+    {
+      "timestampNanos": 1981622354574215,
+      "presentationTimestampNanos": 566894939,
+      "analysisFps": 22.379531,
+      "latencyMillis": 0.000000,
+      "averageGreen": 155.659159,
+      "bandpassedGreen": 2.099051,
+      "translation": {"dx": 0.020607, "dy": -0.000150},
+      "roi": {"left": 0.340625, "top": 0.616667, "right": 0.559375, "bottom": 0.725000}
+    },
+    {
+      "timestampNanos": 1981622396851681,
+      "presentationTimestampNanos": 609172405,
+      "analysisFps": 22.379531,
+      "latencyMillis": 0.000000,
+      "averageGreen": 155.291132,
+      "bandpassedGreen": 3.262820,
+      "translation": {"dx": 0.016300, "dy": -0.000105},
+      "roi": {"left": 0.346875, "top": 0.616667, "right": 0.565625, "bottom": 0.725000}
+    },
+    {
+      "timestampNanos": 1981622439129146,
+      "presentationTimestampNanos": 651449870,
+      "analysisFps": 22.379530,
+      "latencyMillis": 0.000000,
+      "averageGreen": 155.232262,
+      "bandpassedGreen": 4.209387,
+      "translation": {"dx": 0.012816, "dy": -0.000073},
+      "roi": {"left": 0.351563, "top": 0.616667, "right": 0.570313, "bottom": 0.725000}
+    },
+    {
+      "timestampNanos": 1981622481406612,
+      "presentationTimestampNanos": 693727336,
+      "analysisFps": 22.379530,
+      "latencyMillis": 0.000000,
+      "averageGreen": 154.954691,
+      "bandpassedGreen": 4.945465,
+      "translation": {"dx": 0.010378, "dy": -0.000051},
+      "roi": {"left": 0.356250, "top": 0.616667, "right": 0.575000, "bottom": 0.725000}
+    },
+    {
+      "timestampNanos": 1981622523684078,
+      "presentationTimestampNanos": 736004802,
+      "analysisFps": 22.379530,
+      "latencyMillis": 0.000000,
+      "averageGreen": 154.862320,
+      "bandpassedGreen": 5.526356,
+      "translation": {"dx": 0.007733, "dy": -0.000036},
+      "roi": {"left": 0.357812, "top": 0.616667, "right": 0.576563, "bottom": 0.725000}
+    },
+    {
+      "timestampNanos": 1981622565961502,
+      "presentationTimestampNanos": 778282226,
+      "analysisFps": 22.379531,
+      "latencyMillis": 0.000000,
+      "averageGreen": 152.552462,
+      "bandpassedGreen": 5.707577,
+      "translation": {"dx": 0.005882, "dy": -0.000650},
+      "roi": {"left": 0.359375, "top": 0.614583, "right": 0.578125, "bottom": 0.722917}
+    },
+    {
+      "timestampNanos": 1981622599909175,
+      "presentationTimestampNanos": 812229899,
+      "analysisFps": 22.378189,
+      "latencyMillis": 0.000000,
+      "averageGreen": 139.576178,
+      "bandpassedGreen": 4.529483,
+      "translation": {"dx": -0.042289, "dy": 0.000795},
+      "roi": {"left": 0.204688, "top": 0.618750, "right": 0.423438, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981622633856848,
+      "presentationTimestampNanos": 846177572,
+      "analysisFps": 22.379530,
+      "latencyMillis": 0.000000,
+      "averageGreen": 137.698933,
+      "bandpassedGreen": 3.317412,
+      "translation": {"dx": -0.037102, "dy": 0.000556},
+      "roi": {"left": 0.179688, "top": 0.618750, "right": 0.398438, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981622667804480,
+      "presentationTimestampNanos": 880125204,
+      "analysisFps": 22.524321,
+      "latencyMillis": 0.000000,
+      "averageGreen": 136.620192,
+      "bandpassedGreen": 2.158220,
+      "translation": {"dx": -0.031597, "dy": 0.000389},
+      "roi": {"left": 0.160938, "top": 0.618750, "right": 0.379687, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981622701752152,
+      "presentationTimestampNanos": 914072876,
+      "analysisFps": 22.524321,
+      "latencyMillis": 0.000000,
+      "averageGreen": 135.626667,
+      "bandpassedGreen": 1.055950,
+      "translation": {"dx": -0.025868, "dy": 0.000273},
+      "roi": {"left": 0.148438, "top": 0.618750, "right": 0.367188, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981622744029618,
+      "presentationTimestampNanos": 956350342,
+      "analysisFps": 22.379530,
+      "latencyMillis": 0.000000,
+      "averageGreen": 134.634742,
+      "bandpassedGreen": -0.229069,
+      "translation": {"dx": -0.020920, "dy": 0.000191},
+      "roi": {"left": 0.139062, "top": 0.618750, "right": 0.357812, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981622786307084,
+      "presentationTimestampNanos": 998627808,
+      "analysisFps": 22.236590,
+      "latencyMillis": 0.000000,
+      "averageGreen": 134.000501,
+      "bandpassedGreen": -1.371976,
+      "translation": {"dx": -0.016519, "dy": 0.000134},
+      "roi": {"left": 0.132813, "top": 0.618750, "right": 0.351563, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981622820254715,
+      "presentationTimestampNanos": 1032575439,
+      "analysisFps": 22.236590,
+      "latencyMillis": 0.000000,
+      "averageGreen": 133.558619,
+      "bandpassedGreen": -2.187738,
+      "translation": {"dx": -0.012501, "dy": 0.000094},
+      "roi": {"left": 0.129688, "top": 0.618750, "right": 0.348437, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981622854202388,
+      "presentationTimestampNanos": 1066523112,
+      "analysisFps": 22.236590,
+      "latencyMillis": 0.000000,
+      "averageGreen": 133.583490,
+      "bandpassedGreen": -2.882348,
+      "translation": {"dx": -0.008751, "dy": 0.000065},
+      "roi": {"left": 0.129688, "top": 0.618750, "right": 0.348437, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981622888150061,
+      "presentationTimestampNanos": 1100470785,
+      "analysisFps": 22.236900,
+      "latencyMillis": 0.000000,
+      "averageGreen": 133.495553,
+      "bandpassedGreen": -3.482018,
+      "translation": {"dx": -0.006125, "dy": 0.000046},
+      "roi": {"left": 0.129688, "top": 0.618750, "right": 0.348437, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981622922097693,
+      "presentationTimestampNanos": 1134418417,
+      "analysisFps": 25.563760,
+      "latencyMillis": 0.000000,
+      "averageGreen": 133.485535,
+      "bandpassedGreen": -3.990678,
+      "translation": {"dx": -0.004288, "dy": 0.000032},
+      "roi": {"left": 0.129688, "top": 0.618750, "right": 0.348437, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981622956045364,
+      "presentationTimestampNanos": 1168366088,
+      "analysisFps": 25.563758,
+      "latencyMillis": 0.000000,
+      "averageGreen": 147.710525,
+      "bandpassedGreen": -3.010047,
+      "translation": {"dx": 0.040592, "dy": 0.000022},
+      "roi": {"left": 0.275000, "top": 0.618750, "right": 0.493750, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981622998369745,
+      "presentationTimestampNanos": 1210690469,
+      "analysisFps": 25.376375,
+      "latencyMillis": 0.000000,
+      "averageGreen": 151.190543,
+      "bandpassedGreen": -1.543493,
+      "translation": {"dx": 0.036383, "dy": 0.000016},
+      "roi": {"left": 0.303125, "top": 0.618750, "right": 0.518750, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981623032270503,
+      "presentationTimestampNanos": 1244591227,
+      "analysisFps": 25.377416,
+      "latencyMillis": 0.000000,
+      "averageGreen": 153.539810,
+      "bandpassedGreen": -0.313673,
+      "translation": {"dx": 0.030625, "dy": 0.000011},
+      "roi": {"left": 0.320313, "top": 0.618750, "right": 0.535937, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981623066218135,
+      "presentationTimestampNanos": 1278538859,
+      "analysisFps": 25.563758,
+      "latencyMillis": 0.000000,
+      "averageGreen": 155.575698,
+      "bandpassedGreen": 0.949547,
+      "translation": {"dx": 0.025187, "dy": 0.000008},
+      "roi": {"left": 0.331250, "top": 0.618750, "right": 0.550000, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981623100180903,
+      "presentationTimestampNanos": 1312501627,
+      "analysisFps": 25.752511,
+      "latencyMillis": 0.000000,
+      "averageGreen": 156.023327,
+      "bandpassedGreen": 2.079947,
+      "translation": {"dx": 0.020912, "dy": 0.000005},
+      "roi": {"left": 0.343750, "top": 0.618750, "right": 0.559375, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981623134113480,
+      "presentationTimestampNanos": 1346434204,
+      "analysisFps": 25.944772,
+      "latencyMillis": 0.000000,
+      "averageGreen": 156.287933,
+      "bandpassedGreen": 3.073617,
+      "translation": {"dx": 0.016514, "dy": 0.000004},
+      "roi": {"left": 0.350000, "top": 0.618750, "right": 0.565625, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981623168061112,
+      "presentationTimestampNanos": 1380381836,
+      "analysisFps": 26.139571,
+      "latencyMillis": 0.000000,
+      "averageGreen": 156.226008,
+      "bandpassedGreen": 3.915954,
+      "translation": {"dx": 0.012966, "dy": 0.000003},
+      "roi": {"left": 0.354688, "top": 0.618750, "right": 0.570313, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981623202008785,
+      "presentationTimestampNanos": 1414329509,
+      "analysisFps": 26.337315,
+      "latencyMillis": 0.000000,
+      "averageGreen": 155.875621,
+      "bandpassedGreen": 4.596837,
+      "translation": {"dx": 0.010014, "dy": 0.000002},
+      "roi": {"left": 0.357812, "top": 0.618750, "right": 0.573438, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981623235988318,
+      "presentationTimestampNanos": 1448309042,
+      "analysisFps": 26.537301,
+      "latencyMillis": 0.000000,
+      "averageGreen": 155.866888,
+      "bandpassedGreen": 5.171257,
+      "translation": {"dx": 0.007947, "dy": 0.000001},
+      "roi": {"left": 0.360938, "top": 0.618750, "right": 0.576563, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981623269904089,
+      "presentationTimestampNanos": 1482224813,
+      "analysisFps": 26.741920,
+      "latencyMillis": 0.000000,
+      "averageGreen": 155.823470,
+      "bandpassedGreen": 5.647684,
+      "translation": {"dx": 0.006032, "dy": 0.000001},
+      "roi": {"left": 0.362500, "top": 0.618750, "right": 0.578125, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981623337799434,
+      "presentationTimestampNanos": 1550120158,
+      "analysisFps": 26.124771,
+      "latencyMillis": 0.000000,
+      "averageGreen": 137.396883,
+      "bandpassedGreen": 2.978607,
+      "translation": {"dx": -0.042653, "dy": 0.000001},
+      "roi": {"left": 0.204688, "top": 0.618750, "right": 0.423438, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981623371747106,
+      "presentationTimestampNanos": 1584067830,
+      "analysisFps": 26.322292,
+      "latencyMillis": 0.000000,
+      "averageGreen": 135.787427,
+      "bandpassedGreen": 1.742941,
+      "translation": {"dx": -0.037357, "dy": 0.000000},
+      "roi": {"left": 0.179688, "top": 0.618750, "right": 0.398438, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981623405694738,
+      "presentationTimestampNanos": 1618015462,
+      "analysisFps": 26.522823,
+      "latencyMillis": 0.000000,
+      "averageGreen": 134.531957,
+      "bandpassedGreen": 0.549919,
+      "translation": {"dx": -0.031306, "dy": 0.000000},
+      "roi": {"left": 0.162500, "top": 0.618750, "right": 0.381250, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981623439642411,
+      "presentationTimestampNanos": 1651963135,
+      "analysisFps": 26.726431,
+      "latencyMillis": 0.000000,
+      "averageGreen": 133.338874,
+      "bandpassedGreen": -0.597174,
+      "translation": {"dx": -0.026133, "dy": 0.000000},
+      "roi": {"left": 0.148438, "top": 0.618750, "right": 0.367188, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981623473590084,
+      "presentationTimestampNanos": 1685910808,
+      "analysisFps": 26.933190,
+      "latencyMillis": 0.000000,
+      "averageGreen": 133.070589,
+      "bandpassedGreen": -1.610221,
+      "translation": {"dx": -0.021106, "dy": 0.000000},
+      "roi": {"left": 0.139062, "top": 0.618750, "right": 0.357812, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981623507537715,
+      "presentationTimestampNanos": 1719858439,
+      "analysisFps": 27.143174,
+      "latencyMillis": 0.000000,
+      "averageGreen": 132.367070,
+      "bandpassedGreen": -2.548343,
+      "translation": {"dx": -0.016649, "dy": 0.000000},
+      "roi": {"left": 0.132813, "top": 0.618750, "right": 0.351563, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981623541485387,
+      "presentationTimestampNanos": 1753806111,
+      "analysisFps": 27.356458,
+      "latencyMillis": 0.000000,
+      "averageGreen": 132.266695,
+      "bandpassedGreen": -3.359830,
+      "translation": {"dx": -0.013061, "dy": 0.000000},
+      "roi": {"left": 0.128125, "top": 0.618750, "right": 0.346875, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981623575420283,
+      "presentationTimestampNanos": 1787741007,
+      "analysisFps": 27.573454,
+      "latencyMillis": 0.000000,
+      "averageGreen": 132.296948,
+      "bandpassedGreen": -4.047014,
+      "translation": {"dx": -0.009142, "dy": 0.000000},
+      "roi": {"left": 0.128125, "top": 0.618750, "right": 0.346875, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981623609380691,
+      "presentationTimestampNanos": 1821701415,
+      "analysisFps": 27.793240,
+      "latencyMillis": 0.000000,
+      "averageGreen": 132.131247,
+      "bandpassedGreen": -4.645482,
+      "translation": {"dx": -0.006400, "dy": 0.000000},
+      "roi": {"left": 0.128125, "top": 0.618750, "right": 0.346875, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981623643328364,
+      "presentationTimestampNanos": 1855649088,
+      "analysisFps": 27.793240,
+      "latencyMillis": 0.000000,
+      "averageGreen": 131.979757,
+      "bandpassedGreen": -5.163959,
+      "translation": {"dx": -0.004480, "dy": 0.000000},
+      "roi": {"left": 0.128125, "top": 0.618750, "right": 0.346875, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981623677268916,
+      "presentationTimestampNanos": 1889589640,
+      "analysisFps": 27.793430,
+      "latencyMillis": 0.000000,
+      "averageGreen": 145.047882,
+      "bandpassedGreen": -4.303534,
+      "translation": {"dx": 0.040927, "dy": 0.000000},
+      "roi": {"left": 0.275000, "top": 0.618750, "right": 0.493750, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981623711223669,
+      "presentationTimestampNanos": 1923544393,
+      "analysisFps": 27.793240,
+      "latencyMillis": 0.000000,
+      "averageGreen": 147.819744,
+      "bandpassedGreen": -3.276689,
+      "translation": {"dx": 0.036149, "dy": 0.000000},
+      "roi": {"left": 0.300000, "top": 0.618750, "right": 0.518750, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981623745171341,
+      "presentationTimestampNanos": 1957492065,
+      "analysisFps": 27.793240,
+      "latencyMillis": 0.000000,
+      "averageGreen": 149.667758,
+      "bandpassedGreen": -2.201157,
+      "translation": {"dx": 0.030929, "dy": 0.000000},
+      "roi": {"left": 0.318750, "top": 0.618750, "right": 0.537500, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981623779119013,
+      "presentationTimestampNanos": 1991439737,
+      "analysisFps": 28.016904,
+      "latencyMillis": 0.000000,
+      "averageGreen": 151.157977,
+      "bandpassedGreen": -1.121649,
+      "translation": {"dx": 0.025400, "dy": 0.000000},
+      "roi": {"left": 0.331250, "top": 0.618750, "right": 0.550000, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981623813066645,
+      "presentationTimestampNanos": 2025387369,
+      "analysisFps": 28.244198,
+      "latencyMillis": 0.000000,
+      "averageGreen": 151.758410,
+      "bandpassedGreen": -0.129567,
+      "translation": {"dx": 0.020593, "dy": 0.000000},
+      "roi": {"left": 0.340625, "top": 0.618750, "right": 0.559375, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981623847014318,
+      "presentationTimestampNanos": 2059335042,
+      "analysisFps": 28.244197,
+      "latencyMillis": 0.000000,
+      "averageGreen": 151.834191,
+      "bandpassedGreen": 0.732750,
+      "translation": {"dx": 0.016759, "dy": 0.000000},
+      "roi": {"left": 0.348437, "top": 0.618750, "right": 0.567187, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981623880961990,
+      "presentationTimestampNanos": 2093282714,
+      "analysisFps": 28.244197,
+      "latencyMillis": 0.000000,
+      "averageGreen": 151.610124,
+      "bandpassedGreen": 1.451420,
+      "translation": {"dx": 0.013137, "dy": 0.000000},
+      "roi": {"left": 0.353125, "top": 0.618750, "right": 0.571875, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981623914909826,
+      "presentationTimestampNanos": 2127230550,
+      "analysisFps": 28.244192,
+      "latencyMillis": 0.000000,
+      "averageGreen": 151.489635,
+      "bandpassedGreen": 2.054803,
+      "translation": {"dx": 0.010134, "dy": 0.000000},
+      "roi": {"left": 0.356250, "top": 0.618750, "right": 0.575000, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981623948857295,
+      "presentationTimestampNanos": 2161178019,
+      "analysisFps": 28.244197,
+      "latencyMillis": 0.000000,
+      "averageGreen": 152.177670,
+      "bandpassedGreen": 2.637416,
+      "translation": {"dx": 0.008031, "dy": 0.000000},
+      "roi": {"left": 0.359375, "top": 0.618750, "right": 0.578125, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981623982804968,
+      "presentationTimestampNanos": 2195125692,
+      "analysisFps": 28.244196,
+      "latencyMillis": 0.000000,
+      "averageGreen": 152.375767,
+      "bandpassedGreen": 3.152155,
+      "translation": {"dx": 0.006090, "dy": 0.000000},
+      "roi": {"left": 0.360938, "top": 0.618750, "right": 0.579687, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981624016762610,
+      "presentationTimestampNanos": 2229083334,
+      "analysisFps": 28.476240,
+      "latencyMillis": 0.000000,
+      "averageGreen": 136.255857,
+      "bandpassedGreen": 1.990924,
+      "translation": {"dx": -0.042143, "dy": 0.000000},
+      "roi": {"left": 0.207813, "top": 0.618750, "right": 0.423438, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981624050700271,
+      "presentationTimestampNanos": 2263020995,
+      "analysisFps": 28.475209,
+      "latencyMillis": 0.000000,
+      "averageGreen": 134.655815,
+      "bandpassedGreen": 0.827895,
+      "translation": {"dx": -0.037000, "dy": 0.000000},
+      "roi": {"left": 0.182812, "top": 0.618750, "right": 0.398438, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981624084647944,
+      "presentationTimestampNanos": 2296968668,
+      "analysisFps": 28.475207,
+      "latencyMillis": 0.000000,
+      "averageGreen": 134.081582,
+      "bandpassedGreen": -0.233104,
+      "translation": {"dx": -0.031525, "dy": 0.000000},
+      "roi": {"left": 0.164063, "top": 0.618750, "right": 0.379687, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981624118595617,
+      "presentationTimestampNanos": 2330916341,
+      "analysisFps": 28.475629,
+      "latencyMillis": 0.000000,
+      "averageGreen": 133.442144,
+      "bandpassedGreen": -1.209674,
+      "translation": {"dx": -0.025818, "dy": 0.000000},
+      "roi": {"left": 0.151562, "top": 0.618750, "right": 0.367188, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981624152543248,
+      "presentationTimestampNanos": 2364863972,
+      "analysisFps": 28.475209,
+      "latencyMillis": 0.000000,
+      "averageGreen": 132.621464,
+      "bandpassedGreen": -2.128996,
+      "translation": {"dx": -0.020885, "dy": 0.000000},
+      "roi": {"left": 0.142188, "top": 0.618750, "right": 0.357812, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981624186490921,
+      "presentationTimestampNanos": 2398811645,
+      "analysisFps": 28.475207,
+      "latencyMillis": 0.000000,
+      "averageGreen": 131.792133,
+      "bandpassedGreen": -2.997538,
+      "translation": {"dx": -0.016494, "dy": 0.000000},
+      "roi": {"left": 0.135937, "top": 0.618750, "right": 0.351563, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981624220438594,
+      "presentationTimestampNanos": 2432759318,
+      "analysisFps": 28.475207,
+      "latencyMillis": 0.000000,
+      "averageGreen": 131.477495,
+      "bandpassedGreen": -3.769173,
+      "translation": {"dx": -0.012952, "dy": 0.000000},
+      "roi": {"left": 0.131250, "top": 0.618750, "right": 0.346875, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981624254386226,
+      "presentationTimestampNanos": 2466706950,
+      "analysisFps": 28.476099,
+      "latencyMillis": 0.000000,
+      "averageGreen": 130.826380,
+      "bandpassedGreen": -4.488704,
+      "translation": {"dx": -0.010004, "dy": 0.000000},
+      "roi": {"left": 0.128125, "top": 0.618750, "right": 0.343750, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981624288373205,
+      "presentationTimestampNanos": 2500693929,
+      "analysisFps": 28.474108,
+      "latencyMillis": 0.000000,
+      "averageGreen": 130.603020,
+      "bandpassedGreen": -5.119846,
+      "translation": {"dx": -0.007003, "dy": 0.000000},
+      "roi": {"left": 0.128125, "top": 0.618750, "right": 0.343750, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981624322281570,
+      "presentationTimestampNanos": 2534602294,
+      "analysisFps": 29.457111,
+      "latencyMillis": 0.000000,
+      "averageGreen": 130.624515,
+      "bandpassedGreen": -5.647100,
+      "translation": {"dx": -0.004902, "dy": 0.000000},
+      "roi": {"left": 0.128125, "top": 0.618750, "right": 0.343750, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981624356229202,
+      "presentationTimestampNanos": 2568549926,
+      "analysisFps": 29.457113,
+      "latencyMillis": 0.000000,
+      "averageGreen": 143.386360,
+      "bandpassedGreen": -4.823746,
+      "translation": {"dx": 0.041569, "dy": 0.000000},
+      "roi": {"left": 0.276563, "top": 0.618750, "right": 0.495313, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981624390176875,
+      "presentationTimestampNanos": 2602497599,
+      "analysisFps": 29.457111,
+      "latencyMillis": 0.000000,
+      "averageGreen": 146.321137,
+      "bandpassedGreen": -3.811744,
+      "translation": {"dx": 0.036598, "dy": 0.000000},
+      "roi": {"left": 0.301562, "top": 0.618750, "right": 0.520312, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981624424124547,
+      "presentationTimestampNanos": 2636445271,
+      "analysisFps": 29.457111,
+      "latencyMillis": 0.000000,
+      "averageGreen": 149.440171,
+      "bandpassedGreen": -2.621579,
+      "translation": {"dx": 0.031244, "dy": 0.000000},
+      "roi": {"left": 0.320313, "top": 0.618750, "right": 0.539063, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981624458072179,
+      "presentationTimestampNanos": 2670392903,
+      "analysisFps": 29.457113,
+      "latencyMillis": 0.000000,
+      "averageGreen": 151.396130,
+      "bandpassedGreen": -1.396154,
+      "translation": {"dx": 0.025621, "dy": 0.000000},
+      "roi": {"left": 0.332812, "top": 0.618750, "right": 0.551562, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981624492019852,
+      "presentationTimestampNanos": 2704340576,
+      "analysisFps": 29.457111,
+      "latencyMillis": 0.000000,
+      "averageGreen": 151.754789,
+      "bandpassedGreen": -0.301636,
+      "translation": {"dx": 0.020747, "dy": 0.000000},
+      "roi": {"left": 0.342187, "top": 0.618750, "right": 0.560938, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981624525967524,
+      "presentationTimestampNanos": 2738288248,
+      "analysisFps": 29.457111,
+      "latencyMillis": 0.000000,
+      "averageGreen": 152.352821,
+      "bandpassedGreen": 0.701060,
+      "translation": {"dx": 0.016867, "dy": 0.000000},
+      "roi": {"left": 0.351563, "top": 0.618750, "right": 0.567187, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981624559927445,
+      "presentationTimestampNanos": 2772248169,
+      "analysisFps": 29.456363,
+      "latencyMillis": 0.000000,
+      "averageGreen": 152.393289,
+      "bandpassedGreen": 1.567203,
+      "translation": {"dx": 0.013213, "dy": 0.000000},
+      "roi": {"left": 0.356250, "top": 0.618750, "right": 0.571875, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981624593862828,
+      "presentationTimestampNanos": 2806183552,
+      "analysisFps": 29.457111,
+      "latencyMillis": 0.000000,
+      "averageGreen": 152.627999,
+      "bandpassedGreen": 2.331938,
+      "translation": {"dx": 0.010186, "dy": 0.000000},
+      "roi": {"left": 0.357812, "top": 0.618750, "right": 0.576563, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981624627810501,
+      "presentationTimestampNanos": 2840131225,
+      "analysisFps": 29.457111,
+      "latencyMillis": 0.000000,
+      "averageGreen": 153.331040,
+      "bandpassedGreen": 3.054569,
+      "translation": {"dx": 0.008068, "dy": 0.000000},
+      "roi": {"left": 0.362500, "top": 0.618750, "right": 0.578125, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981624670087966,
+      "presentationTimestampNanos": 2882408690,
+      "analysisFps": 29.209754,
+      "latencyMillis": 0.000000,
+      "averageGreen": 153.430130,
+      "bandpassedGreen": 3.817125,
+      "translation": {"dx": 0.006116, "dy": 0.000000},
+      "roi": {"left": 0.364062, "top": 0.618750, "right": 0.579687, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981624712365392,
+      "presentationTimestampNanos": 2924686116,
+      "analysisFps": 28.966928,
+      "latencyMillis": 0.000000,
+      "averageGreen": 137.522076,
+      "bandpassedGreen": 2.508834,
+      "translation": {"dx": -0.042594, "dy": 0.000000},
+      "roi": {"left": 0.206250, "top": 0.618750, "right": 0.425000, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981624754642858,
+      "presentationTimestampNanos": 2966963582,
+      "analysisFps": 28.727903,
+      "latencyMillis": 0.000000,
+      "averageGreen": 136.360216,
+      "bandpassedGreen": 1.272126,
+      "translation": {"dx": -0.037315, "dy": 0.000000},
+      "roi": {"left": 0.181250, "top": 0.618750, "right": 0.400000, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981624796920324,
+      "presentationTimestampNanos": 3009241048,
+      "analysisFps": 28.492791,
+      "latencyMillis": 0.000000,
+      "averageGreen": 135.479814,
+      "bandpassedGreen": 0.133720,
+      "translation": {"dx": -0.031277, "dy": 0.000000},
+      "roi": {"left": 0.164063, "top": 0.618750, "right": 0.382813, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981624839197789,
+      "presentationTimestampNanos": 3051518513,
+      "analysisFps": 28.261495,
+      "latencyMillis": 0.000000,
+      "averageGreen": 134.496460,
+      "bandpassedGreen": -0.931135,
+      "translation": {"dx": -0.026113, "dy": 0.000000},
+      "roi": {"left": 0.150000, "top": 0.618750, "right": 0.368750, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981624881483556,
+      "presentationTimestampNanos": 3093804280,
+      "analysisFps": 28.033700,
+      "latencyMillis": 0.000000,
+      "averageGreen": 134.593089,
+      "bandpassedGreen": -1.800159,
+      "translation": {"dx": -0.021091, "dy": 0.000000},
+      "roi": {"left": 0.140625, "top": 0.618750, "right": 0.359375, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981624923752680,
+      "presentationTimestampNanos": 3136073404,
+      "analysisFps": 27.809991,
+      "latencyMillis": 0.000000,
+      "averageGreen": 134.115718,
+      "bandpassedGreen": -2.572296,
+      "translation": {"dx": -0.016639, "dy": 0.000000},
+      "roi": {"left": 0.134375, "top": 0.618750, "right": 0.353125, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981624966030146,
+      "presentationTimestampNanos": 3178350870,
+      "analysisFps": 27.589610,
+      "latencyMillis": 0.000000,
+      "averageGreen": 134.525022,
+      "bandpassedGreen": -3.154048,
+      "translation": {"dx": -0.013054, "dy": 0.000000},
+      "roi": {"left": 0.129688, "top": 0.618750, "right": 0.348437, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981624999937616,
+      "presentationTimestampNanos": 3212258340,
+      "analysisFps": 27.590660,
+      "latencyMillis": 0.000000,
+      "averageGreen": 134.809256,
+      "bandpassedGreen": -3.511527,
+      "translation": {"dx": -0.009606, "dy": 0.000000},
+      "roi": {"left": 0.128125, "top": 0.618750, "right": 0.346875, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981625033827672,
+      "presentationTimestampNanos": 3246148396,
+      "analysisFps": 27.592173,
+      "latencyMillis": 0.000000,
+      "averageGreen": 134.673928,
+      "bandpassedGreen": -3.823836,
+      "translation": {"dx": -0.006724, "dy": 0.000000},
+      "roi": {"left": 0.128125, "top": 0.618750, "right": 0.346875, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981625067873123,
+      "presentationTimestampNanos": 3280193847,
+      "analysisFps": 27.589868,
+      "latencyMillis": 0.000000,
+      "averageGreen": 134.636621,
+      "bandpassedGreen": -4.088016,
+      "translation": {"dx": -0.004707, "dy": 0.000000},
+      "roi": {"left": 0.128125, "top": 0.618750, "right": 0.346875, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981625101814651,
+      "presentationTimestampNanos": 3314135375,
+      "analysisFps": 27.589766,
+      "latencyMillis": 0.000000,
+      "averageGreen": 147.145573,
+      "bandpassedGreen": -3.065952,
+      "translation": {"dx": 0.041236, "dy": 0.000625},
+      "roi": {"left": 0.278125, "top": 0.620833, "right": 0.493750, "bottom": 0.729167}
+    },
+    {
+      "timestampNanos": 1981625135768468,
+      "presentationTimestampNanos": 3348089192,
+      "analysisFps": 27.589605,
+      "latencyMillis": 0.000000,
+      "averageGreen": 149.888030,
+      "bandpassedGreen": -1.905936,
+      "translation": {"dx": 0.036834, "dy": 0.000438},
+      "roi": {"left": 0.304688, "top": 0.620833, "right": 0.520312, "bottom": 0.729167}
+    },
+    {
+      "timestampNanos": 1981625169716100,
+      "presentationTimestampNanos": 3382036824,
+      "analysisFps": 27.589606,
+      "latencyMillis": 0.000000,
+      "averageGreen": 152.307264,
+      "bandpassedGreen": -0.662610,
+      "translation": {"dx": 0.030940, "dy": 0.000306},
+      "roi": {"left": 0.321875, "top": 0.620833, "right": 0.537500, "bottom": 0.729167}
+    },
+    {
+      "timestampNanos": 1981625203663773,
+      "presentationTimestampNanos": 3415984497,
+      "analysisFps": 27.589605,
+      "latencyMillis": 0.000000,
+      "averageGreen": 154.516802,
+      "bandpassedGreen": 0.628749,
+      "translation": {"dx": 0.025877, "dy": 0.000214},
+      "roi": {"left": 0.335938, "top": 0.620833, "right": 0.551562, "bottom": 0.729167}
+    },
+    {
+      "timestampNanos": 1981625237611444,
+      "presentationTimestampNanos": 3449932168,
+      "analysisFps": 27.589605,
+      "latencyMillis": 0.000000,
+      "averageGreen": 154.012227,
+      "bandpassedGreen": 1.689440,
+      "translation": {"dx": 0.020926, "dy": 0.000150},
+      "roi": {"left": 0.345313, "top": 0.620833, "right": 0.560938, "bottom": 0.729167}
+    },
+    {
+      "timestampNanos": 1981625271559076,
+      "presentationTimestampNanos": 3483879800,
+      "analysisFps": 27.589606,
+      "latencyMillis": 0.000000,
+      "averageGreen": 154.671066,
+      "bandpassedGreen": 2.663973,
+      "translation": {"dx": 0.016523, "dy": 0.000105},
+      "roi": {"left": 0.351563, "top": 0.620833, "right": 0.567187, "bottom": 0.729167}
+    },
+    {
+      "timestampNanos": 1981625305506749,
+      "presentationTimestampNanos": 3517827473,
+      "analysisFps": 27.589605,
+      "latencyMillis": 0.000000,
+      "averageGreen": 154.575041,
+      "bandpassedGreen": 3.487079,
+      "translation": {"dx": 0.012973, "dy": 0.000074},
+      "roi": {"left": 0.356250, "top": 0.620833, "right": 0.571875, "bottom": 0.729167}
+    },
+    {
+      "timestampNanos": 1981625339454422,
+      "presentationTimestampNanos": 3551775146,
+      "analysisFps": 27.590637,
+      "latencyMillis": 0.000000,
+      "averageGreen": 155.532663,
+      "bandpassedGreen": 4.282009,
+      "translation": {"dx": 0.010018, "dy": 0.000051},
+      "roi": {"left": 0.359375, "top": 0.620833, "right": 0.575000, "bottom": 0.729167}
+    },
+    {
+      "timestampNanos": 1981625373402094,
+      "presentationTimestampNanos": 3585722818,
+      "analysisFps": 27.589605,
+      "latencyMillis": 0.000000,
+      "averageGreen": 155.545013,
+      "bandpassedGreen": 4.957053,
+      "translation": {"dx": 0.007950, "dy": 0.000036},
+      "roi": {"left": 0.362500, "top": 0.620833, "right": 0.578125, "bottom": 0.729167}
+    },
+    {
+      "timestampNanos": 1981625407349726,
+      "presentationTimestampNanos": 3619670450,
+      "analysisFps": 27.589605,
+      "latencyMillis": 0.000000,
+      "averageGreen": 155.753343,
+      "bandpassedGreen": 5.546531,
+      "translation": {"dx": 0.006034, "dy": 0.000025},
+      "roi": {"left": 0.364062, "top": 0.620833, "right": 0.579687, "bottom": 0.729167}
+    },
+    {
+      "timestampNanos": 1981625475245071,
+      "presentationTimestampNanos": 3687565795,
+      "analysisFps": 26.726431,
+      "latencyMillis": 0.000000,
+      "averageGreen": 140.108467,
+      "bandpassedGreen": 3.570408,
+      "translation": {"dx": -0.042651, "dy": -0.000607},
+      "roi": {"left": 0.207813, "top": 0.618750, "right": 0.423438, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981625509192702,
+      "presentationTimestampNanos": 3721513426,
+      "analysisFps": 26.726432,
+      "latencyMillis": 0.000000,
+      "averageGreen": 138.668611,
+      "bandpassedGreen": 2.625904,
+      "translation": {"dx": -0.037356, "dy": -0.000425},
+      "roi": {"left": 0.182812, "top": 0.618750, "right": 0.398438, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981625543140375,
+      "presentationTimestampNanos": 3755461099,
+      "analysisFps": 26.726431,
+      "latencyMillis": 0.000000,
+      "averageGreen": 138.085680,
+      "bandpassedGreen": 1.748016,
+      "translation": {"dx": -0.031774, "dy": -0.000298},
+      "roi": {"left": 0.164063, "top": 0.618750, "right": 0.379687, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981625577088048,
+      "presentationTimestampNanos": 3789408772,
+      "analysisFps": 26.726431,
+      "latencyMillis": 0.000000,
+      "averageGreen": 137.492019,
+      "bandpassedGreen": 0.928671,
+      "translation": {"dx": -0.025992, "dy": -0.000208},
+      "roi": {"left": 0.151562, "top": 0.618750, "right": 0.367188, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981625611045812,
+      "presentationTimestampNanos": 3823366536,
+      "analysisFps": 26.726182,
+      "latencyMillis": 0.000000,
+      "averageGreen": 136.697106,
+      "bandpassedGreen": 0.141680,
+      "translation": {"dx": -0.021007, "dy": -0.000146},
+      "roi": {"left": 0.142188, "top": 0.618750, "right": 0.357812, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981625645061803,
+      "presentationTimestampNanos": 3857382527,
+      "analysisFps": 26.724801,
+      "latencyMillis": 0.000000,
+      "averageGreen": 135.955968,
+      "bandpassedGreen": -0.611091,
+      "translation": {"dx": -0.017049, "dy": -0.000102},
+      "roi": {"left": 0.134375, "top": 0.618750, "right": 0.350000, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981625678931025,
+      "presentationTimestampNanos": 3891251749,
+      "analysisFps": 26.726431,
+      "latencyMillis": 0.000000,
+      "averageGreen": 135.512898,
+      "bandpassedGreen": -1.298905,
+      "translation": {"dx": -0.013340, "dy": -0.000071},
+      "roi": {"left": 0.129688, "top": 0.618750, "right": 0.345313, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981625721208450,
+      "presentationTimestampNanos": 3933529174,
+      "analysisFps": 26.522823,
+      "latencyMillis": 0.000000,
+      "averageGreen": 135.751755,
+      "bandpassedGreen": -1.991810,
+      "translation": {"dx": -0.009807, "dy": -0.000050},
+      "roi": {"left": 0.128125, "top": 0.618750, "right": 0.343750, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981625763485915,
+      "presentationTimestampNanos": 3975806639,
+      "analysisFps": 26.522823,
+      "latencyMillis": 0.000000,
+      "averageGreen": 136.261225,
+      "bandpassedGreen": -2.497745,
+      "translation": {"dx": -0.006865, "dy": -0.000035},
+      "roi": {"left": 0.128125, "top": 0.618750, "right": 0.343750, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981625805823643,
+      "presentationTimestampNanos": 4018144367,
+      "analysisFps": 26.521360,
+      "latencyMillis": 0.000000,
+      "averageGreen": 136.499967,
+      "bandpassedGreen": -2.879757,
+      "translation": {"dx": -0.004805, "dy": -0.000025},
+      "roi": {"left": 0.128125, "top": 0.618750, "right": 0.343750, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981625848040847,
+      "presentationTimestampNanos": 4060361571,
+      "analysisFps": 26.522822,
+      "latencyMillis": 0.000000,
+      "averageGreen": 148.129556,
+      "bandpassedGreen": -1.778237,
+      "translation": {"dx": 0.041167, "dy": -0.000017},
+      "roi": {"left": 0.275000, "top": 0.618750, "right": 0.493750, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981625890318312,
+      "presentationTimestampNanos": 4102639036,
+      "analysisFps": 26.522822,
+      "latencyMillis": 0.000000,
+      "averageGreen": 150.491438,
+      "bandpassedGreen": -0.569271,
+      "translation": {"dx": 0.036317, "dy": -0.000012},
+      "roi": {"left": 0.300000, "top": 0.618750, "right": 0.518750, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981625932595779,
+      "presentationTimestampNanos": 4144916503,
+      "analysisFps": 26.522822,
+      "latencyMillis": 0.000000,
+      "averageGreen": 152.292472,
+      "bandpassedGreen": 0.654888,
+      "translation": {"dx": 0.031047, "dy": -0.000008},
+      "roi": {"left": 0.318750, "top": 0.618750, "right": 0.537500, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981625966453404,
+      "presentationTimestampNanos": 4178774128,
+      "analysisFps": 26.728853,
+      "latencyMillis": 0.000000,
+      "averageGreen": 154.305490,
+      "bandpassedGreen": 1.680895,
+      "translation": {"dx": 0.025483, "dy": -0.000006},
+      "roi": {"left": 0.331250, "top": 0.618750, "right": 0.550000, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981626008771357,
+      "presentationTimestampNanos": 4221092081,
+      "analysisFps": 26.727651,
+      "latencyMillis": 0.000000,
+      "averageGreen": 155.101158,
+      "bandpassedGreen": 2.856336,
+      "translation": {"dx": 0.020651, "dy": -0.000004},
+      "roi": {"left": 0.340625, "top": 0.618750, "right": 0.559375, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981626051098342,
+      "presentationTimestampNanos": 4263419066,
+      "analysisFps": 26.726431,
+      "latencyMillis": 0.000000,
+      "averageGreen": 155.137778,
+      "bandpassedGreen": 3.825726,
+      "translation": {"dx": 0.016330, "dy": -0.000003},
+      "roi": {"left": 0.346875, "top": 0.618750, "right": 0.565625, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981626085046015,
+      "presentationTimestampNanos": 4297366739,
+      "analysisFps": 26.725441,
+      "latencyMillis": 0.000000,
+      "averageGreen": 155.197953,
+      "bandpassedGreen": 4.478105,
+      "translation": {"dx": 0.012838, "dy": -0.000002},
+      "roi": {"left": 0.351563, "top": 0.618750, "right": 0.570313, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981626118993647,
+      "presentationTimestampNanos": 4331314371,
+      "analysisFps": 26.724023,
+      "latencyMillis": 0.000000,
+      "averageGreen": 154.777751,
+      "bandpassedGreen": 4.987036,
+      "translation": {"dx": 0.010393, "dy": -0.000001},
+      "roi": {"left": 0.356250, "top": 0.618750, "right": 0.575000, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981626153277216,
+      "presentationTimestampNanos": 4365597940,
+      "analysisFps": 26.718160,
+      "latencyMillis": 0.000000,
+      "averageGreen": 155.048326,
+      "bandpassedGreen": 5.443608,
+      "translation": {"dx": 0.007744, "dy": -0.000001},
+      "roi": {"left": 0.357812, "top": 0.618750, "right": 0.576563, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981626186888991,
+      "presentationTimestampNanos": 4399209715,
+      "analysisFps": 26.726279,
+      "latencyMillis": 0.000000,
+      "averageGreen": 155.199064,
+      "bandpassedGreen": 5.830265,
+      "translation": {"dx": 0.005889, "dy": -0.000001},
+      "roi": {"left": 0.359375, "top": 0.618750, "right": 0.578125, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981626220836623,
+      "presentationTimestampNanos": 4433157347,
+      "analysisFps": 26.726432,
+      "latencyMillis": 0.000000,
+      "averageGreen": 143.074479,
+      "bandpassedGreen": 4.951529,
+      "translation": {"dx": -0.042284, "dy": 0.000625},
+      "roi": {"left": 0.206250, "top": 0.620833, "right": 0.421875, "bottom": 0.729167}
+    },
+    {
+      "timestampNanos": 1981626254760533,
+      "presentationTimestampNanos": 4467081257,
+      "analysisFps": 26.727016,
+      "latencyMillis": 0.000000,
+      "averageGreen": 141.316658,
+      "bandpassedGreen": 4.008666,
+      "translation": {"dx": -0.037099, "dy": 0.000437},
+      "roi": {"left": 0.181250, "top": 0.620833, "right": 0.396875, "bottom": 0.729167}
+    },
+    {
+      "timestampNanos": 1981626288731968,
+      "presentationTimestampNanos": 4501052692,
+      "analysisFps": 26.726431,
+      "latencyMillis": 0.000000,
+      "averageGreen": 139.996324,
+      "bandpassedGreen": 3.054437,
+      "translation": {"dx": -0.031125, "dy": 0.000306},
+      "roi": {"left": 0.164063, "top": 0.620833, "right": 0.379687, "bottom": 0.729167}
+    },
+    {
+      "timestampNanos": 1981626322679600,
+      "presentationTimestampNanos": 4535000324,
+      "analysisFps": 26.726432,
+      "latencyMillis": 0.000000,
+      "averageGreen": 139.033329,
+      "bandpassedGreen": 2.130071,
+      "translation": {"dx": -0.026006, "dy": 0.000214},
+      "roi": {"left": 0.150000, "top": 0.620833, "right": 0.365625, "bottom": 0.729167}
+    },
+    {
+      "timestampNanos": 1981626364957066,
+      "presentationTimestampNanos": 4577277790,
+      "analysisFps": 26.522822,
+      "latencyMillis": 0.000000,
+      "averageGreen": 138.805809,
+      "bandpassedGreen": 1.121282,
+      "translation": {"dx": -0.021017, "dy": 0.000150},
+      "roi": {"left": 0.140625, "top": 0.620833, "right": 0.356250, "bottom": 0.729167}
+    },
+    {
+      "timestampNanos": 1981626407234532,
+      "presentationTimestampNanos": 4619555256,
+      "analysisFps": 26.322292,
+      "latencyMillis": 0.000000,
+      "averageGreen": 138.042163,
+      "bandpassedGreen": 0.186845,
+      "translation": {"dx": -0.016587, "dy": 0.000105},
+      "roi": {"left": 0.134375, "top": 0.620833, "right": 0.350000, "bottom": 0.729167}
+    },
+    {
+      "timestampNanos": 1981626449511997,
+      "presentationTimestampNanos": 4661832721,
+      "analysisFps": 26.124771,
+      "latencyMillis": 0.000000,
+      "averageGreen": 137.628985,
+      "bandpassedGreen": -0.639798,
+      "translation": {"dx": -0.013017, "dy": 0.000073},
+      "roi": {"left": 0.129688, "top": 0.620833, "right": 0.345313, "bottom": 0.729167}
+    },
+    {
+      "timestampNanos": 1981626491789463,
+      "presentationTimestampNanos": 4704110187,
+      "analysisFps": 25.930193,
+      "latencyMillis": 0.000000,
+      "averageGreen": 137.638330,
+      "bandpassedGreen": -1.322573,
+      "translation": {"dx": -0.009581, "dy": 0.000051},
+      "roi": {"left": 0.128125, "top": 0.620833, "right": 0.343750, "bottom": 0.729167}
+    },
+    {
+      "timestampNanos": 1981626534066889,
+      "presentationTimestampNanos": 4746387613,
+      "analysisFps": 25.738491,
+      "latencyMillis": 0.000000,
+      "averageGreen": 137.507990,
+      "bandpassedGreen": -1.900171,
+      "translation": {"dx": -0.006706, "dy": 0.000036},
+      "roi": {"left": 0.128125, "top": 0.620833, "right": 0.343750, "bottom": 0.729167}
+    },
+    {
+      "timestampNanos": 1981626576344354,
+      "presentationTimestampNanos": 4788665078,
+      "analysisFps": 26.337316,
+      "latencyMillis": 0.000000,
+      "averageGreen": 137.504579,
+      "bandpassedGreen": -2.372836,
+      "translation": {"dx": -0.004695, "dy": 0.000025},
+      "roi": {"left": 0.128125, "top": 0.620833, "right": 0.343750, "bottom": 0.729167}
+    },
+    {
+      "timestampNanos": 1981626610292027,
+      "presentationTimestampNanos": 4822612751,
+      "analysisFps": 26.337315,
+      "latencyMillis": 0.000000,
+      "averageGreen": 148.037725,
+      "bandpassedGreen": -1.643961,
+      "translation": {"dx": 0.041245, "dy": -0.000607},
+      "roi": {"left": 0.276563, "top": 0.618750, "right": 0.492188, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981626652569493,
+      "presentationTimestampNanos": 4864890217,
+      "analysisFps": 26.139570,
+      "latencyMillis": 0.000000,
+      "averageGreen": 150.543183,
+      "bandpassedGreen": -0.566922,
+      "translation": {"dx": 0.036372, "dy": -0.000425},
+      "roi": {"left": 0.301562, "top": 0.618750, "right": 0.517187, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981626694846959,
+      "presentationTimestampNanos": 4907167683,
+      "analysisFps": 25.944772,
+      "latencyMillis": 0.000000,
+      "averageGreen": 151.896599,
+      "bandpassedGreen": 0.493473,
+      "translation": {"dx": 0.030616, "dy": -0.000298},
+      "roi": {"left": 0.317187, "top": 0.618750, "right": 0.535937, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981626728794590,
+      "presentationTimestampNanos": 4941115314,
+      "analysisFps": 25.945007,
+      "latencyMillis": 0.000000,
+      "averageGreen": 154.356473,
+      "bandpassedGreen": 1.455537,
+      "translation": {"dx": 0.025650, "dy": -0.000208},
+      "roi": {"left": 0.332812, "top": 0.618750, "right": 0.548437, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981626762764561,
+      "presentationTimestampNanos": 4975085285,
+      "analysisFps": 25.946075,
+      "latencyMillis": 0.000000,
+      "averageGreen": 154.991510,
+      "bandpassedGreen": 2.343899,
+      "translation": {"dx": 0.020768, "dy": -0.000146},
+      "roi": {"left": 0.342187, "top": 0.618750, "right": 0.557813, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981626796689935,
+      "presentationTimestampNanos": 5009010659,
+      "analysisFps": 25.944772,
+      "latencyMillis": 0.000000,
+      "averageGreen": 155.141369,
+      "bandpassedGreen": 3.116934,
+      "translation": {"dx": 0.016412, "dy": -0.000102},
+      "roi": {"left": 0.348437, "top": 0.618750, "right": 0.564062, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981626830640497,
+      "presentationTimestampNanos": 5042961221,
+      "analysisFps": 26.139501,
+      "latencyMillis": 0.000000,
+      "averageGreen": 155.084341,
+      "bandpassedGreen": 3.769726,
+      "translation": {"dx": 0.012895, "dy": -0.000071},
+      "roi": {"left": 0.351563, "top": 0.618750, "right": 0.570313, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981626864601638,
+      "presentationTimestampNanos": 5076922362,
+      "analysisFps": 26.336923,
+      "latencyMillis": 0.000000,
+      "averageGreen": 155.050682,
+      "bandpassedGreen": 4.319235,
+      "translation": {"dx": 0.010433, "dy": -0.000050},
+      "roi": {"left": 0.357812, "top": 0.618750, "right": 0.573438, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981626898532912,
+      "presentationTimestampNanos": 5110853636,
+      "analysisFps": 26.539539,
+      "latencyMillis": 0.000000,
+      "averageGreen": 155.135109,
+      "bandpassedGreen": 4.789527,
+      "translation": {"dx": 0.007772, "dy": -0.000035},
+      "roi": {"left": 0.359375, "top": 0.618750, "right": 0.575000, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981626932480421,
+      "presentationTimestampNanos": 5144801145,
+      "analysisFps": 26.741923,
+      "latencyMillis": 0.000000,
+      "averageGreen": 155.066340,
+      "bandpassedGreen": 5.175850,
+      "translation": {"dx": 0.005909, "dy": -0.000025},
+      "roi": {"left": 0.359375, "top": 0.618750, "right": 0.578125, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981626966428217,
+      "presentationTimestampNanos": 5178748941,
+      "analysisFps": 26.948920,
+      "latencyMillis": 0.000000,
+      "averageGreen": 141.061536,
+      "bandpassedGreen": 4.108646,
+      "translation": {"dx": -0.042270, "dy": -0.000017},
+      "roi": {"left": 0.204688, "top": 0.618750, "right": 0.423438, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981627000354283,
+      "presentationTimestampNanos": 5212675007,
+      "analysisFps": 27.159699,
+      "latencyMillis": 0.000000,
+      "averageGreen": 139.449399,
+      "bandpassedGreen": 3.020052,
+      "translation": {"dx": -0.037089, "dy": -0.000012},
+      "roi": {"left": 0.179688, "top": 0.618750, "right": 0.398438, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981627034323521,
+      "presentationTimestampNanos": 5246644245,
+      "analysisFps": 27.156861,
+      "latencyMillis": 0.000000,
+      "averageGreen": 138.402869,
+      "bandpassedGreen": 1.969894,
+      "translation": {"dx": -0.031587, "dy": -0.000008},
+      "roi": {"left": 0.160938, "top": 0.618750, "right": 0.379687, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981627068271194,
+      "presentationTimestampNanos": 5280591918,
+      "analysisFps": 27.371406,
+      "latencyMillis": 0.000000,
+      "averageGreen": 137.576466,
+      "bandpassedGreen": 0.979179,
+      "translation": {"dx": -0.025861, "dy": -0.000006},
+      "roi": {"left": 0.148438, "top": 0.618750, "right": 0.367188, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981627102217036,
+      "presentationTimestampNanos": 5314537760,
+      "analysisFps": 27.589653,
+      "latencyMillis": 0.000000,
+      "averageGreen": 136.879923,
+      "bandpassedGreen": 0.054462,
+      "translation": {"dx": -0.020915, "dy": -0.000004},
+      "roi": {"left": 0.139062, "top": 0.618750, "right": 0.357812, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981627136166497,
+      "presentationTimestampNanos": 5348487221,
+      "analysisFps": 27.589606,
+      "latencyMillis": 0.000000,
+      "averageGreen": 136.723311,
+      "bandpassedGreen": -0.757730,
+      "translation": {"dx": -0.016984, "dy": -0.000003},
+      "roi": {"left": 0.131250, "top": 0.618750, "right": 0.350000, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981627170114170,
+      "presentationTimestampNanos": 5382434894,
+      "analysisFps": 27.589605,
+      "latencyMillis": 0.000000,
+      "averageGreen": 136.459249,
+      "bandpassedGreen": -1.481462,
+      "translation": {"dx": -0.012827, "dy": -0.000002},
+      "roi": {"left": 0.128125, "top": 0.618750, "right": 0.346875, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981627204061843,
+      "presentationTimestampNanos": 5416382567,
+      "analysisFps": 27.598424,
+      "latencyMillis": 0.000000,
+      "averageGreen": 136.573102,
+      "bandpassedGreen": -2.089784,
+      "translation": {"dx": -0.008979, "dy": -0.000001},
+      "roi": {"left": 0.128125, "top": 0.618750, "right": 0.346875, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981627238009474,
+      "presentationTimestampNanos": 5450330198,
+      "analysisFps": 27.589606,
+      "latencyMillis": 0.000000,
+      "averageGreen": 136.809147,
+      "bandpassedGreen": -2.585060,
+      "translation": {"dx": -0.006285, "dy": -0.000001},
+      "roi": {"left": 0.128125, "top": 0.618750, "right": 0.346875, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981627271957147,
+      "presentationTimestampNanos": 5484277871,
+      "analysisFps": 27.589605,
+      "latencyMillis": 0.000000,
+      "averageGreen": 136.796745,
+      "bandpassedGreen": -3.006317,
+      "translation": {"dx": -0.004400, "dy": -0.000001},
+      "roi": {"left": 0.128125, "top": 0.618750, "right": 0.346875, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981627305904820,
+      "presentationTimestampNanos": 5518225544,
+      "analysisFps": 27.588981,
+      "latencyMillis": 0.000000,
+      "averageGreen": 150.365332,
+      "bandpassedGreen": -2.017900,
+      "translation": {"dx": 0.040514, "dy": 0.000625},
+      "roi": {"left": 0.275000, "top": 0.620833, "right": 0.490625, "bottom": 0.729167}
+    },
+    {
+      "timestampNanos": 1981627339854242,
+      "presentationTimestampNanos": 5552174966,
+      "analysisFps": 27.589559,
+      "latencyMillis": 0.000000,
+      "averageGreen": 153.020494,
+      "bandpassedGreen": -0.898479,
+      "translation": {"dx": 0.036329, "dy": 0.000437},
+      "roi": {"left": 0.301562, "top": 0.620833, "right": 0.517187, "bottom": 0.729167}
+    },
+    {
+      "timestampNanos": 1981627382129917,
+      "presentationTimestampNanos": 5594450641,
+      "analysisFps": 27.372685,
+      "latencyMillis": 0.000000,
+      "averageGreen": 155.054470,
+      "bandpassedGreen": 0.530145,
+      "translation": {"dx": 0.030586, "dy": 0.000306},
+      "roi": {"left": 0.318750, "top": 0.620833, "right": 0.534375, "bottom": 0.729167}
+    },
+    {
+      "timestampNanos": 1981627416060541,
+      "presentationTimestampNanos": 5628381265,
+      "analysisFps": 27.590052,
+      "latencyMillis": 0.000000,
+      "averageGreen": 157.323962,
+      "bandpassedGreen": 1.722724,
+      "translation": {"dx": 0.025629, "dy": 0.000214},
+      "roi": {"left": 0.332812, "top": 0.620833, "right": 0.548437, "bottom": 0.729167}
+    },
+    {
+      "timestampNanos": 1981627450025262,
+      "presentationTimestampNanos": 5662345986,
+      "analysisFps": 27.809990,
+      "latencyMillis": 0.000000,
+      "averageGreen": 158.174809,
+      "bandpassedGreen": 2.830853,
+      "translation": {"dx": 0.020753, "dy": 0.000150},
+      "roi": {"left": 0.342187, "top": 0.620833, "right": 0.557813, "bottom": 0.729167}
+    },
+    {
+      "timestampNanos": 1981627492302728,
+      "presentationTimestampNanos": 5704623452,
+      "analysisFps": 27.809990,
+      "latencyMillis": 0.000000,
+      "averageGreen": 158.325654,
+      "bandpassedGreen": 4.005929,
+      "translation": {"dx": 0.016402, "dy": 0.000105},
+      "roi": {"left": 0.348437, "top": 0.620833, "right": 0.564062, "bottom": 0.729167}
+    },
+    {
+      "timestampNanos": 1981627526250359,
+      "presentationTimestampNanos": 5738571083,
+      "analysisFps": 28.033926,
+      "latencyMillis": 0.000000,
+      "averageGreen": 158.203924,
+      "bandpassedGreen": 4.780267,
+      "translation": {"dx": 0.012888, "dy": 0.000073},
+      "roi": {"left": 0.353125, "top": 0.620833, "right": 0.568750, "bottom": 0.729167}
+    },
+    {
+      "timestampNanos": 1981627560198032,
+      "presentationTimestampNanos": 5772518756,
+      "analysisFps": 28.261495,
+      "latencyMillis": 0.000000,
+      "averageGreen": 157.922303,
+      "bandpassedGreen": 5.407200,
+      "translation": {"dx": 0.009959, "dy": 0.000051},
+      "roi": {"left": 0.356250, "top": 0.620833, "right": 0.571875, "bottom": 0.729167}
+    },
+    {
+      "timestampNanos": 1981627594145094,
+      "presentationTimestampNanos": 5806465818,
+      "analysisFps": 28.492807,
+      "latencyMillis": 0.000000,
+      "averageGreen": 158.145935,
+      "bandpassedGreen": 5.955607,
+      "translation": {"dx": 0.007909, "dy": 0.000036},
+      "roi": {"left": 0.359375, "top": 0.620833, "right": 0.575000, "bottom": 0.729167}
+    },
+    {
+      "timestampNanos": 1981627628093337,
+      "presentationTimestampNanos": 5840414061,
+      "analysisFps": 28.492791,
+      "latencyMillis": 0.000000,
+      "averageGreen": 158.378433,
+      "bandpassedGreen": 6.435893,
+      "translation": {"dx": 0.006005, "dy": 0.000025},
+      "roi": {"left": 0.360938, "top": 0.620833, "right": 0.576563, "bottom": 0.729167}
+    },
+    {
+      "timestampNanos": 1981627662041009,
+      "presentationTimestampNanos": 5874361733,
+      "analysisFps": 28.727903,
+      "latencyMillis": 0.000000,
+      "averageGreen": 143.214721,
+      "bandpassedGreen": 5.331657,
+      "translation": {"dx": -0.042672, "dy": 0.000018},
+      "roi": {"left": 0.203125, "top": 0.620833, "right": 0.421875, "bottom": 0.729167}
+    },
+    {
+      "timestampNanos": 1981627695988682,
+      "presentationTimestampNanos": 5908309406,
+      "analysisFps": 28.966928,
+      "latencyMillis": 0.000000,
+      "averageGreen": 139.957769,
+      "bandpassedGreen": 4.044542,
+      "translation": {"dx": -0.037370, "dy": -0.000613},
+      "roi": {"left": 0.179688, "top": 0.618750, "right": 0.395312, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981627729936314,
+      "presentationTimestampNanos": 5942257038,
+      "analysisFps": 28.966928,
+      "latencyMillis": 0.000000,
+      "averageGreen": 138.680093,
+      "bandpassedGreen": 2.799172,
+      "translation": {"dx": -0.031784, "dy": -0.000429},
+      "roi": {"left": 0.159375, "top": 0.618750, "right": 0.378125, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981627763883986,
+      "presentationTimestampNanos": 5976204710,
+      "analysisFps": 28.967573,
+      "latencyMillis": 0.000000,
+      "averageGreen": 137.960150,
+      "bandpassedGreen": 1.648142,
+      "translation": {"dx": -0.025999, "dy": -0.000300},
+      "roi": {"left": 0.146875, "top": 0.618750, "right": 0.365625, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981627797831658,
+      "presentationTimestampNanos": 6010152382,
+      "analysisFps": 28.966928,
+      "latencyMillis": 0.000000,
+      "averageGreen": 137.322837,
+      "bandpassedGreen": 0.589470,
+      "translation": {"dx": -0.021012, "dy": -0.000210},
+      "roi": {"left": 0.139062, "top": 0.618750, "right": 0.354688, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981627831779290,
+      "presentationTimestampNanos": 6044100014,
+      "analysisFps": 28.967013,
+      "latencyMillis": 0.000000,
+      "averageGreen": 136.775387,
+      "bandpassedGreen": -0.378072,
+      "translation": {"dx": -0.016583, "dy": -0.000147},
+      "roi": {"left": 0.132813, "top": 0.618750, "right": 0.348437, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981627874056756,
+      "presentationTimestampNanos": 6086377480,
+      "analysisFps": 28.728370,
+      "latencyMillis": 0.000000,
+      "averageGreen": 136.111633,
+      "bandpassedGreen": -1.476394,
+      "translation": {"dx": -0.012546, "dy": -0.000103},
+      "roi": {"left": 0.129688, "top": 0.618750, "right": 0.345313, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981627908004428,
+      "presentationTimestampNanos": 6120325152,
+      "analysisFps": 28.727903,
+      "latencyMillis": 0.000000,
+      "averageGreen": 136.318365,
+      "bandpassedGreen": -2.197365,
+      "translation": {"dx": -0.008782, "dy": -0.000072},
+      "roi": {"left": 0.129688, "top": 0.618750, "right": 0.345313, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981627941952101,
+      "presentationTimestampNanos": 6154272825,
+      "analysisFps": 28.727899,
+      "latencyMillis": 0.000000,
+      "averageGreen": 136.333529,
+      "bandpassedGreen": -2.811267,
+      "translation": {"dx": -0.006147, "dy": -0.000050},
+      "roi": {"left": 0.129688, "top": 0.618750, "right": 0.345313, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981627975899733,
+      "presentationTimestampNanos": 6188220457,
+      "analysisFps": 28.727903,
+      "latencyMillis": 0.000000,
+      "averageGreen": 136.428912,
+      "bandpassedGreen": -3.323449,
+      "translation": {"dx": -0.004303, "dy": -0.000035},
+      "roi": {"left": 0.129688, "top": 0.618750, "right": 0.345313, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981628009847406,
+      "presentationTimestampNanos": 6222168130,
+      "analysisFps": 28.727288,
+      "latencyMillis": 0.000000,
+      "averageGreen": 147.448359,
+      "bandpassedGreen": -2.664971,
+      "translation": {"dx": 0.040582, "dy": -0.000025},
+      "roi": {"left": 0.273438, "top": 0.618750, "right": 0.492188, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981628052124830,
+      "presentationTimestampNanos": 6264445554,
+      "analysisFps": 28.492791,
+      "latencyMillis": 0.000000,
+      "averageGreen": 149.500483,
+      "bandpassedGreen": -1.713420,
+      "translation": {"dx": 0.035907, "dy": -0.000017},
+      "roi": {"left": 0.298438, "top": 0.618750, "right": 0.517187, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981628086072503,
+      "presentationTimestampNanos": 6298393227,
+      "analysisFps": 28.492791,
+      "latencyMillis": 0.000000,
+      "averageGreen": 151.049158,
+      "bandpassedGreen": -0.909235,
+      "translation": {"dx": 0.030291, "dy": -0.000012},
+      "roi": {"left": 0.315625, "top": 0.618750, "right": 0.534375, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981628128349969,
+      "presentationTimestampNanos": 6340670693,
+      "analysisFps": 28.261446,
+      "latencyMillis": 0.000000,
+      "averageGreen": 153.380040,
+      "bandpassedGreen": 0.223423,
+      "translation": {"dx": 0.025423, "dy": -0.000008},
+      "roi": {"left": 0.329688, "top": 0.618750, "right": 0.548437, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981628162297642,
+      "presentationTimestampNanos": 6374618366,
+      "analysisFps": 28.261495,
+      "latencyMillis": 0.000000,
+      "averageGreen": 154.399429,
+      "bandpassedGreen": 1.092665,
+      "translation": {"dx": 0.020608, "dy": -0.000006},
+      "roi": {"left": 0.339063, "top": 0.618750, "right": 0.557813, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981628196245314,
+      "presentationTimestampNanos": 6408566038,
+      "analysisFps": 28.261495,
+      "latencyMillis": 0.000000,
+      "averageGreen": 154.581112,
+      "bandpassedGreen": 1.856567,
+      "translation": {"dx": 0.016301, "dy": -0.000004},
+      "roi": {"left": 0.345313, "top": 0.618750, "right": 0.564062, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981628230192946,
+      "presentationTimestampNanos": 6442513670,
+      "analysisFps": 28.261496,
+      "latencyMillis": 0.000000,
+      "averageGreen": 155.095027,
+      "bandpassedGreen": 2.560699,
+      "translation": {"dx": 0.012817, "dy": -0.000003},
+      "roi": {"left": 0.350000, "top": 0.618750, "right": 0.568750, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981628272470412,
+      "presentationTimestampNanos": 6484791136,
+      "analysisFps": 28.033925,
+      "latencyMillis": 0.000000,
+      "averageGreen": 154.766690,
+      "bandpassedGreen": 3.253730,
+      "translation": {"dx": 0.010378, "dy": -0.000002},
+      "roi": {"left": 0.354688, "top": 0.618750, "right": 0.573438, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981628314747877,
+      "presentationTimestampNanos": 6527068601,
+      "analysisFps": 27.809990,
+      "latencyMillis": 0.000000,
+      "averageGreen": 154.957673,
+      "bandpassedGreen": 3.839732,
+      "translation": {"dx": 0.007733, "dy": -0.000001},
+      "roi": {"left": 0.356250, "top": 0.618750, "right": 0.575000, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981628357025343,
+      "presentationTimestampNanos": 6569346067,
+      "analysisFps": 27.589605,
+      "latencyMillis": 0.000000,
+      "averageGreen": 155.281288,
+      "bandpassedGreen": 4.350665,
+      "translation": {"dx": 0.005882, "dy": -0.000001},
+      "roi": {"left": 0.357812, "top": 0.618750, "right": 0.576563, "bottom": 0.727083}
+    },
+    {
+      "timestampNanos": 1981628399302768,
+      "presentationTimestampNanos": 6611623492,
+      "analysisFps": 27.372731,
+      "latencyMillis": 0.000000,
+      "averageGreen": 143.827447,
+      "bandpassedGreen": 3.370860,
+      "translation": {"dx": -0.042289, "dy": 0.001249},
+      "roi": {"left": 0.204688, "top": 0.622917, "right": 0.420312, "bottom": 0.731250}
+    },
+    {
+      "timestampNanos": 1981628441580235,
+      "presentationTimestampNanos": 6653900959,
+      "analysisFps": 27.372685,
+      "latencyMillis": 0.000000,
+      "averageGreen": 141.906328,
+      "bandpassedGreen": 2.311614,
+      "translation": {"dx": -0.037102, "dy": 0.000875},
+      "roi": {"left": 0.179688, "top": 0.622917, "right": 0.395312, "bottom": 0.731250}
+    },
+    {
+      "timestampNanos": 1981628483857700,
+      "presentationTimestampNanos": 6696178424,
+      "analysisFps": 27.158716,
+      "latencyMillis": 0.000000,
+      "averageGreen": 140.127902,
+      "bandpassedGreen": 1.207779,
+      "translation": {"dx": -0.031596, "dy": 0.000612},
+      "roi": {"left": 0.160938, "top": 0.622917, "right": 0.376563, "bottom": 0.731250}
+    },
+    {
+      "timestampNanos": 1981628526135166,
+      "presentationTimestampNanos": 6738455890,
+      "analysisFps": 26.948920,
+      "latencyMillis": 0.000000,
+      "averageGreen": 138.994157,
+      "bandpassedGreen": 0.149265,
+      "translation": {"dx": -0.025868, "dy": 0.000429},
+      "roi": {"left": 0.148438, "top": 0.622917, "right": 0.364062, "bottom": 0.731250}
+    },
+    {
+      "timestampNanos": 1981628568412632,
+      "presentationTimestampNanos": 6780733356,
+      "analysisFps": 26.948920,
+      "latencyMillis": 0.000000,
+      "averageGreen": 138.695863,
+      "bandpassedGreen": -0.766342,
+      "translation": {"dx": -0.020920, "dy": 0.000300},
+      "roi": {"left": 0.139062, "top": 0.622917, "right": 0.354688, "bottom": 0.731250}
+    },
+    {
+      "timestampNanos": 1981628610690097,
+      "presentationTimestampNanos": 6823010821,
+      "analysisFps": 26.741919,
+      "latencyMillis": 0.000000,
+      "averageGreen": 137.803416,
+      "bandpassedGreen": -1.631718,
+      "translation": {"dx": -0.016519, "dy": 0.000210},
+      "roi": {"left": 0.132813, "top": 0.622917, "right": 0.348437, "bottom": 0.731250}
+    },
+    {
+      "timestampNanos": 1981628652967522,
+      "presentationTimestampNanos": 6865288246,
+      "analysisFps": 26.538076,
+      "latencyMillis": 0.000000,
+      "averageGreen": 137.612162,
+      "bandpassedGreen": -2.367117,
+      "translation": {"dx": -0.012969, "dy": 0.000147},
+      "roi": {"left": 0.128125, "top": 0.622917, "right": 0.343750, "bottom": 0.731250}
+    },
+    {
+      "timestampNanos": 1981628695208326,
+      "presentationTimestampNanos": 6907529050,
+      "analysisFps": 26.338179,
+      "latencyMillis": 0.000000,
+      "averageGreen": 137.577184,
+      "bandpassedGreen": -2.972354,
+      "translation": {"dx": -0.009079, "dy": 0.000103},
+      "roi": {"left": 0.128125, "top": 0.622917, "right": 0.343750, "bottom": 0.731250}
+    },
+    {
+      "timestampNanos": 1981628729192660,
+      "presentationTimestampNanos": 6941513384,
+      "analysisFps": 26.337315,
+      "latencyMillis": 0.000000,
+      "averageGreen": 137.445779,
+      "bandpassedGreen": -3.388641,
+      "translation": {"dx": -0.006355, "dy": 0.000072},
+      "roi": {"left": 0.128125, "top": 0.622917, "right": 0.343750, "bottom": 0.731250}
+    },
+    {
+      "timestampNanos": 1981628763140333,
+      "presentationTimestampNanos": 6975461057,
+      "analysisFps": 26.337315,
+      "latencyMillis": 0.000000,
+      "averageGreen": 137.552445,
+      "bandpassedGreen": -3.727617,
+      "translation": {"dx": -0.004449, "dy": 0.000050},
+      "roi": {"left": 0.128125, "top": 0.622917, "right": 0.343750, "bottom": 0.731250}
+    }
+  ]
+}
