@@ -7,7 +7,7 @@ Goal: turn the prototype into a coherent demo app with clean UX and release-read
 - [ ] Refine controls, settings, presets, and recording gallery.
 - [ ] Add app icon and polished permission copy.
 - [ ] Add thermal behavior notes and long-run benchmarks.
-- [ ] Add README with setup, device testing, and demo flow.
+- [x] Add README with setup, device testing, and demo flow.
 - [ ] Add demo videos or links when available.
 - [ ] Hide unavailable modes based on capability reports.
 - [ ] Commit and push to `main`.
@@ -23,6 +23,20 @@ Goal: turn the prototype into a coherent demo app with clean UX and release-read
 
 - `.\gradlew.bat testDebugUnitTest --tests "com.dnrohr.eulerianmagnification.quality.QualityEvaluatorTest"`
 - `.\gradlew.bat clean testDebugUnitTest assembleDebug`
+
+## Completed Slice: Operator README
+
+- Replaced the scaffold README with current app scope, requirements, build
+  commands, offline-first validation order, Pixel device demo flow, and known
+  device notes.
+- Linked the existing recorded-video validation, public sample, Riesz, GPU,
+  recording, quality, and Pixel notes docs from the top-level README.
+- Kept the medical/diagnostic limitation visible near the top of the project.
+
+## Verification
+
+- `.\gradlew.bat testDebugUnitTest`
+- `.\gradlew.bat assembleDebug`
 
 ## Success Criteria
 
