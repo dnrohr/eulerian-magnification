@@ -77,3 +77,16 @@ The Python reference should stay simple and readable. Native or GPU ports should
 match its synthetic fixtures first, then add recorded-video acceptance tests.
 Real-time mode can initially run on reduced-resolution ROIs before attempting a
 full-frame 30 fps path.
+
+`RieszPhaseShaderSource` is the first GPU port slice. It provides GLES 3.0 shader
+source for:
+
+- luminance conversion and central-difference Riesz x/y components
+- phase projection along a dominant-orientation uniform
+- wrapped phase-delta amplification
+- grayscale reconstruction from amplified phase and amplitude
+
+These shaders are source-tested and compile with the app, but they are not yet
+wired into `CameraOesRenderer` or the encoder-surface path. Runtime wiring should
+bind them behind reduced-resolution render targets and reuse the recorded-video
+and synthetic fixtures before phone-only tuning.

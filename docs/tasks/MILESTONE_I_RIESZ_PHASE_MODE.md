@@ -6,7 +6,7 @@ Goal: add a higher-quality phase-based motion magnification path.
 
 - [x] Implement offline/reference Riesz pyramid in Python or C++.
 - [ ] Validate against known sample videos.
-- [ ] Port core filters to C++ or GPU shaders.
+- [x] Port core filters to C++ or GPU shaders.
 - [x] Add dominant-orientation phase manipulation.
 - [x] Add phase denoising and smoothing.
 - [x] Compare quality and performance against simple EVM.
@@ -45,6 +45,23 @@ Verification:
 
 - `python -m unittest discover -s tools\riesz_reference\tests`
 - `python tools\riesz_reference\compare_evm.py`
+
+## Completed Slice: Riesz GPU Shader Source Foundation
+
+- Added `RieszPhaseShaderSource` with GLES 3.0 source for luminance/Riesz
+  component extraction, phase projection, wrapped phase amplification, and phase
+  reconstruction.
+- Added shader-source tests for version placement, central-difference taps,
+  orientation uniform use, wrapped delta math, and amplitude/cosine
+  reconstruction.
+- Documented the GPU port boundary in `docs/architecture/RIESZ_MODE.md`.
+
+This ports the core reference filters to shader source. Runtime GL renderer and
+encoder-surface integration remain separate work.
+
+Verification:
+
+- `.\gradlew.bat testDebugUnitTest --tests "com.dnrohr.eulerianmagnification.gl.RieszPhaseShaderSourceTest"`
 
 ## Completed Slice: Offline Phase Projection And Smoothing
 
