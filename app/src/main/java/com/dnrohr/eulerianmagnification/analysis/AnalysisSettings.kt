@@ -13,11 +13,13 @@ enum class MagnificationMode(
     val label: String,
     val lowCutHz: Double,
     val highCutHz: Double,
+    val outputLabel: String,
+    val compactOutputLabel: String,
 ) {
-    Pulse("Pulse", 0.7, 3.0),
-    Breathing("Breathing", 0.1, 0.6),
-    Tremor("Tremor", 4.0, 12.0),
-    ObjectVibration("Object", 3.0, 12.0),
+    Pulse("Pulse", 0.7, 3.0, "Color amplification", "Color amp"),
+    Breathing("Breathing", 0.1, 0.6, "Breathing signal", "Breath sig"),
+    Tremor("Tremor", 4.0, 12.0, "Experimental motion analysis", "Motion exp"),
+    ObjectVibration("Object", 3.0, 12.0, "Experimental object vibration", "Object exp"),
 }
 
 enum class ViewMode(val label: String) {

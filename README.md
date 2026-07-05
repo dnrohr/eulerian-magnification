@@ -90,6 +90,8 @@ The default screen is intentionally compact so the preview remains visible.
 
 - `Controls`: opens the full controls and diagnostics panel.
 - `Hide`: closes the full panel and returns to the compact preview.
+- `Color amp`, `Breath sig`, `Motion exp`, `Object exp`: compact output labels
+  that state what kind of processing is active.
 - `Pulse`, `Breath`, `Tremor`, `Object`: select the temporal band and analysis
   preset.
 - `Raw`: shows the camera preview without the app's amplified tint.
@@ -114,6 +116,9 @@ The default screen is intentionally compact so the preview remains visible.
 - `Quality`: summarizes whether the current run looks usable. Warnings can come
   from low FPS, camera/ROI motion, lighting flicker, timestamp jumps, or risky
   high-frequency/amplification combinations.
+- `Output`: expanded-controls label that spells out the active pipeline:
+  `Color amplification`, `Breathing signal`, `Experimental motion analysis`, or
+  `Experimental object vibration`.
 - `Auto ROI` / `Manual ROI`: compact status label showing whether the app is
   using automatic face/center ROI or your selected region.
 

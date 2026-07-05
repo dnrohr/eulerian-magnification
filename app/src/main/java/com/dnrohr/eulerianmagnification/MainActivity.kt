@@ -814,6 +814,11 @@ private fun StatusOverlay(
             }
         }
         Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = "Output: ${settings.mode.outputLabel}",
+            color = Color(0xFFC8D3DC),
+        )
+        Spacer(modifier = Modifier.height(4.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -927,7 +932,7 @@ private fun CompactStatusOverlay(
             Text("Controls")
         }
         Text(
-            text = settings.viewMode.label,
+            text = settings.mode.compactOutputLabel,
             color = Color.White,
             modifier = Modifier.weight(1.0f),
             maxLines = 1,

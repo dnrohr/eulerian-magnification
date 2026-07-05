@@ -35,4 +35,16 @@ class AnalysisSettingsTest {
         assertEquals(3.0, settings.lowCutHz, 0.0)
         assertEquals(12.0, settings.highCutHz, 0.0)
     }
+
+    @Test
+    fun exposesTruthfulOutputLabels() {
+        assertEquals("Color amplification", MagnificationMode.Pulse.outputLabel)
+        assertEquals("Color amp", MagnificationMode.Pulse.compactOutputLabel)
+        assertEquals("Breathing signal", MagnificationMode.Breathing.outputLabel)
+        assertEquals("Breath sig", MagnificationMode.Breathing.compactOutputLabel)
+        assertEquals("Experimental motion analysis", MagnificationMode.Tremor.outputLabel)
+        assertEquals("Motion exp", MagnificationMode.Tremor.compactOutputLabel)
+        assertEquals("Experimental object vibration", MagnificationMode.ObjectVibration.outputLabel)
+        assertEquals("Object exp", MagnificationMode.ObjectVibration.compactOutputLabel)
+    }
 }
