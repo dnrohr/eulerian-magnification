@@ -13,6 +13,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 class PulseRoiAnalyzer(
     settings: AnalysisSettings,
+    private val manualRoi: NormalizedRect? = null,
     private val onSample: (AnalysisSample) -> Unit,
 ) : ImageAnalysis.Analyzer {
     private val fpsMeter = FpsMeter()
@@ -42,7 +43,9 @@ class PulseRoiAnalyzer(
         val timestampStatus = timestampTracker.record(timestamp)
         fpsMeter.recordFrame(timestamp)
         latestFaceBounds = roiTracker.predict() ?: latestFaceBounds
-        val roi = latestFaceBounds
+        val roi = manualRoi
+            ?.toRect(imageProxy.width, imageProxy.height)
+            ?: latestFaceBounds
             ?.toRect(imageProxy.width, imageProxy.height)
             ?.let { skinSubregion(it, imageProxy.width, imageProxy.height) }
             ?: centeredRoi(imageProxy.width, imageProxy.height)
@@ -63,6 +66,11 @@ class PulseRoiAnalyzer(
                 frameTimestampNanos = timestamp,
             ),
         )
+
+        if (manualRoi != null) {
+            imageProxy.close()
+            return
+        }
 
         val mediaImage = imageProxy.image
         val shouldDetect = frameIndex++ % DETECTION_INTERVAL_FRAMES == 0

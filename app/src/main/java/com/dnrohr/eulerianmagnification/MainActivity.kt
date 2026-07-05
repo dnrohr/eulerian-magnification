@@ -25,6 +25,7 @@ import androidx.camera.view.PreviewView
 import android.hardware.camera2.CaptureRequest
 import androidx.compose.foundation.background
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -50,8 +51,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -62,7 +65,9 @@ import com.dnrohr.eulerianmagnification.analysis.AnalysisSample
 import com.dnrohr.eulerianmagnification.analysis.AnalysisSettings
 import com.dnrohr.eulerianmagnification.analysis.BreathingMotionFilter
 import com.dnrohr.eulerianmagnification.analysis.BreathingMotionSample
+import com.dnrohr.eulerianmagnification.analysis.ManualRoiSelector
 import com.dnrohr.eulerianmagnification.analysis.MagnificationMode
+import com.dnrohr.eulerianmagnification.analysis.NormalizedRect
 import com.dnrohr.eulerianmagnification.analysis.PulseRoiAnalyzer
 import com.dnrohr.eulerianmagnification.analysis.RecordedVideoDecodeOptions
 import com.dnrohr.eulerianmagnification.analysis.RecordedVideoValidator
@@ -124,6 +129,7 @@ private fun MainScreen() {
     var validationRunning by remember { mutableStateOf(false) }
     var cameraControlsLocked by remember { mutableStateOf(false) }
     var showGlDebug by remember { mutableStateOf(false) }
+    var manualRoi by remember { mutableStateOf<NormalizedRect?>(null) }
     var glFrameStats by remember { mutableStateOf(GlFrameStats()) }
     val qualityEvaluator = remember { QualityEvaluator() }
     val lightingFlickerDetector = remember { LightingFlickerDetector() }
@@ -204,18 +210,20 @@ private fun MainScreen() {
     Box(modifier = Modifier.fillMaxSize()) {
         if (hasCameraPermission) {
             if (showGlDebug) {
-                key(analysisSettings, cameraControlsLocked) {
+                key(analysisSettings, manualRoi, cameraControlsLocked) {
                     CameraGlPreview(
                         settings = analysisSettings,
+                        manualRoi = manualRoi,
                         cameraControlsLocked = cameraControlsLocked,
                         onStats = { glFrameStats = it },
                         modifier = Modifier.fillMaxSize(),
                         onSample = ::handleSample,
                     )
                 }
-            } else key(analysisSettings, cameraControlsLocked) {
+            } else key(analysisSettings, manualRoi, cameraControlsLocked) {
                 CameraPreview(
                     settings = analysisSettings,
+                    manualRoi = manualRoi,
                     cameraControlsLocked = cameraControlsLocked,
                     modifier = Modifier.fillMaxSize(),
                     onSample = ::handleSample,
@@ -229,6 +237,11 @@ private fun MainScreen() {
             )
             RoiOverlay(
                 sample = analysisSample,
+                modifier = Modifier.fillMaxSize(),
+            )
+            ManualRoiOverlay(
+                roi = manualRoi,
+                onRoiChanged = { manualRoi = it },
                 modifier = Modifier.fillMaxSize(),
             )
         } else {
@@ -246,6 +259,8 @@ private fun MainScreen() {
             onSettingsChanged = { analysisSettings = it },
             cameraControlsLocked = cameraControlsLocked,
             onCameraControlsLockedChanged = { cameraControlsLocked = it },
+            manualRoi = manualRoi,
+            onClearManualRoi = { manualRoi = null },
             showGlDebug = showGlDebug,
             onShowGlDebugChanged = { showGlDebug = it },
             glFrameStats = glFrameStats,
@@ -292,6 +307,7 @@ private fun MainScreen() {
 @Composable
 private fun CameraGlPreview(
     settings: AnalysisSettings,
+    manualRoi: NormalizedRect?,
     cameraControlsLocked: Boolean,
     onStats: (GlFrameStats) -> Unit,
     modifier: Modifier = Modifier,
@@ -354,7 +370,7 @@ private fun CameraGlPreview(
                         val analysis = analysisBuilder.build().also {
                             it.setAnalyzer(
                                 analysisExecutor,
-                                PulseRoiAnalyzer(settings) { sample ->
+                                PulseRoiAnalyzer(settings, manualRoi = manualRoi) { sample ->
                                     renderer.setColorMagnificationUniforms(colorParameters.from(sample, settings))
                                     mainExecutor.execute { onSample(sample) }
                                 },
@@ -480,8 +496,58 @@ private fun RoiOverlay(
 }
 
 @Composable
+private fun ManualRoiOverlay(
+    roi: NormalizedRect?,
+    onRoiChanged: (NormalizedRect?) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var dragStart by remember { mutableStateOf<Offset?>(null) }
+    Canvas(
+        modifier = modifier.pointerInput(Unit) {
+            detectDragGestures(
+                onDragStart = { start ->
+                    dragStart = start
+                },
+                onDrag = { change, _ ->
+                    val start = dragStart ?: change.position
+                    ManualRoiSelector.fromDrag(
+                        startX = start.x,
+                        startY = start.y,
+                        endX = change.position.x,
+                        endY = change.position.y,
+                        width = size.width.toFloat(),
+                        height = size.height.toFloat(),
+                    )?.let(onRoiChanged)
+                },
+                onDragEnd = {
+                    dragStart = null
+                },
+                onDragCancel = {
+                    dragStart = null
+                },
+            )
+        },
+    ) {
+        val selected = roi ?: return@Canvas
+        drawRect(
+            color = Color(0xFFFFC857),
+            topLeft = androidx.compose.ui.geometry.Offset(
+                x = selected.left * size.width,
+                y = selected.top * size.height,
+            ),
+            size = androidx.compose.ui.geometry.Size(
+                width = selected.width * size.width,
+                height = selected.height * size.height,
+            ),
+            style = Stroke(width = 3.dp.toPx()),
+        )
+    }
+}
+
+@Composable
 private fun CameraPreview(
     settings: AnalysisSettings,
+    manualRoi: NormalizedRect?,
     cameraControlsLocked: Boolean,
     modifier: Modifier = Modifier,
     onSample: (AnalysisSample) -> Unit,
@@ -530,10 +596,10 @@ private fun CameraPreview(
                         val analysis = analysisBuilder.build()
                             .also {
                                 it.setAnalyzer(
-                                    analysisExecutor,
-                                    PulseRoiAnalyzer(settings) { sample ->
-                                        mainExecutor.execute { onSample(sample) }
-                                    },
+                                analysisExecutor,
+                                PulseRoiAnalyzer(settings, manualRoi = manualRoi) { sample ->
+                                    mainExecutor.execute { onSample(sample) }
+                                },
                                 )
                             }
 
@@ -609,6 +675,8 @@ private fun StatusOverlay(
     onSettingsChanged: (AnalysisSettings) -> Unit,
     cameraControlsLocked: Boolean,
     onCameraControlsLockedChanged: (Boolean) -> Unit,
+    manualRoi: NormalizedRect?,
+    onClearManualRoi: () -> Unit,
     showGlDebug: Boolean,
     onShowGlDebugChanged: (Boolean) -> Unit,
     glFrameStats: GlFrameStats,
@@ -675,6 +743,8 @@ private fun StatusOverlay(
             onSettingsChanged = onSettingsChanged,
             cameraControlsLocked = cameraControlsLocked,
             onCameraControlsLockedChanged = onCameraControlsLockedChanged,
+            manualRoi = manualRoi,
+            onClearManualRoi = onClearManualRoi,
             showGlDebug = showGlDebug,
             onShowGlDebugChanged = onShowGlDebugChanged,
         )
@@ -800,6 +870,8 @@ private fun ModeControls(
     onSettingsChanged: (AnalysisSettings) -> Unit,
     cameraControlsLocked: Boolean,
     onCameraControlsLockedChanged: (Boolean) -> Unit,
+    manualRoi: NormalizedRect?,
+    onClearManualRoi: () -> Unit,
     showGlDebug: Boolean,
     onShowGlDebugChanged: (Boolean) -> Unit,
 ) {
@@ -849,6 +921,12 @@ private fun ModeControls(
     Spacer(modifier = Modifier.height(8.dp))
     Button(onClick = { onCameraControlsLockedChanged(!cameraControlsLocked) }) {
         Text(if (cameraControlsLocked) "Unlock AE/AWB" else "Lock AE/AWB")
+    }
+    if (manualRoi != null) {
+        Spacer(modifier = Modifier.height(8.dp))
+        Button(onClick = onClearManualRoi) {
+            Text("Clear ROI")
+        }
     }
     Spacer(modifier = Modifier.height(8.dp))
     Button(onClick = { onShowGlDebugChanged(!showGlDebug) }) {

@@ -4,13 +4,29 @@ Goal: add a low-frequency motion mode for torso/chest breathing visualization.
 
 ## Tasks
 
-- [ ] Add manual rectangular ROI selector.
+- [x] Add manual rectangular ROI selector.
 - [x] Add breathing preset around 0.1-0.6 Hz.
 - [x] Add low-frequency temporal motion filter.
 - [x] Add amplified motion, heatmap, or waveform display.
 - [ ] Record output video and metadata.
 - [ ] Add device verification notes.
 - [ ] Commit and push to `main`.
+
+## Completed Slice: Manual Rectangular ROI Selector
+
+- Added `ManualRoiSelector` to normalize drag rectangles and reject tiny selections.
+- Added a preview drag overlay for selecting a manual ROI.
+- CameraX and GL preview analysis now receive the manual ROI and sample it directly.
+- Face detection is skipped while a manual ROI is active.
+- Added a `Clear ROI` control that appears when a manual ROI exists.
+- Added unit tests for normalization, reverse dragging, clamping, and tiny-selection rejection.
+
+Runtime ergonomics still need device verification, especially touch targeting over the preview.
+
+## Verification
+
+- `.\gradlew.bat testDebugUnitTest --tests "com.dnrohr.eulerianmagnification.analysis.ManualRoiSelectorTest"`
+- `.\gradlew.bat clean testDebugUnitTest assembleDebug`
 
 ## Completed Slice: Breathing Motion Waveform
 
