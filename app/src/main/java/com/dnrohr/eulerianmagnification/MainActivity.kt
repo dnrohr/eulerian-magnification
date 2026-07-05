@@ -146,6 +146,7 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
     var validationRunning by remember { mutableStateOf(false) }
     var cameraControlsLocked by remember { mutableStateOf(false) }
     var showGlDebug by remember { mutableStateOf(false) }
+    var controlsExpanded by remember { mutableStateOf(false) }
     var manualRoi by remember { mutableStateOf<NormalizedRect?>(null) }
     var glFrameStats by remember { mutableStateOf(GlFrameStats()) }
     val qualityEvaluator = remember { QualityEvaluator() }
@@ -266,10 +267,12 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
                 artifactSuppressor = artifactSuppressor,
                 modifier = Modifier.fillMaxSize(),
             )
-            RoiOverlay(
-                sample = analysisSample,
-                modifier = Modifier.fillMaxSize(),
-            )
+            if (manualRoi == null) {
+                RoiOverlay(
+                    sample = analysisSample,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
             ManualRoiOverlay(
                 roi = manualRoi,
                 onRoiChanged = { manualRoi = it },
@@ -311,6 +314,8 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
                 settings = analysisSettings,
                 lightingFlickerLikely = lightingFlickerLikely,
             ),
+            controlsExpanded = controlsExpanded,
+            onToggleControlsExpanded = { controlsExpanded = !controlsExpanded },
             onToggleRecording = {
                 if (featureAvailability.processedRecordingAvailable) {
                     val activeSession = recordingSession
@@ -771,12 +776,28 @@ private fun StatusOverlay(
     validationSummary: String?,
     validationRunning: Boolean,
     qualityStatuses: List<QualityStatus>,
+    controlsExpanded: Boolean,
+    onToggleControlsExpanded: () -> Unit,
     onToggleRecording: () -> Unit,
     onShareRecording: () -> Unit,
     onShareRecordingPath: (String) -> Unit,
     onValidateVideo: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    if (!controlsExpanded) {
+        CompactStatusOverlay(
+            sample = sample,
+            settings = settings,
+            qualityStatuses = qualityStatuses,
+            isRecording = isRecording,
+            recordingElapsedMillis = recordingElapsedMillis,
+            manualRoi = manualRoi,
+            onToggleControlsExpanded = onToggleControlsExpanded,
+            modifier = modifier,
+        )
+        return
+    }
+
     Column(
         modifier = modifier
             .background(Color(0x99000000))
@@ -788,6 +809,16 @@ private fun StatusOverlay(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text("Mode: ${settings.mode.label}", color = Color.White)
+            Button(onClick = onToggleControlsExpanded) {
+                Text("Hide")
+            }
+        }
+        Spacer(modifier = Modifier.height(4.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             Text(
                 "Analysis: ${"%.1f".format(sample.analysisFps)} fps / ${"%.0f".format(sample.latencyMillis)} ms",
                 color = Color.White,
@@ -875,12 +906,62 @@ private fun StatusOverlay(
 }
 
 @Composable
+private fun CompactStatusOverlay(
+    sample: AnalysisSample,
+    settings: AnalysisSettings,
+    qualityStatuses: List<QualityStatus>,
+    isRecording: Boolean,
+    recordingElapsedMillis: Long,
+    manualRoi: NormalizedRect?,
+    onToggleControlsExpanded: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .background(Color(0x73000000))
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Button(onClick = onToggleControlsExpanded) {
+            Text("Controls")
+        }
+        Text(
+            text = settings.viewMode.label,
+            color = Color.White,
+            modifier = Modifier.weight(1.0f),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Text(
+            text = if (manualRoi == null) "Auto ROI" else "Manual ROI",
+            color = if (manualRoi == null) Color(0xFF00BFA5) else Color(0xFFFFC857),
+            maxLines = 1,
+        )
+        Text(
+            text = if (isRecording) "REC ${formatElapsed(recordingElapsedMillis)}" else qualityStatuses.joinToString { it.label },
+            color = if (isRecording) Color(0xFFFF6B6B) else qualityColor(qualityStatuses),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Text(
+            text = "${"%.0f".format(sample.analysisFps)} fps",
+            color = Color.White,
+            maxLines = 1,
+        )
+    }
+}
+
+@Composable
 private fun QualityStatusRow(statuses: List<QualityStatus>) {
-    val isGood = statuses == listOf(QualityStatus.Good)
     Text(
         text = "Quality: ${statuses.joinToString { it.label }}",
-        color = if (isGood) Color(0xFF00BFA5) else Color(0xFFFFC857),
+        color = qualityColor(statuses),
     )
+}
+
+private fun qualityColor(statuses: List<QualityStatus>): Color {
+    return if (statuses == listOf(QualityStatus.Good)) Color(0xFF00BFA5) else Color(0xFFFFC857)
 }
 
 @Composable

@@ -1,0 +1,29 @@
+# UI Usefulness Audit
+
+Date: 2026-07-05
+
+## Findings
+
+- The previous live screen overloaded the preview with diagnostics, controls, recording history, validation text, and waveforms. That made it hard to judge whether magnification was visibly useful.
+- Manual ROI and analyzed ROI were both drawn at the same time. When a manual ROI was active, the app could appear to have a second drifting square even though the analyzer was using the manual region.
+- The current phone screenshot after cleanup shows a quieter preview, but also reveals that the automatic ROI can be displayed away from the visible face in portrait/front-camera use. That points to a coordinate mapping mismatch between the analysis frame and the preview surface.
+- The compact quality label is useful, but quality can still oscillate with small body motion. It should remain visible in compact mode, while detailed metrics should stay hidden until requested.
+
+## Changes Made
+
+- Defaulted the live UI to a compact viewing mode with a single `Controls` button.
+- Moved detailed metrics, sliders, mode controls, validation, recording history, and waveform charts behind the expanded controls panel.
+- Added a `Hide` button to return from the expanded panel to the compact preview.
+- Suppressed the analyzed ROI outline whenever a manual ROI is active, leaving only one visible ROI square.
+
+## Euler Sample Output
+
+- Generated `docs/experiments/euler_audit_color_magnification.mp4`.
+- The video is a diagnostic side-by-side render of `sample-videos/euler.mp4`: original plus ROI on the left, CPU color magnification on the right.
+- Settings for the diagnostic render: 0.7-3.0 Hz temporal band, 16x amplification, first 7.99 seconds, 29.78 fps.
+
+## Remaining Work
+
+- Fix analysis-to-preview ROI coordinate mapping for portrait/front-camera mode. The compact UI makes this problem much easier to see.
+- Add an app-native recorded-file export path so sample videos can be processed through the same GL pipeline used for live preview and recording.
+- Consider a dedicated ROI mode where tapping/dragging temporarily reveals selection handles, then returns to uncluttered viewing.
