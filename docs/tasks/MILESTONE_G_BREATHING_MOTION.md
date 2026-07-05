@@ -6,11 +6,25 @@ Goal: add a low-frequency motion mode for torso/chest breathing visualization.
 
 - [ ] Add manual rectangular ROI selector.
 - [x] Add breathing preset around 0.1-0.6 Hz.
-- [ ] Add low-frequency temporal motion filter.
+- [x] Add low-frequency temporal motion filter.
 - [ ] Add amplified motion, heatmap, or waveform display.
 - [ ] Record output video and metadata.
 - [ ] Add device verification notes.
 - [ ] Commit and push to `main`.
+
+## Completed Slice: Breathing Motion Filter
+
+- Added `BreathingMotionFilter` for low-frequency vertical translation signals.
+- The filter uses the breathing band, 0.1-0.6 Hz, and emits bandpassed plus amplified vertical motion.
+- It consumes the existing normalized `TranslationEstimate` values.
+- Added tests for first-sample reset, amplification scaling, breathing-band preference, horizontal-motion rejection, and invalid amplification.
+
+This creates the motion signal only. Manual torso ROI selection and visual motion display remain pending.
+
+## Verification
+
+- `.\gradlew.bat testDebugUnitTest --tests "com.dnrohr.eulerianmagnification.analysis.BreathingMotionFilterTest"`
+- `.\gradlew.bat clean testDebugUnitTest assembleDebug`
 
 ## Completed Slice: Breathing Band Preset
 
