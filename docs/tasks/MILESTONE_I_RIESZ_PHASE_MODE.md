@@ -63,6 +63,26 @@ Verification:
 
 - `.\gradlew.bat testDebugUnitTest --tests "com.dnrohr.eulerianmagnification.gl.RieszPhaseShaderSourceTest"`
 
+## Completed Slice: Known Frame-Sequence Validation Harness
+
+- Added `tools/riesz_reference/validate_sample_sequences.py` to validate the
+  Riesz reference against deterministic frame sequences.
+- The harness checks stationary flat content, a vertical edge translating
+  sideways, and a horizontal edge translating downward.
+- Added coverage for passing known sequences, false-motion rejection, and
+  wrong-orientation rejection.
+- Documented this as the pre-decoded-frame validation layer in
+  `docs/architecture/RIESZ_MODE.md`.
+
+This does not close the public sample-video validation task. Real MIT/UBFC/local
+MP4 validation still needs decoded frames from a public clip or the Android
+`MediaMetadataRetriever` path.
+
+Verification:
+
+- `python -m unittest discover -s tools\riesz_reference\tests`
+- `python tools\riesz_reference\validate_sample_sequences.py`
+
 ## Completed Slice: Offline Phase Projection And Smoothing
 
 - Added dominant-orientation selection for a Riesz level.

@@ -64,7 +64,17 @@ Public sample-video validation remains the next evidence gate.
 ## Validation Strategy
 
 The current tests cover small synthetic images because they are deterministic and
-fast. The next validation step is recorded-video testing with known samples:
+fast. `tools/riesz_reference/validate_sample_sequences.py` extends that into
+known frame-sequence validation:
+
+- stationary flat content must produce near-zero linear and phase deltas
+- a vertical edge translating sideways must produce motion response with stable
+  horizontal orientation
+- a horizontal edge translating downward must produce motion response with stable
+  vertical orientation
+
+The next validation step is recorded-video testing with public or locally
+recorded samples:
 
 - Stationary flat content should produce near-zero phase response.
 - Translating edges should produce stable orientation-specific responses.

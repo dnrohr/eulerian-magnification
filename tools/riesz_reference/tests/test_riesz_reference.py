@@ -24,6 +24,13 @@ from riesz_reference import (  # noqa: E402
     smooth_phase3,
     wrap_phase,
 )
+from validate_sample_sequences import (  # noqa: E402
+    SampleSequence,
+    flat_frame,
+    validate_known_sequences,
+    validate_sample_sequence,
+    vertical_edge,
+)
 
 
 class RieszReferenceTest(unittest.TestCase):
@@ -143,6 +150,36 @@ class RieszReferenceTest(unittest.TestCase):
     def test_phase_delta_requires_matching_sizes(self):
         with self.assertRaises(ValueError):
             phase_delta([[0.0, 0.1]], [[0.0]])
+
+    def test_known_sample_sequence_validation_passes(self):
+        results = validate_known_sequences()
+
+        self.assertEqual(3, len(results))
+        self.assertTrue(all(result.passed for result in results), [result.summary() for result in results])
+
+    def test_stationary_sequence_validation_rejects_false_motion(self):
+        result = validate_sample_sequence(
+            SampleSequence(
+                name="stationary",
+                frames=[flat_frame() for _ in range(3)],
+                expected_orientation_radians=None,
+                expects_motion=True,
+            )
+        )
+
+        self.assertFalse(result.passed)
+
+    def test_motion_sequence_validation_rejects_wrong_orientation(self):
+        result = validate_sample_sequence(
+            SampleSequence(
+                name="wrong orientation",
+                frames=[vertical_edge(edge_x=x) for x in (10, 11, 12)],
+                expected_orientation_radians=math.pi / 2.0,
+                expects_motion=True,
+            )
+        )
+
+        self.assertFalse(result.passed)
 
 
 def synthetic_edge(width=12, height=8, edge_x=4):
