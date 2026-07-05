@@ -21,10 +21,19 @@ Goal: process a selected video into a shareable output video so algorithm result
 
 ## Remaining Work
 
-- Encode processed frames to MP4 on Android.
-- Save processed output and metadata in app storage.
-- Add output-file validation around the generated MP4.
 - Wire `Process Video` to produce a user-inspectable artifact rather than only a metrics summary.
+
+## Completed Slice: MP4 Exporter
+
+- Added `RecordedVideoMp4Exporter` to encode processed recorded-video frames to H.264 MP4 with `MediaCodec` and `MediaMuxer`.
+- The exporter accepts `RecordedVideoProcessedFrame` outputs from `RecordedVideoProcessor` and writes the MP4 to the requested app-accessible file.
+- Added `RecordedVideoMp4ExporterInstrumentedTest`, which processes synthetic frames, exports an MP4 in app cache, and validates the result with `EncodedOutputValidator`.
+- Verified on the connected Pixel with `connectedDebugAndroidTest` for the exporter test.
+
+## Remaining Work After Exporter
+
+- Wire the `Process Video` UI action to save/share the exported MP4 and metadata instead of only showing a metrics summary.
+- Add user-facing metadata JSON for recorded-video exports.
 
 ## Done When
 
