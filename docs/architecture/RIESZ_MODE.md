@@ -43,6 +43,24 @@ The reference implementation now covers steps 3-6 at the small-image math-helper
 level. It does not yet reconstruct a full magnified frame sequence or validate
 against real sample videos.
 
+## EVM Baseline Comparison
+
+`tools/riesz_reference/compare_evm.py` runs a deterministic synthetic one-pixel
+edge-motion comparison between simple linear EVM and the offline Riesz phase
+reference. The first baseline uses a 24x16 grayscale edge pair and 4.0x
+amplification:
+
+- Linear mean absolute delta: `0.116667`
+- Phase mean absolute delta: `0.097524`
+- Phase-to-linear delta ratio: `0.835919`
+- Linear roughness: `0.107692`
+- Phase roughness: `0.037700`
+
+This is not a quality win claim for real video. It is a repeatable baseline that
+confirms the phase reference produces a comparable motion response and a smoother
+synthetic output than simple linear intensity amplification on this fixture.
+Public sample-video validation remains the next evidence gate.
+
 ## Validation Strategy
 
 The current tests cover small synthetic images because they are deterministic and

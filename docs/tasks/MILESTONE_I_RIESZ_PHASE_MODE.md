@@ -9,7 +9,7 @@ Goal: add a higher-quality phase-based motion magnification path.
 - [ ] Port core filters to C++ or GPU shaders.
 - [x] Add dominant-orientation phase manipulation.
 - [x] Add phase denoising and smoothing.
-- [ ] Compare quality and performance against simple EVM.
+- [x] Compare quality and performance against simple EVM.
 - [x] Document architecture in `docs/architecture/RIESZ_MODE.md`.
 - [ ] Commit and push to `main`.
 
@@ -30,6 +30,21 @@ Goal: add a higher-quality phase-based motion magnification path.
 Verification:
 
 - `python -m unittest discover -s tools\riesz_reference\tests`
+
+## Completed Slice: Synthetic Riesz vs EVM Comparison
+
+- Added a simple linear EVM baseline frame helper.
+- Added phase reconstruction and synthetic Riesz-vs-linear comparison metrics.
+- Added `tools/riesz_reference/compare_evm.py` for a deterministic one-pixel
+  edge-motion baseline.
+- Expanded Python coverage for reconstruction, linear EVM amplification,
+  phase-magnified edge response, and comparison metrics.
+- Documented the first baseline metrics in `docs/architecture/RIESZ_MODE.md`.
+
+Verification:
+
+- `python -m unittest discover -s tools\riesz_reference\tests`
+- `python tools\riesz_reference\compare_evm.py`
 
 ## Completed Slice: Offline Phase Projection And Smoothing
 

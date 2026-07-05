@@ -58,6 +58,22 @@ class PhaseLevel:
     phase: Image
 
 
+@dataclass(frozen=True)
+class ComparisonMetrics:
+    """Summary metrics for comparing simple EVM and phase reference output."""
+
+    linear_mean_abs_delta: float
+    phase_mean_abs_delta: float
+    linear_roughness: float
+    phase_roughness: float
+
+    @property
+    def phase_to_linear_delta_ratio(self) -> float:
+        if self.linear_mean_abs_delta == 0.0:
+            return math.inf if self.phase_mean_abs_delta > 0.0 else 0.0
+        return self.phase_mean_abs_delta / self.linear_mean_abs_delta
+
+
 def image_size(image: Sequence[Sequence[float]]) -> Tuple[int, int]:
     validate_image(image)
     return (len(image[0]), len(image))
@@ -164,6 +180,59 @@ def amplify_phase(
     ]
 
 
+def reconstruct_from_phase(phase_level: PhaseLevel, phase: Sequence[Sequence[float]]) -> Image:
+    validate_same_size(phase_level.amplitude, phase)
+    return [
+        [phase_level.amplitude[y][x] * math.cos(float(phase[y][x])) for x in range(len(row))]
+        for y, row in enumerate(phase)
+    ]
+
+
+def linear_evm_frame(
+    reference_image: Sequence[Sequence[float]],
+    current_image: Sequence[Sequence[float]],
+    amplification: float,
+) -> Image:
+    validate_same_size(reference_image, current_image)
+    return [
+        [
+            float(reference_image[y][x]) +
+            (float(current_image[y][x]) - float(reference_image[y][x])) * amplification
+            for x in range(len(row))
+        ]
+        for y, row in enumerate(reference_image)
+    ]
+
+
+def phase_magnified_frame(
+    reference_image: Sequence[Sequence[float]],
+    current_image: Sequence[Sequence[float]],
+    amplification: float,
+) -> Image:
+    reference_level = build_riesz_pyramid(reference_image, levels=1)[0]
+    current_level = build_riesz_pyramid(current_image, levels=1)[0]
+    orientation = dominant_orientation(current_level)
+    reference_phase = project_phase(reference_level, orientation)
+    current_phase = project_phase(current_level, orientation)
+    amplified_phase = amplify_phase(reference_phase.phase, current_phase.phase, amplification)
+    return reconstruct_from_phase(current_phase, amplified_phase)
+
+
+def compare_linear_and_phase(
+    reference_image: Sequence[Sequence[float]],
+    current_image: Sequence[Sequence[float]],
+    amplification: float,
+) -> ComparisonMetrics:
+    linear = linear_evm_frame(reference_image, current_image, amplification)
+    phase = phase_magnified_frame(reference_image, current_image, amplification)
+    return ComparisonMetrics(
+        linear_mean_abs_delta=mean_abs_difference(reference_image, linear),
+        phase_mean_abs_delta=mean_abs_difference(reference_image, phase),
+        linear_roughness=image_roughness(linear),
+        phase_roughness=image_roughness(phase),
+    )
+
+
 def smooth_phase3(phase: Sequence[Sequence[float]]) -> Image:
     """Circularly smooth wrapped phase values with the reference 3x3 kernel."""
 
@@ -212,6 +281,33 @@ def convolve_3x3(image: Sequence[Sequence[float]], kernel: Kernel3x3) -> Image:
 def component_energy(image: Sequence[Sequence[float]]) -> float:
     validate_image(image)
     return math.sqrt(sum(float(value) * float(value) for row in image for value in row))
+
+
+def mean_abs_difference(first: Sequence[Sequence[float]], second: Sequence[Sequence[float]]) -> float:
+    validate_same_size(first, second)
+    width, height = image_size(first)
+    total = 0.0
+    for y in range(height):
+        for x in range(width):
+            total += abs(float(second[y][x]) - float(first[y][x]))
+    return total / float(width * height)
+
+
+def image_roughness(image: Sequence[Sequence[float]]) -> float:
+    validate_image(image)
+    width, height = image_size(image)
+    total = 0.0
+    count = 0
+    for y in range(height):
+        for x in range(width):
+            value = float(image[y][x])
+            if x + 1 < width:
+                total += abs(float(image[y][x + 1]) - value)
+                count += 1
+            if y + 1 < height:
+                total += abs(float(image[y + 1][x]) - value)
+                count += 1
+    return total / float(count) if count else 0.0
 
 
 def validate_same_size(first: Sequence[Sequence[float]], second: Sequence[Sequence[float]]) -> None:
