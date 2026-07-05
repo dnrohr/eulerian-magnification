@@ -1,6 +1,7 @@
 package com.dnrohr.eulerianmagnification.capabilities
 
 import android.content.Context
+import android.app.ActivityManager
 import android.graphics.SurfaceTexture
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraManager
@@ -23,6 +24,7 @@ class CapabilityReporter(private val context: Context) {
     fun buildReport(): JSONObject {
         return JSONObject()
             .put("device", deviceInfo())
+            .put("graphics", graphicsInfo())
             .put("cameras", cameraInfo())
             .put("encoders", encoderInfo())
             .put("power", powerInfo())
@@ -35,6 +37,16 @@ class CapabilityReporter(private val context: Context) {
             .put("device", Build.DEVICE)
             .put("sdk", Build.VERSION.SDK_INT)
             .put("release", Build.VERSION.RELEASE)
+    }
+
+    private fun graphicsInfo(): JSONObject {
+        val activityManager = context.getSystemService(ActivityManager::class.java)
+        val version = activityManager.deviceConfigurationInfo.reqGlEsVersion
+        val major = version shr 16
+        val minor = version and 0xffff
+        return JSONObject()
+            .put("glesVersion", "$major.$minor")
+            .put("supportsGles3", major >= 3)
     }
 
     private fun cameraInfo(): JSONArray {

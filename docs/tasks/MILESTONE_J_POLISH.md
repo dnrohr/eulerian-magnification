@@ -9,7 +9,7 @@ Goal: turn the prototype into a coherent demo app with clean UX and release-read
 - [x] Add thermal behavior notes and long-run benchmarks.
 - [x] Add README with setup, device testing, and demo flow.
 - [ ] Add demo videos or links when available.
-- [ ] Hide unavailable modes based on capability reports.
+- [x] Hide unavailable modes based on capability reports.
 - [ ] Commit and push to `main`.
 
 ## Completed Slice: ROI Motion Quality Label
@@ -39,6 +39,26 @@ Goal: turn the prototype into a coherent demo app with clean UX and release-read
 - `.\gradlew.bat assembleDebug`
 - Pixel 8a screenshot after install/relaunch confirmed mode/view labels stayed
   single-line in portrait.
+
+## Completed Slice: Capability-Based Feature Availability
+
+- Added a `FeatureAvailability` mapper over the runtime capability report.
+- Capability reports now include GLES version and a `supportsGles3` flag.
+- Live mode buttons are hidden unless a front camera is reported.
+- Tremor and Object modes require a front camera with a reported 30+ FPS range.
+- GL preview toggle requires a front camera and GLES 3.0 support.
+- Processed recording controls require a front camera and H.264 encoder support.
+- Added JVM unit coverage for Pixel-class, missing-camera, low-FPS, missing-GL,
+  and missing-H.264 capability reports.
+
+## Verification
+
+- `.\gradlew.bat testDebugUnitTest --tests "com.dnrohr.eulerianmagnification.capabilities.CapabilityAvailabilityTest"`
+- `.\gradlew.bat testDebugUnitTest`
+- `.\gradlew.bat assembleDebug`
+- Pixel 8a install/relaunch screenshot confirmed Pulse, Breath, Tremor, Object,
+  Raw, Amp, Diff, Split, GL Preview, Start Recording, and Validate Video remain
+  visible on a capable device.
 
 ## Completed Slice: App Icon And Permission Copy
 

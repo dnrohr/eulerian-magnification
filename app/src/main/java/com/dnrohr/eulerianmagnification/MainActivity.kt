@@ -78,6 +78,8 @@ import com.dnrohr.eulerianmagnification.analysis.RecordedVideoValidator
 import com.dnrohr.eulerianmagnification.analysis.ViewMode
 import com.dnrohr.eulerianmagnification.capabilities.CapabilityReportStore
 import com.dnrohr.eulerianmagnification.capabilities.CapabilityReporter
+import com.dnrohr.eulerianmagnification.capabilities.CapabilityAvailability
+import com.dnrohr.eulerianmagnification.capabilities.FeatureAvailability
 import com.dnrohr.eulerianmagnification.gl.CameraOesRenderer
 import com.dnrohr.eulerianmagnification.gl.ColorMagnificationParameters
 import com.dnrohr.eulerianmagnification.gl.GlFrameStats
@@ -97,13 +99,15 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val capabilityReporter = CapabilityReporter(this)
+        val capabilityReport = capabilityReporter.buildReport()
         capabilityReporter.logSummary()
         CapabilityReportStore(this).writeLatestReport(capabilityReporter)
+        val featureAvailability = CapabilityAvailability.fromReport(capabilityReport)
 
         setContent {
             AppTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    MainScreen()
+                    MainScreen(featureAvailability)
                 }
             }
         }
@@ -111,7 +115,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-private fun MainScreen() {
+private fun MainScreen(featureAvailability: FeatureAvailability) {
     val context = LocalContext.current
     var hasCameraPermission by remember {
         mutableStateOf(
@@ -126,7 +130,9 @@ private fun MainScreen() {
     }
     val validationExecutor = remember { Executors.newSingleThreadExecutor() }
     var analysisSample by remember { mutableStateOf(AnalysisSample()) }
-    var analysisSettings by remember { mutableStateOf(AnalysisSettings()) }
+    var analysisSettings by remember {
+        mutableStateOf(AnalysisSettings(mode = featureAvailability.availableModes.firstOrNull() ?: MagnificationMode.Pulse))
+    }
     var recordingSession by remember { mutableStateOf<ProcessedRecordingSession?>(null) }
     var lastRecordingPath by remember { mutableStateOf<String?>(null) }
     var validationSummary by remember { mutableStateOf<String?>(null) }
@@ -190,6 +196,15 @@ private fun MainScreen() {
         }
     }
 
+    LaunchedEffect(featureAvailability, analysisSettings.mode, showGlDebug) {
+        if (analysisSettings.mode !in featureAvailability.availableModes && featureAvailability.availableModes.isNotEmpty()) {
+            analysisSettings = analysisSettings.copy(mode = featureAvailability.availableModes.first())
+        }
+        if (showGlDebug && !featureAvailability.glPreviewAvailable) {
+            showGlDebug = false
+        }
+    }
+
     fun handleSample(sample: AnalysisSample) {
         analysisSample = sample
         lightingFlickerLikely = lightingFlickerDetector.update(sample.averageGreen)
@@ -212,7 +227,7 @@ private fun MainScreen() {
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        if (hasCameraPermission) {
+        if (hasCameraPermission && featureAvailability.liveCameraAvailable) {
             if (showGlDebug) {
                 key(analysisSettings, manualRoi, cameraControlsLocked) {
                     CameraGlPreview(
@@ -249,9 +264,13 @@ private fun MainScreen() {
                 modifier = Modifier.fillMaxSize(),
             )
         } else {
-            PermissionPane(onRequestPermission = {
-                permissionLauncher.launch(Manifest.permission.CAMERA)
-            })
+            if (hasCameraPermission) {
+                UnavailablePane(message = "This device does not report a front camera for live magnification.")
+            } else {
+                PermissionPane(onRequestPermission = {
+                    permissionLauncher.launch(Manifest.permission.CAMERA)
+                })
+            }
         }
 
         StatusOverlay(
@@ -267,6 +286,7 @@ private fun MainScreen() {
             onClearManualRoi = { manualRoi = null },
             showGlDebug = showGlDebug,
             onShowGlDebugChanged = { showGlDebug = it },
+            featureAvailability = featureAvailability,
             glFrameStats = glFrameStats,
             isRecording = recordingSession != null,
             recordingElapsedMillis = recordingSession?.elapsedMillis ?: 0L,
@@ -279,20 +299,22 @@ private fun MainScreen() {
                 lightingFlickerLikely = lightingFlickerLikely,
             ),
             onToggleRecording = {
-                val activeSession = recordingSession
-                if (activeSession == null) {
-                    recordingSession = ProcessedRecordingSession(
-                        rootDirectory = recordingsRoot(context),
-                        videoRecorderFactory = { outputFile -> DebugProcessedMp4Recorder(outputFile) },
-                    )
-                    lastRecordingPath = null
-                } else {
-                    val output = activeSession.stop(
-                        settings = analysisSettings,
-                        thermalStatus = thermalStatus(context),
-                    )
-                    lastRecordingPath = output.absolutePath
-                    recordingSession = null
+                if (featureAvailability.processedRecordingAvailable) {
+                    val activeSession = recordingSession
+                    if (activeSession == null) {
+                        recordingSession = ProcessedRecordingSession(
+                            rootDirectory = recordingsRoot(context),
+                            videoRecorderFactory = { outputFile -> DebugProcessedMp4Recorder(outputFile) },
+                        )
+                        lastRecordingPath = null
+                    } else {
+                        val output = activeSession.stop(
+                            settings = analysisSettings,
+                            thermalStatus = thermalStatus(context),
+                        )
+                        lastRecordingPath = output.absolutePath
+                        recordingSession = null
+                    }
                 }
             },
             onShareRecording = {
@@ -676,6 +698,24 @@ private fun PermissionPane(onRequestPermission: () -> Unit) {
 }
 
 @Composable
+private fun UnavailablePane(message: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF101418))
+            .padding(24.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = message,
+            color = Color.White,
+            style = MaterialTheme.typography.titleMedium,
+            textAlign = TextAlign.Center,
+        )
+    }
+}
+
+@Composable
 private fun StatusOverlay(
     sample: AnalysisSample,
     signalHistory: List<Double>,
@@ -689,6 +729,7 @@ private fun StatusOverlay(
     onClearManualRoi: () -> Unit,
     showGlDebug: Boolean,
     onShowGlDebugChanged: (Boolean) -> Unit,
+    featureAvailability: FeatureAvailability,
     glFrameStats: GlFrameStats,
     isRecording: Boolean,
     recordingElapsedMillis: Long,
@@ -751,12 +792,14 @@ private fun StatusOverlay(
         ModeControls(
             settings = settings,
             onSettingsChanged = onSettingsChanged,
+            availableModes = featureAvailability.availableModes,
             cameraControlsLocked = cameraControlsLocked,
             onCameraControlsLockedChanged = onCameraControlsLockedChanged,
             manualRoi = manualRoi,
             onClearManualRoi = onClearManualRoi,
             showGlDebug = showGlDebug,
             onShowGlDebugChanged = onShowGlDebugChanged,
+            glPreviewAvailable = featureAvailability.glPreviewAvailable,
         )
         Spacer(modifier = Modifier.height(8.dp))
         RecordingControls(
@@ -765,6 +808,8 @@ private fun StatusOverlay(
             lastRecordingPath = lastRecordingPath,
             onToggleRecording = onToggleRecording,
             onShareRecording = onShareRecording,
+            recordingAvailable = featureAvailability.processedRecordingAvailable,
+            validationAvailable = featureAvailability.recordedVideoValidationAvailable,
             validationSummary = validationSummary,
             validationRunning = validationRunning,
             onValidateVideo = onValidateVideo,
@@ -808,33 +853,39 @@ private fun RecordingControls(
     lastRecordingPath: String?,
     onToggleRecording: () -> Unit,
     onShareRecording: () -> Unit,
+    recordingAvailable: Boolean,
+    validationAvailable: Boolean,
     validationSummary: String?,
     validationRunning: Boolean,
     onValidateVideo: () -> Unit,
 ) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Button(onClick = onToggleRecording) {
-            Text(if (isRecording) "Stop Recording" else "Start Recording")
+    if (recordingAvailable) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Button(onClick = onToggleRecording) {
+                Text(if (isRecording) "Stop Recording" else "Start Recording")
+            }
+            Text(
+                text = if (isRecording) {
+                    "REC ${formatElapsed(elapsedMillis)}"
+                } else {
+                    "Recorder idle"
+                },
+                color = if (isRecording) Color(0xFFFF6B6B) else Color.White,
+            )
         }
-        Text(
-            text = if (isRecording) {
-                "REC ${formatElapsed(elapsedMillis)}"
-            } else {
-                "Recorder idle"
-            },
-            color = if (isRecording) Color(0xFFFF6B6B) else Color.White,
-        )
     }
-    Spacer(modifier = Modifier.height(4.dp))
-    Button(
-        onClick = onValidateVideo,
-        enabled = !validationRunning,
-    ) {
-        Text(if (validationRunning) "Validating Video" else "Validate Video")
+    if (validationAvailable) {
+        Spacer(modifier = Modifier.height(4.dp))
+        Button(
+            onClick = onValidateVideo,
+            enabled = !validationRunning,
+        ) {
+            Text(if (validationRunning) "Validating Video" else "Validate Video")
+        }
     }
     if (!validationSummary.isNullOrBlank()) {
         Spacer(modifier = Modifier.height(4.dp))
@@ -878,18 +929,20 @@ private fun copyUriToCacheFile(context: Context, uri: Uri): File {
 private fun ModeControls(
     settings: AnalysisSettings,
     onSettingsChanged: (AnalysisSettings) -> Unit,
+    availableModes: List<MagnificationMode>,
     cameraControlsLocked: Boolean,
     onCameraControlsLockedChanged: (Boolean) -> Unit,
     manualRoi: NormalizedRect?,
     onClearManualRoi: () -> Unit,
     showGlDebug: Boolean,
     onShowGlDebugChanged: (Boolean) -> Unit,
+    glPreviewAvailable: Boolean,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        MagnificationMode.entries.forEach { mode ->
+        availableModes.forEach { mode ->
             CompactControlButton(
                 label = mode.compactLabel,
                 onClick = { onSettingsChanged(settings.copy(mode = mode)) },
@@ -936,9 +989,11 @@ private fun ModeControls(
             Text("Clear ROI")
         }
     }
-    Spacer(modifier = Modifier.height(8.dp))
-    Button(onClick = { onShowGlDebugChanged(!showGlDebug) }) {
-        Text(if (showGlDebug) "Use CameraX Preview" else "Use GL Preview")
+    if (glPreviewAvailable) {
+        Spacer(modifier = Modifier.height(8.dp))
+        Button(onClick = { onShowGlDebugChanged(!showGlDebug) }) {
+            Text(if (showGlDebug) "Use CameraX Preview" else "Use GL Preview")
+        }
     }
 }
 
