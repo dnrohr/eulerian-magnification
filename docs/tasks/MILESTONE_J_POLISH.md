@@ -4,7 +4,7 @@ Goal: turn the prototype into a coherent demo app with clean UX and release-read
 
 ## Tasks
 
-- [ ] Refine controls, settings, presets, and recording gallery.
+- [x] Refine controls, settings, presets, and recording gallery.
 - [x] Add app icon and polished permission copy.
 - [x] Add thermal behavior notes and long-run benchmarks.
 - [x] Add README with setup, device testing, and demo flow.
@@ -75,6 +75,24 @@ Goal: turn the prototype into a coherent demo app with clean UX and release-read
 - Verified the UBFC-rPPG dataset page is reachable.
 - `.\gradlew.bat testDebugUnitTest`
 - `.\gradlew.bat assembleDebug`
+
+## Completed Slice: Recent Recording Gallery
+
+- Added `RecordingGallery` to scan app-specific `recordings/processed-*`
+  sessions and summarize recent metadata JSON files.
+- Added unit coverage for newest-first sorting, invalid metadata skipping, and
+  result limiting.
+- The live overlay now shows recent recordings with per-item metadata share
+  buttons, and refreshes the list after each stopped recording.
+- Documented the gallery behavior in `docs/architecture/RECORDING_PROTOTYPE.md`.
+
+## Verification
+
+- `.\gradlew.bat testDebugUnitTest --tests "com.dnrohr.eulerianmagnification.recording.RecordingGalleryTest"`
+- `.\gradlew.bat testDebugUnitTest`
+- `.\gradlew.bat assembleDebug`
+- Pixel 8a install/relaunch screenshot confirmed recent recordings render with
+  share buttons and no app crash.
 
 ## Completed Slice: App Icon And Permission Copy
 

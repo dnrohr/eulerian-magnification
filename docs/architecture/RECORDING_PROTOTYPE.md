@@ -16,6 +16,10 @@ The metadata captures:
 
 The latest metadata JSON can be shared through an Android `FileProvider` using the overlay's share button after a recording stops.
 
+The overlay also lists recent app-specific recording sessions by scanning
+`recordings/processed-*/metadata.json`. Each gallery row shows the mode, view,
+sample count, and duration, and can share that recording's metadata JSON.
+
 The app now also writes a debug processed MP4 for each recording session. `DebugProcessedMp4Recorder` uses `MediaCodec` H.264 surface input plus `MediaMuxer` and draws the processed visualization state into the encoder surface: ROI tint, signal, mode, band, amplification, FPS, and latency.
 
 Recording metadata stores both the original frame timestamp and a monotonic presentation timestamp for each processed sample. The presentation timeline starts at zero and advances by at least a 30 FPS frame interval when camera timestamps repeat or move backward. This gives recorded captures a deterministic processed-frame timeline for validation and for the future GL encoder-surface path.

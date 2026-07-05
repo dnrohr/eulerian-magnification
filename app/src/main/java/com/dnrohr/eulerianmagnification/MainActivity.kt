@@ -58,6 +58,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -90,6 +91,8 @@ import com.dnrohr.eulerianmagnification.quality.QualityEvaluator
 import com.dnrohr.eulerianmagnification.quality.QualityStatus
 import com.dnrohr.eulerianmagnification.recording.DebugProcessedMp4Recorder
 import com.dnrohr.eulerianmagnification.recording.ProcessedRecordingSession
+import com.dnrohr.eulerianmagnification.recording.RecordingGallery
+import com.dnrohr.eulerianmagnification.recording.RecordingGalleryItem
 import com.dnrohr.eulerianmagnification.ui.AppTheme
 import java.io.File
 import java.util.concurrent.Executors
@@ -128,6 +131,7 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
     ) { granted ->
         hasCameraPermission = granted
     }
+    val recordingRootDirectory = remember(context) { recordingsRoot(context) }
     val validationExecutor = remember { Executors.newSingleThreadExecutor() }
     var analysisSample by remember { mutableStateOf(AnalysisSample()) }
     var analysisSettings by remember {
@@ -135,6 +139,7 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
     }
     var recordingSession by remember { mutableStateOf<ProcessedRecordingSession?>(null) }
     var lastRecordingPath by remember { mutableStateOf<String?>(null) }
+    var recentRecordings by remember { mutableStateOf(RecordingGallery.listRecent(recordingRootDirectory)) }
     var validationSummary by remember { mutableStateOf<String?>(null) }
     var validationRunning by remember { mutableStateOf(false) }
     var cameraControlsLocked by remember { mutableStateOf(false) }
@@ -291,6 +296,7 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
             isRecording = recordingSession != null,
             recordingElapsedMillis = recordingSession?.elapsedMillis ?: 0L,
             lastRecordingPath = lastRecordingPath,
+            recentRecordings = recentRecordings,
             validationSummary = validationSummary,
             validationRunning = validationRunning,
             qualityStatuses = qualityEvaluator.evaluate(
@@ -303,7 +309,7 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
                     val activeSession = recordingSession
                     if (activeSession == null) {
                         recordingSession = ProcessedRecordingSession(
-                            rootDirectory = recordingsRoot(context),
+                            rootDirectory = recordingRootDirectory,
                             videoRecorderFactory = { outputFile -> DebugProcessedMp4Recorder(outputFile) },
                         )
                         lastRecordingPath = null
@@ -313,12 +319,16 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
                             thermalStatus = thermalStatus(context),
                         )
                         lastRecordingPath = output.absolutePath
+                        recentRecordings = RecordingGallery.listRecent(recordingRootDirectory)
                         recordingSession = null
                     }
                 }
             },
             onShareRecording = {
                 lastRecordingPath?.let { shareRecordingMetadata(context, File(it)) }
+            },
+            onShareRecordingPath = { path ->
+                shareRecordingMetadata(context, File(path))
             },
             onValidateVideo = {
                 videoPickerLauncher.launch("video/*")
@@ -734,11 +744,13 @@ private fun StatusOverlay(
     isRecording: Boolean,
     recordingElapsedMillis: Long,
     lastRecordingPath: String?,
+    recentRecordings: List<RecordingGalleryItem>,
     validationSummary: String?,
     validationRunning: Boolean,
     qualityStatuses: List<QualityStatus>,
     onToggleRecording: () -> Unit,
     onShareRecording: () -> Unit,
+    onShareRecordingPath: (String) -> Unit,
     onValidateVideo: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -806,8 +818,10 @@ private fun StatusOverlay(
             isRecording = isRecording,
             elapsedMillis = recordingElapsedMillis,
             lastRecordingPath = lastRecordingPath,
+            recentRecordings = recentRecordings,
             onToggleRecording = onToggleRecording,
             onShareRecording = onShareRecording,
+            onShareRecordingPath = onShareRecordingPath,
             recordingAvailable = featureAvailability.processedRecordingAvailable,
             validationAvailable = featureAvailability.recordedVideoValidationAvailable,
             validationSummary = validationSummary,
@@ -851,8 +865,10 @@ private fun RecordingControls(
     isRecording: Boolean,
     elapsedMillis: Long,
     lastRecordingPath: String?,
+    recentRecordings: List<RecordingGalleryItem>,
     onToggleRecording: () -> Unit,
     onShareRecording: () -> Unit,
+    onShareRecordingPath: (String) -> Unit,
     recordingAvailable: Boolean,
     validationAvailable: Boolean,
     validationSummary: String?,
@@ -904,6 +920,32 @@ private fun RecordingControls(
             text = "Metadata saved: $lastRecordingPath",
             color = Color.White,
         )
+    }
+    if (recentRecordings.isNotEmpty()) {
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            text = "Recent recordings",
+            color = Color.White,
+            style = MaterialTheme.typography.labelLarge,
+        )
+        recentRecordings.forEach { item ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = item.summary,
+                    color = Color.White,
+                    modifier = Modifier.weight(1.0f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Button(onClick = { onShareRecordingPath(item.metadataFile.absolutePath) }) {
+                    Text("Share")
+                }
+            }
+        }
     }
 }
 
