@@ -11,8 +11,8 @@ validation.
 - Kotlin Android app with Jetpack Compose, CameraX, ML Kit face detection, and
   optional OpenGL ES preview.
 - Live ROI analysis for pulse-color and early breathing/motion experiments.
-- Modes: Pulse (`0.7-3.0 Hz`), Breathing (`0.1-0.6 Hz`), Tremor
-  (`4.0-12.0 Hz`), and Object Vibration (`3.0-12.0 Hz`).
+- Modes: Pulse (`0.7-3.0 Hz`), Breathing (`0.1-0.6 Hz`), and Fast Motion
+  (`4.0-12.0 Hz`).
 - Views: Raw, Amplified, Difference, and Split.
 - Manual ROI selection, face ROI smoothing/tracking, basic translation estimate,
   quality warnings, and amplification/noise guardrails.
@@ -31,7 +31,7 @@ motion-magnification camera.
 - Breathing mode estimates low-frequency vertical translation and shows the
   breathing signal in the expanded controls. It does not yet warp the preview to
   make chest motion visually larger.
-- Tremor and Object modes expose higher-frequency bands and quality warnings,
+- Fast Motion exposes a higher-frequency band and quality warnings,
   but the live preview is still driven mostly by ROI color/tint visualization.
 - The Riesz/phase motion work exists as reference/scaffolding in the repo, but
   it is not yet the primary live preview renderer.
@@ -48,8 +48,8 @@ it wrong.
 4. Let exposure settle for a few seconds, then tap `Controls` and use
    `Lock AE/AWB`.
 5. Drag a manual ROI over the area you want to measure. For pulse, use forehead
-   or cheek skin. For breathing, use the torso/shoulder area. For object tests,
-   use a high-contrast moving edge.
+   or cheek skin. For breathing, use the torso/shoulder area. For fast-motion
+   tests, use a high-contrast moving edge.
 6. Tap `Hide` so the image is mostly unobstructed.
 7. Use `Raw`, `Amplified`, `Difference`, or `Split` to compare whether the
    processed view is adding useful signal or only noise.
@@ -74,13 +74,13 @@ it wrong.
 - Watch the breathing value/waveform in expanded controls. The preview itself is
   not yet a full motion-warped result.
 
-### Best Motion/Object Setup
+### Best Fast Motion Setup
 
 - Use a stable phone mount and a high-contrast object.
 - Good test targets are a black stripe on white paper, a ruler edge, or a small
   tag attached to a speaker, fan, or vibrating surface.
-- Use `Object` for general mechanical vibration and `Tremor` for hand-like
-  biological motion experiments.
+- Use `Motion` for high-frequency biological or small mechanical motion
+  experiments.
 - Keep the camera and background still. Small camera motion can dominate these
   bands.
 
@@ -90,9 +90,9 @@ The default screen is intentionally compact so the preview remains visible.
 
 - `Controls`: opens the full controls and diagnostics panel.
 - `Hide`: closes the full panel and returns to the compact preview.
-- `Color amp`, `Breath sig`, `Motion exp`, `Object exp`: compact output labels
+- `Color amp`, `Breath sig`, `Motion exp`: compact output labels
   that state what kind of processing is active.
-- `Pulse`, `Breath`, `Tremor`, `Object`: select the temporal band and analysis
+- `Pulse`, `Breath`, `Motion`: select the temporal band and analysis
   preset.
 - `Raw`: shows the camera preview without the app's amplified tint.
 - `Amp`: shows the current amplified/tinted visualization.
@@ -119,8 +119,8 @@ The default screen is intentionally compact so the preview remains visible.
   high-frequency/amplification combinations. The compact preview stays terse;
   expanded controls show a short action for each warning.
 - `Output`: expanded-controls label that spells out the active pipeline:
-  `Color amplification`, `Breathing signal`, `Experimental motion analysis`, or
-  `Experimental object vibration`.
+  `Color amplification`, `Breathing signal`, or
+  `Experimental fast-motion analysis`.
 - `Auto ROI` / `Manual ROI`: compact status label showing whether the app is
   using automatic face/center ROI or your selected region.
 
@@ -134,17 +134,14 @@ The presets are broad first-pass bands:
 
 - `Pulse`: `0.7-3.0 Hz`, roughly 42-180 beats per minute.
 - `Breath`: `0.1-0.6 Hz`, roughly 6-36 breaths per minute.
-- `Tremor`: `4.0-12.0 Hz`, intended for hand/biological tremor-style motion.
-- `Object`: `3.0-12.0 Hz`, intended for general small mechanical vibrations.
+- `Fast Motion`: `4.0-12.0 Hz`, intended for high-frequency biological or small
+  mechanical motion experiments.
 
-`Tremor` and `Object` overlap heavily because they are currently coarse
-high-frequency presets running through similar analysis/quality plumbing. The
-lower `3.0 Hz` edge for `Object` admits slower mechanical vibration that would be
-filtered out by `Tremor`; otherwise both modes deliberately cover the range where
-30 FPS phone video can still represent small high-frequency motion with some
-margin below Nyquist. They should become more distinct as the motion pipeline
-matures, for example by adding different ROI defaults, stabilization assumptions,
-quality thresholds, and narrower preset bands.
+Earlier builds exposed separate `Tremor` and `Object` buttons with heavily
+overlapping bands. They are merged in the UI for now because the current live
+pipeline does not yet give them distinct rendering, stabilization, ROI defaults,
+or quality behavior. The single `Fast Motion` preset is a more honest placeholder
+until true motion rendering matures.
 
 ## Requirements
 

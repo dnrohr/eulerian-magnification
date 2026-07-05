@@ -27,7 +27,7 @@ Lighting flicker detection uses a rolling average-green heuristic. It looks for 
 
 ROI motion detection currently uses `TranslationEstimator`, which estimates normalized frame-to-frame movement from the smoothed/tracked ROI center. This can be caused by phone movement, head or torso movement, heartbeat-visible face motion, or detector/tracker drift. It is a practical warning signal for the CPU MVP, not a full global optical-flow compensation pass.
 
-High-frequency modes are more sensitive to small camera motion and aggressive amplification. Tremor and Object Vibration now add `Mode motion risk` when normalized translation reaches 0.008 and `Amplification risk` when amplification is above 18x. Pulse and Breathing do not use those high-frequency guardrails.
+High-frequency modes are more sensitive to small camera motion and aggressive amplification. Fast Motion adds `Mode motion risk` when normalized translation reaches 0.008 and `Amplification risk` when amplification is above 18x. Pulse and Breathing do not use those high-frequency guardrails.
 
 ## Artifact Suppression
 

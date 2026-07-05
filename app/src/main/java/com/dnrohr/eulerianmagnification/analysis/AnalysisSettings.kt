@@ -18,7 +18,7 @@ enum class MagnificationMode(
 ) {
     Pulse("Pulse", 0.7, 3.0, "Color amplification", "Color amp"),
     Breathing("Breathing", 0.1, 0.6, "Breathing signal", "Breath sig"),
-    Tremor("Tremor", 4.0, 12.0, "Experimental motion analysis", "Motion exp"),
+    Tremor("Fast Motion", 4.0, 12.0, "Experimental fast-motion analysis", "Motion exp"),
     ObjectVibration("Object", 3.0, 12.0, "Experimental object vibration", "Object exp"),
 }
 

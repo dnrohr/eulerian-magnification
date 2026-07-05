@@ -24,7 +24,10 @@ class CapabilityAvailabilityTest {
         assertTrue(availability.liveCameraAvailable)
         assertTrue(availability.glPreviewAvailable)
         assertTrue(availability.processedRecordingAvailable)
-        assertEquals(MagnificationMode.entries, availability.availableModes)
+        assertEquals(
+            listOf(MagnificationMode.Pulse, MagnificationMode.Breathing, MagnificationMode.Tremor),
+            availability.availableModes,
+        )
     }
 
     @Test

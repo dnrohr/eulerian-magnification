@@ -1231,7 +1231,7 @@ private val MagnificationMode.compactLabel: String
     get() = when (this) {
         MagnificationMode.Pulse -> "Pulse"
         MagnificationMode.Breathing -> "Breath"
-        MagnificationMode.Tremor -> "Tremor"
+        MagnificationMode.Tremor -> "Motion"
         MagnificationMode.ObjectVibration -> "Object"
     }
 

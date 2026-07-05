@@ -14,7 +14,7 @@ Goal: make the live UI accurately describe what the current app is doing so user
 ## Completed Slice
 
 - Added `outputLabel` and `compactOutputLabel` to `MagnificationMode`.
-- Compact live UI now shows `Color amp`, `Breath sig`, `Motion exp`, or `Object exp`.
+- Compact live UI now shows `Color amp`, `Breath sig`, or `Motion exp`.
 - Expanded controls now show `Output: ...` with the full pipeline description.
 - README UI reference documents the exact labels.
 - `AnalysisSettingsTest` verifies the user-facing output labels.

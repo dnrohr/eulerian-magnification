@@ -50,7 +50,6 @@ object CapabilityAvailability {
                 }
                 if (hasThirtyFpsFrontCamera) {
                     add(MagnificationMode.Tremor)
-                    add(MagnificationMode.ObjectVibration)
                 }
             },
         )
