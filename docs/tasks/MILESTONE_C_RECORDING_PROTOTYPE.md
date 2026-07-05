@@ -93,6 +93,25 @@ processed texture into the encoder input surface remains open.
 - `.\gradlew.bat testDebugUnitTest`
 - `.\gradlew.bat assembleDebug`
 
+## Supporting Slice: EGL Encoder Surface Renderer Foundation
+
+- Added `GlEncoderSurfaceRenderer` for recordable GLES 3 EGL window surfaces
+  backed by a `MediaCodec` input `Surface`.
+- The renderer shares the current GL context, blits a processed texture to the
+  encoder surface, assigns `eglPresentationTimeANDROID`, swaps buffers, and
+  restores the previous EGL context.
+- Added unit coverage for the recordable EGL config and GLES 3 context
+  attributes.
+
+This creates the encoder-surface renderer component. It is not yet wired into
+`ProcessedVideoRecorder`, so the composited-frame checklist item stays open.
+
+## Verification
+
+- `.\gradlew.bat testDebugUnitTest --tests "com.dnrohr.eulerianmagnification.gl.GlEncoderSurfaceRendererTest"`
+- `.\gradlew.bat testDebugUnitTest`
+- `.\gradlew.bat assembleDebug`
+
 ## Completed Slice: Debug Processed MP4 Recorder
 
 - Added a `ProcessedVideoRecorder` interface and `DebugProcessedMp4Recorder` implementation.

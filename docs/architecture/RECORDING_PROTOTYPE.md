@@ -40,6 +40,13 @@ encoder slice should render that texture into `MediaCodec`'s input surface from
 an EGL context and assign the same timestamp with
 `eglPresentationTimeANDROID`.
 
+`GlEncoderSurfaceRenderer` is the first encoder-surface rendering component. It
+creates a recordable GLES 3 EGL window surface around a `MediaCodec` input
+surface, shares the current GL context, blits a processed texture to that
+surface, assigns `eglPresentationTimeANDROID`, swaps buffers, and restores the
+previous EGL context. It is compiled and unit-checked, but not yet wired into
+`ProcessedVideoRecorder`.
+
 This is not the final camera-preview MP4 yet. It proves the app-owned MP4 encoder/muxer path and records processed state, while final preview-matching recording still needs the Camera/GPU texture path.
 
 An `EncodedOutputValidator` now exists as the first local gate for future MP4 work. It verifies file presence, non-empty output, `.mp4` naming, and top-level `ftyp`, `moov`, and `mdat` atoms. Once `MediaCodec` output exists, this should grow into track-level validation.

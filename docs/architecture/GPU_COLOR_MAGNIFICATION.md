@@ -29,6 +29,11 @@ presentation timestamp from the latest analysis uniforms. This is the handoff
 point for the future EGL encoder-surface renderer; it does not yet write the
 texture into `MediaCodec`'s input surface.
 
+`GlEncoderSurfaceRenderer` can consume that processed texture on a recordable
+EGL window surface, using the shared GL context and `eglPresentationTimeANDROID`
+for the processed frame timestamp. The class is not yet connected to the
+recording session, so display/encoder dual rendering still remains open.
+
 The `Split` view mode reuses those two render targets for visual comparison: raw RGB is drawn into the left half of the GL surface and the processed texture is drawn into the right half. The split is implemented with deterministic viewport layout logic so odd-width and tiny surfaces remain drawable.
 
 The GL preview overlay also reports a benchmark summary from `PerformanceBenchmark`, comparing CPU analysis FPS/latency with GL render FPS/frame time and flagging whether GL meets the 30 fps display target. A short Pixel 8a run is recorded in `docs/experiments/pixel8a_gpu_benchmark.md`: the GL preview sample hit 11 ms median frame time and 1.14% janky frames, compared with 15 ms median and 32.55% janky frames in the CameraX CPU preview sample. Longer thermal and CPU-load runs are still needed before treating this as a sustained-performance result.

@@ -154,6 +154,24 @@ piece of the combined display/encoder checklist item.
 - `.\gradlew.bat testDebugUnitTest`
 - `.\gradlew.bat assembleDebug`
 
+## Supporting Slice: EGL Encoder Surface Renderer Foundation
+
+- Added `GlEncoderSurfaceRenderer` to render a processed GL texture onto a
+  recordable `MediaCodec` input surface.
+- The renderer uses a shared GLES 3 context and assigns the processed frame's
+  presentation timestamp with `eglPresentationTimeANDROID`.
+- Added unit coverage for recordable EGL surface config attributes.
+
+This is the encoder rendering component, but it is not yet connected to live
+recording. The display/encoder checklist item remains open until live GL frames
+are written through this path.
+
+## Verification
+
+- `.\gradlew.bat testDebugUnitTest --tests "com.dnrohr.eulerianmagnification.gl.GlEncoderSurfaceRendererTest"`
+- `.\gradlew.bat testDebugUnitTest`
+- `.\gradlew.bat assembleDebug`
+
 ## Completed Slice: Temporal State Texture Foundation
 
 - Added ping-pong temporal state render targets for each pyramid level.
