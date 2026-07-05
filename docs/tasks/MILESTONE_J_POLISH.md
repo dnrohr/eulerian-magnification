@@ -10,7 +10,7 @@ Goal: turn the prototype into a coherent demo app with clean UX and release-read
 - [x] Add README with setup, device testing, and demo flow.
 - [x] Add demo videos or links when available.
 - [x] Hide unavailable modes based on capability reports.
-- [ ] Commit and push to `main`.
+- [x] Commit and push to `main`.
 
 ## Completed Slice: ROI Motion Quality Label
 
@@ -122,6 +122,18 @@ Goal: turn the prototype into a coherent demo app with clean UX and release-read
 - 3-minute CameraX preview ADB sample
 - 2-minute GL preview ADB sample
 - `adb logcat -d -b crash`
+
+## Completed Slice: Milestone J Completion Bookkeeping
+
+- Confirmed all Milestone J polish slices have been committed and pushed to
+  `main`.
+- Updated the task backlog status table so complete milestones and the remaining
+  C/E/I work are visible from the index.
+
+## Verification
+
+- `.\gradlew.bat testDebugUnitTest`
+- `.\gradlew.bat assembleDebug`
 
 ## Completed Slice: Compact Pixel Portrait Controls
 
