@@ -60,6 +60,8 @@ import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.dnrohr.eulerianmagnification.analysis.AnalysisSample
 import com.dnrohr.eulerianmagnification.analysis.AnalysisSettings
+import com.dnrohr.eulerianmagnification.analysis.BreathingMotionFilter
+import com.dnrohr.eulerianmagnification.analysis.BreathingMotionSample
 import com.dnrohr.eulerianmagnification.analysis.MagnificationMode
 import com.dnrohr.eulerianmagnification.analysis.PulseRoiAnalyzer
 import com.dnrohr.eulerianmagnification.analysis.RecordedVideoDecodeOptions
@@ -126,8 +128,13 @@ private fun MainScreen() {
     val qualityEvaluator = remember { QualityEvaluator() }
     val lightingFlickerDetector = remember { LightingFlickerDetector() }
     val artifactSuppressor = remember { ArtifactSuppressor() }
+    val breathingMotionFilter = remember(analysisSettings.mode, analysisSettings.amplification) {
+        BreathingMotionFilter(amplification = analysisSettings.amplification)
+    }
     var lightingFlickerLikely by remember { mutableStateOf(false) }
+    var breathingMotionSample by remember { mutableStateOf(BreathingMotionSample()) }
     val signalHistory = remember { mutableStateListOf<Double>() }
+    val breathingMotionHistory = remember { mutableStateListOf<Double>() }
     val videoPickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent(),
     ) { uri: Uri? ->
@@ -166,6 +173,34 @@ private fun MainScreen() {
         }
     }
 
+    LaunchedEffect(analysisSettings.mode) {
+        if (analysisSettings.mode != MagnificationMode.Breathing) {
+            breathingMotionHistory.clear()
+            breathingMotionSample = BreathingMotionSample()
+        }
+    }
+
+    fun handleSample(sample: AnalysisSample) {
+        analysisSample = sample
+        lightingFlickerLikely = lightingFlickerDetector.update(sample.averageGreen)
+        recordingSession?.record(sample, analysisSettings)
+        signalHistory.add(sample.bandpassedGreen)
+        if (signalHistory.size > SIGNAL_HISTORY_SIZE) {
+            signalHistory.removeAt(0)
+        }
+        if (analysisSettings.mode == MagnificationMode.Breathing) {
+            val motion = breathingMotionFilter.update(
+                translation = sample.translation,
+                timestampNanos = sample.frameTimestampNanos,
+            )
+            breathingMotionSample = motion
+            breathingMotionHistory.add(motion.amplifiedDy)
+            if (breathingMotionHistory.size > SIGNAL_HISTORY_SIZE) {
+                breathingMotionHistory.removeAt(0)
+            }
+        }
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         if (hasCameraPermission) {
             if (showGlDebug) {
@@ -175,15 +210,7 @@ private fun MainScreen() {
                         cameraControlsLocked = cameraControlsLocked,
                         onStats = { glFrameStats = it },
                         modifier = Modifier.fillMaxSize(),
-                        onSample = {
-                            analysisSample = it
-                            lightingFlickerLikely = lightingFlickerDetector.update(it.averageGreen)
-                            recordingSession?.record(it, analysisSettings)
-                            signalHistory.add(it.bandpassedGreen)
-                            if (signalHistory.size > SIGNAL_HISTORY_SIZE) {
-                                signalHistory.removeAt(0)
-                            }
-                        },
+                        onSample = ::handleSample,
                     )
                 }
             } else key(analysisSettings, cameraControlsLocked) {
@@ -191,15 +218,7 @@ private fun MainScreen() {
                     settings = analysisSettings,
                     cameraControlsLocked = cameraControlsLocked,
                     modifier = Modifier.fillMaxSize(),
-                    onSample = {
-                        analysisSample = it
-                        lightingFlickerLikely = lightingFlickerDetector.update(it.averageGreen)
-                        recordingSession?.record(it, analysisSettings)
-                        signalHistory.add(it.bandpassedGreen)
-                        if (signalHistory.size > SIGNAL_HISTORY_SIZE) {
-                            signalHistory.removeAt(0)
-                        }
-                    },
+                    onSample = ::handleSample,
                 )
             }
             AmplifiedTintOverlay(
@@ -221,6 +240,8 @@ private fun MainScreen() {
         StatusOverlay(
             sample = analysisSample,
             signalHistory = signalHistory,
+            breathingMotionSample = breathingMotionSample,
+            breathingMotionHistory = breathingMotionHistory,
             settings = analysisSettings,
             onSettingsChanged = { analysisSettings = it },
             cameraControlsLocked = cameraControlsLocked,
@@ -582,6 +603,8 @@ private fun PermissionPane(onRequestPermission: () -> Unit) {
 private fun StatusOverlay(
     sample: AnalysisSample,
     signalHistory: List<Double>,
+    breathingMotionSample: BreathingMotionSample,
+    breathingMotionHistory: List<Double>,
     settings: AnalysisSettings,
     onSettingsChanged: (AnalysisSettings) -> Unit,
     cameraControlsLocked: Boolean,
@@ -673,6 +696,19 @@ private fun StatusOverlay(
                 .fillMaxWidth()
                 .height(44.dp),
         )
+        if (settings.mode == MagnificationMode.Breathing) {
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Breathing motion: ${"%+.4f".format(breathingMotionSample.amplifiedDy)}",
+                color = Color.White,
+            )
+            SignalWaveform(
+                values = breathingMotionHistory,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(36.dp),
+            )
+        }
     }
 }
 

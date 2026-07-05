@@ -7,10 +7,24 @@ Goal: add a low-frequency motion mode for torso/chest breathing visualization.
 - [ ] Add manual rectangular ROI selector.
 - [x] Add breathing preset around 0.1-0.6 Hz.
 - [x] Add low-frequency temporal motion filter.
-- [ ] Add amplified motion, heatmap, or waveform display.
+- [x] Add amplified motion, heatmap, or waveform display.
 - [ ] Record output video and metadata.
 - [ ] Add device verification notes.
 - [ ] Commit and push to `main`.
+
+## Completed Slice: Breathing Motion Waveform
+
+- Live sample handling now runs `BreathingMotionFilter` while Breathing mode is selected.
+- The status overlay shows the amplified vertical breathing-motion value.
+- The overlay adds a compact breathing-motion waveform below the existing color-signal waveform.
+- Motion history resets when leaving Breathing mode.
+
+This is a waveform display, not a torso-motion heatmap or motion-warped preview. Manual torso ROI selection remains pending.
+
+## Verification
+
+- `.\gradlew.bat testDebugUnitTest --tests "com.dnrohr.eulerianmagnification.analysis.BreathingMotionFilterTest"`
+- `.\gradlew.bat clean testDebugUnitTest assembleDebug`
 
 ## Completed Slice: Breathing Motion Filter
 
