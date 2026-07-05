@@ -5,7 +5,7 @@ Goal: turn the prototype into a coherent demo app with clean UX and release-read
 ## Tasks
 
 - [ ] Refine controls, settings, presets, and recording gallery.
-- [ ] Add app icon and polished permission copy.
+- [x] Add app icon and polished permission copy.
 - [ ] Add thermal behavior notes and long-run benchmarks.
 - [x] Add README with setup, device testing, and demo flow.
 - [ ] Add demo videos or links when available.
@@ -32,6 +32,17 @@ Goal: turn the prototype into a coherent demo app with clean UX and release-read
 - Linked the existing recorded-video validation, public sample, Riesz, GPU,
   recording, quality, and Pixel notes docs from the top-level README.
 - Kept the medical/diagnostic limitation visible near the top of the project.
+
+## Verification
+
+- `.\gradlew.bat testDebugUnitTest`
+- `.\gradlew.bat assembleDebug`
+
+## Completed Slice: App Icon And Permission Copy
+
+- Added adaptive launcher icon resources and wired them into the manifest.
+- Updated the camera permission pane to explain live/local camera analysis,
+  recording/share behavior, and the non-diagnostic prototype limit.
 
 ## Verification
 

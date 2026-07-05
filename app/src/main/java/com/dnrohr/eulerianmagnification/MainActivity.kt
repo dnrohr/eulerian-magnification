@@ -654,13 +654,19 @@ private fun PermissionPane(onRequestPermission: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = "Camera access is needed to preview and magnify live video.",
+            text = "Camera access powers the live preview and local magnification analysis.",
             color = Color.White,
             style = MaterialTheme.typography.titleMedium,
         )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "Frames stay on this device unless you choose to record or share metadata. This prototype is for visualization, not diagnosis.",
+            color = Color(0xFFC8D3DC),
+            style = MaterialTheme.typography.bodyMedium,
+        )
         Spacer(modifier = Modifier.height(16.dp))
         Button(onClick = onRequestPermission) {
-            Text("Allow Camera")
+            Text("Continue")
         }
     }
 }
