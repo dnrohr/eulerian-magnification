@@ -43,15 +43,18 @@ class QualityEvaluator {
 private val MagnificationMode.isHighFrequencyMode: Boolean
     get() = this == MagnificationMode.Tremor || this == MagnificationMode.ObjectVibration
 
-enum class QualityStatus(val label: String) {
-    Good("Good"),
-    FaceMissing("Face missing"),
-    TooDark("Too dark"),
-    LowFps("Low FPS"),
-    TimingUnstable("Timing unstable"),
-    LightingFlicker("Lighting flicker"),
-    CameraMotion("ROI motion"),
-    ModeMotionRisk("Mode motion risk"),
-    AmplificationRisk("Amplification risk"),
-    SignalWeak("Signal weak"),
+enum class QualityStatus(
+    val label: String,
+    val action: String,
+) {
+    Good("Good", "Keep this setup."),
+    FaceMissing("Face missing", "Frame the face or select a manual ROI."),
+    TooDark("Too dark", "Use brighter, steady light."),
+    LowFps("Low FPS", "Close apps or reduce device load."),
+    TimingUnstable("Timing unstable", "Restart the preview if timing keeps jumping."),
+    LightingFlicker("Lighting flicker", "Try daylight or a non-flickering lamp."),
+    CameraMotion("ROI motion", "Mount the phone or redraw a stable ROI."),
+    ModeMotionRisk("Mode motion risk", "Use a tripod for high-frequency modes."),
+    AmplificationRisk("Amplification risk", "Lower amplification below 18x."),
+    SignalWeak("Signal weak", "Use steadier light or choose a stronger ROI."),
 }

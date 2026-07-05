@@ -6,16 +6,20 @@ The app now evaluates basic capture quality from each analysis sample and displa
 
 Current statuses:
 
-- `Good`
-- `Face missing`
-- `Too dark`
-- `Low FPS`
-- `Timing unstable`
-- `Lighting flicker`
-- `ROI motion`
-- `Mode motion risk`
-- `Amplification risk`
-- `Signal weak`
+- `Good`: keep this setup.
+- `Face missing`: frame the face or select a manual ROI.
+- `Too dark`: use brighter, steady light.
+- `Low FPS`: close apps or reduce device load.
+- `Timing unstable`: restart the preview if timing keeps jumping.
+- `Lighting flicker`: try daylight or a non-flickering lamp.
+- `ROI motion`: mount the phone or redraw a stable ROI.
+- `Mode motion risk`: use a tripod for high-frequency modes.
+- `Amplification risk`: lower amplification below 18x.
+- `Signal weak`: use steadier light or choose a stronger ROI.
+
+The compact overlay shows only the status labels. Expanded controls show the
+same labels plus these short actions, so the user can respond without losing the
+mostly unobstructed preview.
 
 The evaluator is intentionally conservative. It does not decide whether the visualization is medically meaningful; it only flags capture and timing conditions that commonly produce poor Eulerian magnification output.
 

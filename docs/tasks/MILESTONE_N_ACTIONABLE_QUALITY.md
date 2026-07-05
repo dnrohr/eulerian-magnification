@@ -4,11 +4,19 @@ Goal: replace terse quality labels with guidance that tells the user what to cha
 
 ## Tasks
 
-- [ ] Map each quality status to a short user action.
-- [ ] Keep the compact overlay concise while showing richer guidance in expanded controls.
-- [ ] Distinguish phone motion, ROI/tracker motion, lighting flicker, low FPS, timestamp issues, and risky high-frequency settings.
-- [ ] Add tests for user-facing quality guidance.
-- [ ] Update README quality documentation.
+- [x] Map each quality status to a short user action.
+- [x] Keep the compact overlay concise while showing richer guidance in expanded controls.
+- [x] Distinguish phone motion, ROI/tracker motion, lighting flicker, low FPS, timestamp issues, and risky high-frequency settings.
+- [x] Add tests for user-facing quality guidance.
+- [x] Update README quality documentation.
+
+## Completed Slice
+
+- Added an `action` string to every `QualityStatus`.
+- Expanded controls now show actionable guidance for non-good statuses.
+- Compact overlay remains concise and still shows only the status labels.
+- README and quality architecture docs now explain the action behavior.
+- `QualityEvaluatorTest` verifies the user-facing guidance strings.
 
 ## Done When
 

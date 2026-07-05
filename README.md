@@ -116,7 +116,8 @@ The default screen is intentionally compact so the preview remains visible.
 - `Share Metadata`: shares the JSON metadata for the latest recording.
 - `Quality`: summarizes whether the current run looks usable. Warnings can come
   from low FPS, camera/ROI motion, lighting flicker, timestamp jumps, or risky
-  high-frequency/amplification combinations.
+  high-frequency/amplification combinations. The compact preview stays terse;
+  expanded controls show a short action for each warning.
 - `Output`: expanded-controls label that spells out the active pipeline:
   `Color amplification`, `Breathing signal`, `Experimental motion analysis`, or
   `Experimental object vibration`.

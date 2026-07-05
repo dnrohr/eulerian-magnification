@@ -960,10 +960,19 @@ private fun CompactStatusOverlay(
 
 @Composable
 private fun QualityStatusRow(statuses: List<QualityStatus>) {
-    Text(
-        text = "Quality: ${statuses.joinToString { it.label }}",
-        color = qualityColor(statuses),
-    )
+    Column {
+        Text(
+            text = "Quality: ${statuses.joinToString { it.label }}",
+            color = qualityColor(statuses),
+        )
+        if (statuses != listOf(QualityStatus.Good)) {
+            Text(
+                text = statuses.joinToString("  ") { "${it.label}: ${it.action}" },
+                color = Color(0xFFC8D3DC),
+                style = MaterialTheme.typography.bodySmall,
+            )
+        }
+    }
 }
 
 private fun qualityColor(statuses: List<QualityStatus>): Color {
