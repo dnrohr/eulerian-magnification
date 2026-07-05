@@ -2,6 +2,7 @@ package com.dnrohr.eulerianmagnification.recording
 
 import com.dnrohr.eulerianmagnification.analysis.AnalysisSample
 import com.dnrohr.eulerianmagnification.analysis.AnalysisSettings
+import com.dnrohr.eulerianmagnification.gl.ProcessedGlFrame
 import java.io.File
 import java.time.Instant
 import java.time.format.DateTimeFormatter
@@ -44,6 +45,10 @@ class ProcessedRecordingSession(
         val recordingSample = record(sample)
         videoRecorder?.record(sample, settings)
         return recordingSample
+    }
+
+    fun record(frame: ProcessedGlFrame) {
+        videoRecorder?.record(frame)
     }
 
     fun stop(

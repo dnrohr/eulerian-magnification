@@ -84,12 +84,14 @@ import com.dnrohr.eulerianmagnification.capabilities.FeatureAvailability
 import com.dnrohr.eulerianmagnification.gl.CameraOesRenderer
 import com.dnrohr.eulerianmagnification.gl.ColorMagnificationParameters
 import com.dnrohr.eulerianmagnification.gl.GlFrameStats
+import com.dnrohr.eulerianmagnification.gl.ProcessedGlFrame
 import com.dnrohr.eulerianmagnification.profiling.PerformanceBenchmark
 import com.dnrohr.eulerianmagnification.quality.ArtifactSuppressor
 import com.dnrohr.eulerianmagnification.quality.LightingFlickerDetector
 import com.dnrohr.eulerianmagnification.quality.QualityEvaluator
 import com.dnrohr.eulerianmagnification.quality.QualityStatus
 import com.dnrohr.eulerianmagnification.recording.DebugProcessedMp4Recorder
+import com.dnrohr.eulerianmagnification.recording.GlProcessedMp4Recorder
 import com.dnrohr.eulerianmagnification.recording.ProcessedRecordingSession
 import com.dnrohr.eulerianmagnification.recording.RecordingGallery
 import com.dnrohr.eulerianmagnification.recording.RecordingGalleryItem
@@ -246,6 +248,7 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
                         onStats = { glFrameStats = it },
                         modifier = Modifier.fillMaxSize(),
                         onSample = ::handleSample,
+                        onProcessedFrame = { frame -> recordingSession?.record(frame) },
                     )
                 }
             } else key(analysisSettings, manualRoi, cameraControlsLocked) {
@@ -314,7 +317,13 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
                     if (activeSession == null) {
                         recordingSession = ProcessedRecordingSession(
                             rootDirectory = recordingRootDirectory,
-                            videoRecorderFactory = { outputFile -> DebugProcessedMp4Recorder(outputFile) },
+                            videoRecorderFactory = { outputFile ->
+                                if (showGlDebug) {
+                                    GlProcessedMp4Recorder(outputFile)
+                                } else {
+                                    DebugProcessedMp4Recorder(outputFile)
+                                }
+                            },
                         )
                         lastRecordingPath = null
                     } else {
@@ -352,6 +361,7 @@ private fun CameraGlPreview(
     onStats: (GlFrameStats) -> Unit,
     modifier: Modifier = Modifier,
     onSample: (AnalysisSample) -> Long,
+    onProcessedFrame: (ProcessedGlFrame) -> Unit,
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -376,6 +386,7 @@ private fun CameraGlPreview(
                 renderer = CameraOesRenderer(
                     requestRender = { glView.requestRender() },
                     onStats = onStats,
+                    onProcessedFrame = onProcessedFrame,
                 )
                 setRenderer(renderer)
                 renderMode = GLSurfaceView.RENDERMODE_WHEN_DIRTY

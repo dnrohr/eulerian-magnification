@@ -9,7 +9,7 @@ Goal: move color magnification from CPU analysis toward texture processing.
 - [x] Add temporal filter state textures.
 - [x] Implement color amplification shader pass.
 - [x] Add ROI-limited processing when possible.
-- [ ] Render processed output to display and encoder surfaces.
+- [x] Render processed output to display and encoder surfaces.
 - [x] Add side-by-side raw/amplified view.
 - [x] Benchmark against CPU MVP.
 - [x] Commit and push to `main`.
@@ -171,6 +171,22 @@ are written through this path.
 - `.\gradlew.bat testDebugUnitTest --tests "com.dnrohr.eulerianmagnification.gl.GlEncoderSurfaceRendererTest"`
 - `.\gradlew.bat testDebugUnitTest`
 - `.\gradlew.bat assembleDebug`
+
+## Completed Slice: Live GL Processed MP4 Recorder
+
+- GL preview still renders the processed color-magnified texture to display.
+- While recording in GL preview, the same emitted `ProcessedGlFrame` is forwarded
+  into `GlProcessedMp4Recorder`.
+- The recorder draws that processed texture to the `MediaCodec` encoder input
+  surface with the frame's monotonic presentation timestamp.
+- Added Pixel 8a instrumentation coverage for the real GL texture to MP4 encoder
+  surface path.
+
+## Verification
+
+- `.\gradlew.bat testDebugUnitTest`
+- `.\gradlew.bat assembleDebug assembleDebugAndroidTest`
+- `.\gradlew.bat connectedDebugAndroidTest '-Pandroid.testInstrumentationRunnerArguments.class=com.dnrohr.eulerianmagnification.recording.GlProcessedMp4RecorderInstrumentedTest'`
 
 ## Completed Slice: Temporal State Texture Foundation
 

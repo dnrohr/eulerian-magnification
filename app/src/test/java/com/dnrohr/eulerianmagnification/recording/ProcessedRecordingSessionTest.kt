@@ -5,6 +5,8 @@ import com.dnrohr.eulerianmagnification.analysis.AnalysisSettings
 import com.dnrohr.eulerianmagnification.analysis.MagnificationMode
 import com.dnrohr.eulerianmagnification.analysis.NormalizedRect
 import com.dnrohr.eulerianmagnification.analysis.TranslationEstimate
+import com.dnrohr.eulerianmagnification.gl.GlTextureSize
+import com.dnrohr.eulerianmagnification.gl.ProcessedGlFrame
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -102,10 +104,36 @@ class ProcessedRecordingSessionTest {
         assertTrue(fakeRecorder.stopped)
     }
 
+    @Test
+    fun forwardsProcessedGlFramesToVideoRecorder() {
+        val directory = Files.createTempDirectory("recording-session").toFile()
+        val fakeRecorder = FakeVideoRecorder(File(directory, "debug_processed.mp4"))
+        val session = ProcessedRecordingSession(
+            rootDirectory = directory,
+            videoRecorderFactory = { fakeRecorder },
+        )
+
+        session.record(
+            ProcessedGlFrame(
+                textureId = 4,
+                size = GlTextureSize(640, 480),
+                presentationTimestampNanos = 33_333_333L,
+                splitMode = false,
+            )
+        )
+
+        assertEquals(1, fakeRecorder.recordedFrames)
+        assertEquals(33_333_333L, fakeRecorder.lastFrameTimestampNanos)
+    }
+
     private class FakeVideoRecorder(
         override val outputFile: File,
     ) : ProcessedVideoRecorder {
         var recordedSamples = 0
+            private set
+        var recordedFrames = 0
+            private set
+        var lastFrameTimestampNanos = -1L
             private set
         var stopped = false
             private set
@@ -115,6 +143,11 @@ class ProcessedRecordingSessionTest {
             settings: AnalysisSettings,
         ) {
             recordedSamples++
+        }
+
+        override fun record(frame: ProcessedGlFrame) {
+            recordedFrames++
+            lastFrameTimestampNanos = frame.presentationTimestampNanos
         }
 
         override fun stop() {

@@ -5,14 +5,14 @@ Goal: record processed output, not the raw camera feed.
 ## Tasks
 
 - [x] Add start/stop recording controls.
-- [ ] Encode composited processed frames with monotonic timestamps.
+- [x] Encode composited processed frames with monotonic timestamps.
 - [x] Save MP4 to app-specific media storage.
 - [x] Save sidecar metadata JSON with FPS, resolution, algorithm settings, ROI, dropped frames, and thermal state.
 - [x] Add recording indicator and elapsed time.
 - [x] Add export/share affordance.
 - [x] Add encoder output validity checks.
 - [x] Document recording architecture.
-- [ ] Commit and push to `main`.
+- [x] Commit and push to `main`.
 
 ## Completed Slice: Metadata Recording Prototype
 
@@ -111,6 +111,28 @@ This creates the encoder-surface renderer component. It is not yet wired into
 - `.\gradlew.bat testDebugUnitTest --tests "com.dnrohr.eulerianmagnification.gl.GlEncoderSurfaceRendererTest"`
 - `.\gradlew.bat testDebugUnitTest`
 - `.\gradlew.bat assembleDebug`
+
+## Completed Slice: Live GL Processed MP4 Recorder
+
+- Added `GlProcessedMp4Recorder`, which owns a H.264 `MediaCodec` surface-input
+  encoder and `MediaMuxer`.
+- GL preview recordings now use `GlProcessedMp4Recorder`; CameraX preview keeps
+  the canvas debug recorder.
+- `ProcessedRecordingSession` forwards emitted `ProcessedGlFrame` instances to
+  the active recorder.
+- The GL recorder renders processed textures into the encoder input surface and
+  applies each frame's monotonic `presentationTimestampNanos` with
+  `eglPresentationTimeANDROID`.
+- Added a Pixel 8a instrumentation test that records generated GL textures
+  through the real encoder-surface path, stops the muxer, and validates the MP4
+  container with `EncodedOutputValidator`.
+
+## Verification
+
+- `.\gradlew.bat testDebugUnitTest --tests "com.dnrohr.eulerianmagnification.recording.ProcessedRecordingSessionTest" --tests "com.dnrohr.eulerianmagnification.gl.GlEncoderSurfaceRendererTest"`
+- `.\gradlew.bat testDebugUnitTest`
+- `.\gradlew.bat assembleDebug assembleDebugAndroidTest`
+- `.\gradlew.bat connectedDebugAndroidTest '-Pandroid.testInstrumentationRunnerArguments.class=com.dnrohr.eulerianmagnification.recording.GlProcessedMp4RecorderInstrumentedTest'`
 
 ## Completed Slice: Debug Processed MP4 Recorder
 

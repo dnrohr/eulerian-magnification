@@ -22,6 +22,12 @@ sample count, and duration, and can share that recording's metadata JSON.
 
 The app now also writes a debug processed MP4 for each recording session. `DebugProcessedMp4Recorder` uses `MediaCodec` H.264 surface input plus `MediaMuxer` and draws the processed visualization state into the encoder surface: ROI tint, signal, mode, band, amplification, FPS, and latency.
 
+When recording from GL preview, `GlProcessedMp4Recorder` records the processed
+GL texture instead of the canvas debug visualization. It uses the same
+`MediaCodec`/`MediaMuxer` surface-input pattern, but feeds frames through
+`GlEncoderSurfaceRenderer` so the processed preview texture is rendered directly
+to the encoder input surface.
+
 Recording metadata stores both the original frame timestamp and a monotonic presentation timestamp for each processed sample. The presentation timeline starts at zero and advances by at least a 30 FPS frame interval when camera timestamps repeat or move backward. This gives recorded captures a deterministic processed-frame timeline for validation and for the future GL encoder-surface path.
 
 `ProcessedRecordingSession.record(...)` returns the stored `RecordingSample`, so
@@ -44,8 +50,9 @@ an EGL context and assign the same timestamp with
 creates a recordable GLES 3 EGL window surface around a `MediaCodec` input
 surface, shares the current GL context, blits a processed texture to that
 surface, assigns `eglPresentationTimeANDROID`, swaps buffers, and restores the
-previous EGL context. It is compiled and unit-checked, but not yet wired into
-`ProcessedVideoRecorder`.
+previous EGL context. It is wired into GL preview recording through
+`GlProcessedMp4Recorder` and covered by a Pixel 8a instrumentation test that
+validates the resulting MP4 container.
 
 This is not the final camera-preview MP4 yet. It proves the app-owned MP4 encoder/muxer path and records processed state, while final preview-matching recording still needs the Camera/GPU texture path.
 
@@ -53,7 +60,5 @@ An `EncodedOutputValidator` now exists as the first local gate for future MP4 wo
 
 ## Next Work
 
-- Add a processed frame source suitable for video encoding.
-- Feed the actual camera/processed preview texture to the encoder surface.
-- Set explicit presentation timestamps from camera or render timing.
-- Save final preview-matching MP4 and metadata together.
+- Add deeper MP4 validation for track duration and sample timestamps.
+- Run longer GL preview recording benchmarks on Pixel 8a.
