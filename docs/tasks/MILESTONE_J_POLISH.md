@@ -6,7 +6,7 @@ Goal: turn the prototype into a coherent demo app with clean UX and release-read
 
 - [ ] Refine controls, settings, presets, and recording gallery.
 - [x] Add app icon and polished permission copy.
-- [ ] Add thermal behavior notes and long-run benchmarks.
+- [x] Add thermal behavior notes and long-run benchmarks.
 - [x] Add README with setup, device testing, and demo flow.
 - [ ] Add demo videos or links when available.
 - [ ] Hide unavailable modes based on capability reports.
@@ -48,6 +48,24 @@ Goal: turn the prototype into a coherent demo app with clean UX and release-read
 
 - `.\gradlew.bat testDebugUnitTest`
 - `.\gradlew.bat assembleDebug`
+
+## Completed Slice: Pixel 8a Thermal Preview Benchmark
+
+- Ran a 3-minute CameraX preview sample and a 2-minute GL preview sample on the
+  connected Pixel 8a after rebooting the app.
+- Captured `dumpsys gfxinfo`, `dumpsys battery`, `dumpsys thermalservice`,
+  screenshots, process liveness, and crash-buffer checks.
+- Documented results and caveats in
+  `docs/experiments/pixel8a_thermal_long_run.md`.
+
+## Verification
+
+- `adb install -r app\build\outputs\apk\debug\app-debug.apk`
+- `adb shell am force-stop com.dnrohr.eulerianmagnification`
+- `adb shell am start -n com.dnrohr.eulerianmagnification/.MainActivity`
+- 3-minute CameraX preview ADB sample
+- 2-minute GL preview ADB sample
+- `adb logcat -d -b crash`
 
 ## Success Criteria
 
