@@ -25,5 +25,6 @@ Status: device run captured on 2026-07-05.
 - Short Breathing recording completed in Amplified view. Metadata was pulled into `docs/experiments/pixel8a_latest_breathing_metadata.json`.
 - Breathing recording metadata captured mode `Breathing`, band `0.1-0.6 Hz`, 190 samples over about 7.2 seconds, zero dropped-frame estimate, ROI coordinates, dx/dy translation, and monotonic presentation timestamps from `0` to `6975461057` ns.
 - The debug processed MP4 was written on-device at `/storage/emulated/0/Android/data/com.dnrohr.eulerianmagnification/files/recordings/processed-2026-07-05t10-52-22-936z/debug_processed.mp4`.
+- While the phone was front-facing, the quality status oscillated between `Good` and motion warning in sync with visible heartbeat/face movement. This confirmed the translation warning is ROI motion, not proof of camera movement.
 - Thermal status after the preview/recording run was `0`; sampled HAL values included battery around 28.5 C, virtual skin around 31.8 C, GPU around 49 C, and CPU clusters around 53-56 C.
 - `dumpsys gfxinfo` during preview reported 854 rendered frames, 15 ms median frame time, 19 ms p90, 29 ms p99, and 2-3 ms GPU percentiles. The UI thread showed jank under live camera load, so longer tripod breathing tests should still watch quality warnings and dropped frames.

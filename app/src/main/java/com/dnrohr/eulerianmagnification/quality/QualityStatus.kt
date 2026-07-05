@@ -50,7 +50,7 @@ enum class QualityStatus(val label: String) {
     LowFps("Low FPS"),
     TimingUnstable("Timing unstable"),
     LightingFlicker("Lighting flicker"),
-    CameraMotion("Camera motion"),
+    CameraMotion("ROI motion"),
     ModeMotionRisk("Mode motion risk"),
     AmplificationRisk("Amplification risk"),
     SignalWeak("Signal weak"),

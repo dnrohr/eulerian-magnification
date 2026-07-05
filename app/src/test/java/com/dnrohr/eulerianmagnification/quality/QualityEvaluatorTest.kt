@@ -85,6 +85,7 @@ class QualityEvaluatorTest {
         )
 
         assertTrue(QualityStatus.CameraMotion in statuses)
+        assertEquals("ROI motion", QualityStatus.CameraMotion.label)
     }
 
     @Test

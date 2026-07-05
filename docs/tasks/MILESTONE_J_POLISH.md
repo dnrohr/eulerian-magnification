@@ -12,6 +12,18 @@ Goal: turn the prototype into a coherent demo app with clean UX and release-read
 - [ ] Hide unavailable modes based on capability reports.
 - [ ] Commit and push to `main`.
 
+## Completed Slice: ROI Motion Quality Label
+
+- Renamed the live quality warning label from `Camera motion` to `ROI motion`.
+- Kept the existing ROI translation threshold behavior, but documented that the warning can come from phone motion, subject motion, heartbeat-visible face motion, or tracker drift.
+- Added unit coverage for the user-facing quality label.
+- Captured the Pixel 8a observation that front-facing heartbeat/face movement can oscillate the motion warning.
+
+## Verification
+
+- `.\gradlew.bat testDebugUnitTest --tests "com.dnrohr.eulerianmagnification.quality.QualityEvaluatorTest"`
+- `.\gradlew.bat clean testDebugUnitTest assembleDebug`
+
 ## Success Criteria
 
 - Minimum viable demo flow is smooth on Pixel 8a.

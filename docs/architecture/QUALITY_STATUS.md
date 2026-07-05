@@ -12,7 +12,7 @@ Current statuses:
 - `Low FPS`
 - `Timing unstable`
 - `Lighting flicker`
-- `Camera motion`
+- `ROI motion`
 - `Mode motion risk`
 - `Amplification risk`
 - `Signal weak`
@@ -21,7 +21,7 @@ The evaluator is intentionally conservative. It does not decide whether the visu
 
 Lighting flicker detection uses a rolling average-green heuristic. It looks for repeated, above-threshold alternation in brightness deltas, which catches obvious unstable LED/light-source behavior. It is not yet a 50/60 Hz frequency-domain detector.
 
-Camera motion detection currently uses `TranslationEstimator`, which estimates normalized frame-to-frame movement from the smoothed/tracked ROI center. This is a practical warning signal for the CPU MVP, not a full global optical-flow compensation pass.
+ROI motion detection currently uses `TranslationEstimator`, which estimates normalized frame-to-frame movement from the smoothed/tracked ROI center. This can be caused by phone movement, head or torso movement, heartbeat-visible face motion, or detector/tracker drift. It is a practical warning signal for the CPU MVP, not a full global optical-flow compensation pass.
 
 High-frequency modes are more sensitive to small camera motion and aggressive amplification. Tremor and Object Vibration now add `Mode motion risk` when normalized translation reaches 0.008 and `Amplification risk` when amplification is above 18x. Pulse and Breathing do not use those high-frequency guardrails.
 
