@@ -9,6 +9,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
 import android.opengl.GLSurfaceView
+import android.provider.OpenableColumns
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -164,18 +165,18 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
     ) { uri: Uri? ->
         if (uri != null) {
             validationRunning = true
-            validationSummary = "Recorded validation: running"
+            validationSummary = "Video processing: running"
             val settings = analysisSettings
             validationExecutor.execute {
                 val summary = runCatching {
-                    val inputFile = copyUriToCacheFile(context, uri)
+                    val inputFile = copyUriToCacheFile(context, uri, displayNameForUri(context, uri))
                     RecordedVideoValidator().validate(
                         file = inputFile,
                         settings = settings,
                         decodeOptions = RecordedVideoDecodeOptions(maxFrames = 300),
                     ).summary()
                 }.getOrElse { error ->
-                    "Recorded validation failed: ${error.message ?: error::class.java.simpleName}"
+                    "Video processing failed: ${error.message ?: error::class.java.simpleName}"
                 }
                 ContextCompat.getMainExecutor(context).execute {
                     validationSummary = summary
@@ -1009,7 +1010,7 @@ private fun RecordingControls(
             onClick = onValidateVideo,
             enabled = !validationRunning,
         ) {
-            Text(if (validationRunning) "Validating Video" else "Validate Video")
+            Text(if (validationRunning) "Processing Video" else "Process Video")
         }
     }
     if (!validationSummary.isNullOrBlank()) {
@@ -1065,8 +1066,8 @@ private fun formatElapsed(elapsedMillis: Long): String {
     return "%02d:%02d".format(minutes, seconds)
 }
 
-private fun copyUriToCacheFile(context: Context, uri: Uri): File {
-    val outputFile = File(context.cacheDir, "recorded-validation-input.mp4")
+private fun copyUriToCacheFile(context: Context, uri: Uri, displayName: String?): File {
+    val outputFile = File(context.cacheDir, sanitizeVideoFileName(displayName ?: "selected-video.mp4"))
     context.contentResolver.openInputStream(uri).use { input ->
         requireNotNull(input) { "Could not open selected video" }
         outputFile.outputStream().use { output ->
@@ -1074,6 +1075,24 @@ private fun copyUriToCacheFile(context: Context, uri: Uri): File {
         }
     }
     return outputFile
+}
+
+private fun displayNameForUri(context: Context, uri: Uri): String? {
+    return context.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null).use { cursor ->
+        if (cursor != null && cursor.moveToFirst()) {
+            val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+            if (nameIndex >= 0) cursor.getString(nameIndex) else null
+        } else {
+            null
+        }
+    }
+}
+
+private fun sanitizeVideoFileName(name: String): String {
+    val cleaned = name
+        .replace(Regex("[^A-Za-z0-9._-]"), "_")
+        .trim('_')
+    return cleaned.ifBlank { "selected-video.mp4" }
 }
 
 @Composable

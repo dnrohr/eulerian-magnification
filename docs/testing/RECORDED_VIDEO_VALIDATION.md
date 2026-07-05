@@ -8,7 +8,7 @@ Recorded-video validation comes before phone testing. It gives the signal path r
 
 `RecordedVideoAnalysisRunner` consumes a sequence of `RgbFrame` inputs and returns a report with frame count, average FPS, average green, total bandpassed energy, max bandpassed magnitude, and timestamp monotonicity. This is the metric layer that synthetic fixtures, public samples, and future local phone recordings can share.
 
-`RecordedVideoValidator` ties the decode and report steps together for a local video file. It returns a concise summary string that includes the source name, selected mode/band, frame count, FPS, energy, peak bandpassed magnitude, and timing status.
+`RecordedVideoValidator` ties the decode and report steps together for a local video file. It returns a concise `Video processing` summary string that includes the source name, selected mode/band, frame count, FPS, energy, peak bandpassed magnitude, and timing status.
 
 The JVM tests generate synthetic 30 fps RGB frame sequences with known green-channel changes:
 
@@ -30,11 +30,19 @@ The decoder preserves planned timestamps in nanoseconds before frames are passed
 1. Place a public sample in `sample-videos/`.
 2. Build and open the app.
 3. Set the intended mode and amplification.
-4. Tap `Validate Video` in the recording controls.
+4. Tap `Process Video` in the recording controls.
 5. Pick the local sample video from the system picker.
 6. Record the displayed summary metrics in notes or a future benchmark artifact.
 
-The app copies the selected video into cache, decodes a bounded frame set, runs `RecordedVideoValidator`, and displays the summary in the overlay.
+The app copies the selected video into cache using the selected display name when available, decodes a bounded frame set, runs `RecordedVideoValidator`, and displays the summary in the overlay. Selecting `euler.mp4` should produce a summary beginning with `Video processing: euler.mp4`.
+
+## Running `euler.mp4`
+
+1. Copy `sample-videos/euler.mp4` to the phone's downloads, camera roll, or another location visible to the Android system picker.
+2. Open the app and select the mode to test, usually `Pulse` for the current color-amplification path.
+3. Tap `Controls`, then `Process Video`.
+4. Select `euler.mp4`.
+5. Use the displayed frame count, FPS, energy, peak, and timing status as the repeatable baseline for that mode.
 
 ## Next Sample Step
 

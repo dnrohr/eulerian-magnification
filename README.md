@@ -53,7 +53,7 @@ it wrong.
 6. Tap `Hide` so the image is mostly unobstructed.
 7. Use `Raw`, `Amplified`, `Difference`, or `Split` to compare whether the
    processed view is adding useful signal or only noise.
-8. Use short recordings and sample videos for validation before trusting live
+8. Use short recordings and sample videos for processing checks before trusting live
    handheld behavior.
 
 ### Best Pulse Setup
@@ -110,8 +110,9 @@ The default screen is intentionally compact so the preview remains visible.
 - `Use CameraX Preview`: returns to the standard CameraX preview.
 - `Start Recording` / `Stop Recording`: records a processed debug MP4 plus
   metadata JSON in app storage.
-- `Validate Video`: selects a recorded video and runs the offline validation
-  summary path.
+- `Process Video`: selects a recorded/sample video and runs the offline
+  processing summary path. Use this for `sample-videos/euler.mp4` after copying
+  it to the phone or another picker-visible location.
 - `Share Metadata`: shares the JSON metadata for the latest recording.
 - `Quality`: summarizes whether the current run looks usable. Warnings can come
   from low FPS, camera/ROI motion, lighting flicker, timestamp jumps, or risky

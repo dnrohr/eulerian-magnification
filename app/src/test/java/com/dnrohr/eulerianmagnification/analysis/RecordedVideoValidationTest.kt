@@ -48,7 +48,7 @@ class RecordedVideoValidationTest {
         )
 
         assertEquals(
-            "Recorded validation: clip.mp4 Breathing 0.1-0.6 Hz, 90 frames, 30.0 fps, energy 42.2, peak 2.8, timing OK",
+            "Video processing: clip.mp4 Breathing 0.1-0.6 Hz, 90 frames, 30.0 fps, energy 42.2, peak 2.8, timing OK",
             result.summary(),
         )
     }
@@ -60,7 +60,7 @@ class RecordedVideoValidationTest {
             settings = AnalysisSettings(),
         )
 
-        assertEquals("Recorded validation: empty.mp4 produced no frames", result.summary())
+        assertEquals("Video processing: empty.mp4 produced no frames", result.summary())
     }
 
     private fun syntheticClip(frequencyHz: Double): List<RgbFrame> {
