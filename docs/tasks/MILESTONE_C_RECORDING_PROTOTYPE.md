@@ -26,6 +26,20 @@ Goal: record processed output, not the raw camera feed.
 
 - `.\gradlew.bat clean testDebugUnitTest assembleDebug`
 
+## Completed Slice: Monotonic Recording Timeline Foundation
+
+- Added a `MonotonicFrameTimeline` for processed recording sessions.
+- Recording metadata now stores both the source `timestampNanos` and monotonic `presentationTimestampNanos`.
+- Repeated or decreasing source timestamps advance by a 30 FPS interval, keeping the presentation timeline strictly increasing after the first frame.
+- Added unit coverage for increasing, repeated, decreasing, and before-first source timestamps.
+
+The current debug MP4 encoder uses `Surface.lockCanvas`, which does not expose explicit presentation timestamp control. True encoded PTS assignment remains part of the final GL encoder-surface recording path, so the composited-frame checklist item stays open.
+
+## Verification
+
+- `.\gradlew.bat testDebugUnitTest --tests "com.dnrohr.eulerianmagnification.recording.MonotonicFrameTimelineTest" --tests "com.dnrohr.eulerianmagnification.recording.ProcessedRecordingSessionTest"`
+- `.\gradlew.bat clean testDebugUnitTest assembleDebug`
+
 ## Completed Slice: Debug Processed MP4 Recorder
 
 - Added a `ProcessedVideoRecorder` interface and `DebugProcessedMp4Recorder` implementation.

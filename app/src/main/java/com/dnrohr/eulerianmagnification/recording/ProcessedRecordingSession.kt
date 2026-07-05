@@ -14,6 +14,7 @@ class ProcessedRecordingSession(
 ) {
     private val sessionDirectory = File(rootDirectory, sessionName()).apply { mkdirs() }
     private val videoRecorder = videoRecorderFactory?.invoke(File(sessionDirectory, "debug_processed.mp4"))
+    private val frameTimeline = MonotonicFrameTimeline()
     private val samples = mutableListOf<RecordingSample>()
     private var lastTimestampNanos: Long? = null
     var droppedFrameEstimate: Int = 0
@@ -28,7 +29,10 @@ class ProcessedRecordingSession(
             droppedFrameEstimate++
         }
         lastTimestampNanos = sample.frameTimestampNanos
-        samples += RecordingSample.from(sample)
+        samples += RecordingSample.from(
+            sample = sample,
+            presentationTimestampNanos = frameTimeline.next(sample.frameTimestampNanos),
+        )
     }
 
     fun record(
@@ -91,6 +95,7 @@ class ProcessedRecordingSession(
 
 data class RecordingSample(
     val timestampNanos: Long,
+    val presentationTimestampNanos: Long,
     val analysisFps: Double,
     val latencyMillis: Double,
     val averageGreen: Double,
@@ -106,6 +111,7 @@ data class RecordingSample(
         return buildString {
             appendLine("$indent{")
             appendLine("$indent  \"timestampNanos\": $timestampNanos,")
+            appendLine("$indent  \"presentationTimestampNanos\": $presentationTimestampNanos,")
             appendLine("$indent  \"analysisFps\": ${analysisFps.format()},")
             appendLine("$indent  \"latencyMillis\": ${latencyMillis.format()},")
             appendLine("$indent  \"averageGreen\": ${averageGreen.format()},")
@@ -129,9 +135,13 @@ data class RecordingSample(
     }
 
     companion object {
-        fun from(sample: AnalysisSample): RecordingSample {
+        fun from(
+            sample: AnalysisSample,
+            presentationTimestampNanos: Long,
+        ): RecordingSample {
             return RecordingSample(
                 timestampNanos = sample.frameTimestampNanos,
+                presentationTimestampNanos = presentationTimestampNanos,
                 analysisFps = sample.analysisFps,
                 latencyMillis = sample.latencyMillis,
                 averageGreen = sample.averageGreen,

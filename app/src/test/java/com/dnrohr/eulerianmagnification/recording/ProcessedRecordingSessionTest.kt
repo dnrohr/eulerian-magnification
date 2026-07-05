@@ -39,6 +39,7 @@ class ProcessedRecordingSessionTest {
         assertTrue(json.contains("\"thermalStatus\": \"none\""))
         assertTrue(json.contains("\"sampleCount\": 1"))
         assertTrue(json.contains("\"bandpassedGreen\": 0.250000"))
+        assertTrue(json.contains("\"presentationTimestampNanos\": 0"))
         assertTrue(json.contains("\"translation\": {\"dx\": 0.010000, \"dy\": -0.020000}"))
     }
 
@@ -51,6 +52,28 @@ class ProcessedRecordingSessionTest {
         session.record(AnalysisSample(frameTimestampNanos = 100L))
 
         assertTrue(session.droppedFrameEstimate == 1)
+    }
+
+    @Test
+    fun writesMonotonicPresentationTimestampsForNonMonotonicSourceFrames() {
+        val directory = Files.createTempDirectory("recording-session").toFile()
+        val session = ProcessedRecordingSession(directory)
+
+        session.record(AnalysisSample(frameTimestampNanos = 200L))
+        session.record(AnalysisSample(frameTimestampNanos = 100L))
+        session.record(AnalysisSample(frameTimestampNanos = 300L))
+
+        val output = session.stop(
+            settings = AnalysisSettings(),
+            thermalStatus = "none",
+        )
+        val json = output.readText()
+
+        assertTrue(json.contains("\"timestampNanos\": 200"))
+        assertTrue(json.contains("\"timestampNanos\": 100"))
+        assertTrue(json.contains("\"presentationTimestampNanos\": 0"))
+        assertTrue(json.contains("\"presentationTimestampNanos\": 33333333"))
+        assertTrue(json.contains("\"presentationTimestampNanos\": 66666666"))
     }
 
     @Test

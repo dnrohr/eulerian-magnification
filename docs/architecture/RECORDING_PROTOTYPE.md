@@ -18,6 +18,8 @@ The latest metadata JSON can be shared through an Android `FileProvider` using t
 
 The app now also writes a debug processed MP4 for each recording session. `DebugProcessedMp4Recorder` uses `MediaCodec` H.264 surface input plus `MediaMuxer` and draws the processed visualization state into the encoder surface: ROI tint, signal, mode, band, amplification, FPS, and latency.
 
+Recording metadata stores both the original frame timestamp and a monotonic presentation timestamp for each processed sample. The presentation timeline starts at zero and advances by at least a 30 FPS frame interval when camera timestamps repeat or move backward. This gives recorded captures a deterministic processed-frame timeline for validation and for the future GL encoder-surface path.
+
 This is not the final camera-preview MP4 yet. It proves the app-owned MP4 encoder/muxer path and records processed state, while final preview-matching recording still needs the Camera/GPU texture path.
 
 An `EncodedOutputValidator` now exists as the first local gate for future MP4 work. It verifies file presence, non-empty output, `.mp4` naming, and top-level `ftyp`, `moov`, and `mdat` atoms. Once `MediaCodec` output exists, this should grow into track-level validation.
