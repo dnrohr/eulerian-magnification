@@ -29,6 +29,11 @@ future GL recording integration can pass the same monotonic
 `presentationTimestampNanos` into the processed texture export and encoder
 surface.
 
+The GL preview analysis callback now records the sample first, then passes the
+returned monotonic `presentationTimestampNanos` into
+`ColorMagnificationUniforms`. As a result, each emitted `ProcessedGlFrame`
+carries the same presentation timeline written to recording metadata.
+
 The GL renderer now exposes a `ProcessedGlFrame` callback with the processed
 texture id, target size, split-mode flag, and presentation timestamp. The next
 encoder slice should render that texture into `MediaCodec`'s input surface from

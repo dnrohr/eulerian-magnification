@@ -210,10 +210,13 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
         }
     }
 
-    fun handleSample(sample: AnalysisSample) {
+    fun handleSample(sample: AnalysisSample): Long {
         analysisSample = sample
         lightingFlickerLikely = lightingFlickerDetector.update(sample.averageGreen)
-        recordingSession?.record(sample, analysisSettings)
+        val presentationTimestampNanos = recordingSession
+            ?.record(sample, analysisSettings)
+            ?.presentationTimestampNanos
+            ?: sample.frameTimestampNanos.coerceAtLeast(0L)
         signalHistory.add(sample.bandpassedGreen)
         if (signalHistory.size > SIGNAL_HISTORY_SIZE) {
             signalHistory.removeAt(0)
@@ -229,6 +232,7 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
                 breathingMotionHistory.removeAt(0)
             }
         }
+        return presentationTimestampNanos
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -250,7 +254,7 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
                     manualRoi = manualRoi,
                     cameraControlsLocked = cameraControlsLocked,
                     modifier = Modifier.fillMaxSize(),
-                    onSample = ::handleSample,
+                    onSample = { sample -> handleSample(sample) },
                 )
             }
             AmplifiedTintOverlay(
@@ -347,7 +351,7 @@ private fun CameraGlPreview(
     cameraControlsLocked: Boolean,
     onStats: (GlFrameStats) -> Unit,
     modifier: Modifier = Modifier,
-    onSample: (AnalysisSample) -> Unit,
+    onSample: (AnalysisSample) -> Long,
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -407,8 +411,16 @@ private fun CameraGlPreview(
                             it.setAnalyzer(
                                 analysisExecutor,
                                 PulseRoiAnalyzer(settings, manualRoi = manualRoi) { sample ->
-                                    renderer.setColorMagnificationUniforms(colorParameters.from(sample, settings))
-                                    mainExecutor.execute { onSample(sample) }
+                                    mainExecutor.execute {
+                                        val presentationTimestampNanos = onSample(sample)
+                                        renderer.setColorMagnificationUniforms(
+                                            colorParameters.from(
+                                                sample = sample,
+                                                settings = settings,
+                                                presentationTimestampNanos = presentationTimestampNanos,
+                                            )
+                                        )
+                                    }
                                 },
                             )
                         }

@@ -76,6 +76,23 @@ actual encoded frame PTS assignment remains open.
 - `.\gradlew.bat testDebugUnitTest`
 - `.\gradlew.bat assembleDebug`
 
+## Supporting Slice: GL Recording Timestamp Wiring
+
+- The GL preview analyzer now records the sample before updating renderer color
+  uniforms.
+- Recording mode uses the returned monotonic `presentationTimestampNanos` in
+  `ColorMagnificationUniforms`.
+- Emitted `ProcessedGlFrame` instances now carry the same monotonic timeline
+  that recording metadata stores.
+
+This aligns the GL frame-export timestamp with recording metadata. Rendering the
+processed texture into the encoder input surface remains open.
+
+## Verification
+
+- `.\gradlew.bat testDebugUnitTest`
+- `.\gradlew.bat assembleDebug`
+
 ## Completed Slice: Debug Processed MP4 Recorder
 
 - Added a `ProcessedVideoRecorder` interface and `DebugProcessedMp4Recorder` implementation.

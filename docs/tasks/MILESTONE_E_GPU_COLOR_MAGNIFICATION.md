@@ -139,6 +139,21 @@ open.
 - `.\gradlew.bat testDebugUnitTest`
 - `.\gradlew.bat assembleDebug`
 
+## Supporting Slice: GL Recording Timestamp Wiring
+
+- GL preview now updates color uniforms after the recording session assigns a
+  monotonic presentation timestamp.
+- `ProcessedGlFrame.presentationTimestampNanos` matches the recording metadata
+  timeline while recording is active.
+
+The display path is unchanged. Encoder-surface rendering remains the final open
+piece of the combined display/encoder checklist item.
+
+## Verification
+
+- `.\gradlew.bat testDebugUnitTest`
+- `.\gradlew.bat assembleDebug`
+
 ## Completed Slice: Temporal State Texture Foundation
 
 - Added ping-pong temporal state render targets for each pyramid level.
