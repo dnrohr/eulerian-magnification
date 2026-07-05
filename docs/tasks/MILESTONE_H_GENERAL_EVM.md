@@ -9,8 +9,23 @@ Goal: implement simple linear Eulerian magnification with a Laplacian pyramid.
 - [x] Amplify selected levels and reconstruct frame.
 - [x] Add presets for pulse, breathing, tremor, and object vibration.
 - [x] Warn for invalid amplification, frequency, and camera-motion combinations.
-- [ ] Add controlled synthetic video tests.
+- [x] Add controlled synthetic video tests.
 - [ ] Commit and push to `main`.
+
+## Completed Slice: Controlled Synthetic EVM Tests
+
+- Added end-to-end CPU reference EVM tests over synthetic video-like frame sequences.
+- The tests build full-frame pyramids, apply per-level temporal bandpass filtering, reconstruct amplified output, and measure processed green-channel variation.
+- Pulse-band tests verify in-band variation is amplified more than slow drift.
+- Zero-amplification tests verify reconstruction can preserve raw variation.
+- Breathing-mode tests verify the breathing band favors 0.25 Hz motion over pulse-band motion.
+
+These tests prove the CPU/reference EVM path on controlled synthetic color variation. Real recorded samples and device/GPU integration remain separate validation steps.
+
+## Verification
+
+- `.\gradlew.bat testDebugUnitTest --tests "com.dnrohr.eulerianmagnification.analysis.ControlledSyntheticEvmTest"`
+- `.\gradlew.bat clean testDebugUnitTest assembleDebug`
 
 ## Completed Slice: High-Frequency Mode Warnings
 
