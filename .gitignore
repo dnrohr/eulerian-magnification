@@ -10,3 +10,5 @@ build/
 captures/
 sample-videos/
 app/release/
+__pycache__/
+*.pyc
