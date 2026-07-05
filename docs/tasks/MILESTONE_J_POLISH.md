@@ -37,6 +37,8 @@ Goal: turn the prototype into a coherent demo app with clean UX and release-read
 
 - `.\gradlew.bat testDebugUnitTest`
 - `.\gradlew.bat assembleDebug`
+- Pixel 8a screenshot after install/relaunch confirmed mode/view labels stayed
+  single-line in portrait.
 
 ## Completed Slice: App Icon And Permission Copy
 
@@ -66,6 +68,19 @@ Goal: turn the prototype into a coherent demo app with clean UX and release-read
 - 3-minute CameraX preview ADB sample
 - 2-minute GL preview ADB sample
 - `adb logcat -d -b crash`
+
+## Completed Slice: Compact Pixel Portrait Controls
+
+- Added compact single-line mode/view controls for the Pixel portrait overlay.
+- Shortened row labels to `Pulse`, `Breath`, `Tremor`, `Object` and `Raw`,
+  `Amp`, `Diff`, `Split`.
+- Added a shared compact button style with reduced padding, stable minimum
+  height, and single-line centered text.
+
+## Verification
+
+- `.\gradlew.bat testDebugUnitTest`
+- `.\gradlew.bat assembleDebug`
 
 ## Success Criteria
 

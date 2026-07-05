@@ -29,8 +29,10 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -56,7 +58,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
@@ -886,13 +890,12 @@ private fun ModeControls(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         MagnificationMode.entries.forEach { mode ->
-            Button(
+            CompactControlButton(
+                label = mode.compactLabel,
                 onClick = { onSettingsChanged(settings.copy(mode = mode)) },
                 enabled = settings.mode != mode,
                 modifier = Modifier.weight(1.0f),
-            ) {
-                Text(mode.label)
-            }
+            )
         }
     }
     Spacer(modifier = Modifier.height(8.dp))
@@ -901,13 +904,12 @@ private fun ModeControls(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         ViewMode.entries.forEach { viewMode ->
-            Button(
+            CompactControlButton(
+                label = viewMode.compactLabel,
                 onClick = { onSettingsChanged(settings.copy(viewMode = viewMode)) },
                 enabled = settings.viewMode != viewMode,
                 modifier = Modifier.weight(1.0f),
-            ) {
-                Text(viewMode.label)
-            }
+            )
         }
     }
     Spacer(modifier = Modifier.height(8.dp))
@@ -939,6 +941,44 @@ private fun ModeControls(
         Text(if (showGlDebug) "Use CameraX Preview" else "Use GL Preview")
     }
 }
+
+@Composable
+private fun CompactControlButton(
+    label: String,
+    onClick: () -> Unit,
+    enabled: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    Button(
+        onClick = onClick,
+        enabled = enabled,
+        modifier = modifier.defaultMinSize(minWidth = 0.dp, minHeight = 48.dp),
+        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 10.dp),
+    ) {
+        Text(
+            text = label,
+            maxLines = 1,
+            textAlign = TextAlign.Center,
+            fontSize = 13.sp,
+        )
+    }
+}
+
+private val MagnificationMode.compactLabel: String
+    get() = when (this) {
+        MagnificationMode.Pulse -> "Pulse"
+        MagnificationMode.Breathing -> "Breath"
+        MagnificationMode.Tremor -> "Tremor"
+        MagnificationMode.ObjectVibration -> "Object"
+    }
+
+private val ViewMode.compactLabel: String
+    get() = when (this) {
+        ViewMode.Raw -> "Raw"
+        ViewMode.Amplified -> "Amp"
+        ViewMode.Difference -> "Diff"
+        ViewMode.Split -> "Split"
+    }
 
 @Composable
 private fun SignalWaveform(
