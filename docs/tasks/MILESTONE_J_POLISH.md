@@ -8,7 +8,7 @@ Goal: turn the prototype into a coherent demo app with clean UX and release-read
 - [x] Add app icon and polished permission copy.
 - [x] Add thermal behavior notes and long-run benchmarks.
 - [x] Add README with setup, device testing, and demo flow.
-- [ ] Add demo videos or links when available.
+- [x] Add demo videos or links when available.
 - [x] Hide unavailable modes based on capability reports.
 - [ ] Commit and push to `main`.
 
@@ -59,6 +59,22 @@ Goal: turn the prototype into a coherent demo app with clean UX and release-read
 - Pixel 8a install/relaunch screenshot confirmed Pulse, Breath, Tremor, Object,
   Raw, Amp, Diff, Split, GL Preview, Start Recording, and Validate Video remain
   visible on a capable device.
+
+## Completed Slice: Demo Links And Local Demo Flow
+
+- Added `docs/demo/DEMO_LINKS.md` with public EVM references, UBFC-rPPG sample
+  source, committed Pixel 8a evidence links, local media policy, and a suggested
+  demo flow.
+- Linked the demo document from the top-level README.
+- Kept sample videos out of Git and documented `sample-videos/` as the local
+  storage path.
+
+## Verification
+
+- Verified the MIT EVM examples page is reachable.
+- Verified the UBFC-rPPG dataset page is reachable.
+- `.\gradlew.bat testDebugUnitTest`
+- `.\gradlew.bat assembleDebug`
 
 ## Completed Slice: App Icon And Permission Copy
 

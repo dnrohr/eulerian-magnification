@@ -82,6 +82,7 @@ The intended order is:
 ## Useful Docs
 
 - `docs/tasks/README.md` - roadmap task files.
+- `docs/demo/DEMO_LINKS.md` - public demo references and local demo flow.
 - `docs/architecture/CPU_PULSE_COLOR_MVP.md` - CPU analysis and ROI pipeline.
 - `docs/architecture/GPU_COLOR_MAGNIFICATION.md` - GL color path status.
 - `docs/architecture/RECORDING_PROTOTYPE.md` - recording metadata and debug MP4.
