@@ -57,6 +57,25 @@ This is the renderer-side handoff only. The debug MP4 path still uses
 - `.\gradlew.bat testDebugUnitTest`
 - `.\gradlew.bat assembleDebug`
 
+## Supporting Slice: Recording Timeline Return Value
+
+- `ProcessedRecordingSession.record(...)` now returns the stored
+  `RecordingSample`.
+- Callers can use the returned `presentationTimestampNanos` to feed the future
+  GL texture encoder path with the same monotonic timestamps written to
+  metadata.
+- Added unit coverage for the returned monotonic timestamps on non-monotonic
+  source frames and video-recorder forwarding.
+
+This exposes the timeline value needed by the encoder surface integration. The
+actual encoded frame PTS assignment remains open.
+
+## Verification
+
+- `.\gradlew.bat testDebugUnitTest --tests "com.dnrohr.eulerianmagnification.recording.ProcessedRecordingSessionTest"`
+- `.\gradlew.bat testDebugUnitTest`
+- `.\gradlew.bat assembleDebug`
+
 ## Completed Slice: Debug Processed MP4 Recorder
 
 - Added a `ProcessedVideoRecorder` interface and `DebugProcessedMp4Recorder` implementation.

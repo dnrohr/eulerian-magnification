@@ -24,6 +24,11 @@ The app now also writes a debug processed MP4 for each recording session. `Debug
 
 Recording metadata stores both the original frame timestamp and a monotonic presentation timestamp for each processed sample. The presentation timeline starts at zero and advances by at least a 30 FPS frame interval when camera timestamps repeat or move backward. This gives recorded captures a deterministic processed-frame timeline for validation and for the future GL encoder-surface path.
 
+`ProcessedRecordingSession.record(...)` returns the stored `RecordingSample`, so
+future GL recording integration can pass the same monotonic
+`presentationTimestampNanos` into the processed texture export and encoder
+surface.
+
 The GL renderer now exposes a `ProcessedGlFrame` callback with the processed
 texture id, target size, split-mode flag, and presentation timestamp. The next
 encoder slice should render that texture into `MediaCodec`'s input surface from

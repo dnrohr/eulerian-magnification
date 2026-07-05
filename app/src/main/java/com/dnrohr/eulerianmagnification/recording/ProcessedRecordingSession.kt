@@ -23,24 +23,27 @@ class ProcessedRecordingSession(
     val elapsedMillis: Long
         get() = (System.currentTimeMillis() - startedAtMillis).coerceAtLeast(0L)
 
-    fun record(sample: AnalysisSample) {
+    fun record(sample: AnalysisSample): RecordingSample {
         val previous = lastTimestampNanos
         if (previous != null && sample.frameTimestampNanos <= previous) {
             droppedFrameEstimate++
         }
         lastTimestampNanos = sample.frameTimestampNanos
-        samples += RecordingSample.from(
+        val recordingSample = RecordingSample.from(
             sample = sample,
             presentationTimestampNanos = frameTimeline.next(sample.frameTimestampNanos),
         )
+        samples += recordingSample
+        return recordingSample
     }
 
     fun record(
         sample: AnalysisSample,
         settings: AnalysisSettings,
-    ) {
-        record(sample)
+    ): RecordingSample {
+        val recordingSample = record(sample)
         videoRecorder?.record(sample, settings)
+        return recordingSample
     }
 
     fun stop(

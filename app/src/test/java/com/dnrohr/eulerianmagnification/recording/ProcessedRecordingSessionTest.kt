@@ -59,9 +59,9 @@ class ProcessedRecordingSessionTest {
         val directory = Files.createTempDirectory("recording-session").toFile()
         val session = ProcessedRecordingSession(directory)
 
-        session.record(AnalysisSample(frameTimestampNanos = 200L))
-        session.record(AnalysisSample(frameTimestampNanos = 100L))
-        session.record(AnalysisSample(frameTimestampNanos = 300L))
+        val first = session.record(AnalysisSample(frameTimestampNanos = 200L))
+        val second = session.record(AnalysisSample(frameTimestampNanos = 100L))
+        val third = session.record(AnalysisSample(frameTimestampNanos = 300L))
 
         val output = session.stop(
             settings = AnalysisSettings(),
@@ -69,6 +69,9 @@ class ProcessedRecordingSessionTest {
         )
         val json = output.readText()
 
+        assertEquals(0L, first.presentationTimestampNanos)
+        assertEquals(33_333_333L, second.presentationTimestampNanos)
+        assertEquals(66_666_666L, third.presentationTimestampNanos)
         assertTrue(json.contains("\"timestampNanos\": 200"))
         assertTrue(json.contains("\"timestampNanos\": 100"))
         assertTrue(json.contains("\"presentationTimestampNanos\": 0"))
@@ -85,7 +88,7 @@ class ProcessedRecordingSessionTest {
             videoRecorderFactory = { fakeRecorder },
         )
 
-        session.record(
+        val recordingSample = session.record(
             sample = AnalysisSample(frameTimestampNanos = 300L),
             settings = AnalysisSettings(),
         )
@@ -94,6 +97,7 @@ class ProcessedRecordingSessionTest {
             thermalStatus = "none",
         )
 
+        assertEquals(0L, recordingSample.presentationTimestampNanos)
         assertEquals(1, fakeRecorder.recordedSamples)
         assertTrue(fakeRecorder.stopped)
     }
