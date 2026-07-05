@@ -77,8 +77,11 @@ import com.dnrohr.eulerianmagnification.analysis.NormalizedRect
 import com.dnrohr.eulerianmagnification.analysis.PulseRoiAnalyzer
 import com.dnrohr.eulerianmagnification.analysis.PreviewRoiMapper
 import com.dnrohr.eulerianmagnification.analysis.PreviewSize
+import com.dnrohr.eulerianmagnification.analysis.RecordedVideoAnalysisRunner
 import com.dnrohr.eulerianmagnification.analysis.RecordedVideoDecodeOptions
-import com.dnrohr.eulerianmagnification.analysis.RecordedVideoValidator
+import com.dnrohr.eulerianmagnification.analysis.RecordedVideoFrameDecoder
+import com.dnrohr.eulerianmagnification.analysis.RecordedVideoProcessor
+import com.dnrohr.eulerianmagnification.analysis.RecordedVideoValidationResult
 import com.dnrohr.eulerianmagnification.analysis.ViewMode
 import com.dnrohr.eulerianmagnification.capabilities.CapabilityReportStore
 import com.dnrohr.eulerianmagnification.capabilities.CapabilityReporter
@@ -96,10 +99,14 @@ import com.dnrohr.eulerianmagnification.quality.QualityStatus
 import com.dnrohr.eulerianmagnification.recording.DebugProcessedMp4Recorder
 import com.dnrohr.eulerianmagnification.recording.GlProcessedMp4Recorder
 import com.dnrohr.eulerianmagnification.recording.ProcessedRecordingSession
+import com.dnrohr.eulerianmagnification.recording.RecordedVideoMp4Exporter
 import com.dnrohr.eulerianmagnification.recording.RecordingGallery
 import com.dnrohr.eulerianmagnification.recording.RecordingGalleryItem
 import com.dnrohr.eulerianmagnification.ui.AppTheme
 import java.io.File
+import java.time.Instant
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 import java.util.concurrent.Executors
 import kotlin.math.abs
 
@@ -170,18 +177,27 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
             validationSummary = "Video processing: running"
             val settings = analysisSettings
             validationExecutor.execute {
-                val summary = runCatching {
-                    val inputFile = copyUriToCacheFile(context, uri, displayNameForUri(context, uri))
-                    RecordedVideoValidator().validate(
-                        file = inputFile,
+                val outcome = runCatching {
+                    val displayName = displayNameForUri(context, uri)
+                    val inputFile = copyUriToCacheFile(context, uri, displayName)
+                    processRecordedVideoExport(
+                        inputFile = inputFile,
+                        sourceName = displayName ?: inputFile.name,
                         settings = settings,
-                        decodeOptions = RecordedVideoDecodeOptions(maxFrames = 300),
-                    ).summary()
+                        rootDirectory = recordingRootDirectory,
+                    )
                 }.getOrElse { error ->
-                    "Video processing failed: ${error.message ?: error::class.java.simpleName}"
+                    ProcessedVideoOutcome(
+                        summary = "Video processing failed: ${error.message ?: error::class.java.simpleName}",
+                        metadataFile = null,
+                    )
                 }
                 ContextCompat.getMainExecutor(context).execute {
-                    validationSummary = summary
+                    validationSummary = outcome.summary
+                    outcome.metadataFile?.let { metadata ->
+                        lastRecordingPath = metadata.absolutePath
+                        recentRecordings = RecordingGallery.listRecent(recordingRootDirectory)
+                    }
                     validationRunning = false
                 }
             }
@@ -352,6 +368,9 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
             onShareRecordingPath = { path ->
                 shareRecordingMetadata(context, File(path))
             },
+            onShareRecordingVideo = { path ->
+                shareRecordingVideo(context, File(path))
+            },
             onValidateVideo = {
                 videoPickerLauncher.launch("video/*")
             },
@@ -485,18 +504,31 @@ private fun thermalStatus(context: Context): String {
 }
 
 private fun shareRecordingMetadata(context: Context, metadataFile: File) {
-    if (!metadataFile.exists()) return
+    shareFile(context, metadataFile, mimeType = "application/json", title = "Share recording metadata")
+}
+
+private fun shareRecordingVideo(context: Context, videoFile: File) {
+    shareFile(context, videoFile, mimeType = "video/mp4", title = "Share processed video")
+}
+
+private fun shareFile(
+    context: Context,
+    file: File,
+    mimeType: String,
+    title: String,
+) {
+    if (!file.exists()) return
     val uri = FileProvider.getUriForFile(
         context,
         "${context.packageName}.files",
-        metadataFile,
+        file,
     )
     val intent = Intent(Intent.ACTION_SEND).apply {
-        type = "application/json"
+        type = mimeType
         putExtra(Intent.EXTRA_STREAM, uri)
         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
     }
-    context.startActivity(Intent.createChooser(intent, "Share recording metadata"))
+    context.startActivity(Intent.createChooser(intent, title))
 }
 
 @Composable
@@ -811,6 +843,7 @@ private fun StatusOverlay(
     onToggleRecording: () -> Unit,
     onShareRecording: () -> Unit,
     onShareRecordingPath: (String) -> Unit,
+    onShareRecordingVideo: (String) -> Unit,
     onValidateVideo: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -911,6 +944,7 @@ private fun StatusOverlay(
             onToggleRecording = onToggleRecording,
             onShareRecording = onShareRecording,
             onShareRecordingPath = onShareRecordingPath,
+            onShareRecordingVideo = onShareRecordingVideo,
             recordingAvailable = featureAvailability.processedRecordingAvailable,
             validationAvailable = featureAvailability.recordedVideoValidationAvailable,
             validationSummary = validationSummary,
@@ -1017,6 +1051,7 @@ private fun RecordingControls(
     onToggleRecording: () -> Unit,
     onShareRecording: () -> Unit,
     onShareRecordingPath: (String) -> Unit,
+    onShareRecordingVideo: (String) -> Unit,
     recordingAvailable: Boolean,
     validationAvailable: Boolean,
     validationSummary: String?,
@@ -1090,7 +1125,12 @@ private fun RecordingControls(
                     overflow = TextOverflow.Ellipsis,
                 )
                 Button(onClick = { onShareRecordingPath(item.metadataFile.absolutePath) }) {
-                    Text("Share")
+                    Text("Metadata")
+                }
+                item.debugVideoPath?.let { videoPath ->
+                    Button(onClick = { onShareRecordingVideo(videoPath) }) {
+                        Text("Video")
+                    }
                 }
             }
         }
@@ -1113,6 +1153,106 @@ private fun copyUriToCacheFile(context: Context, uri: Uri, displayName: String?)
         }
     }
     return outputFile
+}
+
+private data class ProcessedVideoOutcome(
+    val summary: String,
+    val metadataFile: File?,
+)
+
+private fun processRecordedVideoExport(
+    inputFile: File,
+    sourceName: String,
+    settings: AnalysisSettings,
+    rootDirectory: File,
+): ProcessedVideoOutcome {
+    val startedAtMillis = System.currentTimeMillis()
+    val decodeOptions = RecordedVideoDecodeOptions(maxFrames = 300)
+    val frames = RecordedVideoFrameDecoder().decode(inputFile, decodeOptions)
+    val report = RecordedVideoAnalysisRunner(settings).analyze(frames)
+    val validation = RecordedVideoValidationResult(
+        sourceName = sourceName,
+        settings = settings,
+        report = report,
+    )
+    val processing = RecordedVideoProcessor(settings).process(frames)
+    val sessionDirectory = File(rootDirectory, processedVideoSessionName(startedAtMillis)).apply { mkdirs() }
+    val outputVideo = File(sessionDirectory, "debug_processed.mp4")
+    if (processing.hasFrames) {
+        RecordedVideoMp4Exporter().export(processing.processedFrames, outputVideo)
+    }
+    val metadataFile = File(sessionDirectory, "metadata.json")
+    metadataFile.writeText(
+        recordedVideoExportMetadata(
+            sourceName = sourceName,
+            startedAtMillis = startedAtMillis,
+            durationMillis = (System.currentTimeMillis() - startedAtMillis).coerceAtLeast(0L),
+            settings = settings,
+            frameCount = report.frameCount,
+            averageFps = report.averageFps,
+            bandpassedEnergy = report.bandpassedEnergy,
+            maxBandpassedMagnitude = report.maxBandpassedMagnitude,
+            timestampsMonotonic = report.timestampsMonotonic,
+            debugVideoPath = outputVideo.takeIf { it.exists() }?.absolutePath,
+        )
+    )
+    val exportText = if (outputVideo.exists()) {
+        ", export saved: ${outputVideo.name}"
+    } else {
+        ", no export frames"
+    }
+    return ProcessedVideoOutcome(
+        summary = validation.summary() + exportText,
+        metadataFile = metadataFile,
+    )
+}
+
+private fun processedVideoSessionName(startedAtMillis: Long): String {
+    return "processed-${DateTimeFormatter.ISO_INSTANT.format(Instant.ofEpochMilli(startedAtMillis))}"
+        .replace(":", "-")
+        .replace(".", "-")
+        .lowercase(Locale.US)
+}
+
+private fun recordedVideoExportMetadata(
+    sourceName: String,
+    startedAtMillis: Long,
+    durationMillis: Long,
+    settings: AnalysisSettings,
+    frameCount: Int,
+    averageFps: Double,
+    bandpassedEnergy: Double,
+    maxBandpassedMagnitude: Double,
+    timestampsMonotonic: Boolean,
+    debugVideoPath: String?,
+): String {
+    return buildString {
+        appendLine("{")
+        appendLine("  \"sourceName\": ${sourceName.quoteJson()},")
+        appendLine("  \"startedAtMillis\": $startedAtMillis,")
+        appendLine("  \"durationMillis\": $durationMillis,")
+        appendLine("  \"mode\": ${settings.mode.label.quoteJson()},")
+        appendLine("  \"viewMode\": ${settings.viewMode.label.quoteJson()},")
+        appendLine("  \"amplification\": ${settings.amplification},")
+        appendLine("  \"lowCutHz\": ${settings.lowCutHz},")
+        appendLine("  \"highCutHz\": ${settings.highCutHz},")
+        appendLine("  \"debugVideoPath\": ${debugVideoPath?.quoteJson() ?: "null"},")
+        appendLine("  \"sampleCount\": $frameCount,")
+        appendLine("  \"frameCount\": $frameCount,")
+        appendLine("  \"averageFps\": ${averageFps.formatJsonNumber()},")
+        appendLine("  \"bandpassedEnergy\": ${bandpassedEnergy.formatJsonNumber()},")
+        appendLine("  \"maxBandpassedMagnitude\": ${maxBandpassedMagnitude.formatJsonNumber()},")
+        appendLine("  \"timestampsMonotonic\": $timestampsMonotonic")
+        appendLine("}")
+    }
+}
+
+private fun String.quoteJson(): String {
+    return "\"" + replace("\\", "\\\\").replace("\"", "\\\"") + "\""
+}
+
+private fun Number.formatJsonNumber(): String {
+    return String.format(Locale.US, "%.6f", toDouble())
 }
 
 private fun displayNameForUri(context: Context, uri: Uri): String? {

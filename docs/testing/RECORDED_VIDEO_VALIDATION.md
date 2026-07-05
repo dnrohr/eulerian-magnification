@@ -12,7 +12,7 @@ Recorded-video validation comes before phone testing. It gives the signal path r
 
 `RecordedVideoProcessor` is the first export-pipeline building block. It consumes decoded `RgbFrame` inputs and produces processed `RgbFrame` outputs for `Raw`, `Amplified`, `Difference`, and `Split` views. This is app-native CPU color processing, not the earlier Python diagnostic render.
 
-`RecordedVideoMp4Exporter` can encode those processed frames to H.264 MP4 on Android. The exporter is covered by an instrumented Pixel test that writes to app cache and validates the generated MP4 atoms. The picker UI still shows only a metrics summary; wiring it to save/share exported MP4 files is the next integration step.
+`RecordedVideoMp4Exporter` can encode those processed frames to H.264 MP4 on Android. The exporter is covered by an instrumented Pixel test that writes to app cache and validates the generated MP4 atoms. The picker UI now saves `debug_processed.mp4` and `metadata.json` under `recordings/processed-*`; recent rows expose `Metadata` and `Video` share buttons when available.
 
 The JVM tests generate synthetic 30 fps RGB frame sequences with known green-channel changes:
 
@@ -47,6 +47,7 @@ The app copies the selected video into cache using the selected display name whe
 3. Tap `Controls`, then `Process Video`.
 4. Select `euler.mp4`.
 5. Use the displayed frame count, FPS, energy, peak, and timing status as the repeatable baseline for that mode.
+6. Use the recent recording/export row's `Video` button to share the processed MP4, or `Metadata` to inspect the JSON.
 
 ## Next Sample Step
 

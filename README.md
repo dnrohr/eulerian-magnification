@@ -111,9 +111,11 @@ The default screen is intentionally compact so the preview remains visible.
 - `Start Recording` / `Stop Recording`: records a processed debug MP4 plus
   metadata JSON in app storage.
 - `Process Video`: selects a recorded/sample video and runs the offline
-  processing summary path. Use this for `sample-videos/euler.mp4` after copying
+  processing/export path. Use this for `sample-videos/euler.mp4` after copying
   it to the phone or another picker-visible location.
 - `Share Metadata`: shares the JSON metadata for the latest recording.
+- `Metadata` / `Video`: shares recent recording/export metadata or processed
+  MP4 output.
 - `Quality`: summarizes whether the current run looks usable. Warnings can come
   from low FPS, camera/ROI motion, lighting flicker, timestamp jumps, or risky
   high-frequency/amplification combinations. The compact preview stays terse;

@@ -7,7 +7,7 @@ Goal: process a selected video into a shareable output video so algorithm result
 - [x] Define a recorded-video processing API that can produce frames or an MP4 output.
 - [x] Start with the CPU color magnification path so it matches current live capability.
 - [x] Include side-by-side or difference output options for diagnostics.
-- [ ] Save output and metadata in app storage.
+- [x] Save output and metadata in app storage.
 - [x] Add validator coverage for generated files where possible.
 - [x] Document how the app-generated output differs from Python/offline diagnostic renders.
 
@@ -21,7 +21,7 @@ Goal: process a selected video into a shareable output video so algorithm result
 
 ## Remaining Work
 
-- Wire `Process Video` to produce a user-inspectable artifact rather than only a metrics summary.
+- None for the current CPU export path. Future work can improve progress UI and add richer metadata samples.
 
 ## Completed Slice: MP4 Exporter
 
@@ -32,8 +32,14 @@ Goal: process a selected video into a shareable output video so algorithm result
 
 ## Remaining Work After Exporter
 
-- Wire the `Process Video` UI action to save/share the exported MP4 and metadata instead of only showing a metrics summary.
-- Add user-facing metadata JSON for recorded-video exports.
+- Improve progress UI for long videos.
+- Add richer per-frame/sample metadata for recorded-video exports if needed.
+
+## Completed Slice: UI Export Integration
+
+- `Process Video` now decodes the selected video once, computes the processing summary, runs `RecordedVideoProcessor`, exports `debug_processed.mp4`, and writes `metadata.json`.
+- Recorded-video exports use the same `recordings/processed-*` folder shape as live debug recordings.
+- Recent recording rows now expose separate `Metadata` and `Video` share buttons when a processed MP4 exists.
 
 ## Done When
 
