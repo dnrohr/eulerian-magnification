@@ -16,12 +16,18 @@ The reference currently provides:
 - Gaussian pyramid construction with clamped-edge 3x3 smoothing.
 - First-order Riesz-like x/y derivative responses for each pyramid level.
 - Component energy helpers used by tests to verify orientation behavior.
+- Dominant-orientation projection for a pyramid level.
+- Local phase/amplitude extraction along the dominant orientation.
+- Wrapped phase delta amplification.
+- Circular 3x3 phase smoothing for denoising without averaging across the
+  `-pi`/`pi` boundary.
 
 This is not yet the production Riesz transform. The 3x3 derivative kernels are a
 small deterministic reference that captures expected behavior for flat fields,
-horizontal ramps, vertical ramps, and pyramid sizing. The production path can use
-FFT, separable filters, C++, or GPU shaders once the phase-mode pipeline is ready
-to move beyond offline validation.
+horizontal ramps, vertical ramps, wrapped phase deltas, circular phase smoothing,
+and pyramid sizing. The production path can use FFT, separable filters, C++, or
+GPU shaders once the phase-mode pipeline is ready to move beyond offline
+validation.
 
 ## Expected Pipeline
 
@@ -32,6 +38,10 @@ to move beyond offline validation.
 5. Apply temporal filtering to phase deltas in the target motion band.
 6. Denoise and smooth phase changes across space, scale, and time.
 7. Reconstruct or approximate the magnified output for display and recording.
+
+The reference implementation now covers steps 3-6 at the small-image math-helper
+level. It does not yet reconstruct a full magnified frame sequence or validate
+against real sample videos.
 
 ## Validation Strategy
 

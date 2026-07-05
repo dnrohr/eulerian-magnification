@@ -48,6 +48,16 @@ class RieszLevel:
         return image_size(self.image)
 
 
+@dataclass(frozen=True)
+class PhaseLevel:
+    """Dominant-orientation phase representation for one Riesz level."""
+
+    orientation_radians: float
+    oriented_riesz: Image
+    amplitude: Image
+    phase: Image
+
+
 def image_size(image: Sequence[Sequence[float]]) -> Tuple[int, int]:
     validate_image(image)
     return (len(image[0]), len(image))
@@ -85,6 +95,84 @@ def build_riesz_pyramid(image: Sequence[Sequence[float]], levels: int) -> List[R
             riesz_y=convolve_3x3(level, _RIESZ_Y_3X3),
         )
         for level in build_gaussian_pyramid(image, levels)
+    ]
+
+
+def dominant_orientation(level: RieszLevel) -> float:
+    """Return the strongest global orientation for a Riesz level in radians."""
+
+    validate_same_size(level.riesz_x, level.riesz_y)
+    sum_x = sum(float(value) for row in level.riesz_x for value in row)
+    sum_y = sum(float(value) for row in level.riesz_y for value in row)
+    if abs(sum_x) < 1e-12 and abs(sum_y) < 1e-12:
+        return 0.0
+    return math.atan2(sum_y, sum_x)
+
+
+def project_phase(level: RieszLevel, orientation_radians: float | None = None) -> PhaseLevel:
+    """Project Riesz components onto an orientation and compute local phase."""
+
+    validate_same_size(level.image, level.riesz_x)
+    validate_same_size(level.image, level.riesz_y)
+
+    orientation = dominant_orientation(level) if orientation_radians is None else orientation_radians
+    cos_theta = math.cos(orientation)
+    sin_theta = math.sin(orientation)
+    oriented: Image = []
+    amplitude: Image = []
+    phase: Image = []
+
+    for y, row in enumerate(level.image):
+        oriented_row: List[float] = []
+        amplitude_row: List[float] = []
+        phase_row: List[float] = []
+        for x, value in enumerate(row):
+            riesz_value = level.riesz_x[y][x] * cos_theta + level.riesz_y[y][x] * sin_theta
+            source_value = float(value)
+            oriented_row.append(riesz_value)
+            amplitude_row.append(math.hypot(source_value, riesz_value))
+            phase_row.append(math.atan2(riesz_value, source_value))
+        oriented.append(oriented_row)
+        amplitude.append(amplitude_row)
+        phase.append(phase_row)
+
+    return PhaseLevel(
+        orientation_radians=orientation,
+        oriented_riesz=oriented,
+        amplitude=amplitude,
+        phase=phase,
+    )
+
+
+def phase_delta(reference_phase: Sequence[Sequence[float]], current_phase: Sequence[Sequence[float]]) -> Image:
+    validate_same_size(reference_phase, current_phase)
+    return [
+        [wrap_phase(float(current_phase[y][x]) - float(reference_phase[y][x])) for x in range(len(row))]
+        for y, row in enumerate(reference_phase)
+    ]
+
+
+def amplify_phase(
+    reference_phase: Sequence[Sequence[float]],
+    current_phase: Sequence[Sequence[float]],
+    amplification: float,
+) -> Image:
+    delta = phase_delta(reference_phase, current_phase)
+    return [
+        [wrap_phase(float(reference_phase[y][x]) + delta[y][x] * amplification) for x in range(len(row))]
+        for y, row in enumerate(reference_phase)
+    ]
+
+
+def smooth_phase3(phase: Sequence[Sequence[float]]) -> Image:
+    """Circularly smooth wrapped phase values with the reference 3x3 kernel."""
+
+    validate_image(phase)
+    sin_smoothed = smooth3([[math.sin(float(value)) for value in row] for row in phase])
+    cos_smoothed = smooth3([[math.cos(float(value)) for value in row] for row in phase])
+    return [
+        [math.atan2(sin_smoothed[y][x], cos_smoothed[y][x]) for x in range(len(row))]
+        for y, row in enumerate(phase)
     ]
 
 
@@ -126,6 +214,11 @@ def component_energy(image: Sequence[Sequence[float]]) -> float:
     return math.sqrt(sum(float(value) * float(value) for row in image for value in row))
 
 
+def validate_same_size(first: Sequence[Sequence[float]], second: Sequence[Sequence[float]]) -> None:
+    if image_size(first) != image_size(second):
+        raise ValueError("images must have the same size")
+
+
 def clone_image(image: Sequence[Sequence[float]]) -> Image:
     validate_image(image)
     return [[float(value) for value in row] for row in image]
@@ -133,3 +226,7 @@ def clone_image(image: Sequence[Sequence[float]]) -> Image:
 
 def clamp(value: int, lower: int, upper: int) -> int:
     return max(lower, min(value, upper))
+
+
+def wrap_phase(value: float) -> float:
+    return math.atan2(math.sin(value), math.cos(value))

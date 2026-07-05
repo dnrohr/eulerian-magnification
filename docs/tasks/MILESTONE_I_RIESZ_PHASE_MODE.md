@@ -7,8 +7,8 @@ Goal: add a higher-quality phase-based motion magnification path.
 - [x] Implement offline/reference Riesz pyramid in Python or C++.
 - [ ] Validate against known sample videos.
 - [ ] Port core filters to C++ or GPU shaders.
-- [ ] Add dominant-orientation phase manipulation.
-- [ ] Add phase denoising and smoothing.
+- [x] Add dominant-orientation phase manipulation.
+- [x] Add phase denoising and smoothing.
 - [ ] Compare quality and performance against simple EVM.
 - [x] Document architecture in `docs/architecture/RIESZ_MODE.md`.
 - [ ] Commit and push to `main`.
@@ -26,6 +26,20 @@ Goal: add a higher-quality phase-based motion magnification path.
   vertical ramp orientation behavior, and ragged input validation.
 - Documented the phase-mode architecture and validation plan in
   `docs/architecture/RIESZ_MODE.md`.
+
+Verification:
+
+- `python -m unittest discover -s tools\riesz_reference\tests`
+
+## Completed Slice: Offline Phase Projection And Smoothing
+
+- Added dominant-orientation selection for a Riesz level.
+- Added oriented Riesz projection, local phase/amplitude extraction, wrapped
+  phase deltas, and phase amplification helpers.
+- Added circular 3x3 phase smoothing so denoising preserves values around the
+  `-pi`/`pi` wrap boundary.
+- Expanded Python tests for horizontal/vertical orientation, phase projection,
+  wrapped deltas, amplification, smoothing, wrapping, and size validation.
 
 Verification:
 
