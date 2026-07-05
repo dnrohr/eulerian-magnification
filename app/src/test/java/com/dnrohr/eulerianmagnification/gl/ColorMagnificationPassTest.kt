@@ -11,6 +11,12 @@ import org.junit.Test
 
 class ColorMagnificationPassTest {
     @Test
+    fun shadersStartWithVersionDeclaration() {
+        assertTrue(ColorMagnificationShaderSource.VERTEX.startsWith("#version 300 es"))
+        assertTrue(ColorMagnificationShaderSource.FRAGMENT.startsWith("#version 300 es"))
+    }
+
+    @Test
     fun shaderLimitsAmplificationToRoi() {
         assertTrue(ColorMagnificationShaderSource.FRAGMENT.contains("insideRoi"))
         assertTrue(ColorMagnificationShaderSource.FRAGMENT.contains("uRoi"))

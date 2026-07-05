@@ -5,6 +5,12 @@ import org.junit.Test
 
 class OesShaderSourceTest {
     @Test
+    fun shadersStartWithVersionDeclaration() {
+        assertTrue(OesShaderSource.VERTEX.startsWith("#version 300 es"))
+        assertTrue(OesShaderSource.FRAGMENT.startsWith("#version 300 es"))
+    }
+
+    @Test
     fun vertexShaderDeclaresTransformAndTexCoord() {
         assertTrue(OesShaderSource.VERTEX.contains("uTexTransform"))
         assertTrue(OesShaderSource.VERTEX.contains("aTexCoord"))

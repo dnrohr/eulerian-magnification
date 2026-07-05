@@ -11,8 +11,52 @@ Goal: move color magnification from CPU analysis toward texture processing.
 - [x] Add ROI-limited processing when possible.
 - [ ] Render processed output to display and encoder surfaces.
 - [x] Add side-by-side raw/amplified view.
-- [ ] Benchmark against CPU MVP.
-- [ ] Commit and push to `main`.
+- [x] Benchmark against CPU MVP.
+- [x] Commit and push to `main`.
+
+## Completed Slice: Pixel 8a Short-Run GL Benchmark
+
+- Captured a CameraX CPU preview sample and a GL preview sample on Pixel 8a.
+- Documented the benchmark in `docs/experiments/pixel8a_gpu_benchmark.md`.
+- CameraX preview sample: 854 frames, 15 ms median frame time, 29 ms p99, and 32.55% janky frames.
+- GL preview sample: 350 frames over the short run, 11 ms median frame time, 16 ms p99, and 1.14% janky frames.
+- The GL display path met the 30 FPS display target in the short sample while CPU ROI analysis remained active.
+- A follow-up GL smoke attempt exposed a Pixel 8a shader compile crash caused by shader source formatting; this was fixed in the GL shader version-declaration slice.
+
+This closes the short-run CPU MVP comparison. Sustained CPU load, thermal behavior, and battery impact remain tracked under Milestone J polish/long-run benchmarks.
+
+## Completed Slice: Pixel 8a GL Shader Version Fix
+
+- Fixed GLES shader source constants so `#version 300 es` is the first line of each shader.
+- Covered OES, RGB texture, color magnification, and debug renderer shader sources.
+- Added unit coverage for public shader source version placement.
+- Verified the crash root cause through `adb logcat -b crash` and `dumpsys activity exit-info`.
+- Reinstalled the fixed APK on Pixel 8a and confirmed GL preview stays alive with no new package crash in the cleared crash buffer.
+- Follow-up smoke showed the GL preview image upright after clean app reboot, but stretched/cropped differently from CameraX; this was fixed by orienting the camera buffer aspect to the surface and aspect-filling the OES-to-RGB pass.
+
+## Verification
+
+- `.\gradlew.bat testDebugUnitTest --tests "com.dnrohr.eulerianmagnification.gl.OesShaderSourceTest" --tests "com.dnrohr.eulerianmagnification.gl.RgbTextureShaderSourceTest" --tests "com.dnrohr.eulerianmagnification.gl.ColorMagnificationPassTest"`
+- `.\gradlew.bat clean testDebugUnitTest assembleDebug`
+- `adb logcat -b crash -d`
+- Pixel 8a GL preview smoke screenshot after reinstall
+
+## Completed Slice: GL Preview Framing Fix
+
+- Added named fullscreen quads for external `SurfaceTexture` sampling and regular framebuffer texture sampling.
+- Camera OES input now uses normal OpenGL coordinates and relies on `SurfaceTexture.getTransformMatrix()` for orientation.
+- Color-processing and screen-display passes now use regular OpenGL framebuffer texture coordinates.
+- The OES-to-RGB pass now orients the camera buffer aspect to the surface and draws through an aspect-fill viewport before color processing/display.
+- Added unit coverage for the two coordinate layouts and aspect-fill crop calculations.
+
+## Verification
+
+- `.\gradlew.bat testDebugUnitTest --tests "com.dnrohr.eulerianmagnification.gl.GlFullscreenQuadTest"`
+- `.\gradlew.bat testDebugUnitTest --tests "com.dnrohr.eulerianmagnification.gl.GlViewportLayoutTest"`
+- `.\gradlew.bat clean testDebugUnitTest assembleDebug`
+- `adb install -r app\build\outputs\apk\debug\app-debug.apk`
+- Pixel 8a live CameraX preview sample
+- Pixel 8a live GL preview `dumpsys gfxinfo` sample
 
 ## Completed Slice: CPU/GL Benchmark Readout Foundation
 
@@ -20,7 +64,7 @@ Goal: move color magnification from CPU analysis toward texture processing.
 - GL preview overlay now shows a benchmark summary with the 30 fps target status and CPU/GL FPS delta.
 - Added unit tests for benchmark mapping, target detection, and summary formatting.
 
-The actual CPU MVP comparison still needs a Pixel 8a runtime pass, so the benchmark checklist item remains open until measured values are recorded.
+The actual CPU MVP comparison is now documented in the Pixel 8a short-run benchmark slice. Sustained thermal and CPU-load benchmarking remains separate polish work.
 
 ## Verification
 

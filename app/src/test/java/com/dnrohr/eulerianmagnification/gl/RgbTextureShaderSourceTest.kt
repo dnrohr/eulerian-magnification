@@ -5,6 +5,12 @@ import org.junit.Test
 
 class RgbTextureShaderSourceTest {
     @Test
+    fun shadersStartWithVersionDeclaration() {
+        assertTrue(RgbTextureShaderSource.VERTEX.startsWith("#version 300 es"))
+        assertTrue(RgbTextureShaderSource.FRAGMENT.startsWith("#version 300 es"))
+    }
+
+    @Test
     fun fragmentShaderSamplesTexture2d() {
         assertTrue(RgbTextureShaderSource.FRAGMENT.contains("sampler2D"))
         assertTrue(RgbTextureShaderSource.FRAGMENT.contains("uInputTexture"))

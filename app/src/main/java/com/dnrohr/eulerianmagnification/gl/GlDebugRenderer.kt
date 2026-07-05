@@ -45,8 +45,7 @@ class GlDebugRenderer(
             -1.0f, 3.0f,
         )
 
-        private const val VERTEX_SHADER = """
-            #version 300 es
+        private const val VERTEX_SHADER = """#version 300 es
             layout(location = 0) in vec2 aPosition;
             out vec2 vPosition;
 
@@ -56,8 +55,7 @@ class GlDebugRenderer(
             }
         """
 
-        private const val FRAGMENT_SHADER = """
-            #version 300 es
+        private const val FRAGMENT_SHADER = """#version 300 es
             precision mediump float;
             uniform float uPulse;
             in vec2 vPosition;

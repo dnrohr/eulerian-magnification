@@ -35,4 +35,56 @@ class GlViewportLayoutTest {
         assertEquals(1, left.height)
         assertEquals(1, right.height)
     }
+
+    @Test
+    fun aspectFillCropsWideContentHorizontallyForPortraitSurface() {
+        val viewport = GlViewportLayout.aspectFill(
+            surfaceSize = GlTextureSize(1080, 2400),
+            contentSize = GlTextureSize(640, 480),
+        )
+
+        assertEquals(2400, viewport.height)
+        assertEquals(3200, viewport.width)
+        assertEquals(-1060, viewport.x)
+        assertEquals(0, viewport.y)
+    }
+
+    @Test
+    fun orientContentToSurfaceSwapsLandscapeBufferForPortraitSurface() {
+        val oriented = GlViewportLayout.orientContentToSurface(
+            surfaceSize = GlTextureSize(1080, 2400),
+            contentSize = GlTextureSize(640, 480),
+        )
+
+        assertEquals(480, oriented.width)
+        assertEquals(640, oriented.height)
+    }
+
+    @Test
+    fun aspectFillUsesOrientedCameraBufferForPortraitSurface() {
+        val surfaceSize = GlTextureSize(1080, 2400)
+        val orientedContentSize = GlViewportLayout.orientContentToSurface(
+            surfaceSize = surfaceSize,
+            contentSize = GlTextureSize(640, 480),
+        )
+        val viewport = GlViewportLayout.aspectFill(surfaceSize, orientedContentSize)
+
+        assertEquals(2400, viewport.height)
+        assertEquals(1800, viewport.width)
+        assertEquals(-360, viewport.x)
+        assertEquals(0, viewport.y)
+    }
+
+    @Test
+    fun aspectFillCropsTallContentVerticallyForWideSurface() {
+        val viewport = GlViewportLayout.aspectFill(
+            surfaceSize = GlTextureSize(1920, 1080),
+            contentSize = GlTextureSize(720, 1280),
+        )
+
+        assertEquals(1920, viewport.width)
+        assertEquals(3413, viewport.height)
+        assertEquals(0, viewport.x)
+        assertEquals(-1166, viewport.y)
+    }
 }

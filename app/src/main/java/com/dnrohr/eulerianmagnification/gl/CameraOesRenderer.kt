@@ -18,7 +18,8 @@ class CameraOesRenderer(
 ) : GLSurfaceView.Renderer {
     private val timer = GlFrameTimer()
     private val transformMatrix = FloatArray(16)
-    private val vertexBuffer = FULLSCREEN_QUAD.toFloatBuffer()
+    private val externalTextureVertexBuffer = GlFullscreenQuad.EXTERNAL_TEXTURE.toFloatBuffer()
+    private val framebufferTextureVertexBuffer = GlFullscreenQuad.FRAMEBUFFER_TEXTURE.toFloatBuffer()
     private val lock = Any()
     private var surfaceRequest: SurfaceRequest? = null
     private var surfaceRequestExecutor: Executor? = null
@@ -39,6 +40,7 @@ class CameraOesRenderer(
     private var downsamplePyramid: GlPyramid? = null
     private var temporalState: GlTemporalState? = null
     private var surfaceSize = GlTextureSize(1, 1)
+    private var cameraTextureSize = GlTextureSize(1, 1)
     private var hasNewFrame = false
     @Volatile private var colorUniforms = ColorMagnificationUniforms(
         roi = com.dnrohr.eulerianmagnification.analysis.NormalizedRect(0.0f, 0.0f, 0.0f, 0.0f),
@@ -154,6 +156,7 @@ class CameraOesRenderer(
         }
 
         texture.setDefaultBufferSize(request.resolution.width, request.resolution.height)
+        cameraTextureSize = GlTextureSize(request.resolution.width, request.resolution.height)
         val surface = Surface(texture)
         cameraSurface?.release()
         cameraSurface = surface
@@ -168,20 +171,26 @@ class CameraOesRenderer(
     private fun renderCameraTextureToRgb() {
         val target = rgbRenderTarget ?: return
         target.bind()
+        val viewport = GlViewportLayout.aspectFill(
+            surfaceSize = surfaceSize,
+            contentSize = GlViewportLayout.orientContentToSurface(surfaceSize, cameraTextureSize),
+        )
+        GLES30.glViewport(viewport.x, viewport.y, viewport.width, viewport.height)
         GLES30.glUseProgram(oesProgram)
         GLES30.glUniformMatrix4fv(oesTexTransformLocation, 1, false, transformMatrix, 0)
         GLES30.glActiveTexture(GLES30.GL_TEXTURE0)
         GLES30.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, oesTextureId)
         GLES30.glEnableVertexAttribArray(0)
         GLES30.glEnableVertexAttribArray(1)
-        vertexBuffer.position(0)
-        GLES30.glVertexAttribPointer(0, 2, GLES30.GL_FLOAT, false, VERTEX_STRIDE_BYTES, vertexBuffer)
-        vertexBuffer.position(2)
-        GLES30.glVertexAttribPointer(1, 2, GLES30.GL_FLOAT, false, VERTEX_STRIDE_BYTES, vertexBuffer)
+        externalTextureVertexBuffer.position(0)
+        GLES30.glVertexAttribPointer(0, 2, GLES30.GL_FLOAT, false, VERTEX_STRIDE_BYTES, externalTextureVertexBuffer)
+        externalTextureVertexBuffer.position(2)
+        GLES30.glVertexAttribPointer(1, 2, GLES30.GL_FLOAT, false, VERTEX_STRIDE_BYTES, externalTextureVertexBuffer)
         GLES30.glDrawArrays(GLES30.GL_TRIANGLE_STRIP, 0, 4)
         GLES30.glDisableVertexAttribArray(0)
         GLES30.glDisableVertexAttribArray(1)
         GLES30.glBindFramebuffer(GLES30.GL_FRAMEBUFFER, 0)
+        GLES30.glViewport(0, 0, surfaceSize.width, surfaceSize.height)
         GlProgram.checkNoGlError("renderCameraTextureToRgb")
     }
 
@@ -205,10 +214,10 @@ class CameraOesRenderer(
         GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, input.textureId)
         GLES30.glEnableVertexAttribArray(0)
         GLES30.glEnableVertexAttribArray(1)
-        vertexBuffer.position(0)
-        GLES30.glVertexAttribPointer(0, 2, GLES30.GL_FLOAT, false, VERTEX_STRIDE_BYTES, vertexBuffer)
-        vertexBuffer.position(2)
-        GLES30.glVertexAttribPointer(1, 2, GLES30.GL_FLOAT, false, VERTEX_STRIDE_BYTES, vertexBuffer)
+        framebufferTextureVertexBuffer.position(0)
+        GLES30.glVertexAttribPointer(0, 2, GLES30.GL_FLOAT, false, VERTEX_STRIDE_BYTES, framebufferTextureVertexBuffer)
+        framebufferTextureVertexBuffer.position(2)
+        GLES30.glVertexAttribPointer(1, 2, GLES30.GL_FLOAT, false, VERTEX_STRIDE_BYTES, framebufferTextureVertexBuffer)
         GLES30.glDrawArrays(GLES30.GL_TRIANGLE_STRIP, 0, 4)
         GLES30.glDisableVertexAttribArray(0)
         GLES30.glDisableVertexAttribArray(1)
@@ -236,10 +245,10 @@ class CameraOesRenderer(
         GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, target.textureId)
         GLES30.glEnableVertexAttribArray(0)
         GLES30.glEnableVertexAttribArray(1)
-        vertexBuffer.position(0)
-        GLES30.glVertexAttribPointer(0, 2, GLES30.GL_FLOAT, false, VERTEX_STRIDE_BYTES, vertexBuffer)
-        vertexBuffer.position(2)
-        GLES30.glVertexAttribPointer(1, 2, GLES30.GL_FLOAT, false, VERTEX_STRIDE_BYTES, vertexBuffer)
+        framebufferTextureVertexBuffer.position(0)
+        GLES30.glVertexAttribPointer(0, 2, GLES30.GL_FLOAT, false, VERTEX_STRIDE_BYTES, framebufferTextureVertexBuffer)
+        framebufferTextureVertexBuffer.position(2)
+        GLES30.glVertexAttribPointer(1, 2, GLES30.GL_FLOAT, false, VERTEX_STRIDE_BYTES, framebufferTextureVertexBuffer)
         GLES30.glDrawArrays(GLES30.GL_TRIANGLE_STRIP, 0, 4)
         GLES30.glDisableVertexAttribArray(0)
         GLES30.glDisableVertexAttribArray(1)
@@ -262,12 +271,6 @@ class CameraOesRenderer(
         private const val FLOAT_BYTES = 4
         private const val VERTEX_STRIDE_BYTES = 4 * FLOAT_BYTES
         private const val DOWNSAMPLE_LEVELS = 3
-        private val FULLSCREEN_QUAD = floatArrayOf(
-            -1.0f, -1.0f, 0.0f, 1.0f,
-            1.0f, -1.0f, 1.0f, 1.0f,
-            -1.0f, 1.0f, 0.0f, 0.0f,
-            1.0f, 1.0f, 1.0f, 0.0f,
-        )
     }
 }
 

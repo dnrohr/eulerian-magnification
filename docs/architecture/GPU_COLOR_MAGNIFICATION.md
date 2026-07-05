@@ -25,7 +25,7 @@ The color magnification pass is now wired into the camera GL renderer's display 
 
 The `Split` view mode reuses those two render targets for visual comparison: raw RGB is drawn into the left half of the GL surface and the processed texture is drawn into the right half. The split is implemented with deterministic viewport layout logic so odd-width and tiny surfaces remain drawable.
 
-The GL preview overlay also reports a benchmark summary from `PerformanceBenchmark`, comparing CPU analysis FPS/latency with GL render FPS/frame time and flagging whether GL meets the 30 fps display target. This is an instrumentation readout; measured CPU MVP comparison results still need an on-device run.
+The GL preview overlay also reports a benchmark summary from `PerformanceBenchmark`, comparing CPU analysis FPS/latency with GL render FPS/frame time and flagging whether GL meets the 30 fps display target. A short Pixel 8a run is recorded in `docs/experiments/pixel8a_gpu_benchmark.md`: the GL preview sample hit 11 ms median frame time and 1.14% janky frames, compared with 15 ms median and 32.55% janky frames in the CameraX CPU preview sample. Longer thermal and CPU-load runs are still needed before treating this as a sustained-performance result.
 
 For now, CPU analysis still supplies the ROI and bandpassed signal uniforms. Encoder-surface rendering and true GPU temporal-filter updates are still pending.
 

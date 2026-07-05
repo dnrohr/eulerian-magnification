@@ -7,8 +7,7 @@ import com.dnrohr.eulerianmagnification.analysis.ViewMode
 import com.dnrohr.eulerianmagnification.quality.ArtifactSuppressor
 
 object ColorMagnificationShaderSource {
-    const val VERTEX = """
-        #version 300 es
+    const val VERTEX = """#version 300 es
         layout(location = 0) in vec4 aPosition;
         layout(location = 1) in vec2 aTexCoord;
         out vec2 vTexCoord;
@@ -19,8 +18,7 @@ object ColorMagnificationShaderSource {
         }
     """
 
-    const val FRAGMENT = """
-        #version 300 es
+    const val FRAGMENT = """#version 300 es
         precision mediump float;
         uniform sampler2D uInputTexture;
         uniform vec4 uRoi;
