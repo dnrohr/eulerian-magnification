@@ -5,13 +5,13 @@ Goal: add a higher-quality phase-based motion magnification path.
 ## Tasks
 
 - [x] Implement offline/reference Riesz pyramid in Python or C++.
-- [ ] Validate against known sample videos.
+- [x] Validate against known sample videos.
 - [x] Port core filters to C++ or GPU shaders.
 - [x] Add dominant-orientation phase manipulation.
 - [x] Add phase denoising and smoothing.
 - [x] Compare quality and performance against simple EVM.
 - [x] Document architecture in `docs/architecture/RIESZ_MODE.md`.
-- [ ] Commit and push to `main`.
+- [x] Commit and push to `main`.
 
 ## Success Criteria
 
@@ -82,6 +82,24 @@ Verification:
 
 - `python -m unittest discover -s tools\riesz_reference\tests`
 - `python tools\riesz_reference\validate_sample_sequences.py`
+
+## Completed Slice: MIT Baby Sample Validation
+
+- Added an Android instrumentation exporter that decodes a real MP4 sample with
+  the app's `RecordedVideoFrameDecoder` and writes 24x16 luminance-frame JSON
+  for the Riesz reference.
+- Added `tools/riesz_reference/validate_decoded_sample.py` to run
+  Riesz-vs-linear adjacent-frame metrics over exported decoded frames.
+- Validated the MIT EVM `baby.mp4` source clip on Pixel 8a with 60 decoded
+  frames and 59 adjacent frame pairs.
+- Documented the commands and metrics in
+  `docs/experiments/riesz_mit_baby_validation.md`.
+
+Verification:
+
+- `.\gradlew.bat connectedDebugAndroidTest '-Pandroid.testInstrumentationRunnerArguments.sampleAssetName=mit-evm-baby.mp4' '-Pandroid.testInstrumentationRunnerArguments.class=com.dnrohr.eulerianmagnification.analysis.RecordedVideoFrameExportInstrumentedTest'`
+- `adb shell am instrument -w -e sampleAssetName mit-evm-baby.mp4 -e class com.dnrohr.eulerianmagnification.analysis.RecordedVideoFrameExportInstrumentedTest com.dnrohr.eulerianmagnification.test/androidx.test.runner.AndroidJUnitRunner`
+- `python tools\riesz_reference\validate_decoded_sample.py sample-videos\exports\mit-evm-baby-riesz-frames.json`
 
 ## Completed Slice: Offline Phase Projection And Smoothing
 

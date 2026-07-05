@@ -9,6 +9,7 @@ build/
 .externalNativeBuild/
 captures/
 sample-videos/
+app/src/androidTest/assets/*.mp4
 app/release/
 __pycache__/
 *.pyc

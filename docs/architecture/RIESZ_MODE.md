@@ -73,6 +73,15 @@ known frame-sequence validation:
 - a horizontal edge translating downward must produce motion response with stable
   vertical orientation
 
+`tools/riesz_reference/validate_decoded_sample.py` consumes small luminance-frame
+JSON exports from Android instrumentation. The intended public-sample flow is:
+
+1. Download a public source clip outside Git.
+2. Push it to the device.
+3. Run `RecordedVideoFrameExportInstrumentedTest` with `sampleVideoPath` and
+   `outputJsonPath` instrumentation arguments.
+4. Pull the exported JSON and run the decoded-sample validator.
+
 The next validation step is recorded-video testing with public or locally
 recorded samples:
 

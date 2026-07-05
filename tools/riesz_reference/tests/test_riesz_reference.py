@@ -1,6 +1,8 @@
 import sys
 from pathlib import Path
+import json
 import math
+import tempfile
 import unittest
 
 
@@ -31,6 +33,7 @@ from validate_sample_sequences import (  # noqa: E402
     validate_sample_sequence,
     vertical_edge,
 )
+from validate_decoded_sample import validate_decoded_sample  # noqa: E402
 
 
 class RieszReferenceTest(unittest.TestCase):
@@ -178,6 +181,39 @@ class RieszReferenceTest(unittest.TestCase):
                 expects_motion=True,
             )
         )
+
+        self.assertFalse(result.passed)
+
+    def test_decoded_sample_validation_accepts_frame_sequence_json(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "sample.json"
+            path.write_text(
+                json.dumps(
+                    {
+                        "source": "synthetic-motion.mp4",
+                        "frames": [vertical_edge(edge_x=x) for x in range(10, 31)],
+                    }
+                )
+            )
+
+            result = validate_decoded_sample(path)
+
+        self.assertTrue(result.passed, result.summary())
+        self.assertEqual("synthetic-motion.mp4", result.source)
+
+    def test_decoded_sample_validation_rejects_static_json(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "sample.json"
+            path.write_text(
+                json.dumps(
+                    {
+                        "source": "static.mp4",
+                        "frames": [flat_frame() for _ in range(20)],
+                    }
+                )
+            )
+
+            result = validate_decoded_sample(path)
 
         self.assertFalse(result.passed)
 

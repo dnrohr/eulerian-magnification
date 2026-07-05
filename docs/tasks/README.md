@@ -14,7 +14,7 @@ This backlog is split from `C:\Users\dnroh\Downloads\ROADMAP.md` into commit-siz
 | F | [MILESTONE_F_STABILIZATION.md](MILESTONE_F_STABILIZATION.md) | Complete |
 | G | [MILESTONE_G_BREATHING_MOTION.md](MILESTONE_G_BREATHING_MOTION.md) | Complete |
 | H | [MILESTONE_H_GENERAL_EVM.md](MILESTONE_H_GENERAL_EVM.md) | Complete |
-| I | [MILESTONE_I_RIESZ_PHASE_MODE.md](MILESTONE_I_RIESZ_PHASE_MODE.md) | In progress |
+| I | [MILESTONE_I_RIESZ_PHASE_MODE.md](MILESTONE_I_RIESZ_PHASE_MODE.md) | Complete |
 | J | [MILESTONE_J_POLISH.md](MILESTONE_J_POLISH.md) | Complete |
 
 ## Definition of Done
