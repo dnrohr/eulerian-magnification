@@ -10,7 +10,7 @@ Goal: implement simple linear Eulerian magnification with a Laplacian pyramid.
 - [x] Add presets for pulse, breathing, tremor, and object vibration.
 - [x] Warn for invalid amplification, frequency, and camera-motion combinations.
 - [x] Add controlled synthetic video tests.
-- [ ] Commit and push to `main`.
+- [x] Commit and push to `main`.
 
 ## Completed Slice: Controlled Synthetic EVM Tests
 
