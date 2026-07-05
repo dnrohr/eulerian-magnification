@@ -86,4 +86,26 @@ class ColorMagnificationPassTest {
 
         assertEquals(0.0f, uniforms.amplifiedSignal, 0.0f)
     }
+
+    @Test
+    fun mapsPresentationTimestampForEncoderSurfaceExport() {
+        val uniforms = ColorMagnificationParameters().from(
+            sample = AnalysisSample(frameTimestampNanos = 50L),
+            settings = AnalysisSettings(),
+            presentationTimestampNanos = 33_333_333L,
+        )
+
+        assertEquals(33_333_333L, uniforms.presentationTimestampNanos)
+    }
+
+    @Test
+    fun clampsPresentationTimestampToNonNegativeValue() {
+        val uniforms = ColorMagnificationParameters().from(
+            sample = AnalysisSample(frameTimestampNanos = -50L),
+            settings = AnalysisSettings(),
+            presentationTimestampNanos = -1L,
+        )
+
+        assertEquals(0L, uniforms.presentationTimestampNanos)
+    }
 }

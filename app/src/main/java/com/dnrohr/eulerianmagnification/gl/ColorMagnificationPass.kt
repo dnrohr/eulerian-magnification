@@ -54,6 +54,7 @@ class ColorMagnificationParameters(
     fun from(
         sample: AnalysisSample,
         settings: AnalysisSettings,
+        presentationTimestampNanos: Long = sample.frameTimestampNanos.coerceAtLeast(0L),
     ): ColorMagnificationUniforms {
         val signal = artifactSuppressor.amplify(sample.bandpassedGreen, settings.amplification)
         val amplifiedSignal = if (settings.viewMode == ViewMode.Raw) {
@@ -68,6 +69,7 @@ class ColorMagnificationParameters(
                 .toFloat(),
             differenceMode = settings.viewMode == ViewMode.Difference,
             splitMode = settings.viewMode == ViewMode.Split,
+            presentationTimestampNanos = presentationTimestampNanos.coerceAtLeast(0L),
         )
     }
 }
@@ -77,4 +79,5 @@ data class ColorMagnificationUniforms(
     val amplifiedSignal: Float,
     val differenceMode: Boolean,
     val splitMode: Boolean,
+    val presentationTimestampNanos: Long = 0L,
 )

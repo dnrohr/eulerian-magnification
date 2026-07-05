@@ -15,6 +15,7 @@ import javax.microedition.khronos.opengles.GL10
 class CameraOesRenderer(
     private val requestRender: () -> Unit,
     private val onStats: (GlFrameStats) -> Unit,
+    private val onProcessedFrame: (ProcessedGlFrame) -> Unit = {},
 ) : GLSurfaceView.Renderer {
     private val timer = GlFrameTimer()
     private val transformMatrix = FloatArray(16)
@@ -47,6 +48,7 @@ class CameraOesRenderer(
         amplifiedSignal = 0.0f,
         differenceMode = false,
         splitMode = false,
+        presentationTimestampNanos = 0L,
     )
 
     fun setSurfaceRequest(
@@ -119,6 +121,7 @@ class CameraOesRenderer(
         renderCameraTextureToRgb()
         temporalState?.swap()
         renderColorMagnification()
+        emitProcessedFrame()
         drawOutputToScreen()
         providePendingSurfaceIfReady()
         onStats(timer.endFrame(System.nanoTime()))
@@ -235,6 +238,18 @@ class CameraOesRenderer(
         } else {
             drawTextureToScreen(processedTarget, GlViewportLayout.full(surfaceSize))
         }
+    }
+
+    private fun emitProcessedFrame() {
+        val processedTarget = processedRenderTarget ?: return
+        onProcessedFrame(
+            ProcessedGlFrame(
+                textureId = processedTarget.textureId,
+                size = processedTarget.size,
+                presentationTimestampNanos = colorUniforms.presentationTimestampNanos,
+                splitMode = colorUniforms.splitMode,
+            )
+        )
     }
 
     private fun drawTextureToScreen(target: GlRenderTarget, viewport: GlViewport) {

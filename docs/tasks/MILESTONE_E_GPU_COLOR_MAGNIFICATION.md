@@ -117,6 +117,28 @@ Encoder-surface rendering is still pending, so the combined display/encoder chec
 
 - `.\gradlew.bat clean testDebugUnitTest assembleDebug`
 
+## Supporting Slice: Processed GL Frame Export Hook
+
+- Added `ProcessedGlFrame` as the renderer-to-encoder handoff model for the
+  processed texture id, texture size, split-mode flag, and presentation
+  timestamp.
+- `CameraOesRenderer` now emits the processed texture after the color pass and
+  before drawing to the display surface.
+- `ColorMagnificationUniforms` carries the presentation timestamp that a future
+  EGL encoder-surface renderer should apply with `eglPresentationTimeANDROID`.
+- Documented the remaining encoder-surface assignment in the GPU and recording
+  architecture notes.
+
+This exposes the display texture for encoder work, but does not yet render it to
+`MediaCodec`'s input surface. The combined display/encoder checklist item stays
+open.
+
+## Verification
+
+- `.\gradlew.bat testDebugUnitTest --tests "com.dnrohr.eulerianmagnification.gl.ColorMagnificationPassTest" --tests "com.dnrohr.eulerianmagnification.gl.ProcessedGlFrameTest"`
+- `.\gradlew.bat testDebugUnitTest`
+- `.\gradlew.bat assembleDebug`
+
 ## Completed Slice: Temporal State Texture Foundation
 
 - Added ping-pong temporal state render targets for each pyramid level.

@@ -23,11 +23,19 @@ The renderer also allocates a three-level reduced-resolution pyramid using `GlPy
 
 The color magnification pass is now wired into the camera GL renderer's display path. The renderer runs OES camera frames into an internal RGB texture, applies the ROI color magnification shader to a processed render target, then displays that processed texture.
 
+After the color pass, the renderer also publishes a `ProcessedGlFrame` callback
+containing the processed texture id, render-target size, split-mode flag, and
+presentation timestamp from the latest analysis uniforms. This is the handoff
+point for the future EGL encoder-surface renderer; it does not yet write the
+texture into `MediaCodec`'s input surface.
+
 The `Split` view mode reuses those two render targets for visual comparison: raw RGB is drawn into the left half of the GL surface and the processed texture is drawn into the right half. The split is implemented with deterministic viewport layout logic so odd-width and tiny surfaces remain drawable.
 
 The GL preview overlay also reports a benchmark summary from `PerformanceBenchmark`, comparing CPU analysis FPS/latency with GL render FPS/frame time and flagging whether GL meets the 30 fps display target. A short Pixel 8a run is recorded in `docs/experiments/pixel8a_gpu_benchmark.md`: the GL preview sample hit 11 ms median frame time and 1.14% janky frames, compared with 15 ms median and 32.55% janky frames in the CameraX CPU preview sample. Longer thermal and CPU-load runs are still needed before treating this as a sustained-performance result.
 
-For now, CPU analysis still supplies the ROI and bandpassed signal uniforms. Encoder-surface rendering and true GPU temporal-filter updates are still pending.
+For now, CPU analysis still supplies the ROI and bandpassed signal uniforms.
+Encoder-surface rendering, explicit `eglPresentationTimeANDROID` assignment,
+and true GPU temporal-filter updates are still pending.
 
 ## Verification
 

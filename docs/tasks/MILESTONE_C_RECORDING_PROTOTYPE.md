@@ -40,6 +40,23 @@ The current debug MP4 encoder uses `Surface.lockCanvas`, which does not expose e
 - `.\gradlew.bat testDebugUnitTest --tests "com.dnrohr.eulerianmagnification.recording.MonotonicFrameTimelineTest" --tests "com.dnrohr.eulerianmagnification.recording.ProcessedRecordingSessionTest"`
 - `.\gradlew.bat clean testDebugUnitTest assembleDebug`
 
+## Supporting Slice: Processed GL Frame Export Hook
+
+- Added a GL callback model that exposes the processed texture and presentation
+  timestamp after the color pass.
+- Documented the intended next encoder step: draw that texture into
+  `MediaCodec`'s input surface from EGL and assign the timestamp with
+  `eglPresentationTimeANDROID`.
+
+This is the renderer-side handoff only. The debug MP4 path still uses
+`Surface.lockCanvas`, so explicit encoded PTS assignment remains open.
+
+## Verification
+
+- `.\gradlew.bat testDebugUnitTest --tests "com.dnrohr.eulerianmagnification.gl.ColorMagnificationPassTest" --tests "com.dnrohr.eulerianmagnification.gl.ProcessedGlFrameTest"`
+- `.\gradlew.bat testDebugUnitTest`
+- `.\gradlew.bat assembleDebug`
+
 ## Completed Slice: Debug Processed MP4 Recorder
 
 - Added a `ProcessedVideoRecorder` interface and `DebugProcessedMp4Recorder` implementation.
