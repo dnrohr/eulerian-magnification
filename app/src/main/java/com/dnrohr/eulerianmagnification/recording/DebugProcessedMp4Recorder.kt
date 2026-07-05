@@ -173,6 +173,7 @@ class DebugProcessedMp4Recorder(
             canvas.drawText("Band: ${settings.lowCutHz}-${settings.highCutHz} Hz  Amp: ${settings.amplification}x", 32.0f, 152.0f, labelPaint)
             canvas.drawText("FPS: ${"%.1f".format(sample.analysisFps)}  Latency: ${"%.0f".format(sample.latencyMillis)} ms", 32.0f, 192.0f, labelPaint)
             canvas.drawText("Green: ${"%.1f".format(sample.averageGreen)}  Signal: ${"%+.3f".format(sample.bandpassedGreen)}", 32.0f, 232.0f, labelPaint)
+            canvas.drawText("Motion: dx ${"%+.4f".format(sample.translation.dx)} dy ${"%+.4f".format(sample.translation.dy)}", 32.0f, 272.0f, labelPaint)
         }
 
         private fun drawSignalBar(

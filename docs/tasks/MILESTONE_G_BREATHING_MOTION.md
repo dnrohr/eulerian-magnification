@@ -8,9 +8,23 @@ Goal: add a low-frequency motion mode for torso/chest breathing visualization.
 - [x] Add breathing preset around 0.1-0.6 Hz.
 - [x] Add low-frequency temporal motion filter.
 - [x] Add amplified motion, heatmap, or waveform display.
-- [ ] Record output video and metadata.
+- [x] Record output video and metadata.
 - [ ] Add device verification notes.
 - [ ] Commit and push to `main`.
+
+## Completed Slice: Breathing Recording Metadata
+
+- Existing recording controls and debug MP4 output now cover Breathing mode, including mode, band, amplification, and manual ROI.
+- Recording metadata now includes per-sample translation dx/dy so breathing-motion captures preserve the motion signal source.
+- Debug processed MP4 labels now include translation dx/dy.
+- Added unit coverage for translation metadata serialization.
+
+This satisfies breathing-mode debug recording and metadata. The final preview-matching encoded output remains tracked in Milestone C/E.
+
+## Verification
+
+- `.\gradlew.bat testDebugUnitTest --tests "com.dnrohr.eulerianmagnification.recording.ProcessedRecordingSessionTest"`
+- `.\gradlew.bat clean testDebugUnitTest assembleDebug`
 
 ## Completed Slice: Manual Rectangular ROI Selector
 

@@ -4,6 +4,7 @@ import com.dnrohr.eulerianmagnification.analysis.AnalysisSample
 import com.dnrohr.eulerianmagnification.analysis.AnalysisSettings
 import com.dnrohr.eulerianmagnification.analysis.MagnificationMode
 import com.dnrohr.eulerianmagnification.analysis.NormalizedRect
+import com.dnrohr.eulerianmagnification.analysis.TranslationEstimate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -23,6 +24,7 @@ class ProcessedRecordingSessionTest {
                 averageGreen = 120.0,
                 bandpassedGreen = 0.25,
                 latencyMillis = 12.0,
+                translation = TranslationEstimate(dx = 0.01f, dy = -0.02f),
                 frameTimestampNanos = 100L,
             ),
         )
@@ -37,6 +39,7 @@ class ProcessedRecordingSessionTest {
         assertTrue(json.contains("\"thermalStatus\": \"none\""))
         assertTrue(json.contains("\"sampleCount\": 1"))
         assertTrue(json.contains("\"bandpassedGreen\": 0.250000"))
+        assertTrue(json.contains("\"translation\": {\"dx\": 0.010000, \"dy\": -0.020000}"))
     }
 
     @Test

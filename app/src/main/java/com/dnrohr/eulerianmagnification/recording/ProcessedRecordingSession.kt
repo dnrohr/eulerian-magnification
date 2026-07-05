@@ -95,6 +95,8 @@ data class RecordingSample(
     val latencyMillis: Double,
     val averageGreen: Double,
     val bandpassedGreen: Double,
+    val translationDx: Float,
+    val translationDy: Float,
     val roiLeft: Float?,
     val roiTop: Float?,
     val roiRight: Float?,
@@ -108,6 +110,7 @@ data class RecordingSample(
             appendLine("$indent  \"latencyMillis\": ${latencyMillis.format()},")
             appendLine("$indent  \"averageGreen\": ${averageGreen.format()},")
             appendLine("$indent  \"bandpassedGreen\": ${bandpassedGreen.format()},")
+            appendLine("$indent  \"translation\": {\"dx\": ${translationDx.format()}, \"dy\": ${translationDy.format()}},")
             appendLine("$indent  \"roi\": ${roiJson()}")
             append("$indent}")
         }
@@ -133,6 +136,8 @@ data class RecordingSample(
                 latencyMillis = sample.latencyMillis,
                 averageGreen = sample.averageGreen,
                 bandpassedGreen = sample.bandpassedGreen,
+                translationDx = sample.translation.dx,
+                translationDy = sample.translation.dy,
                 roiLeft = sample.roi?.left,
                 roiTop = sample.roi?.top,
                 roiRight = sample.roi?.right,
