@@ -75,6 +75,8 @@ import com.dnrohr.eulerianmagnification.analysis.ManualRoiSelector
 import com.dnrohr.eulerianmagnification.analysis.MagnificationMode
 import com.dnrohr.eulerianmagnification.analysis.NormalizedRect
 import com.dnrohr.eulerianmagnification.analysis.PulseRoiAnalyzer
+import com.dnrohr.eulerianmagnification.analysis.PreviewRoiMapper
+import com.dnrohr.eulerianmagnification.analysis.PreviewSize
 import com.dnrohr.eulerianmagnification.analysis.RecordedVideoDecodeOptions
 import com.dnrohr.eulerianmagnification.analysis.RecordedVideoValidator
 import com.dnrohr.eulerianmagnification.analysis.ViewMode
@@ -545,15 +547,22 @@ private fun RoiOverlay(
 ) {
     val roi = sample.roi ?: return
     Canvas(modifier = modifier) {
+        val displayRoi = PreviewRoiMapper.mapAnalysisToPreview(
+            roi = roi,
+            frameSize = PreviewSize(sample.frameWidth, sample.frameHeight),
+            previewSize = PreviewSize(size.width.toInt(), size.height.toInt()),
+            rotationDegrees = sample.rotationDegrees,
+            mirrorHorizontally = true,
+        )
         drawRect(
             color = Color(0xFF00BFA5),
             topLeft = androidx.compose.ui.geometry.Offset(
-                x = roi.left * size.width,
-                y = roi.top * size.height,
+                x = displayRoi.left * size.width,
+                y = displayRoi.top * size.height,
             ),
             size = androidx.compose.ui.geometry.Size(
-                width = (roi.right - roi.left) * size.width,
-                height = (roi.bottom - roi.top) * size.height,
+                width = displayRoi.width * size.width,
+                height = displayRoi.height * size.height,
             ),
             style = Stroke(width = 3.dp.toPx()),
         )

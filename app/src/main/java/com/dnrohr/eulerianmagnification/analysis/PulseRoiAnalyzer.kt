@@ -64,6 +64,9 @@ class PulseRoiAnalyzer(
                 timestampMonotonic = timestampStatus.isMonotonic,
                 translation = translation,
                 frameTimestampNanos = timestamp,
+                frameWidth = imageProxy.width,
+                frameHeight = imageProxy.height,
+                rotationDegrees = imageProxy.imageInfo.rotationDegrees,
             ),
         )
 

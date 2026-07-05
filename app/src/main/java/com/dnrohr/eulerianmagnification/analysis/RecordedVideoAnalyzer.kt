@@ -38,6 +38,8 @@ class RecordedVideoAnalyzer(
             latencyMillis = 0.0,
             timestampMonotonic = timestampStatus.isMonotonic,
             frameTimestampNanos = frame.timestampNanos,
+            frameWidth = frame.width,
+            frameHeight = frame.height,
         )
     }
 

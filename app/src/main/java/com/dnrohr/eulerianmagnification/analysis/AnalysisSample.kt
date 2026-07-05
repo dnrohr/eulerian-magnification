@@ -9,6 +9,9 @@ data class AnalysisSample(
     val timestampMonotonic: Boolean = true,
     val translation: TranslationEstimate = TranslationEstimate(),
     val frameTimestampNanos: Long = 0L,
+    val frameWidth: Int = 0,
+    val frameHeight: Int = 0,
+    val rotationDegrees: Int = 0,
 )
 
 data class NormalizedRect(
