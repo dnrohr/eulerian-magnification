@@ -162,6 +162,7 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
     var controlsExpanded by remember { mutableStateOf(false) }
     var cleanPreview by remember { mutableStateOf(false) }
     var manualRoi by remember { mutableStateOf<NormalizedRect?>(null) }
+    var manualRoiEditing by remember { mutableStateOf(false) }
     var glFrameStats by remember { mutableStateOf(GlFrameStats()) }
     val qualityEvaluator = remember { QualityEvaluator() }
     val lightingFlickerDetector = remember { LightingFlickerDetector() }
@@ -304,7 +305,11 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
             ManualRoiOverlay(
                 roi = manualRoi,
                 sample = analysisSample,
-                onRoiChanged = { manualRoi = it },
+                editing = manualRoiEditing,
+                onRoiChanged = {
+                    manualRoi = it
+                    manualRoiEditing = ManualRoiEditState.afterManualRoiChanged(manualRoiEditing)
+                },
                 modifier = Modifier.fillMaxSize(),
             )
         } else {
@@ -327,7 +332,12 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
             cameraControlsLocked = cameraControlsLocked,
             onCameraControlsLockedChanged = { cameraControlsLocked = it },
             manualRoi = manualRoi,
-            onClearManualRoi = { manualRoi = null },
+            manualRoiEditing = manualRoiEditing,
+            onManualRoiEditingChanged = { manualRoiEditing = it },
+            onClearManualRoi = {
+                manualRoi = null
+                manualRoiEditing = ManualRoiEditState.afterClearRoi()
+            },
             showGlDebug = showGlDebug,
             onShowGlDebugChanged = { showGlDebug = it },
             usingGlPreview = usingGlPreview,
@@ -642,12 +652,13 @@ private fun RoiOverlay(
 private fun ManualRoiOverlay(
     roi: NormalizedRect?,
     sample: AnalysisSample,
+    editing: Boolean,
     onRoiChanged: (NormalizedRect?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var dragStart by remember { mutableStateOf<Offset?>(null) }
-    Canvas(
-        modifier = modifier.pointerInput(sample.frameWidth, sample.frameHeight, sample.rotationDegrees) {
+    val inputModifier = if (editing) {
+        modifier.pointerInput(sample.frameWidth, sample.frameHeight, sample.rotationDegrees) {
             detectDragGestures(
                 onDragStart = { start ->
                     dragStart = start
@@ -681,7 +692,12 @@ private fun ManualRoiOverlay(
                     dragStart = null
                 },
             )
-        },
+        }
+    } else {
+        modifier
+    }
+    Canvas(
+        modifier = inputModifier,
     ) {
         val selected = roi ?: return@Canvas
         val displayRoi = PreviewRoiMapper.mapAnalysisToPreview(
@@ -703,6 +719,25 @@ private fun ManualRoiOverlay(
             ),
             style = Stroke(width = 3.dp.toPx()),
         )
+        if (editing) {
+            val handleRadius = 6.dp.toPx()
+            val left = displayRoi.left * size.width
+            val top = displayRoi.top * size.height
+            val right = displayRoi.right * size.width
+            val bottom = displayRoi.bottom * size.height
+            listOf(
+                Offset(left, top),
+                Offset(right, top),
+                Offset(left, bottom),
+                Offset(right, bottom),
+            ).forEach { handle ->
+                drawCircle(
+                    color = Color(0xFFFFC857),
+                    radius = handleRadius,
+                    center = handle,
+                )
+            }
+        }
     }
 }
 
@@ -862,6 +897,8 @@ private fun StatusOverlay(
     cameraControlsLocked: Boolean,
     onCameraControlsLockedChanged: (Boolean) -> Unit,
     manualRoi: NormalizedRect?,
+    manualRoiEditing: Boolean,
+    onManualRoiEditingChanged: (Boolean) -> Unit,
     onClearManualRoi: () -> Unit,
     showGlDebug: Boolean,
     onShowGlDebugChanged: (Boolean) -> Unit,
@@ -992,6 +1029,8 @@ private fun StatusOverlay(
             cameraControlsLocked = cameraControlsLocked,
             onCameraControlsLockedChanged = onCameraControlsLockedChanged,
             manualRoi = manualRoi,
+            manualRoiEditing = manualRoiEditing,
+            onManualRoiEditingChanged = onManualRoiEditingChanged,
             onClearManualRoi = onClearManualRoi,
             showGlDebug = showGlDebug,
             onShowGlDebugChanged = onShowGlDebugChanged,
@@ -1524,6 +1563,8 @@ private fun ModeControls(
     cameraControlsLocked: Boolean,
     onCameraControlsLockedChanged: (Boolean) -> Unit,
     manualRoi: NormalizedRect?,
+    manualRoiEditing: Boolean,
+    onManualRoiEditingChanged: (Boolean) -> Unit,
     onClearManualRoi: () -> Unit,
     showGlDebug: Boolean,
     onShowGlDebugChanged: (Boolean) -> Unit,
@@ -1574,6 +1615,21 @@ private fun ModeControls(
     Spacer(modifier = Modifier.height(8.dp))
     Button(onClick = { onCameraControlsLockedChanged(!cameraControlsLocked) }) {
         Text(if (cameraControlsLocked) "Unlock AE/AWB" else "Lock AE/AWB")
+    }
+    Spacer(modifier = Modifier.height(8.dp))
+    Button(onClick = {
+        onManualRoiEditingChanged(
+            if (manualRoiEditing) ManualRoiEditState.afterDoneEditing() else true
+        )
+    }) {
+        Text(if (manualRoiEditing) "Done ROI" else "Edit ROI")
+    }
+    if (manualRoiEditing) {
+        Text(
+            text = "Drag on the preview to place one manual ROI.",
+            color = Color(0xFFC8D3DC),
+            style = MaterialTheme.typography.bodySmall,
+        )
     }
     if (manualRoi != null) {
         Spacer(modifier = Modifier.height(8.dp))

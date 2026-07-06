@@ -120,6 +120,9 @@ The default screen is intentionally compact so the preview remains visible.
 - `Lock AE/AWB`: locks auto-exposure and auto-white-balance after the camera has
   settled. This helps reduce brightness/color pumping.
 - `Unlock AE/AWB`: returns exposure and white balance to camera auto mode.
+- `Edit ROI`: enables manual ROI placement by dragging on the preview. Normal
+  viewing ignores preview drags so accidental touches do not move the ROI.
+- `Done ROI`: exits ROI edit mode and hides corner handles.
 - `Clear ROI`: removes the manual ROI and returns to automatic/center ROI.
 - `Use GL Preview`: switches to the OpenGL preview path when available.
 - `Use CameraX Preview`: returns to the standard CameraX preview.

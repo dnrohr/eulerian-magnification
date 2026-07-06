@@ -26,6 +26,7 @@ Date: 2026-07-05
 - Difference view now uses signed warm/blue colors and keeps dim context in recorded exports.
 - Selected-video exports now include `evidence_report.html` with an inline signal plot and shareable recent-export `Report` action.
 - Added demo presets that apply mode, view, and amplification together before showing the matching setup guide.
+- Added explicit ROI edit mode so normal preview drags do not accidentally move the manual ROI; corner handles appear only while editing.
 
 ## Euler Sample Output
 
