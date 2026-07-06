@@ -105,6 +105,8 @@ The default screen is intentionally compact so the preview remains visible.
 - `Diff`: shows the magnitude of the added signal, which is useful for spotting
   noise and flicker.
 - `Split`: shows raw and processed views side by side in the GL preview path.
+  Selecting `Split` automatically uses GL preview when available so the live
+  comparison is raw on the left and processed on the right.
 - `Amplification`: scales the measured signal. Higher values are easier to see
   but amplify noise and camera motion.
 - `Band`: displays the active frequency range in Hz.

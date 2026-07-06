@@ -168,6 +168,11 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
     val breathingMotionFilter = remember(analysisSettings.mode, analysisSettings.amplification) {
         BreathingMotionFilter(amplification = analysisSettings.amplification)
     }
+    val usingGlPreview = PreviewPathPolicy.useGlPreview(
+        settings = analysisSettings,
+        requestedGlPreview = showGlDebug,
+        glPreviewAvailable = featureAvailability.glPreviewAvailable,
+    )
     var lightingFlickerLikely by remember { mutableStateOf(false) }
     var breathingMotionSample by remember { mutableStateOf(BreathingMotionSample()) }
     val signalHistory = remember { mutableStateListOf<Double>() }
@@ -262,7 +267,7 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
 
     Box(modifier = Modifier.fillMaxSize()) {
         if (hasCameraPermission && featureAvailability.liveCameraAvailable) {
-            if (showGlDebug) {
+            if (usingGlPreview) {
                 key(analysisSettings, manualRoi, cameraControlsLocked) {
                     CameraGlPreview(
                         settings = analysisSettings,
@@ -324,6 +329,7 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
             onClearManualRoi = { manualRoi = null },
             showGlDebug = showGlDebug,
             onShowGlDebugChanged = { showGlDebug = it },
+            usingGlPreview = usingGlPreview,
             featureAvailability = featureAvailability,
             glFrameStats = glFrameStats,
             isRecording = recordingSession != null,
@@ -358,7 +364,7 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
                         recordingSession = ProcessedRecordingSession(
                             rootDirectory = recordingRootDirectory,
                             videoRecorderFactory = { outputFile ->
-                                if (showGlDebug) {
+                                if (usingGlPreview) {
                                     GlProcessedMp4Recorder(outputFile)
                                 } else {
                                     DebugProcessedMp4Recorder(outputFile)
@@ -851,6 +857,7 @@ private fun StatusOverlay(
     onClearManualRoi: () -> Unit,
     showGlDebug: Boolean,
     onShowGlDebugChanged: (Boolean) -> Unit,
+    usingGlPreview: Boolean,
     featureAvailability: FeatureAvailability,
     glFrameStats: GlFrameStats,
     isRecording: Boolean,
@@ -972,6 +979,7 @@ private fun StatusOverlay(
             onClearManualRoi = onClearManualRoi,
             showGlDebug = showGlDebug,
             onShowGlDebugChanged = onShowGlDebugChanged,
+            usingGlPreview = usingGlPreview,
             glPreviewAvailable = featureAvailability.glPreviewAvailable,
         )
         Spacer(modifier = Modifier.height(8.dp))
@@ -1438,6 +1446,7 @@ private fun ModeControls(
     onClearManualRoi: () -> Unit,
     showGlDebug: Boolean,
     onShowGlDebugChanged: (Boolean) -> Unit,
+    usingGlPreview: Boolean,
     glPreviewAvailable: Boolean,
 ) {
     Row(
@@ -1493,8 +1502,18 @@ private fun ModeControls(
     }
     if (glPreviewAvailable) {
         Spacer(modifier = Modifier.height(8.dp))
-        Button(onClick = { onShowGlDebugChanged(!showGlDebug) }) {
-            Text(if (showGlDebug) "Use CameraX Preview" else "Use GL Preview")
+        Button(
+            onClick = { onShowGlDebugChanged(!showGlDebug) },
+            enabled = settings.viewMode != ViewMode.Split,
+        ) {
+            Text(if (usingGlPreview) "Use CameraX Preview" else "Use GL Preview")
+        }
+        if (settings.viewMode == ViewMode.Split) {
+            Text(
+                text = "Split uses GL preview for live raw-vs-processed comparison.",
+                color = Color(0xFFC8D3DC),
+                style = MaterialTheme.typography.bodySmall,
+            )
         }
     }
 }

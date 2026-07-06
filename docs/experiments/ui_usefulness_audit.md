@@ -21,6 +21,7 @@ Date: 2026-07-05
 - Added compact ROI-state labels: `Manual ROI`, `Tracking`, `Frozen ROI`, and `Center ROI`.
 - Added `signal_timeline.csv` and richer metadata to app-native selected-video exports.
 - Added mode-specific setup recipes in expanded controls for Pulse, Breathing, and Fast Motion.
+- Selecting `Split` now automatically uses GL preview for live raw-left/processed-right comparison; verified on Pixel device `47091JEKB05516` in portrait with a non-sensitive room target.
 
 ## Euler Sample Output
 
