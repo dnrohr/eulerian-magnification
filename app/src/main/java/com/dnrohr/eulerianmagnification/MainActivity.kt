@@ -79,6 +79,7 @@ import com.dnrohr.eulerianmagnification.analysis.PreviewRoiMapper
 import com.dnrohr.eulerianmagnification.analysis.PreviewSize
 import com.dnrohr.eulerianmagnification.analysis.RecordedVideoAnalysisRunner
 import com.dnrohr.eulerianmagnification.analysis.RecordedVideoDecodeOptions
+import com.dnrohr.eulerianmagnification.analysis.RecordedVideoEvidenceTimeline
 import com.dnrohr.eulerianmagnification.analysis.RecordedVideoFrameDecoder
 import com.dnrohr.eulerianmagnification.analysis.RecordedVideoProcessor
 import com.dnrohr.eulerianmagnification.analysis.RecordedVideoValidationResult
@@ -1274,6 +1275,10 @@ private fun processRecordedVideoExport(
     if (processing.hasFrames) {
         RecordedVideoMp4Exporter().export(processing.processedFrames, outputVideo)
     }
+    val timelineFile = File(sessionDirectory, "signal_timeline.csv")
+    if (processing.hasFrames) {
+        timelineFile.writeText(RecordedVideoEvidenceTimeline.toCsv(processing.processedFrames))
+    }
     val metadataFile = File(sessionDirectory, "metadata.json")
     metadataFile.writeText(
         recordedVideoExportMetadata(
@@ -1287,6 +1292,8 @@ private fun processRecordedVideoExport(
             maxBandpassedMagnitude = report.maxBandpassedMagnitude,
             timestampsMonotonic = report.timestampsMonotonic,
             debugVideoPath = outputVideo.takeIf { it.exists() }?.absolutePath,
+            timelinePath = timelineFile.takeIf { it.exists() }?.absolutePath,
+            processedFrameCount = processing.processedFrames.size,
         )
     )
     val exportText = if (outputVideo.exists()) {
@@ -1318,7 +1325,14 @@ private fun recordedVideoExportMetadata(
     maxBandpassedMagnitude: Double,
     timestampsMonotonic: Boolean,
     debugVideoPath: String?,
+    timelinePath: String?,
+    processedFrameCount: Int,
 ): String {
+    val qualitySummary = recordedVideoQualitySummary(
+        frameCount = frameCount,
+        bandpassedEnergy = bandpassedEnergy,
+        timestampsMonotonic = timestampsMonotonic,
+    )
     return buildString {
         appendLine("{")
         appendLine("  \"sourceName\": ${sourceName.quoteJson()},")
@@ -1330,13 +1344,29 @@ private fun recordedVideoExportMetadata(
         appendLine("  \"lowCutHz\": ${settings.lowCutHz},")
         appendLine("  \"highCutHz\": ${settings.highCutHz},")
         appendLine("  \"debugVideoPath\": ${debugVideoPath?.quoteJson() ?: "null"},")
+        appendLine("  \"timelinePath\": ${timelinePath?.quoteJson() ?: "null"},")
         appendLine("  \"sampleCount\": $frameCount,")
         appendLine("  \"frameCount\": $frameCount,")
+        appendLine("  \"processedFrameCount\": $processedFrameCount,")
         appendLine("  \"averageFps\": ${averageFps.formatJsonNumber()},")
         appendLine("  \"bandpassedEnergy\": ${bandpassedEnergy.formatJsonNumber()},")
         appendLine("  \"maxBandpassedMagnitude\": ${maxBandpassedMagnitude.formatJsonNumber()},")
-        appendLine("  \"timestampsMonotonic\": $timestampsMonotonic")
+        appendLine("  \"timestampsMonotonic\": $timestampsMonotonic,")
+        appendLine("  \"qualitySummary\": ${qualitySummary.quoteJson()}")
         appendLine("}")
+    }
+}
+
+private fun recordedVideoQualitySummary(
+    frameCount: Int,
+    bandpassedEnergy: Double,
+    timestampsMonotonic: Boolean,
+): String {
+    return when {
+        frameCount == 0 -> "no frames"
+        !timestampsMonotonic -> "timing issue"
+        bandpassedEnergy <= 0.0 -> "weak signal"
+        else -> "signal present"
     }
 }
 

@@ -19,6 +19,7 @@ Date: 2026-07-05
 - Added compact Raw/Amp/Diff/Split controls so view validation does not require opening the full diagnostics panel.
 - Changed live auto ROI to freeze the last good detection across missed detection passes instead of extrapolating movement.
 - Added compact ROI-state labels: `Manual ROI`, `Tracking`, `Frozen ROI`, and `Center ROI`.
+- Added `signal_timeline.csv` and richer metadata to app-native selected-video exports.
 
 ## Euler Sample Output
 
@@ -30,5 +31,4 @@ Date: 2026-07-05
 
 - Fix analysis-to-preview ROI coordinate mapping for portrait/front-camera mode. The compact UI makes this problem much easier to see.
 - Add guided setup for ideal pulse, breathing, and fast-motion demos.
-- Add richer evidence exports such as side-by-side videos and signal/quality timelines.
 - Consider a dedicated ROI mode where tapping/dragging temporarily reveals selection handles, then returns to uncluttered viewing.
