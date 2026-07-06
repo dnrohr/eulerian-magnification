@@ -550,15 +550,22 @@ private fun AmplifiedTintOverlay(
     }
 
     Canvas(modifier = modifier) {
+        val displayRoi = PreviewRoiMapper.mapAnalysisToPreview(
+            roi = roi,
+            frameSize = PreviewSize(sample.frameWidth, sample.frameHeight),
+            previewSize = PreviewSize(size.width.toInt(), size.height.toInt()),
+            rotationDegrees = sample.rotationDegrees,
+            mirrorHorizontally = true,
+        )
         drawRect(
             color = tint,
             topLeft = androidx.compose.ui.geometry.Offset(
-                x = roi.left * size.width,
-                y = roi.top * size.height,
+                x = displayRoi.left * size.width,
+                y = displayRoi.top * size.height,
             ),
             size = androidx.compose.ui.geometry.Size(
-                width = roi.width * size.width,
-                height = roi.height * size.height,
+                width = displayRoi.width * size.width,
+                height = displayRoi.height * size.height,
             ),
         )
     }

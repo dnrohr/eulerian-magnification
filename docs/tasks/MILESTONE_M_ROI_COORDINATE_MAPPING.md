@@ -20,7 +20,7 @@ Goal: fix the trust-breaking mismatch where automatic ROI can be drawn away from
 
 ## Remaining Work
 
-- Verify the front-camera mirror assumption on the Pixel 8a with screenshots.
+- Verify the front-camera mirror assumption on the Pixel 8a with a face or known target in frame.
 - Decide whether GL preview and CameraX preview need separate mapping flags.
 
 ## Completed Slice: Manual ROI Reverse Mapping
@@ -30,6 +30,14 @@ Goal: fix the trust-breaking mismatch where automatic ROI can be drawn away from
 - Manual ROI drawing maps the stored analysis ROI back through the same preview transform used by automatic ROI drawing.
 - Added round-trip tests for preview-to-analysis mapping with rotation, mirroring, and aspect-fill crop.
 - Installed and launched the updated debug APK on the connected Pixel as a smoke test; visual face/target alignment verification remains open.
+
+## Completed Slice: Tint Overlay Mapping
+
+- Captured a non-committed Pixel screenshot for verification.
+- The screenshot did not include a face or known target, so it could not prove face alignment.
+- It did reveal that the amplified tint rectangle was still using unmapped analysis ROI coordinates while the outline used mapped preview coordinates.
+- Updated `AmplifiedTintOverlay` to draw the tint through the same `PreviewRoiMapper.mapAnalysisToPreview` transform as the ROI outline.
+- Reinstalled the updated APK and captured a second non-committed Pixel screenshot; the tint and outline now overlap in portrait preview.
 
 ## Coordinate Assumptions
 
