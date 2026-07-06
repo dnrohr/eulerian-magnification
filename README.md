@@ -93,6 +93,9 @@ The default screen is intentionally compact so the preview remains visible.
 - `Hide`: closes the full panel and returns to the compact preview.
 - `Clean`: hides the compact mode, ROI, quality, FPS, and view controls so the
   image is easier to inspect. A small `Controls` button remains available.
+- `Pulse setup`, `Breathing setup`, `Fast motion setup`: expanded-controls
+  recipes that name the best target, stabilization steps, and realistic expected
+  output for the active mode.
 - `Color amp`, `Breath sig`, `Motion exp`: compact output labels
   that state what kind of processing is active.
 - `Pulse`, `Breath`, `Motion`: select the temporal band and analysis

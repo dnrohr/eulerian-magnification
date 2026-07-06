@@ -960,6 +960,8 @@ private fun StatusOverlay(
         Spacer(modifier = Modifier.height(4.dp))
         QualityStatusRow(qualityStatuses)
         Spacer(modifier = Modifier.height(8.dp))
+        SetupGuidePanel(settings.mode)
+        Spacer(modifier = Modifier.height(8.dp))
         ModeControls(
             settings = settings,
             onSettingsChanged = onSettingsChanged,
@@ -1133,6 +1135,35 @@ private fun roiStateColor(state: RoiState): Color {
         RoiState.Tracking -> Color(0xFF00BFA5)
         RoiState.Frozen -> Color(0xFFFFC857)
         RoiState.Center -> Color(0xFFC8D3DC)
+    }
+}
+
+@Composable
+private fun SetupGuidePanel(mode: MagnificationMode) {
+    val guide = SetupGuide.forMode(mode)
+    Column {
+        Text(
+            text = guide.title,
+            color = Color.White,
+            style = MaterialTheme.typography.labelLarge,
+        )
+        Text(
+            text = guide.target,
+            color = Color(0xFFC8D3DC),
+            style = MaterialTheme.typography.bodySmall,
+        )
+        guide.stabilize.forEachIndexed { index, step ->
+            Text(
+                text = "${index + 1}. $step",
+                color = Color(0xFFC8D3DC),
+                style = MaterialTheme.typography.bodySmall,
+            )
+        }
+        Text(
+            text = guide.expected,
+            color = Color(0xFFC8D3DC),
+            style = MaterialTheme.typography.bodySmall,
+        )
     }
 }
 
