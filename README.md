@@ -93,6 +93,8 @@ The default screen is intentionally compact so the preview remains visible.
 - `Hide`: closes the full panel and returns to the compact preview.
 - `Clean`: hides the compact mode, ROI, quality, FPS, and view controls so the
   image is easier to inspect. A small `Controls` button remains available.
+- Compact sparkline: shows the active signal history under the view buttons when
+  enough samples are available. It is hidden in Clean preview.
 - `Pulse setup`, `Breathing setup`, `Fast motion setup`: expanded-controls
   recipes that name the best target, stabilization steps, and realistic expected
   output for the active mode.

@@ -894,6 +894,8 @@ private fun StatusOverlay(
             sample = sample,
             settings = settings,
             onSettingsChanged = onSettingsChanged,
+            signalHistory = signalHistory,
+            breathingMotionHistory = breathingMotionHistory,
             qualityStatuses = qualityStatuses,
             isRecording = isRecording,
             recordingElapsedMillis = recordingElapsedMillis,
@@ -1026,6 +1028,8 @@ private fun CompactStatusOverlay(
     sample: AnalysisSample,
     settings: AnalysisSettings,
     onSettingsChanged: (AnalysisSettings) -> Unit,
+    signalHistory: List<Double>,
+    breathingMotionHistory: List<Double>,
     qualityStatuses: List<QualityStatus>,
     isRecording: Boolean,
     recordingElapsedMillis: Long,
@@ -1087,6 +1091,20 @@ private fun CompactStatusOverlay(
                     modifier = Modifier.weight(1.0f),
                 )
             }
+        }
+        val compactHistory = SignalDisplayPolicy.compactSignalHistory(
+            mode = settings.mode,
+            pulseHistory = signalHistory,
+            breathingHistory = breathingMotionHistory,
+        )
+        if (compactHistory.size >= 2) {
+            Spacer(modifier = Modifier.height(6.dp))
+            SignalWaveform(
+                values = compactHistory,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(24.dp),
+            )
         }
     }
 }
