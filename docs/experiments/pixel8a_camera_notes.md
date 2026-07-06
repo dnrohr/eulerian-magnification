@@ -1,5 +1,14 @@
 # Pixel 8a Camera Notes
 
+## ROI Validation Probe
+
+- Date: 2026-07-05
+- Device: `47091JEKB05516`
+- Latest debug APK installed and launched.
+- Unattended front-camera screenshot did not include a visible face target.
+- App showed `Center ROI`, which is expected fallback behavior and does not complete automatic face ROI validation.
+- Follow `docs/testing/ROI_DEVICE_VALIDATION.md` for the manual known-target and automatic face-target checks.
+
 Status: device run captured on 2026-07-05.
 
 ## How To Capture

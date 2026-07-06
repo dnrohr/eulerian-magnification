@@ -180,6 +180,7 @@ configuration when device testing is needed.
 Use recorded or synthetic inputs before relying on live phone behavior:
 
 - Recorded-video validation flow: `docs/testing/RECORDED_VIDEO_VALIDATION.md`
+- ROI device validation flow: `docs/testing/ROI_DEVICE_VALIDATION.md`
 - Public sample plan: `docs/testing/SAMPLE_VIDEO_SOURCES.md`
 - Riesz / phase-mode reference: `docs/architecture/RIESZ_MODE.md`
 
