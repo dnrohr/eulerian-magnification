@@ -125,7 +125,8 @@ The default screen is intentionally compact so the preview remains visible.
 - `Process Video`: selects a recorded/sample video and runs the offline
   processing/export path. Use this for `sample-videos/euler.mp4` after copying
   it to the phone or another picker-visible location. The export writes a
-  processed MP4, metadata JSON, and `signal_timeline.csv`.
+  processed MP4, metadata JSON, `signal_timeline.csv`, and
+  `evidence_report.html`.
 - `Share Metadata`: shares the JSON metadata for the latest recording.
 - `Metadata` / `Video`: shares recent recording/export metadata or processed
   MP4 output.

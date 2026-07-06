@@ -79,6 +79,7 @@ import com.dnrohr.eulerianmagnification.analysis.PreviewRoiMapper
 import com.dnrohr.eulerianmagnification.analysis.PreviewSize
 import com.dnrohr.eulerianmagnification.analysis.RecordedVideoAnalysisRunner
 import com.dnrohr.eulerianmagnification.analysis.RecordedVideoDecodeOptions
+import com.dnrohr.eulerianmagnification.analysis.RecordedVideoEvidenceReport
 import com.dnrohr.eulerianmagnification.analysis.RecordedVideoEvidenceTimeline
 import com.dnrohr.eulerianmagnification.analysis.RecordedVideoFrameDecoder
 import com.dnrohr.eulerianmagnification.analysis.RecordedVideoProcessor
@@ -392,6 +393,9 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
             onShareRecordingVideo = { path ->
                 shareRecordingVideo(context, File(path))
             },
+            onShareRecordingReport = { path ->
+                shareRecordingReport(context, File(path))
+            },
             onValidateVideo = {
                 videoPickerLauncher.launch("video/*")
             },
@@ -530,6 +534,10 @@ private fun shareRecordingMetadata(context: Context, metadataFile: File) {
 
 private fun shareRecordingVideo(context: Context, videoFile: File) {
     shareFile(context, videoFile, mimeType = "video/mp4", title = "Share processed video")
+}
+
+private fun shareRecordingReport(context: Context, reportFile: File) {
+    shareFile(context, reportFile, mimeType = "text/html", title = "Share evidence report")
 }
 
 private fun shareFile(
@@ -876,6 +884,7 @@ private fun StatusOverlay(
     onShareRecording: () -> Unit,
     onShareRecordingPath: (String) -> Unit,
     onShareRecordingVideo: (String) -> Unit,
+    onShareRecordingReport: (String) -> Unit,
     onValidateVideo: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -994,6 +1003,7 @@ private fun StatusOverlay(
             onShareRecording = onShareRecording,
             onShareRecordingPath = onShareRecordingPath,
             onShareRecordingVideo = onShareRecordingVideo,
+            onShareRecordingReport = onShareRecordingReport,
             recordingAvailable = featureAvailability.processedRecordingAvailable,
             validationAvailable = featureAvailability.recordedVideoValidationAvailable,
             validationSummary = validationSummary,
@@ -1203,6 +1213,7 @@ private fun RecordingControls(
     onShareRecording: () -> Unit,
     onShareRecordingPath: (String) -> Unit,
     onShareRecordingVideo: (String) -> Unit,
+    onShareRecordingReport: (String) -> Unit,
     recordingAvailable: Boolean,
     validationAvailable: Boolean,
     validationSummary: String?,
@@ -1283,6 +1294,11 @@ private fun RecordingControls(
                         Text("Video")
                     }
                 }
+                item.evidenceReportPath?.let { reportPath ->
+                    Button(onClick = { onShareRecordingReport(reportPath) }) {
+                        Text("Report")
+                    }
+                }
             }
         }
     }
@@ -1336,6 +1352,22 @@ private fun processRecordedVideoExport(
     if (processing.hasFrames) {
         timelineFile.writeText(RecordedVideoEvidenceTimeline.toCsv(processing.processedFrames))
     }
+    val qualitySummary = recordedVideoQualitySummary(
+        frameCount = report.frameCount,
+        bandpassedEnergy = report.bandpassedEnergy,
+        timestampsMonotonic = report.timestampsMonotonic,
+    )
+    val evidenceReportFile = File(sessionDirectory, "evidence_report.html")
+    if (processing.hasFrames) {
+        evidenceReportFile.writeText(
+            RecordedVideoEvidenceReport.toHtml(
+                sourceName = sourceName,
+                settings = settings,
+                frames = processing.processedFrames,
+                qualitySummary = qualitySummary,
+            )
+        )
+    }
     val metadataFile = File(sessionDirectory, "metadata.json")
     metadataFile.writeText(
         recordedVideoExportMetadata(
@@ -1350,7 +1382,9 @@ private fun processRecordedVideoExport(
             timestampsMonotonic = report.timestampsMonotonic,
             debugVideoPath = outputVideo.takeIf { it.exists() }?.absolutePath,
             timelinePath = timelineFile.takeIf { it.exists() }?.absolutePath,
+            evidenceReportPath = evidenceReportFile.takeIf { it.exists() }?.absolutePath,
             processedFrameCount = processing.processedFrames.size,
+            qualitySummary = qualitySummary,
         )
     )
     val exportText = if (outputVideo.exists()) {
@@ -1383,13 +1417,10 @@ private fun recordedVideoExportMetadata(
     timestampsMonotonic: Boolean,
     debugVideoPath: String?,
     timelinePath: String?,
+    evidenceReportPath: String?,
     processedFrameCount: Int,
+    qualitySummary: String,
 ): String {
-    val qualitySummary = recordedVideoQualitySummary(
-        frameCount = frameCount,
-        bandpassedEnergy = bandpassedEnergy,
-        timestampsMonotonic = timestampsMonotonic,
-    )
     return buildString {
         appendLine("{")
         appendLine("  \"sourceName\": ${sourceName.quoteJson()},")
@@ -1402,6 +1433,7 @@ private fun recordedVideoExportMetadata(
         appendLine("  \"highCutHz\": ${settings.highCutHz},")
         appendLine("  \"debugVideoPath\": ${debugVideoPath?.quoteJson() ?: "null"},")
         appendLine("  \"timelinePath\": ${timelinePath?.quoteJson() ?: "null"},")
+        appendLine("  \"evidenceReportPath\": ${evidenceReportPath?.quoteJson() ?: "null"},")
         appendLine("  \"sampleCount\": $frameCount,")
         appendLine("  \"frameCount\": $frameCount,")
         appendLine("  \"processedFrameCount\": $processedFrameCount,")

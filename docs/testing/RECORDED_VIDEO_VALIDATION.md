@@ -1,5 +1,12 @@
 # Recorded Video Validation
 
+Processed video exports now write these artifacts in the app recordings folder:
+
+- `debug_processed.mp4`: processed video output for the selected view.
+- `metadata.json`: settings, frame counts, quality summary, and artifact paths.
+- `signal_timeline.csv`: frame-by-frame timing/FPS/green/bandpassed signal data.
+- `evidence_report.html`: quick visual report with metadata and an inline signal plot.
+
 Recorded-video validation comes before phone testing. It gives the signal path repeatable inputs before CameraX, device exposure, thermal behavior, and GLES lifecycle issues enter the loop.
 
 ## Current Test Fixture

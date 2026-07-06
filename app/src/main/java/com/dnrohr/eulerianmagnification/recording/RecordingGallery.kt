@@ -13,6 +13,7 @@ data class RecordingGalleryItem(
     val viewMode: String,
     val sampleCount: Int,
     val debugVideoPath: String?,
+    val evidenceReportPath: String?,
 ) {
     val summary: String
         get() {
@@ -52,6 +53,7 @@ object RecordingGallery {
                 viewMode = json.optString("viewMode", "Unknown"),
                 sampleCount = json.optInt("sampleCount", 0),
                 debugVideoPath = json.optString("debugVideoPath").takeUnless { it.isBlank() || it == "null" },
+                evidenceReportPath = json.optString("evidenceReportPath").takeUnless { it.isBlank() || it == "null" },
             )
         }.getOrNull()
     }

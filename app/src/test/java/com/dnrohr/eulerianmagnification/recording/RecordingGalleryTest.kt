@@ -20,6 +20,7 @@ class RecordingGalleryTest {
         assertEquals("Breathing", recordings[0].mode)
         assertEquals(7, recordings[0].sampleCount)
         assertTrue(recordings[0].summary.contains("Breathing"))
+        assertEquals("report.html", recordings[0].evidenceReportPath)
     }
 
     @Test
@@ -64,6 +65,7 @@ class RecordingGalleryTest {
               "mode": "$mode",
               "viewMode": "Amplified",
               "debugVideoPath": null,
+              "evidenceReportPath": "report.html",
               "sampleCount": $sampleCount
             }
             """.trimIndent(),
