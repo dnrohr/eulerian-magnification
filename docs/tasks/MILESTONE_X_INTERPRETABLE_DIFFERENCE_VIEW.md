@@ -6,12 +6,19 @@ Goal: make Difference view easier to interpret for live and recorded validation.
 
 ## Tasks
 
-- [ ] Audit current Difference output for pulse, breathing, and fast-motion clips.
-- [ ] Choose a clear visual encoding for positive/negative or magnitude-only signal.
-- [ ] Add scaling/clamping that avoids all-black and all-saturated output.
-- [ ] Keep the ROI and raw context understandable.
-- [ ] Add tests for difference-frame rendering behavior.
-- [ ] Update README with how to read Difference view.
+- [x] Audit current Difference output for pulse, breathing, and fast-motion clips.
+- [x] Choose a clear visual encoding for positive/negative or magnitude-only signal.
+- [x] Add scaling/clamping that avoids all-black and all-saturated output.
+- [x] Keep the ROI and raw context understandable.
+- [x] Add tests for difference-frame rendering behavior.
+- [x] Update README with how to read Difference view.
+
+## Completed Slice
+
+- Difference view now uses signed color: warm/red-orange for positive signal and blue for negative signal.
+- Live GL Difference view uses the same signed-color semantics inside the ROI.
+- Recorded Difference exports dim the raw frame outside the ROI instead of rendering everything black.
+- Added/updated tests for shader semantics and recorded difference-frame colors.
 
 ## Done When
 

@@ -23,6 +23,7 @@ Date: 2026-07-05
 - Added mode-specific setup recipes in expanded controls for Pulse, Breathing, and Fast Motion.
 - Selecting `Split` now automatically uses GL preview for live raw-left/processed-right comparison; verified on Pixel device `47091JEKB05516` in portrait with a non-sensitive room target.
 - Added a compact sparkline for active signal history while keeping Clean preview unobstructed.
+- Difference view now uses signed warm/blue colors and keeps dim context in recorded exports.
 
 ## Euler Sample Output
 

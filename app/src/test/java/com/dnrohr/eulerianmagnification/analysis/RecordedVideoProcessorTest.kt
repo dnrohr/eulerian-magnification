@@ -40,7 +40,7 @@ class RecordedVideoProcessorTest {
     }
 
     @Test
-    fun differenceViewRendersOnlyTheRoiSignal() {
+    fun differenceViewRendersSignedRoiSignalWithDimContext() {
         val frames = syntheticClip(frequencyHz = 1.2)
         val result = RecordedVideoProcessor(
             settings = AnalysisSettings(
@@ -50,9 +50,16 @@ class RecordedVideoProcessorTest {
             ),
         ).process(frames)
 
-        val changedFrame = result.processedFrames.first { it.frame.pixels[roiIndex()] != 0xFF000000.toInt() }
-        assertEquals(0xFF000000.toInt(), changedFrame.frame.pixels[0])
-        assertTrue(changedFrame.frame.pixels[roiIndex()] != 0xFF000000.toInt())
+        val positiveFrame = result.processedFrames.first { processed ->
+            processed.sample.bandpassedGreen > 0.1
+        }.frame
+        val negativeFrame = result.processedFrames.first { processed ->
+            processed.sample.bandpassedGreen < -0.1
+        }.frame
+
+        assertEquals(rgb(17, 17, 17), positiveFrame.pixels[0])
+        assertTrue(red(positiveFrame.pixels[roiIndex()]) > blue(positiveFrame.pixels[roiIndex()]))
+        assertTrue(blue(negativeFrame.pixels[roiIndex()]) > red(negativeFrame.pixels[roiIndex()]))
     }
 
     @Test
@@ -115,6 +122,9 @@ class RecordedVideoProcessorTest {
             (green.coerceIn(0, 255) shl 8) or
             blue.coerceIn(0, 255)
     }
+
+    private fun red(pixel: Int): Int = (pixel shr 16) and 0xFF
+    private fun blue(pixel: Int): Int = pixel and 0xFF
 
     companion object {
         private const val WIDTH = 64

@@ -1,7 +1,6 @@
 package com.dnrohr.eulerianmagnification.analysis
 
 import com.dnrohr.eulerianmagnification.quality.ArtifactSuppressor
-import kotlin.math.abs
 
 data class RecordedVideoProcessedFrame(
     val frame: RgbFrame,
@@ -67,12 +66,10 @@ class RecordedVideoProcessor(
         frame: RgbFrame,
         sample: AnalysisSample,
     ): RgbFrame {
-        val pixels = IntArray(frame.pixels.size) { 0xFF000000.toInt() }
-        val signal = abs(normalizedSignal(sample))
-        val red = (signal * 255.0).toInt().coerceIn(0, 255)
-        val green = (signal * 140.0).toInt().coerceIn(0, 255)
-        val blue = (signal * 90.0).toInt().coerceIn(0, 255)
-        val color = argb(red, green, blue)
+        val pixels = IntArray(frame.pixels.size) { index ->
+            DifferenceColorMap.dimContext(frame.pixels[index])
+        }
+        val color = DifferenceColorMap.signalColor(normalizedSignal(sample))
         forEachRoiPixel(frame) { index ->
             pixels[index] = color
         }

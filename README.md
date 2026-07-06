@@ -105,7 +105,9 @@ The default screen is intentionally compact so the preview remains visible.
 - `Raw`: shows the camera preview without the app's amplified tint.
 - `Amp`: shows the current amplified/tinted visualization.
 - `Diff`: shows the magnitude of the added signal, which is useful for spotting
-  noise and flicker.
+  noise and flicker. Warm/red-orange means positive signal, blue means negative
+  signal, and darker output means weak or no signal. Recorded Difference exports
+  keep dim raw context outside the ROI.
 - `Split`: shows raw and processed views side by side in the GL preview path.
   Selecting `Split` automatically uses GL preview when available so the live
   comparison is raw on the left and processed on the right.

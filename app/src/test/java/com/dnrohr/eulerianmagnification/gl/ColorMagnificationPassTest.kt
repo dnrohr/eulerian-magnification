@@ -25,7 +25,8 @@ class ColorMagnificationPassTest {
     @Test
     fun shaderSupportsDifferenceMode() {
         assertTrue(ColorMagnificationShaderSource.FRAGMENT.contains("uDifferenceMode"))
-        assertTrue(ColorMagnificationShaderSource.FRAGMENT.contains("abs(delta)"))
+        assertTrue(ColorMagnificationShaderSource.FRAGMENT.contains("signedColor"))
+        assertTrue(ColorMagnificationShaderSource.FRAGMENT.contains("uAmplifiedSignal >= 0.0"))
     }
 
     @Test

@@ -40,7 +40,12 @@ object ColorMagnificationShaderSource {
 
             vec3 delta = vec3(uAmplifiedSignal, uAmplifiedSignal * 0.55, uAmplifiedSignal * 0.35);
             if (uDifferenceMode == 1) {
-                outColor = vec4(abs(delta), raw.a);
+                float strength = clamp(abs(uAmplifiedSignal), 0.0, 1.0);
+                vec3 base = vec3(0.06);
+                vec3 positive = vec3(1.0, 0.35, 0.05);
+                vec3 negative = vec3(0.05, 0.45, 1.0);
+                vec3 signedColor = uAmplifiedSignal >= 0.0 ? positive : negative;
+                outColor = vec4(mix(base, signedColor, strength), raw.a);
             } else {
                 outColor = vec4(clamp(raw.rgb + delta, 0.0, 1.0), raw.a);
             }
