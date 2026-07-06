@@ -157,6 +157,7 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
     var cameraControlsLocked by remember { mutableStateOf(false) }
     var showGlDebug by remember { mutableStateOf(false) }
     var controlsExpanded by remember { mutableStateOf(false) }
+    var cleanPreview by remember { mutableStateOf(false) }
     var manualRoi by remember { mutableStateOf<NormalizedRect?>(null) }
     var glFrameStats by remember { mutableStateOf(GlFrameStats()) }
     val qualityEvaluator = remember { QualityEvaluator() }
@@ -335,7 +336,19 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
                 lightingFlickerLikely = lightingFlickerLikely,
             ),
             controlsExpanded = controlsExpanded,
-            onToggleControlsExpanded = { controlsExpanded = !controlsExpanded },
+            cleanPreview = cleanPreview,
+            onShowControls = {
+                cleanPreview = false
+                controlsExpanded = true
+            },
+            onHideControls = {
+                controlsExpanded = false
+                cleanPreview = false
+            },
+            onEnterCleanPreview = {
+                controlsExpanded = false
+                cleanPreview = true
+            },
             onToggleRecording = {
                 if (featureAvailability.processedRecordingAvailable) {
                     val activeSession = recordingSession
@@ -846,7 +859,10 @@ private fun StatusOverlay(
     validationRunning: Boolean,
     qualityStatuses: List<QualityStatus>,
     controlsExpanded: Boolean,
-    onToggleControlsExpanded: () -> Unit,
+    cleanPreview: Boolean,
+    onShowControls: () -> Unit,
+    onHideControls: () -> Unit,
+    onEnterCleanPreview: () -> Unit,
     onToggleRecording: () -> Unit,
     onShareRecording: () -> Unit,
     onShareRecordingPath: (String) -> Unit,
@@ -854,15 +870,27 @@ private fun StatusOverlay(
     onValidateVideo: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    if (!controlsExpanded && cleanPreview) {
+        CleanPreviewOverlay(
+            isRecording = isRecording,
+            recordingElapsedMillis = recordingElapsedMillis,
+            onShowControls = onShowControls,
+            modifier = modifier,
+        )
+        return
+    }
+
     if (!controlsExpanded) {
         CompactStatusOverlay(
             sample = sample,
             settings = settings,
+            onSettingsChanged = onSettingsChanged,
             qualityStatuses = qualityStatuses,
             isRecording = isRecording,
             recordingElapsedMillis = recordingElapsedMillis,
             manualRoi = manualRoi,
-            onToggleControlsExpanded = onToggleControlsExpanded,
+            onShowControls = onShowControls,
+            onEnterCleanPreview = onEnterCleanPreview,
             modifier = modifier,
         )
         return
@@ -879,7 +907,7 @@ private fun StatusOverlay(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text("Mode: ${settings.mode.label}", color = Color.White)
-            Button(onClick = onToggleControlsExpanded) {
+            Button(onClick = onHideControls) {
                 Text("Hide")
             }
         }
@@ -985,46 +1013,94 @@ private fun StatusOverlay(
 private fun CompactStatusOverlay(
     sample: AnalysisSample,
     settings: AnalysisSettings,
+    onSettingsChanged: (AnalysisSettings) -> Unit,
     qualityStatuses: List<QualityStatus>,
     isRecording: Boolean,
     recordingElapsedMillis: Long,
     manualRoi: NormalizedRect?,
-    onToggleControlsExpanded: () -> Unit,
+    onShowControls: () -> Unit,
+    onEnterCleanPreview: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Row(
+    Column(
         modifier = modifier
             .background(Color(0x73000000))
             .padding(horizontal = 12.dp, vertical = 8.dp),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Button(onClick = onShowControls) {
+                Text("Controls")
+            }
+            Button(onClick = onEnterCleanPreview) {
+                Text("Clean")
+            }
+            Text(
+                text = settings.mode.compactOutputLabel,
+                color = Color.White,
+                modifier = Modifier.weight(1.0f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = if (manualRoi == null) "Auto ROI" else "Manual ROI",
+                color = if (manualRoi == null) Color(0xFF00BFA5) else Color(0xFFFFC857),
+                maxLines = 1,
+            )
+            Text(
+                text = if (isRecording) "REC ${formatElapsed(recordingElapsedMillis)}" else qualityStatuses.joinToString { it.label },
+                color = if (isRecording) Color(0xFFFF6B6B) else qualityColor(qualityStatuses),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = "${"%.0f".format(sample.analysisFps)} fps",
+                color = Color.White,
+                maxLines = 1,
+            )
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            ViewMode.entries.forEach { viewMode ->
+                CompactControlButton(
+                    label = viewMode.compactLabel,
+                    onClick = { onSettingsChanged(settings.copy(viewMode = viewMode)) },
+                    enabled = settings.viewMode != viewMode,
+                    modifier = Modifier.weight(1.0f),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun CleanPreviewOverlay(
+    isRecording: Boolean,
+    recordingElapsedMillis: Long,
+    onShowControls: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier.padding(horizontal = 12.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Button(onClick = onToggleControlsExpanded) {
+        Button(onClick = onShowControls) {
             Text("Controls")
         }
-        Text(
-            text = settings.mode.compactOutputLabel,
-            color = Color.White,
-            modifier = Modifier.weight(1.0f),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-        Text(
-            text = if (manualRoi == null) "Auto ROI" else "Manual ROI",
-            color = if (manualRoi == null) Color(0xFF00BFA5) else Color(0xFFFFC857),
-            maxLines = 1,
-        )
-        Text(
-            text = if (isRecording) "REC ${formatElapsed(recordingElapsedMillis)}" else qualityStatuses.joinToString { it.label },
-            color = if (isRecording) Color(0xFFFF6B6B) else qualityColor(qualityStatuses),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-        Text(
-            text = "${"%.0f".format(sample.analysisFps)} fps",
-            color = Color.White,
-            maxLines = 1,
-        )
+        if (isRecording) {
+            Text(
+                text = "REC ${formatElapsed(recordingElapsedMillis)}",
+                color = Color(0xFFFF6B6B),
+                maxLines = 1,
+            )
+        }
     }
 }
 

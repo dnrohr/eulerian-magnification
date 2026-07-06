@@ -51,9 +51,10 @@ it wrong.
    or cheek skin. For breathing, use the torso/shoulder area. For fast-motion
    tests, use a high-contrast moving edge.
 6. Tap `Hide` so the image is mostly unobstructed.
-7. Use `Raw`, `Amplified`, `Difference`, or `Split` to compare whether the
+7. Use `Raw`, `Amplified`, `Difference`, or `Split` from the compact preview to compare whether the
    processed view is adding useful signal or only noise.
-8. Use short recordings and sample videos for processing checks before trusting live
+8. Tap `Clean` when you want the least obstructed preview. Tap `Controls` to return.
+9. Use short recordings and sample videos for processing checks before trusting live
    handheld behavior.
 
 ### Best Pulse Setup
@@ -90,6 +91,8 @@ The default screen is intentionally compact so the preview remains visible.
 
 - `Controls`: opens the full controls and diagnostics panel.
 - `Hide`: closes the full panel and returns to the compact preview.
+- `Clean`: hides the compact mode, ROI, quality, FPS, and view controls so the
+  image is easier to inspect. A small `Controls` button remains available.
 - `Color amp`, `Breath sig`, `Motion exp`: compact output labels
   that state what kind of processing is active.
 - `Pulse`, `Breath`, `Motion`: select the temporal band and analysis

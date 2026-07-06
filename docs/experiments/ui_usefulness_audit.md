@@ -15,6 +15,8 @@ Date: 2026-07-05
 - Moved detailed metrics, sliders, mode controls, validation, recording history, and waveform charts behind the expanded controls panel.
 - Added a `Hide` button to return from the expanded panel to the compact preview.
 - Suppressed the analyzed ROI outline whenever a manual ROI is active, leaving only one visible ROI square.
+- Added a `Clean` preview state that hides the compact status/control bar and leaves only a way back to `Controls`.
+- Added compact Raw/Amp/Diff/Split controls so view validation does not require opening the full diagnostics panel.
 
 ## Euler Sample Output
 
@@ -25,5 +27,7 @@ Date: 2026-07-05
 ## Remaining Work
 
 - Fix analysis-to-preview ROI coordinate mapping for portrait/front-camera mode. The compact UI makes this problem much easier to see.
-- Add an app-native recorded-file export path so sample videos can be processed through the same GL pipeline used for live preview and recording.
+- Stabilize automatic ROI behavior when tracking confidence drops so the square does not visibly wander.
+- Add guided setup for ideal pulse, breathing, and fast-motion demos.
+- Add richer evidence exports such as side-by-side videos and signal/quality timelines.
 - Consider a dedicated ROI mode where tapping/dragging temporarily reveals selection handles, then returns to uncluttered viewing.
