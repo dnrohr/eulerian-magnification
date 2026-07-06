@@ -95,6 +95,9 @@ The default screen is intentionally compact so the preview remains visible.
   image is easier to inspect. A small `Controls` button remains available.
 - Compact sparkline: shows the active signal history under the view buttons when
   enough samples are available. It is hidden in Clean preview.
+- `Pulse demo`, `Breathing demo`, `Motion demo`: expanded-controls presets that
+  apply mode, view, and amplification together before you follow the matching
+  setup recipe.
 - `Pulse setup`, `Breathing setup`, `Fast motion setup`: expanded-controls
   recipes that name the best target, stabilization steps, and realistic expected
   output for the active mode.
@@ -203,12 +206,14 @@ The intended order is:
 2. Grant camera permission.
 3. Start in Pulse mode with Amplified view and wait for the preview timing to
    settle near 30 FPS.
-4. Switch between Raw, Amplified, Difference, and Split to inspect the ROI
+4. Or open `Controls` and choose `Pulse demo`, `Breathing demo`, or
+   `Motion demo` to apply a repeatable preset.
+5. Switch between Raw, Amplified, Difference, and Split to inspect the ROI
    visualization.
-5. Try Breathing mode with a stable manual ROI around visible torso/shoulder
+6. Try Breathing mode with a stable manual ROI around visible torso/shoulder
    motion.
-6. Use `Start Recording` for a short run, then stop and share metadata if needed.
-7. Toggle `Use GL Preview` for the GPU display path and compare framing, FPS, and
+7. Use `Start Recording` for a short run, then stop and share metadata if needed.
+8. Toggle `Use GL Preview` for the GPU display path and compare framing, FPS, and
    quality warnings against CameraX preview.
 
 ## Device Notes

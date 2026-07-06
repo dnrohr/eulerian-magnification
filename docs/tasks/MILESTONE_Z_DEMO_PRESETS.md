@@ -6,12 +6,22 @@ Goal: add mode-specific demo presets that configure mode, view, amplification, a
 
 ## Tasks
 
-- [ ] Define Pulse, Breathing, and Fast Motion demo defaults.
-- [ ] Add preset buttons or a preset selector in the expanded controls.
-- [ ] Apply settings atomically so the UI does not pass through confusing intermediate states.
-- [ ] Pair presets with the guided setup text.
-- [ ] Add tests for preset-to-settings mapping.
-- [ ] Update README/demo flow.
+- [x] Define Pulse, Breathing, and Fast Motion demo defaults.
+- [x] Add preset buttons or a preset selector in the expanded controls.
+- [x] Apply settings atomically so the UI does not pass through confusing intermediate states.
+- [x] Pair presets with the guided setup text.
+- [x] Add tests for preset-to-settings mapping.
+- [x] Update README/demo flow.
+
+## Completed Slice
+
+- Added `Pulse demo`, `Breathing demo`, and `Motion demo` buttons in expanded controls.
+- Presets apply mode, view mode, and amplification together.
+- The setup guide updates immediately because it is driven by the selected mode.
+- Pulse demo uses Pulse/Amp/12x.
+- Breathing demo uses Breathing/Diff/16x.
+- Motion demo uses Fast Motion/Split/20x.
+- Added `DemoPresetTest` for preset-to-settings mapping.
 
 ## Done When
 

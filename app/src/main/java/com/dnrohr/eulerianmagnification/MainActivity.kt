@@ -978,6 +978,11 @@ private fun StatusOverlay(
         Spacer(modifier = Modifier.height(4.dp))
         QualityStatusRow(qualityStatuses)
         Spacer(modifier = Modifier.height(8.dp))
+        DemoPresetControls(
+            settings = settings,
+            onSettingsChanged = onSettingsChanged,
+        )
+        Spacer(modifier = Modifier.height(8.dp))
         SetupGuidePanel(settings.mode)
         Spacer(modifier = Modifier.height(8.dp))
         ModeControls(
@@ -1171,6 +1176,32 @@ private fun roiStateColor(state: RoiState): Color {
         RoiState.Tracking -> Color(0xFF00BFA5)
         RoiState.Frozen -> Color(0xFFFFC857)
         RoiState.Center -> Color(0xFFC8D3DC)
+    }
+}
+
+@Composable
+private fun DemoPresetControls(
+    settings: AnalysisSettings,
+    onSettingsChanged: (AnalysisSettings) -> Unit,
+) {
+    Text(
+        text = "Demo presets",
+        color = Color.White,
+        style = MaterialTheme.typography.labelLarge,
+    )
+    Spacer(modifier = Modifier.height(4.dp))
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        DemoPreset.entries.forEach { preset ->
+            CompactControlButton(
+                label = preset.label,
+                onClick = { onSettingsChanged(preset.settings) },
+                enabled = settings != preset.settings,
+                modifier = Modifier.weight(1.0f),
+            )
+        }
     }
 }
 

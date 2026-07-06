@@ -25,6 +25,7 @@ Date: 2026-07-05
 - Added a compact sparkline for active signal history while keeping Clean preview unobstructed.
 - Difference view now uses signed warm/blue colors and keeps dim context in recorded exports.
 - Selected-video exports now include `evidence_report.html` with an inline signal plot and shareable recent-export `Report` action.
+- Added demo presets that apply mode, view, and amplification together before showing the matching setup guide.
 
 ## Euler Sample Output
 
