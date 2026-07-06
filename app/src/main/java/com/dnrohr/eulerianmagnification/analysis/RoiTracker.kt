@@ -29,6 +29,18 @@ class RoiTracker(
         return predicted
     }
 
+    fun holdLastDetection(): NormalizedRect? {
+        velocityX = 0.0f
+        velocityY = 0.0f
+        return current
+    }
+
+    fun reset() {
+        current = null
+        velocityX = 0.0f
+        velocityY = 0.0f
+    }
+
     private val NormalizedRect.centerX: Float get() = (left + right) / 2.0f
     private val NormalizedRect.centerY: Float get() = (top + bottom) / 2.0f
 

@@ -12,7 +12,15 @@ data class AnalysisSample(
     val frameWidth: Int = 0,
     val frameHeight: Int = 0,
     val rotationDegrees: Int = 0,
+    val roiState: RoiState = RoiState.Center,
 )
+
+enum class RoiState(val label: String) {
+    Manual("Manual ROI"),
+    Tracking("Tracking"),
+    Frozen("Frozen ROI"),
+    Center("Center ROI"),
+}
 
 data class NormalizedRect(
     val left: Float,

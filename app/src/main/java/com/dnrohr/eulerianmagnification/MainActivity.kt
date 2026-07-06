@@ -82,6 +82,7 @@ import com.dnrohr.eulerianmagnification.analysis.RecordedVideoDecodeOptions
 import com.dnrohr.eulerianmagnification.analysis.RecordedVideoFrameDecoder
 import com.dnrohr.eulerianmagnification.analysis.RecordedVideoProcessor
 import com.dnrohr.eulerianmagnification.analysis.RecordedVideoValidationResult
+import com.dnrohr.eulerianmagnification.analysis.RoiState
 import com.dnrohr.eulerianmagnification.analysis.ViewMode
 import com.dnrohr.eulerianmagnification.capabilities.CapabilityReportStore
 import com.dnrohr.eulerianmagnification.capabilities.CapabilityReporter
@@ -1046,8 +1047,8 @@ private fun CompactStatusOverlay(
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
-                text = if (manualRoi == null) "Auto ROI" else "Manual ROI",
-                color = if (manualRoi == null) Color(0xFF00BFA5) else Color(0xFFFFC857),
+                text = sample.roiState.label,
+                color = roiStateColor(sample.roiState),
                 maxLines = 1,
             )
             Text(
@@ -1123,6 +1124,15 @@ private fun QualityStatusRow(statuses: List<QualityStatus>) {
 
 private fun qualityColor(statuses: List<QualityStatus>): Color {
     return if (statuses == listOf(QualityStatus.Good)) Color(0xFF00BFA5) else Color(0xFFFFC857)
+}
+
+private fun roiStateColor(state: RoiState): Color {
+    return when (state) {
+        RoiState.Manual -> Color(0xFFFFC857)
+        RoiState.Tracking -> Color(0xFF00BFA5)
+        RoiState.Frozen -> Color(0xFFFFC857)
+        RoiState.Center -> Color(0xFFC8D3DC)
+    }
 }
 
 @Composable

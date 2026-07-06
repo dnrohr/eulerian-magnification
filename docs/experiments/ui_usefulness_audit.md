@@ -17,6 +17,8 @@ Date: 2026-07-05
 - Suppressed the analyzed ROI outline whenever a manual ROI is active, leaving only one visible ROI square.
 - Added a `Clean` preview state that hides the compact status/control bar and leaves only a way back to `Controls`.
 - Added compact Raw/Amp/Diff/Split controls so view validation does not require opening the full diagnostics panel.
+- Changed live auto ROI to freeze the last good detection across missed detection passes instead of extrapolating movement.
+- Added compact ROI-state labels: `Manual ROI`, `Tracking`, `Frozen ROI`, and `Center ROI`.
 
 ## Euler Sample Output
 
@@ -27,7 +29,6 @@ Date: 2026-07-05
 ## Remaining Work
 
 - Fix analysis-to-preview ROI coordinate mapping for portrait/front-camera mode. The compact UI makes this problem much easier to see.
-- Stabilize automatic ROI behavior when tracking confidence drops so the square does not visibly wander.
 - Add guided setup for ideal pulse, breathing, and fast-motion demos.
 - Add richer evidence exports such as side-by-side videos and signal/quality timelines.
 - Consider a dedicated ROI mode where tapping/dragging temporarily reveals selection handles, then returns to uncluttered viewing.

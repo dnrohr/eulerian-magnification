@@ -4,11 +4,19 @@ Goal: make ROI behavior predictable enough that users can trust what region is b
 
 ## Tasks
 
-- [ ] Keep manual ROI fixed unless the user explicitly drags a new region or clears it.
-- [ ] Freeze the last good automatic ROI when tracking confidence drops instead of allowing visible wandering.
-- [ ] Add a tracking-state label such as `Auto ROI`, `Tracking`, `Frozen`, or `Manual ROI`.
-- [ ] Add unit tests for ROI smoothing/freeze behavior.
-- [ ] Update README troubleshooting notes for ROI drift and manual selection.
+- [x] Keep manual ROI fixed unless the user explicitly drags a new region or clears it.
+- [x] Freeze the last good automatic ROI when tracking confidence drops instead of allowing visible wandering.
+- [x] Add a tracking-state label such as `Auto ROI`, `Tracking`, `Frozen`, or `Manual ROI`.
+- [x] Add unit tests for ROI smoothing/freeze behavior.
+- [x] Update README troubleshooting notes for ROI drift and manual selection.
+
+## Completed Slice
+
+- Live auto ROI now holds the last detected region instead of predicting/extrapolating movement between face-detection passes.
+- Empty detection results increment a missed-detection counter and show `Frozen ROI` while the app keeps using the last good region.
+- After sustained missed detections, the app resets the tracker/smoother and falls back to `Center ROI`.
+- Compact preview labels now show `Manual ROI`, `Tracking`, `Frozen ROI`, or `Center ROI`.
+- Added tracker tests for freeze and reset behavior.
 
 ## Done When
 

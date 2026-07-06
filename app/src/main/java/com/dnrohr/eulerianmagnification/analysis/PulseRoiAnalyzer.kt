@@ -27,6 +27,7 @@ class PulseRoiAnalyzer(
     private val translationEstimator = TranslationEstimator()
     private val detectorBusy = AtomicBoolean(false)
     private var latestFaceBounds: NormalizedRect? = null
+    private var missedDetections = 0
     private var frameIndex = 0
 
     private val detector = FaceDetection.getClient(
@@ -42,10 +43,17 @@ class PulseRoiAnalyzer(
         val timestamp = imageProxy.imageInfo.timestamp
         val timestampStatus = timestampTracker.record(timestamp)
         fpsMeter.recordFrame(timestamp)
-        latestFaceBounds = roiTracker.predict() ?: latestFaceBounds
+        latestFaceBounds = roiTracker.holdLastDetection() ?: latestFaceBounds
+        val activeAutoRoi = latestFaceBounds
+        val roiState = when {
+            manualRoi != null -> RoiState.Manual
+            activeAutoRoi != null && missedDetections > 0 -> RoiState.Frozen
+            activeAutoRoi != null -> RoiState.Tracking
+            else -> RoiState.Center
+        }
         val roi = manualRoi
             ?.toRect(imageProxy.width, imageProxy.height)
-            ?: latestFaceBounds
+            ?: activeAutoRoi
             ?.toRect(imageProxy.width, imageProxy.height)
             ?.let { skinSubregion(it, imageProxy.width, imageProxy.height) }
             ?: centeredRoi(imageProxy.width, imageProxy.height)
@@ -67,6 +75,7 @@ class PulseRoiAnalyzer(
                 frameWidth = imageProxy.width,
                 frameHeight = imageProxy.height,
                 rotationDegrees = imageProxy.imageInfo.rotationDegrees,
+                roiState = roiState,
             ),
         )
 
@@ -81,12 +90,23 @@ class PulseRoiAnalyzer(
             val input = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
             detector.process(input)
                 .addOnSuccessListener { faces ->
-                    latestFaceBounds = faces.maxByOrNull { it.boundingBox.width() * it.boundingBox.height() }
+                    val detected = faces.maxByOrNull { it.boundingBox.width() * it.boundingBox.height() }
                         ?.boundingBox
                         ?.clamped(imageProxy.width, imageProxy.height)
                         ?.toNormalized(imageProxy.width, imageProxy.height)
                         ?.let(roiSmoother::update)
                         ?.let(roiTracker::updateDetection)
+                    if (detected != null) {
+                        missedDetections = 0
+                        latestFaceBounds = detected
+                    } else {
+                        missedDetections += 1
+                        if (missedDetections >= MAX_MISSED_DETECTIONS) {
+                            latestFaceBounds = null
+                            roiTracker.reset()
+                            roiSmoother.reset()
+                        }
+                    }
                 }
                 .addOnCompleteListener {
                     detectorBusy.set(false)
@@ -202,6 +222,7 @@ class PulseRoiAnalyzer(
 
     companion object {
         private const val DETECTION_INTERVAL_FRAMES = 10
+        private const val MAX_MISSED_DETECTIONS = 12
         private const val SAMPLE_GRID = 16
         private const val NANOS_PER_MILLISECOND = 1_000_000.0
     }

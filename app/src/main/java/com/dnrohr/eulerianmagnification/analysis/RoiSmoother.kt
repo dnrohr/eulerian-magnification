@@ -19,6 +19,10 @@ class RoiSmoother(
         return smoothed
     }
 
+    fun reset() {
+        current = null
+    }
+
     private fun NormalizedRect.distanceTo(other: NormalizedRect): Float {
         return abs(left - other.left) +
             abs(top - other.top) +

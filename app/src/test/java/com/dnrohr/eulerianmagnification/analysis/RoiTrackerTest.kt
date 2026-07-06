@@ -45,4 +45,29 @@ class RoiTrackerTest {
         assertEquals(1.0f, predicted!!.right, 0.001f)
         assertEquals(1.0f, predicted.bottom, 0.001f)
     }
+
+    @Test
+    fun canFreezeLastDetectionInsteadOfPredicting() {
+        val tracker = RoiTracker(damping = 1.0f, maxStep = 0.10f)
+
+        tracker.updateDetection(NormalizedRect(0.10f, 0.10f, 0.30f, 0.30f))
+        tracker.updateDetection(NormalizedRect(0.20f, 0.10f, 0.40f, 0.30f))
+        val held = tracker.holdLastDetection()
+        val repeated = tracker.predict()
+
+        assertNotNull(held)
+        assertNotNull(repeated)
+        assertEquals(0.20f, held!!.left, 0.001f)
+        assertEquals(0.20f, repeated!!.left, 0.001f)
+    }
+
+    @Test
+    fun resetClearsTrackedRegion() {
+        val tracker = RoiTracker()
+
+        tracker.updateDetection(NormalizedRect(0.10f, 0.10f, 0.30f, 0.30f))
+        tracker.reset()
+
+        assertEquals(null, tracker.holdLastDetection())
+    }
 }
