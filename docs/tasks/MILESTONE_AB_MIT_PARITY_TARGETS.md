@@ -6,12 +6,20 @@ Goal: define the MIT EVM behaviors, sample clips, settings, and acceptance crite
 
 ## Tasks
 
-- [ ] Identify the canonical MIT EVM outputs we want to match first: color pulse, breathing/large low-frequency motion, and small edge/object motion.
-- [ ] Choose local sample clips and document source, license, checksum, and expected effect.
-- [ ] Define per-sample settings: temporal band, amplification, chrominance/luminance mode, pyramid levels, and attenuation limits.
-- [ ] Define measurable acceptance criteria: visual inspection notes, frame-difference energy, signal plots, and artifact limits.
-- [ ] Add a parity validation doc linking samples to app commands and expected artifacts.
-- [ ] Update README to distinguish current app behavior from MIT-parity target behavior.
+- [x] Identify the canonical MIT EVM outputs we want to match first: color pulse, breathing/large low-frequency motion, and small edge/object motion.
+- [x] Choose local sample clips and document source, license, checksum, and expected effect.
+- [x] Define per-sample settings: temporal band, amplification, chrominance/luminance mode, pyramid levels, and attenuation limits.
+- [x] Define measurable acceptance criteria: visual inspection notes, frame-difference energy, signal plots, and artifact limits.
+- [x] Add a parity validation doc linking samples to app commands and expected artifacts.
+- [x] Update README to distinguish current app behavior from MIT-parity target behavior.
+
+## Completed Slice
+
+- Added `docs/testing/MIT_PARITY_TARGETS.md`.
+- Defined initial parity target classes: color pulse, slow motion/breathing, and small edge/object motion.
+- Documented local sample files, source/provenance handling, and SHA-256 hashes for `mit-evm-baby.mp4` and `euler.mp4`.
+- Added baseline settings and acceptance criteria for full-frame EVM output.
+- Listed current local commands and non-goals so ROI tint or signal-only views cannot be mistaken for parity.
 
 ## Done When
 

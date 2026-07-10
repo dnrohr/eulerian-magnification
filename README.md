@@ -53,6 +53,9 @@ work rather than an implied future outcome:
 - Promote the existing Riesz/phase reference work into a real app renderer.
 - Rework mode/visualization labels once true color and motion renderers exist.
 
+The first target definition is tracked in
+`docs/testing/MIT_PARITY_TARGETS.md`.
+
 ## Live Usage Guide
 
 1. Mount the phone or hold it as still as possible.
@@ -206,6 +209,7 @@ configuration when device testing is needed.
 Use recorded or synthetic inputs before relying on live phone behavior:
 
 - Recorded-video validation flow: `docs/testing/RECORDED_VIDEO_VALIDATION.md`
+- MIT parity targets: `docs/testing/MIT_PARITY_TARGETS.md`
 - ROI device validation flow: `docs/testing/ROI_DEVICE_VALIDATION.md`
 - Public sample plan: `docs/testing/SAMPLE_VIDEO_SOURCES.md`
 - Riesz / phase-mode reference: `docs/architecture/RIESZ_MODE.md`
