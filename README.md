@@ -31,16 +31,17 @@ motion-magnification camera.
 - GL Pulse `Amplified`/`Split` can use an early full-frame color preview bridge
   when timing is healthy. This is still signal-driven color output, not live
   MIT-style pyramid reconstruction.
-- Recorded-video `Amplified` and `Split` exports now run a full-frame linear EVM
-  reconstruction path over the selected clip. This is the first path that should
-  look like true frame processing rather than an ROI overlay.
+- Recorded-video `Amplified` and `Split` exports now run full-frame linear EVM
+  for Pulse and recorded Riesz phase motion for non-Pulse motion modes. These
+  are the first paths that should look like true frame processing rather than an
+  ROI overlay.
 - Breathing mode estimates low-frequency vertical translation and shows the
   breathing signal in the expanded controls. It does not yet warp the preview to
   make chest motion visually larger.
 - Fast Motion exposes a higher-frequency band and quality warnings,
   but the live preview is still driven mostly by ROI color/tint visualization.
-- The Riesz/phase motion work exists as reference/scaffolding in the repo, but
-  it is not yet the primary live preview renderer.
+- The Riesz/phase motion work now has a recorded CPU renderer, but it is not yet
+  the primary live preview renderer.
 
 If the only obvious effect you see is ROI flicker or color flicker, that is a
 limitation of the current implementation rather than a sign that you are using

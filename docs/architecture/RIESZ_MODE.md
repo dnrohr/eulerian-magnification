@@ -39,9 +39,9 @@ validation.
 6. Denoise and smooth phase changes across space, scale, and time.
 7. Reconstruct or approximate the magnified output for display and recording.
 
-The reference implementation now covers steps 3-6 at the small-image math-helper
-level. It does not yet reconstruct a full magnified frame sequence or validate
-against real sample videos.
+The Python reference covers steps 3-6 at the small-image math-helper level. The
+app now also has a recorded-frame CPU renderer that reconstructs output frames
+for non-Pulse motion exports.
 
 ## EVM Baseline Comparison
 
@@ -89,6 +89,17 @@ recorded samples:
 - Translating edges should produce stable orientation-specific responses.
 - Pulse or breathing samples should be compared against the linear EVM output for
   visible artifacts, latency, and usable frame rate.
+
+## App Renderer Path
+
+`RieszPhaseMotionRenderer` is the first executable app-side phase renderer. It
+is a recorded-frame CPU path used by `RecordedVideoProcessor` for non-Pulse
+`Amplified` and `Split` exports. It computes luminance, Riesz-like x/y
+derivatives, dominant orientation, local phase/amplitude, wrapped phase tracking,
+temporal filtering, phase amplification, and luminance reconstruction.
+
+This is intentionally recorded-first. Live GL phase rendering still needs a
+runtime render pass and device validation.
 
 ## Porting Notes
 

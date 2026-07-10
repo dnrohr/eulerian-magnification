@@ -21,14 +21,19 @@ class RecordedVideoProcessor(
 ) {
     fun process(frames: Iterable<RgbFrame>): RecordedVideoProcessingResult {
         val analyzer = RecordedVideoAnalyzer(settings, roi)
-        val fullFrameRenderer = FullFrameLinearEvmRenderer(settings)
+        val linearRenderer = FullFrameLinearEvmRenderer(settings)
+        val phaseMotionRenderer = RieszPhaseMotionRenderer(settings)
         val processed = mutableListOf<RecordedVideoProcessedFrame>()
         var sourceFrameCount = 0
         frames.forEach { frame ->
             sourceFrameCount++
             val sample = analyzer.analyze(frame)
             val fullFrameEvm = if (settings.viewMode == ViewMode.Amplified || settings.viewMode == ViewMode.Split) {
-                fullFrameRenderer.render(frame)
+                if (settings.mode == MagnificationMode.Pulse) {
+                    linearRenderer.render(frame)
+                } else {
+                    phaseMotionRenderer.render(frame)
+                }
             } else {
                 frame
             }

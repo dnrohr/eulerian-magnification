@@ -86,6 +86,25 @@ class RecordedVideoProcessorTest {
         assertTrue(rgb24(changedSplitFrame.pixels[WIDTH]) != rgb24(changedSplitFrame.pixels[0]))
     }
 
+    @Test
+    fun fastMotionAmplifiedViewUsesPhaseMotionOutput() {
+        val frames = translatingEdgeClip(frequencyHz = 6.0)
+        val result = RecordedVideoProcessor(
+            settings = AnalysisSettings(
+                mode = MagnificationMode.Tremor,
+                amplification = 8.0f,
+                viewMode = ViewMode.Amplified,
+            ),
+        ).process(frames)
+
+        val changedFrame = result.processedFrames.first { processed ->
+            processed.frame.pixels.toList() != frames[result.processedFrames.indexOf(processed)].pixels.toList()
+        }
+        val sourceFrame = frames[result.processedFrames.indexOf(changedFrame)]
+        assertEquals(sourceFrame.width, changedFrame.frame.width)
+        assertEquals(sourceFrame.height, changedFrame.frame.height)
+    }
+
     private fun syntheticClip(frequencyHz: Double): List<RgbFrame> {
         return (0 until FRAME_COUNT).map { frameIndex ->
             val seconds = frameIndex / FPS
@@ -125,6 +144,28 @@ class RecordedVideoProcessorTest {
                 height = HEIGHT,
                 timestampNanos = timestampNanos,
                 pixels = IntArray(WIDTH * HEIGHT) { rgb(96, green, 96) },
+            )
+        }
+    }
+
+    private fun translatingEdgeClip(frequencyHz: Double): List<RgbFrame> {
+        return (0 until FRAME_COUNT).map { frameIndex ->
+            val seconds = frameIndex / FPS
+            val timestampNanos = (seconds * NANOS_PER_SECOND).toLong()
+            val edgeOffset = (2.0 * sin(2.0 * PI * frequencyHz * seconds)).roundToInt()
+            val edgeX = WIDTH / 2 + edgeOffset
+            RgbFrame(
+                width = WIDTH,
+                height = HEIGHT,
+                timestampNanos = timestampNanos,
+                pixels = IntArray(WIDTH * HEIGHT) { index ->
+                    val x = index % WIDTH
+                    if (x < edgeX) {
+                        rgb(48, 48, 48)
+                    } else {
+                        rgb(208, 208, 208)
+                    }
+                },
             )
         }
     }
