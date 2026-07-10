@@ -52,6 +52,30 @@ The decoder preserves planned timestamps in nanoseconds before frames are passed
 
 The app copies the selected video into cache using the selected display name when available, decodes a bounded frame set, runs `RecordedVideoValidator`, and displays the summary in the overlay. Selecting `euler.mp4` should produce a summary beginning with `Video processing: euler.mp4`.
 
+## Ten-Second Validation Contract
+
+`TenSecondValidationFlow` defines the guided short-run flow the app should use
+for one-tap validation:
+
+1. `Setup`: show the current mode's setup guide and expected result.
+2. `Countdown`: give the user three seconds to settle.
+3. `Recording`: capture/process ten seconds with the current mode, view, band,
+   and amplification.
+4. `Processing`: generate the same evidence artifacts as the recorded-video
+   export path.
+5. `Review`: show a concise summary and expose share actions for all artifacts.
+
+The required evidence bundle is:
+
+- `debug_processed.mp4`
+- `metadata.json`
+- `signal_timeline.csv`
+- `evidence_report.html`
+
+The JVM flow tests cover the state transitions, target duration, artifact
+checklist, and metadata fields. Phone validation is still required before
+calling the one-tap live capture path complete.
+
 ## Running `euler.mp4`
 
 1. Copy `sample-videos/euler.mp4` to the phone's downloads, camera roll, or another location visible to the Android system picker.

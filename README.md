@@ -161,6 +161,10 @@ The default screen is intentionally compact so the preview remains visible.
   `Difference`, the export shows a signed ROI diagnostic over dim context. The
   export writes a processed MP4, metadata JSON, `signal_timeline.csv`, and
   `evidence_report.html`.
+- Ten-second validation flow: defines a setup/countdown/recording/processing/
+  review contract for guided short runs. Live one-tap capture still needs phone
+  verification, but the required evidence bundle and state transitions are
+  tested in code.
 - `Share Metadata`: shares the JSON metadata for the latest recording.
 - `Metadata` / `Video`: shares recent recording/export metadata or processed
   MP4 output.

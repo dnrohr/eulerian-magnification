@@ -1439,7 +1439,9 @@ private fun processRecordedVideoExport(
     rootDirectory: File,
 ): ProcessedVideoOutcome {
     val startedAtMillis = System.currentTimeMillis()
-    val decodeOptions = RecordedVideoDecodeOptions(maxFrames = 300)
+    val decodeOptions = RecordedVideoDecodeOptions(
+        maxFrames = (TenSecondValidationFlow.TARGET_DURATION_MILLIS / 1000L * 30L).toInt(),
+    )
     val frames = RecordedVideoFrameDecoder().decode(inputFile, decodeOptions)
     val report = RecordedVideoAnalysisRunner(settings).analyze(frames)
     val validation = RecordedVideoValidationResult(
@@ -1527,9 +1529,13 @@ private fun recordedVideoExportMetadata(
     qualitySummary: String,
 ): String {
     val visualizationModel = VisualizationModel.recorded(settings)
+    val validationFields = TenSecondValidationFlow.metadataFields(TenSecondValidationFlow.setup(settings))
     return buildString {
         appendLine("{")
         appendLine("  \"sourceName\": ${sourceName.quoteJson()},")
+        appendLine("  \"validationFlow\": ${validationFields.getValue("validationFlow").quoteJson()},")
+        appendLine("  \"targetDurationMillis\": ${validationFields.getValue("targetDurationMillis")},")
+        appendLine("  \"requiredArtifacts\": ${validationFields.getValue("requiredArtifacts").quoteJson()},")
         appendLine("  \"startedAtMillis\": $startedAtMillis,")
         appendLine("  \"durationMillis\": $durationMillis,")
         appendLine("  \"mode\": ${settings.mode.label.quoteJson()},")
