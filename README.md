@@ -28,6 +28,9 @@ motion-magnification camera.
 - Live Pulse mode currently shows color/tint changes inside the ROI. A good
   live result is a subtle rhythmic color change in a skin patch, not visible
   movement of the face.
+- GL Pulse `Amplified`/`Split` can use an early full-frame color preview bridge
+  when timing is healthy. This is still signal-driven color output, not live
+  MIT-style pyramid reconstruction.
 - Recorded-video `Amplified` and `Split` exports now run a full-frame linear EVM
   reconstruction path over the selected clip. This is the first path that should
   look like true frame processing rather than an ROI overlay.

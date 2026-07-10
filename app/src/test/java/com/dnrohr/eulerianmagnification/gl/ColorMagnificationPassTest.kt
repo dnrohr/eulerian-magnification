@@ -20,6 +20,7 @@ class ColorMagnificationPassTest {
     fun shaderLimitsAmplificationToRoi() {
         assertTrue(ColorMagnificationShaderSource.FRAGMENT.contains("insideRoi"))
         assertTrue(ColorMagnificationShaderSource.FRAGMENT.contains("uRoi"))
+        assertTrue(ColorMagnificationShaderSource.FRAGMENT.contains("uFullFrameMode"))
     }
 
     @Test
@@ -43,6 +44,7 @@ class ColorMagnificationPassTest {
         assertEquals(0.0625f, uniforms.amplifiedSignal, 0.0001f)
         assertFalse(uniforms.differenceMode)
         assertFalse(uniforms.splitMode)
+        assertFalse(uniforms.fullFrameMode)
     }
 
     @Test
@@ -70,6 +72,20 @@ class ColorMagnificationPassTest {
 
         assertTrue(uniforms.splitMode)
         assertFalse(uniforms.differenceMode)
+    }
+
+    @Test
+    fun mapsFullFrameModeFlag() {
+        val uniforms = ColorMagnificationParameters().from(
+            sample = AnalysisSample(
+                roi = NormalizedRect(0.1f, 0.2f, 0.3f, 0.4f),
+                bandpassedGreen = 0.5,
+            ),
+            settings = AnalysisSettings(viewMode = ViewMode.Split),
+            fullFrameMode = true,
+        )
+
+        assertTrue(uniforms.fullFrameMode)
     }
 
     @Test

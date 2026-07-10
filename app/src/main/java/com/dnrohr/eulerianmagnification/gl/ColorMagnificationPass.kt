@@ -24,6 +24,7 @@ object ColorMagnificationShaderSource {
         uniform vec4 uRoi;
         uniform float uAmplifiedSignal;
         uniform int uDifferenceMode;
+        uniform int uFullFrameMode;
         in vec2 vTexCoord;
         out vec4 outColor;
 
@@ -33,7 +34,7 @@ object ColorMagnificationShaderSource {
 
         void main() {
             vec4 raw = texture(uInputTexture, vTexCoord);
-            if (!insideRoi(vTexCoord)) {
+            if (uFullFrameMode == 0 && !insideRoi(vTexCoord)) {
                 outColor = raw;
                 return;
             }
@@ -59,6 +60,7 @@ class ColorMagnificationParameters(
     fun from(
         sample: AnalysisSample,
         settings: AnalysisSettings,
+        fullFrameMode: Boolean = false,
         presentationTimestampNanos: Long = sample.frameTimestampNanos.coerceAtLeast(0L),
     ): ColorMagnificationUniforms {
         val signal = artifactSuppressor.amplify(sample.bandpassedGreen, settings.amplification)
@@ -74,6 +76,7 @@ class ColorMagnificationParameters(
                 .toFloat(),
             differenceMode = settings.viewMode == ViewMode.Difference,
             splitMode = settings.viewMode == ViewMode.Split,
+            fullFrameMode = fullFrameMode,
             presentationTimestampNanos = presentationTimestampNanos.coerceAtLeast(0L),
         )
     }
@@ -84,5 +87,6 @@ data class ColorMagnificationUniforms(
     val amplifiedSignal: Float,
     val differenceMode: Boolean,
     val splitMode: Boolean,
+    val fullFrameMode: Boolean = false,
     val presentationTimestampNanos: Long = 0L,
 )

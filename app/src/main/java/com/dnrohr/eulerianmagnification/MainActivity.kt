@@ -50,6 +50,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
@@ -175,6 +176,11 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
         requestedGlPreview = showGlDebug,
         glPreviewAvailable = featureAvailability.glPreviewAvailable,
     )
+    val liveEvmPreviewDecision = LiveEvmPreviewPolicy.decide(
+        settings = analysisSettings,
+        usingGlPreview = usingGlPreview,
+        glFrameStats = glFrameStats,
+    )
     var lightingFlickerLikely by remember { mutableStateOf(false) }
     var breathingMotionSample by remember { mutableStateOf(BreathingMotionSample()) }
     val signalHistory = remember { mutableStateListOf<Double>() }
@@ -275,6 +281,7 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
                         settings = analysisSettings,
                         manualRoi = manualRoi,
                         cameraControlsLocked = cameraControlsLocked,
+                        liveEvmPreviewDecision = liveEvmPreviewDecision,
                         onStats = { glFrameStats = it },
                         modifier = Modifier.fillMaxSize(),
                         onSample = ::handleSample,
@@ -290,12 +297,14 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
                     onSample = { sample -> handleSample(sample) },
                 )
             }
-            AmplifiedTintOverlay(
-                sample = analysisSample,
-                settings = analysisSettings,
-                artifactSuppressor = artifactSuppressor,
-                modifier = Modifier.fillMaxSize(),
-            )
+            if (!liveEvmPreviewDecision.fullFrameColorPreview) {
+                AmplifiedTintOverlay(
+                    sample = analysisSample,
+                    settings = analysisSettings,
+                    artifactSuppressor = artifactSuppressor,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
             if (manualRoi == null) {
                 RoiOverlay(
                     sample = analysisSample,
@@ -343,6 +352,7 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
             usingGlPreview = usingGlPreview,
             featureAvailability = featureAvailability,
             glFrameStats = glFrameStats,
+            liveEvmPreviewDecision = liveEvmPreviewDecision,
             isRecording = recordingSession != null,
             recordingElapsedMillis = recordingSession?.elapsedMillis ?: 0L,
             lastRecordingPath = lastRecordingPath,
@@ -421,6 +431,7 @@ private fun CameraGlPreview(
     settings: AnalysisSettings,
     manualRoi: NormalizedRect?,
     cameraControlsLocked: Boolean,
+    liveEvmPreviewDecision: LiveEvmPreviewDecision,
     onStats: (GlFrameStats) -> Unit,
     modifier: Modifier = Modifier,
     onSample: (AnalysisSample) -> Long,
@@ -431,6 +442,7 @@ private fun CameraGlPreview(
     val analysisExecutor = remember { Executors.newSingleThreadExecutor() }
     val mainExecutor = remember(context) { ContextCompat.getMainExecutor(context) }
     val colorParameters = remember { ColorMagnificationParameters() }
+    val currentLiveEvmPreviewDecision = rememberUpdatedState(liveEvmPreviewDecision)
 
     DisposableEffect(Unit) {
         onDispose {
@@ -491,6 +503,7 @@ private fun CameraGlPreview(
                                             colorParameters.from(
                                                 sample = sample,
                                                 settings = settings,
+                                                fullFrameMode = currentLiveEvmPreviewDecision.value.fullFrameColorPreview,
                                                 presentationTimestampNanos = presentationTimestampNanos,
                                             )
                                         )
@@ -905,6 +918,7 @@ private fun StatusOverlay(
     usingGlPreview: Boolean,
     featureAvailability: FeatureAvailability,
     glFrameStats: GlFrameStats,
+    liveEvmPreviewDecision: LiveEvmPreviewDecision,
     isRecording: Boolean,
     recordingElapsedMillis: Long,
     lastRecordingPath: String?,
@@ -971,6 +985,10 @@ private fun StatusOverlay(
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = "Output: ${settings.mode.outputLabel}",
+            color = Color(0xFFC8D3DC),
+        )
+        Text(
+            text = "Preview: ${liveEvmPreviewDecision.label}",
             color = Color(0xFFC8D3DC),
         )
         Spacer(modifier = Modifier.height(4.dp))

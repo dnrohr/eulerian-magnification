@@ -36,6 +36,7 @@ class CameraOesRenderer(
     private var colorRoiLocation = -1
     private var colorSignalLocation = -1
     private var colorDifferenceModeLocation = -1
+    private var colorFullFrameModeLocation = -1
     private var rgbRenderTarget: GlRenderTarget? = null
     private var processedRenderTarget: GlRenderTarget? = null
     private var downsamplePyramid: GlPyramid? = null
@@ -48,6 +49,7 @@ class CameraOesRenderer(
         amplifiedSignal = 0.0f,
         differenceMode = false,
         splitMode = false,
+        fullFrameMode = false,
         presentationTimestampNanos = 0L,
     )
 
@@ -78,6 +80,7 @@ class CameraOesRenderer(
         colorRoiLocation = GLES30.glGetUniformLocation(colorProgram, "uRoi")
         colorSignalLocation = GLES30.glGetUniformLocation(colorProgram, "uAmplifiedSignal")
         colorDifferenceModeLocation = GLES30.glGetUniformLocation(colorProgram, "uDifferenceMode")
+        colorFullFrameModeLocation = GLES30.glGetUniformLocation(colorProgram, "uFullFrameMode")
         oesTextureId = createOesTexture()
         surfaceTexture = SurfaceTexture(oesTextureId).apply {
             setOnFrameAvailableListener {
@@ -213,6 +216,7 @@ class CameraOesRenderer(
         )
         GLES30.glUniform1f(colorSignalLocation, uniforms.amplifiedSignal)
         GLES30.glUniform1i(colorDifferenceModeLocation, if (uniforms.differenceMode) 1 else 0)
+        GLES30.glUniform1i(colorFullFrameModeLocation, if (uniforms.fullFrameMode) 1 else 0)
         GLES30.glActiveTexture(GLES30.GL_TEXTURE0)
         GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, input.textureId)
         GLES30.glEnableVertexAttribArray(0)
