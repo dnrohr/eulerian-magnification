@@ -204,7 +204,10 @@ until true motion rendering matures.
 - Pixel 8a-class Android device for camera, GL, encoder, and thermal validation.
 
 The repo ignores local media under `sample-videos/`. Keep downloaded public clips
-and phone recordings there rather than committing them.
+and phone recordings there rather than committing them. The current sample
+catalog is documented in `docs/testing/SAMPLE_VIDEO_SOURCES.md`; it records
+sample IDs, local paths, hashes, recommended modes, and redistribution notes
+without bundling the videos into the app.
 
 ## Build
 
