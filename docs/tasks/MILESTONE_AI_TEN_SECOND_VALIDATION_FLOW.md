@@ -1,4 +1,4 @@
-# Milestone AC - Ten-Second Validation Flow
+# Milestone AI - Ten-Second Validation Flow
 
 Importance: Medium-high. A guided capture/process/review loop is likely the most user-friendly validation workflow.
 

@@ -1,4 +1,4 @@
-# Milestone AG - Quality Change Cues
+# Milestone AL - Quality Change Cues
 
 Importance: Low-medium. Nonvisual cues can help during setup, but must not become annoying.
 

@@ -40,6 +40,19 @@ If the only obvious effect you see is ROI flicker or color flicker, that is a
 limitation of the current implementation rather than a sign that you are using
 it wrong.
 
+## MIT Parity Roadmap
+
+The roadmap now treats MIT-style Eulerian Video Magnification parity as explicit
+work rather than an implied future outcome:
+
+- Define parity targets, samples, settings, and acceptance criteria.
+- Build a recorded full-frame linear EVM renderer that runs
+  pyramid/filter/amplify/reconstruct over whole frames.
+- Validate against MIT-style color and motion samples.
+- Integrate a live full-frame EVM preview path.
+- Promote the existing Riesz/phase reference work into a real app renderer.
+- Rework mode/visualization labels once true color and motion renderers exist.
+
 ## Live Usage Guide
 
 1. Mount the phone or hold it as still as possible.

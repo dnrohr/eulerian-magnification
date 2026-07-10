@@ -1,4 +1,4 @@
-# Milestone AH - Gated Rate Estimates
+# Milestone AM - Gated Rate Estimates
 
 Importance: Low for now. Rate estimates are tempting but risky before signal validation is stronger.
 

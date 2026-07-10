@@ -1,4 +1,4 @@
-# Milestone AE - Exposure And Lighting Diagnostics
+# Milestone AJ - Exposure And Lighting Diagnostics
 
 Importance: Medium. Lighting and exposure pumping can dominate pulse/color results.
 

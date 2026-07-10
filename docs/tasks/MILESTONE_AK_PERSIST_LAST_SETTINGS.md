@@ -1,4 +1,4 @@
-# Milestone AF - Persist Last Settings
+# Milestone AK - Persist Last Settings
 
 Importance: Medium. Remembering settings improves repeated testing.
 

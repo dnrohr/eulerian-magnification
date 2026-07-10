@@ -1,4 +1,4 @@
-# Milestone AI - History Browser
+# Milestone AN - History Browser
 
 Importance: Low for now. A polished history view is useful later, after core outputs are trustworthy.
 
