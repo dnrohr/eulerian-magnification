@@ -79,6 +79,13 @@ For existing Riesz reference validation:
 python tools\riesz_reference\validate_decoded_sample.py sample-videos\exports\mit-evm-baby-riesz-frames.json
 ```
 
+For recorded full-frame linear EVM parity checks that do not require Android
+media decode:
+
+```powershell
+.\gradlew.bat testDebugUnitTest --tests "com.dnrohr.eulerianmagnification.analysis.RecordedEvmParityValidatorTest"
+```
+
 For local file integrity:
 
 ```powershell
