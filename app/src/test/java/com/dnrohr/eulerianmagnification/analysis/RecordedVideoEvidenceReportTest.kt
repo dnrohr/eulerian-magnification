@@ -20,6 +20,8 @@ class RecordedVideoEvidenceReportTest {
         assertTrue(html.contains("<!doctype html>"))
         assertTrue(html.contains("clip&lt;1&gt;.mp4"))
         assertTrue(html.contains("Pulse / Difference"))
+        assertTrue(html.contains("Signal: Recorded ROI green bandpass"))
+        assertTrue(html.contains("Renderer: ROI signal diagnostic"))
         assertTrue(html.contains("Quality: signal present"))
         assertTrue(html.contains("<polyline"))
         assertFalse(html.contains("clip<1>.mp4"))

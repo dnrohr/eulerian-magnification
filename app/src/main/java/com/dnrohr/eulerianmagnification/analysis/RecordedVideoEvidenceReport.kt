@@ -23,6 +23,7 @@ object RecordedVideoEvidenceReport {
             .average()
             .takeUnless { it.isNaN() }
             ?: 0.0
+        val visualizationModel = VisualizationModel.recorded(settings)
 
         return """
             <!doctype html>
@@ -42,6 +43,7 @@ object RecordedVideoEvidenceReport {
               <h1>Evidence Report</h1>
               <p class="meta">Source: ${sourceName.escapeHtml()}</p>
               <p class="meta">Mode: ${settings.mode.label.escapeHtml()} / ${settings.viewMode.label.escapeHtml()} / ${format(settings.lowCutHz)}-${format(settings.highCutHz)} Hz / ${format(settings.amplification.toDouble())}x</p>
+              <p class="meta">Signal: ${visualizationModel.signalSource.label.escapeHtml()} / Renderer: ${visualizationModel.renderer.label.escapeHtml()} / Visualization: ${visualizationModel.visualizationStyle.label.escapeHtml()}</p>
               <p class="meta">Frames: ${frames.size} / Average FPS: ${format(averageFps)} / Quality: ${qualitySummary.escapeHtml()}</p>
               <svg viewBox="0 0 ${PLOT_WIDTH.toInt()} ${PLOT_HEIGHT.toInt()}" role="img" aria-label="Bandpassed signal over time">
                 <line class="axis" x1="0" y1="${PLOT_MIDLINE.toInt()}" x2="${PLOT_WIDTH.toInt()}" y2="${PLOT_MIDLINE.toInt()}"></line>

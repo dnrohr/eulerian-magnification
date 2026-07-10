@@ -31,6 +31,9 @@ motion-magnification camera.
 - GL Pulse `Amplified`/`Split` can use an early full-frame color preview bridge
   when timing is healthy. This is still signal-driven color output, not live
   MIT-style pyramid reconstruction.
+- Expanded controls and exports now separate the measured signal source,
+  renderer, and visualization style, so mode names no longer have to imply that
+  every renderer is equally mature.
 - Recorded-video `Amplified` and `Split` exports now run full-frame linear EVM
   for Pulse and recorded Riesz phase motion for non-Pulse motion modes. These
   are the first paths that should look like true frame processing rather than an
@@ -219,6 +222,7 @@ Use recorded or synthetic inputs before relying on live phone behavior:
 
 - Recorded-video validation flow: `docs/testing/RECORDED_VIDEO_VALIDATION.md`
 - MIT parity targets: `docs/testing/MIT_PARITY_TARGETS.md`
+- Signal/renderer/visualization model: `docs/architecture/SIGNAL_VISUALIZATION_MODEL.md`
 - ROI device validation flow: `docs/testing/ROI_DEVICE_VALIDATION.md`
 - Public sample plan: `docs/testing/SAMPLE_VIDEO_SOURCES.md`
 - Riesz / phase-mode reference: `docs/architecture/RIESZ_MODE.md`

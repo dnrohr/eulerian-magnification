@@ -5,6 +5,8 @@ import com.dnrohr.eulerianmagnification.analysis.AnalysisSettings
 import com.dnrohr.eulerianmagnification.analysis.MagnificationMode
 import com.dnrohr.eulerianmagnification.analysis.NormalizedRect
 import com.dnrohr.eulerianmagnification.analysis.TranslationEstimate
+import com.dnrohr.eulerianmagnification.analysis.VisualizationModel
+import com.dnrohr.eulerianmagnification.analysis.ViewMode
 import com.dnrohr.eulerianmagnification.gl.GlTextureSize
 import com.dnrohr.eulerianmagnification.gl.ProcessedGlFrame
 import org.junit.Assert.assertEquals
@@ -38,6 +40,9 @@ class ProcessedRecordingSessionTest {
 
         assertTrue(output.exists())
         assertTrue(json.contains("\"mode\": \"Breathing\""))
+        assertTrue(json.contains("\"signalSource\": \"roi_vertical_translation\""))
+        assertTrue(json.contains("\"renderer\": \"live_roi_signal_tint\""))
+        assertTrue(json.contains("\"visualizationStyle\": \"roi_signal_overlay\""))
         assertTrue(json.contains("\"thermalStatus\": \"none\""))
         assertTrue(json.contains("\"sampleCount\": 1"))
         assertTrue(json.contains("\"bandpassedGreen\": 0.250000"))
@@ -54,6 +59,30 @@ class ProcessedRecordingSessionTest {
         session.record(AnalysisSample(frameTimestampNanos = 100L))
 
         assertTrue(session.droppedFrameEstimate == 1)
+    }
+
+    @Test
+    fun writesResolvedLiveVisualizationModelWhenProvided() {
+        val directory = Files.createTempDirectory("recording-session").toFile()
+        val session = ProcessedRecordingSession(directory, startedAtMillis = 1_700_000_000_000L)
+        val settings = AnalysisSettings(
+            mode = MagnificationMode.Pulse,
+            viewMode = ViewMode.Split,
+        )
+
+        val output = session.stop(
+            settings = settings,
+            thermalStatus = "none",
+            visualizationModel = VisualizationModel.live(
+                settings = settings,
+                fullFrameColorPreview = true,
+            ),
+        )
+        val json = output.readText()
+
+        assertTrue(json.contains("\"signalSource\": \"roi_green_bandpass\""))
+        assertTrue(json.contains("\"renderer\": \"live_gl_full_frame_color_bridge\""))
+        assertTrue(json.contains("\"visualizationStyle\": \"split_comparison\""))
     }
 
     @Test

@@ -2,6 +2,7 @@ package com.dnrohr.eulerianmagnification.recording
 
 import com.dnrohr.eulerianmagnification.analysis.AnalysisSample
 import com.dnrohr.eulerianmagnification.analysis.AnalysisSettings
+import com.dnrohr.eulerianmagnification.analysis.VisualizationModel
 import com.dnrohr.eulerianmagnification.gl.ProcessedGlFrame
 import java.io.File
 import java.time.Instant
@@ -54,10 +55,14 @@ class ProcessedRecordingSession(
     fun stop(
         settings: AnalysisSettings,
         thermalStatus: String,
+        visualizationModel: VisualizationModel = VisualizationModel.live(
+            settings = settings,
+            fullFrameColorPreview = false,
+        ),
     ): File {
         videoRecorder?.stop()
         val output = File(sessionDirectory, "metadata.json")
-        output.writeText(toJson(settings, thermalStatus))
+        output.writeText(toJson(settings, thermalStatus, visualizationModel))
         return output
     }
 
@@ -71,6 +76,7 @@ class ProcessedRecordingSession(
     private fun toJson(
         settings: AnalysisSettings,
         thermalStatus: String,
+        visualizationModel: VisualizationModel,
     ): String {
         return buildString {
             appendLine("{")
@@ -79,6 +85,12 @@ class ProcessedRecordingSession(
             appendLine("  \"thermalStatus\": \"$thermalStatus\",")
             appendLine("  \"mode\": \"${settings.mode.label}\",")
             appendLine("  \"viewMode\": \"${settings.viewMode.label}\",")
+            appendLine("  \"signalSource\": \"${visualizationModel.signalSource.id}\",")
+            appendLine("  \"signalSourceLabel\": \"${visualizationModel.signalSource.label}\",")
+            appendLine("  \"renderer\": \"${visualizationModel.renderer.id}\",")
+            appendLine("  \"rendererLabel\": \"${visualizationModel.renderer.label}\",")
+            appendLine("  \"visualizationStyle\": \"${visualizationModel.visualizationStyle.id}\",")
+            appendLine("  \"visualizationStyleLabel\": \"${visualizationModel.visualizationStyle.label}\",")
             appendLine("  \"amplification\": ${settings.amplification},")
             appendLine("  \"lowCutHz\": ${settings.lowCutHz},")
             appendLine("  \"highCutHz\": ${settings.highCutHz},")

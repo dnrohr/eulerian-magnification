@@ -86,6 +86,7 @@ import com.dnrohr.eulerianmagnification.analysis.RecordedVideoFrameDecoder
 import com.dnrohr.eulerianmagnification.analysis.RecordedVideoProcessor
 import com.dnrohr.eulerianmagnification.analysis.RecordedVideoValidationResult
 import com.dnrohr.eulerianmagnification.analysis.RoiState
+import com.dnrohr.eulerianmagnification.analysis.VisualizationModel
 import com.dnrohr.eulerianmagnification.analysis.ViewMode
 import com.dnrohr.eulerianmagnification.capabilities.CapabilityReportStore
 import com.dnrohr.eulerianmagnification.capabilities.CapabilityReporter
@@ -397,6 +398,10 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
                         val output = activeSession.stop(
                             settings = analysisSettings,
                             thermalStatus = thermalStatus(context),
+                            visualizationModel = VisualizationModel.live(
+                                settings = analysisSettings,
+                                fullFrameColorPreview = liveEvmPreviewDecision.fullFrameColorPreview,
+                            ),
                         )
                         lastRecordingPath = output.absolutePath
                         recentRecordings = RecordingGallery.listRecent(recordingRootDirectory)
@@ -991,6 +996,18 @@ private fun StatusOverlay(
             text = "Preview: ${liveEvmPreviewDecision.label}",
             color = Color(0xFFC8D3DC),
         )
+        val liveVisualizationModel = VisualizationModel.live(
+            settings = settings,
+            fullFrameColorPreview = liveEvmPreviewDecision.fullFrameColorPreview,
+        )
+        Text(
+            text = "Signal: ${liveVisualizationModel.signalSource.label}",
+            color = Color(0xFFC8D3DC),
+        )
+        Text(
+            text = "Renderer: ${liveVisualizationModel.renderer.label}",
+            color = Color(0xFFC8D3DC),
+        )
         Spacer(modifier = Modifier.height(4.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -1509,6 +1526,7 @@ private fun recordedVideoExportMetadata(
     processedFrameCount: Int,
     qualitySummary: String,
 ): String {
+    val visualizationModel = VisualizationModel.recorded(settings)
     return buildString {
         appendLine("{")
         appendLine("  \"sourceName\": ${sourceName.quoteJson()},")
@@ -1516,6 +1534,12 @@ private fun recordedVideoExportMetadata(
         appendLine("  \"durationMillis\": $durationMillis,")
         appendLine("  \"mode\": ${settings.mode.label.quoteJson()},")
         appendLine("  \"viewMode\": ${settings.viewMode.label.quoteJson()},")
+        appendLine("  \"signalSource\": ${visualizationModel.signalSource.id.quoteJson()},")
+        appendLine("  \"signalSourceLabel\": ${visualizationModel.signalSource.label.quoteJson()},")
+        appendLine("  \"renderer\": ${visualizationModel.renderer.id.quoteJson()},")
+        appendLine("  \"rendererLabel\": ${visualizationModel.renderer.label.quoteJson()},")
+        appendLine("  \"visualizationStyle\": ${visualizationModel.visualizationStyle.id.quoteJson()},")
+        appendLine("  \"visualizationStyleLabel\": ${visualizationModel.visualizationStyle.label.quoteJson()},")
         appendLine("  \"amplification\": ${settings.amplification},")
         appendLine("  \"lowCutHz\": ${settings.lowCutHz},")
         appendLine("  \"highCutHz\": ${settings.highCutHz},")
