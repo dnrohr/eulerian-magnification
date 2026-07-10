@@ -21,8 +21,8 @@ class RecordedVideoProcessorTest {
     }
 
     @Test
-    fun amplifiedViewChangesRoiPixelsForInBandSignal() {
-        val frames = syntheticClip(frequencyHz = 1.2)
+    fun amplifiedViewChangesFullFrameForInBandSignal() {
+        val frames = syntheticGlobalClip(frequencyHz = 1.2)
         val result = RecordedVideoProcessor(
             settings = AnalysisSettings(
                 mode = MagnificationMode.Pulse,
@@ -32,11 +32,12 @@ class RecordedVideoProcessorTest {
         ).process(frames)
 
         val changedFrame = result.processedFrames.first { processed ->
-            processed.frame.pixels[roiIndex()] != frames[result.processedFrames.indexOf(processed)].pixels[roiIndex()]
+            processed.frame.pixels[0] != frames[result.processedFrames.indexOf(processed)].pixels[0]
         }
         val sourceFrame = frames[result.processedFrames.indexOf(changedFrame)]
-        assertTrue(changedFrame.frame.pixels[roiIndex()] != sourceFrame.pixels[roiIndex()])
-        assertEquals(sourceFrame.pixels[0], changedFrame.frame.pixels[0])
+        assertEquals(sourceFrame.width, changedFrame.frame.width)
+        assertEquals(sourceFrame.height, changedFrame.frame.height)
+        assertTrue(changedFrame.frame.pixels[0] != sourceFrame.pixels[0])
     }
 
     @Test
@@ -64,7 +65,7 @@ class RecordedVideoProcessorTest {
 
     @Test
     fun splitViewPlacesRawAndProcessedFramesSideBySide() {
-        val frames = syntheticClip(frequencyHz = 1.2)
+        val frames = syntheticGlobalClip(frequencyHz = 1.2)
         val result = RecordedVideoProcessor(
             settings = AnalysisSettings(
                 mode = MagnificationMode.Pulse,
@@ -77,7 +78,12 @@ class RecordedVideoProcessorTest {
         assertEquals(WIDTH * 2, splitFrame.width)
         assertEquals(HEIGHT, splitFrame.height)
         assertEquals(frames.first().pixels[0], splitFrame.pixels[0])
-        assertEquals(frames.first().pixels[0], splitFrame.pixels[WIDTH])
+        assertEquals(rgb24(frames.first().pixels[0]), rgb24(splitFrame.pixels[WIDTH]))
+
+        val changedSplitFrame = result.processedFrames.first { processed ->
+            rgb24(processed.frame.pixels[WIDTH]) != rgb24(frames[result.processedFrames.indexOf(processed)].pixels[0])
+        }.frame
+        assertTrue(rgb24(changedSplitFrame.pixels[WIDTH]) != rgb24(changedSplitFrame.pixels[0]))
     }
 
     private fun syntheticClip(frequencyHz: Double): List<RgbFrame> {
@@ -109,6 +115,20 @@ class RecordedVideoProcessorTest {
         )
     }
 
+    private fun syntheticGlobalClip(frequencyHz: Double): List<RgbFrame> {
+        return (0 until FRAME_COUNT).map { frameIndex ->
+            val seconds = frameIndex / FPS
+            val timestampNanos = (seconds * NANOS_PER_SECOND).toLong()
+            val green = 128 + (10.0 * sin(2.0 * PI * frequencyHz * seconds)).roundToInt()
+            RgbFrame(
+                width = WIDTH,
+                height = HEIGHT,
+                timestampNanos = timestampNanos,
+                pixels = IntArray(WIDTH * HEIGHT) { rgb(96, green, 96) },
+            )
+        }
+    }
+
     private fun roiIndex(): Int {
         val roi = RecordedVideoAnalyzer.DEFAULT_ROI
         val x = (((roi.left + roi.right) / 2.0f) * WIDTH).toInt()
@@ -125,6 +145,7 @@ class RecordedVideoProcessorTest {
 
     private fun red(pixel: Int): Int = (pixel shr 16) and 0xFF
     private fun blue(pixel: Int): Int = pixel and 0xFF
+    private fun rgb24(pixel: Int): Int = pixel and 0x00FF_FFFF
 
     companion object {
         private const val WIDTH = 64

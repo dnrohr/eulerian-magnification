@@ -17,17 +17,20 @@ validation.
 - Manual ROI selection, face ROI smoothing/tracking, basic translation estimate,
   quality warnings, and amplification/noise guardrails.
 - Debug processed MP4 recording with sidecar metadata JSON.
-- Offline recorded-frame validation scaffolding and a Python Riesz reference
-  pyramid for phase-mode work.
+- Offline recorded-frame validation, recorded full-frame linear EVM processing,
+  and a Python Riesz reference pyramid for phase-mode work.
 
 ## What To Expect
 
 The current live app is best understood as a research viewer, not a finished
 motion-magnification camera.
 
-- Pulse mode currently shows color/tint changes inside the ROI. A good result is
-  a subtle rhythmic color change in a skin patch, not visible movement of the
-  face.
+- Live Pulse mode currently shows color/tint changes inside the ROI. A good
+  live result is a subtle rhythmic color change in a skin patch, not visible
+  movement of the face.
+- Recorded-video `Amplified` and `Split` exports now run a full-frame linear EVM
+  reconstruction path over the selected clip. This is the first path that should
+  look like true frame processing rather than an ROI overlay.
 - Breathing mode estimates low-frequency vertical translation and shows the
   breathing signal in the expanded controls. It does not yet warp the preview to
   make chest motion visually larger.
@@ -146,8 +149,10 @@ The default screen is intentionally compact so the preview remains visible.
   metadata JSON in app storage.
 - `Process Video`: selects a recorded/sample video and runs the offline
   processing/export path. Use this for `sample-videos/euler.mp4` after copying
-  it to the phone or another picker-visible location. The export writes a
-  processed MP4, metadata JSON, `signal_timeline.csv`, and
+  it to the phone or another picker-visible location. In `Amplified` and
+  `Split`, recorded exports use full-frame linear EVM reconstruction; in
+  `Difference`, the export shows a signed ROI diagnostic over dim context. The
+  export writes a processed MP4, metadata JSON, `signal_timeline.csv`, and
   `evidence_report.html`.
 - `Share Metadata`: shares the JSON metadata for the latest recording.
 - `Metadata` / `Video`: shares recent recording/export metadata or processed
@@ -240,8 +245,9 @@ The intended order is:
 
 - The `ROI motion` quality warning can be caused by phone movement, subject
   movement, visible heartbeat/face movement, or tracker drift.
-- The debug MP4 is an app-owned processed visualization, not the final
-  preview-matching camera/GPU recording path.
+- The debug MP4 is an app-owned processed visualization. Recorded-video
+  processing now reconstructs full frames for `Amplified`/`Split`, while the
+  live preview-matching camera/GPU recording path is still separate work.
 - GL preview currently uses CPU analysis for ROI and signal uniforms while GPU
   color processing/display work continues.
 - Public or synthetic recorded-video validation should come before asking for a

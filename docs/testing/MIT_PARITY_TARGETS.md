@@ -59,7 +59,9 @@ These are starting settings. A parity run should record the exact settings in
 
 ## Local Commands
 
-Current recorded-video processing is app-driven. Until a CLI renderer exists:
+Current recorded-video processing is app-driven. The `Amplified` and `Split`
+recorded export views now use the CPU full-frame linear EVM renderer; live
+preview parity is still separate work. Until a CLI renderer exists:
 
 1. Place sample media under `sample-videos/`.
 2. Copy or share the target sample to a picker-visible location when device testing

@@ -21,13 +21,19 @@ class RecordedVideoProcessor(
 ) {
     fun process(frames: Iterable<RgbFrame>): RecordedVideoProcessingResult {
         val analyzer = RecordedVideoAnalyzer(settings, roi)
+        val fullFrameRenderer = FullFrameLinearEvmRenderer(settings)
         val processed = mutableListOf<RecordedVideoProcessedFrame>()
         var sourceFrameCount = 0
         frames.forEach { frame ->
             sourceFrameCount++
             val sample = analyzer.analyze(frame)
+            val fullFrameEvm = if (settings.viewMode == ViewMode.Amplified || settings.viewMode == ViewMode.Split) {
+                fullFrameRenderer.render(frame)
+            } else {
+                frame
+            }
             processed += RecordedVideoProcessedFrame(
-                frame = render(frame, sample),
+                frame = render(frame, sample, fullFrameEvm),
                 sample = sample,
             )
         }
@@ -40,26 +46,15 @@ class RecordedVideoProcessor(
     private fun render(
         frame: RgbFrame,
         sample: AnalysisSample,
+        fullFrameEvm: RgbFrame,
     ): RgbFrame {
         val processed = when (settings.viewMode) {
             ViewMode.Raw -> frame.copy(pixels = frame.pixels.copyOf())
-            ViewMode.Amplified -> amplified(frame, sample)
+            ViewMode.Amplified -> fullFrameEvm
             ViewMode.Difference -> difference(frame, sample)
-            ViewMode.Split -> sideBySide(frame, amplified(frame, sample))
+            ViewMode.Split -> sideBySide(frame, fullFrameEvm)
         }
         return processed
-    }
-
-    private fun amplified(
-        frame: RgbFrame,
-        sample: AnalysisSample,
-    ): RgbFrame {
-        val pixels = frame.pixels.copyOf()
-        val signal = normalizedSignal(sample)
-        forEachRoiPixel(frame) { index ->
-            pixels[index] = addDelta(frame.pixels[index], signal)
-        }
-        return frame.copy(pixels = pixels)
     }
 
     private fun difference(
@@ -106,17 +101,6 @@ class RecordedVideoProcessor(
             .coerceIn(-1.0, 1.0)
     }
 
-    private fun addDelta(pixel: Int, signal: Double): Int {
-        val red = red(pixel) + signal * 255.0
-        val green = green(pixel) + signal * 255.0 * 0.55
-        val blue = blue(pixel) + signal * 255.0 * 0.35
-        return argb(
-            red = red.toInt().coerceIn(0, 255),
-            green = green.toInt().coerceIn(0, 255),
-            blue = blue.toInt().coerceIn(0, 255),
-        )
-    }
-
     private fun forEachRoiPixel(
         frame: RgbFrame,
         block: (Int) -> Unit,
@@ -131,14 +115,4 @@ class RecordedVideoProcessor(
             }
         }
     }
-
-    private fun red(pixel: Int): Int = (pixel shr 16) and 0xFF
-    private fun green(pixel: Int): Int = (pixel shr 8) and 0xFF
-    private fun blue(pixel: Int): Int = pixel and 0xFF
-
-    private fun argb(
-        red: Int,
-        green: Int,
-        blue: Int,
-    ): Int = (0xFF shl 24) or (red shl 16) or (green shl 8) or blue
 }
