@@ -8,6 +8,30 @@ enum class ColorAmplificationStrategy {
     GreenOnly,
     Rgb,
     Chrominance,
+    RoiWeightedChrominance,
+}
+
+data class ChrominanceAmplificationWeights(
+    val roi: NormalizedRect,
+    val backgroundGain: Double = DEFAULT_BACKGROUND_GAIN,
+) {
+    init {
+        require(backgroundGain in 0.0..1.0) { "backgroundGain must be in 0..1" }
+    }
+
+    fun gainFor(index: Int, width: Int, height: Int): Double {
+        val x = index % width
+        val y = index / width
+        val insideRoi = x >= (roi.left * width).toInt().coerceIn(0, width - 1) &&
+            x < (roi.right * width).toInt().coerceIn(1, width) &&
+            y >= (roi.top * height).toInt().coerceIn(0, height - 1) &&
+            y < (roi.bottom * height).toInt().coerceIn(1, height)
+        return if (insideRoi) 1.0 else backgroundGain
+    }
+
+    companion object {
+        private const val DEFAULT_BACKGROUND_GAIN = 0.12
+    }
 }
 
 data class ColorAmplificationMetrics(
@@ -26,14 +50,18 @@ object ChrominanceAmplificationComparison {
             targetRed = 188,
             targetGreen = 132,
             targetBlue = 112,
-            background = 72,
+            backgroundRed = 72,
+            backgroundGreen = 72,
+            backgroundBlue = 72,
             timestampNanos = 0L,
         )
         val pulse = syntheticSkinFrame(
             targetRed = 190,
             targetGreen = 136,
             targetBlue = 114,
-            background = 74,
+            backgroundRed = 75,
+            backgroundGreen = 73,
+            backgroundBlue = 72,
             timestampNanos = FRAME_NANOS,
         )
         return ColorAmplificationStrategy.entries.map { strategy ->
@@ -42,10 +70,12 @@ object ChrominanceAmplificationComparison {
                 current = pulse,
                 strategy = strategy,
                 amplification = amplification,
+                weights = ChrominanceAmplificationWeights(TARGET_ROI),
             )
             metrics(
                 strategy = strategy,
                 base = base,
+                current = pulse,
                 amplified = amplified,
             )
         }
@@ -56,6 +86,7 @@ object ChrominanceAmplificationComparison {
         current: RgbFrame,
         strategy: ColorAmplificationStrategy,
         amplification: Double,
+        weights: ChrominanceAmplificationWeights = ChrominanceAmplificationWeights(FULL_FRAME_ROI),
     ): RgbFrame {
         require(base.width == current.width && base.height == current.height) {
             "base and current frame dimensions must match"
@@ -69,6 +100,11 @@ object ChrominanceAmplificationComparison {
                     base.pixels[index],
                     current.pixels[index],
                     amplification,
+                )
+                ColorAmplificationStrategy.RoiWeightedChrominance -> amplifyChrominance(
+                    base.pixels[index],
+                    current.pixels[index],
+                    amplification * weights.gainFor(index, current.width, current.height),
                 )
             }
         }
@@ -116,6 +152,7 @@ object ChrominanceAmplificationComparison {
     private fun metrics(
         strategy: ColorAmplificationStrategy,
         base: RgbFrame,
+        current: RgbFrame,
         amplified: RgbFrame,
     ): ColorAmplificationMetrics {
         var targetChroma = 0.0
@@ -125,18 +162,23 @@ object ChrominanceAmplificationComparison {
         var backgroundCount = 0
         amplified.pixels.forEachIndexed { index, pixel ->
             val baseYiq = YiqColor.fromRgb(base.pixels[index])
+            val currentYiq = YiqColor.fromRgb(current.pixels[index])
             val amplifiedYiq = YiqColor.fromRgb(pixel)
-            val chromaDelta = hypot(
+            val targetChromaDelta = hypot(
                 amplifiedYiq.inPhase - baseYiq.inPhase,
                 amplifiedYiq.quadrature - baseYiq.quadrature,
             )
-            val luminanceDelta = abs(amplifiedYiq.luminance - baseYiq.luminance)
+            val backgroundChromaDelta = hypot(
+                amplifiedYiq.inPhase - currentYiq.inPhase,
+                amplifiedYiq.quadrature - currentYiq.quadrature,
+            )
+            val backgroundLuminanceDelta = abs(amplifiedYiq.luminance - currentYiq.luminance)
             if (isTargetIndex(index, amplified.width)) {
-                targetChroma += chromaDelta
+                targetChroma += targetChromaDelta
                 targetCount++
             } else {
-                backgroundPumping += chromaDelta + luminanceDelta
-                backgroundLuminance += luminanceDelta
+                backgroundPumping += backgroundChromaDelta + backgroundLuminanceDelta
+                backgroundLuminance += backgroundLuminanceDelta
                 backgroundCount++
             }
         }
@@ -152,7 +194,9 @@ object ChrominanceAmplificationComparison {
         targetRed: Int,
         targetGreen: Int,
         targetBlue: Int,
-        background: Int,
+        backgroundRed: Int,
+        backgroundGreen: Int,
+        backgroundBlue: Int,
         timestampNanos: Long,
     ): RgbFrame {
         return RgbFrame(
@@ -163,7 +207,7 @@ object ChrominanceAmplificationComparison {
                 if (isTargetIndex(index, WIDTH)) {
                     rgb(targetRed, targetGreen, targetBlue)
                 } else {
-                    rgb(background, background, background)
+                    rgb(backgroundRed, backgroundGreen, backgroundBlue)
                 }
             },
         )
@@ -191,6 +235,13 @@ object ChrominanceAmplificationComparison {
     private const val TARGET_RIGHT = 42
     private const val TARGET_TOP = 14
     private const val TARGET_BOTTOM = 34
+    private val TARGET_ROI = NormalizedRect(
+        left = TARGET_LEFT / WIDTH.toFloat(),
+        top = TARGET_TOP / HEIGHT.toFloat(),
+        right = TARGET_RIGHT / WIDTH.toFloat(),
+        bottom = TARGET_BOTTOM / HEIGHT.toFloat(),
+    )
+    private val FULL_FRAME_ROI = NormalizedRect(0.0f, 0.0f, 1.0f, 1.0f)
     private const val FRAME_NANOS = 33_333_333L
     private const val DEFAULT_AMPLIFICATION = 6.0
 }

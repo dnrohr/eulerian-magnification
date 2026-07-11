@@ -38,6 +38,27 @@ class ChrominanceAmplificationComparisonTest {
     }
 
     @Test
+    fun roiWeightedChrominanceSuppressesBackgroundPumping() {
+        val metrics = ChrominanceAmplificationComparison.compareSyntheticSkinPulse()
+        val chrominance = metrics.first { it.strategy == ColorAmplificationStrategy.Chrominance }
+        val weighted = metrics.first { it.strategy == ColorAmplificationStrategy.RoiWeightedChrominance }
+
+        assertTrue(weighted.targetChromaResponse >= chrominance.targetChromaResponse * 0.95)
+        assertTrue(weighted.backgroundPumping < chrominance.backgroundPumping * 0.5)
+        assertTrue(weighted.responseToPumpRatio > chrominance.responseToPumpRatio)
+    }
+
+    @Test
+    fun rejectsInvalidBackgroundGain() {
+        assertThrows(IllegalArgumentException::class.java) {
+            ChrominanceAmplificationWeights(
+                roi = NormalizedRect(0.0f, 0.0f, 1.0f, 1.0f),
+                backgroundGain = 1.2,
+            )
+        }
+    }
+
+    @Test
     fun rejectsMismatchedFrameSizes() {
         val base = frame(width = 2, height = 2)
         val current = frame(width = 3, height = 2)
