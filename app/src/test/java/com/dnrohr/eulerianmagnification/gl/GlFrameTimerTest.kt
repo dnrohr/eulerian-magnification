@@ -11,6 +11,7 @@ class GlFrameTimerTest {
         assertEquals(0, stats.sampleCount)
         assertEquals(0.0, stats.averageFrameMillis, 0.0)
         assertEquals(0.0, stats.averageFps, 0.0)
+        assertEquals(GlRenderPath.Unknown, stats.renderPath)
     }
 
     @Test
@@ -26,6 +27,16 @@ class GlFrameTimerTest {
         assertEquals(2, stats.sampleCount)
         assertEquals(24.0, stats.averageFrameMillis, 0.001)
         assertEquals(41.666, stats.averageFps, 0.01)
+    }
+
+    @Test
+    fun carriesRenderPathInStats() {
+        val timer = GlFrameTimer()
+
+        timer.beginFrame(0L)
+        val stats = timer.endFrame(16_000_000L, GlRenderPath.LiveReconstruction)
+
+        assertEquals(GlRenderPath.LiveReconstruction, stats.renderPath)
     }
 
     @Test

@@ -175,13 +175,21 @@ class CameraOesRenderer(
             hasNewFrame = false
         }
         renderCameraTextureToRgb()
-        if (!renderLivePyramidReconstruction()) {
+        val reconstructionRequested = liveReconstructionRequested(colorUniforms)
+        val renderPath = if (renderLivePyramidReconstruction()) {
+            GlRenderPath.LiveReconstruction
+        } else {
             renderColorMagnification()
+            if (reconstructionRequested) {
+                GlRenderPath.LiveReconstructionFallback
+            } else {
+                GlRenderPath.ColorBridge
+            }
         }
         emitProcessedFrame()
         drawOutputToScreen()
         providePendingSurfaceIfReady()
-        onStats(timer.endFrame(System.nanoTime()))
+        onStats(timer.endFrame(System.nanoTime(), renderPath))
     }
 
     fun release() {
@@ -288,7 +296,7 @@ class CameraOesRenderer(
 
     private fun renderLivePyramidReconstruction(): Boolean {
         val uniforms = colorUniforms
-        if (!supportsHalfFloatTemporalTargets || !uniforms.fullFrameMode || uniforms.differenceMode) {
+        if (!supportsHalfFloatTemporalTargets || !liveReconstructionRequested(uniforms)) {
             lastTemporalTimestampNanos = null
             return false
         }
@@ -315,6 +323,10 @@ class CameraOesRenderer(
             lastTemporalTimestampNanos = null
             false
         }
+    }
+
+    private fun liveReconstructionRequested(uniforms: ColorMagnificationUniforms): Boolean {
+        return uniforms.fullFrameMode && !uniforms.differenceMode
     }
 
     private fun createTemporalStateIfSupported(pyramid: GlPyramid): GlTemporalState? {

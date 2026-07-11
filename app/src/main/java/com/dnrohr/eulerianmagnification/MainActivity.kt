@@ -1118,6 +1118,10 @@ private fun StatusOverlay(
                 color = Color.White,
             )
             Text(
+                text = "GL renderer: ${glFrameStats.renderPath.label}",
+                color = Color.White,
+            )
+            Text(
                 text = PerformanceBenchmark.from(sample, glFrameStats).summary(),
                 color = Color.White,
             )

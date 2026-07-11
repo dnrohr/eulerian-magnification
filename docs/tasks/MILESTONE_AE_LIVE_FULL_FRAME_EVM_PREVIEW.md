@@ -25,9 +25,9 @@ Goal: integrate the full-frame EVM renderer into the live preview path.
 - Suppressed the Compose ROI tint overlay during the full-frame GL bridge so the
   image is easier to inspect.
 - Added an expanded-controls `Preview:` label.
-- This is not yet live MIT-style pyramid reconstruction. The remaining AE work
-  is to wire temporal pyramid state into GL reconstruction and validate on the
-  Pixel in portrait orientation.
+- The initial bridge was not live MIT-style pyramid reconstruction. Later AE
+  slices wired temporal pyramid state into GL reconstruction; the remaining AE
+  work is Pixel portrait validation with a known target.
 
 ## Completed Slice: Reconstruction Shader Plan
 
@@ -39,8 +39,9 @@ Goal: integrate the full-frame EVM renderer into the live preview path.
   reconstruction passes.
 - Added JVM coverage for pyramid sizing, temporal coefficients, invalid band
   rejection, and shader uniform/source expectations.
-- This still does not wire the runtime GL pass into `CameraOesRenderer`, so AE
-  remains in progress until reconstructed output is rendered and validated.
+- This slice did not wire the runtime GL pass into `CameraOesRenderer`; later
+  AE slices connected the pass graph. AE remains in progress until reconstructed
+  output is validated on device.
 
 ## Completed Slice: Temporal State Targets
 
@@ -53,9 +54,9 @@ Goal: integrate the full-frame EVM renderer into the live preview path.
   passes.
 - Updated shader contracts and JVM coverage so the temporal pass exposes both
   highpass history output and bandpass reconstruction output.
-- This still does not call the temporal shader from `CameraOesRenderer`; the
-  next AE slice should compile/link the pass programs and invoke them between
-  RGB capture and output display.
+- This slice did not call the temporal shader from `CameraOesRenderer`; later
+  AE slices compile/link and invoke the pass programs between RGB capture and
+  output display.
 
 ## Completed Slice: Live Reconstruction Pass Graph
 
@@ -98,6 +99,14 @@ Goal: integrate the full-frame EVM renderer into the live preview path.
 - Subsequent frames use the normal high-minus-low bandpass output.
 - This matches the CPU `BandpassFilter` startup behavior and avoids a startup
   flash that could be mistaken for real magnified motion.
+
+## Completed Slice: Renderer Path Diagnostics
+
+- Added a GL render-path field to frame stats.
+- The expanded debug UI now reports whether the GL renderer is using the color
+  bridge, live reconstruction, or live reconstruction fallback.
+- This gives the Pixel validation run a direct way to confirm which path is
+  visible before evaluating magnification quality.
 
 ## Evidence
 

@@ -74,6 +74,10 @@ current pyramid level into lowpass and highpass history while emitting zero
 bandpass. This keeps startup behavior consistent with the CPU filter and avoids
 an artificial first-frame pulse.
 
+The expanded debug UI now includes `GL renderer:` so validation can distinguish
+the color bridge, live reconstruction, and live reconstruction fallback before
+judging visual output.
+
 ## Verification
 
 ```powershell

@@ -74,6 +74,11 @@ emits zero bandpass, then later frames use the normal high-minus-low bandpass
 output. This mirrors the CPU filter startup behavior and avoids an artificial
 first-frame flash.
 
+The GL frame stats include the active render path, and the expanded debug UI
+shows whether preview is using the color bridge, live reconstruction, or live
+reconstruction fallback. This is intended to make device validation less
+ambiguous.
+
 ## Verification
 
 - Unit tests verify ROI-limited shader source expectations, difference-mode source expectations, split-mode uniform mapping, viewport layout, benchmark summary mapping, and uniform mapping from analysis/settings.
