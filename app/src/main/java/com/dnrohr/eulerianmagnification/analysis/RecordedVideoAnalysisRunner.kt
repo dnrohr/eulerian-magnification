@@ -9,6 +9,10 @@ data class RecordedVideoAnalysisReport(
     val bandpassedEnergy: Double,
     val maxBandpassedMagnitude: Double,
     val timestampsMonotonic: Boolean,
+    val rateEstimate: GatedRateEstimate = GatedRateEstimate(
+        estimate = null,
+        hiddenReason = RateEstimateHiddenReason.TooFewFrames,
+    ),
 ) {
     val hasFrames: Boolean get() = frameCount > 0
 }
@@ -26,6 +30,7 @@ class RecordedVideoAnalysisRunner(
         var bandpassedEnergy = 0.0
         var maxBandpassedMagnitude = 0.0
         var timestampsMonotonic = true
+        val rateSamples = mutableListOf<RateSignalSample>()
 
         frames.forEach { frame ->
             val sample = analyzer.analyze(frame)
@@ -39,15 +44,36 @@ class RecordedVideoAnalysisRunner(
             bandpassedEnergy += bandpassedMagnitude
             maxBandpassedMagnitude = maxOf(maxBandpassedMagnitude, bandpassedMagnitude)
             timestampsMonotonic = timestampsMonotonic && sample.timestampMonotonic
+            rateSamples += RateSignalSample(
+                timestampNanos = sample.frameTimestampNanos,
+                value = sample.bandpassedGreen,
+            )
         }
+
+        val averageFps = if (fpsCount == 0) 0.0 else fpsSum / fpsCount
+        val rateEstimate = GatedRateEstimator.estimate(
+            mode = settings.mode,
+            samples = rateSamples,
+            gate = RateEstimateGate(
+                frameCount = frameCount,
+                averageFps = averageFps,
+                timestampsMonotonic = timestampsMonotonic,
+                hasRoi = roi.width > 0.0f && roi.height > 0.0f,
+                lightingStable = true,
+                motionMagnitude = 0.0f,
+                bandpassedEnergy = bandpassedEnergy,
+                maxBandpassedMagnitude = maxBandpassedMagnitude,
+            ),
+        )
 
         return RecordedVideoAnalysisReport(
             frameCount = frameCount,
-            averageFps = if (fpsCount == 0) 0.0 else fpsSum / fpsCount,
+            averageFps = averageFps,
             averageGreen = if (frameCount == 0) 0.0 else greenSum / frameCount,
             bandpassedEnergy = bandpassedEnergy,
             maxBandpassedMagnitude = maxBandpassedMagnitude,
             timestampsMonotonic = timestampsMonotonic,
+            rateEstimate = rateEstimate,
         )
     }
 }

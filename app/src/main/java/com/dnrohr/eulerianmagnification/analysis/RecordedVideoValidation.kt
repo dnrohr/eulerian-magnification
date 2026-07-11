@@ -13,9 +13,11 @@ data class RecordedVideoValidationResult(
             return "Video processing: $sourceName produced no frames"
         }
         val timing = if (report.timestampsMonotonic) "timing OK" else "timing issue"
+        val rate = report.rateEstimate.estimate?.let { ", ${it.summary()}" }
+            ?: ", ${report.rateEstimate.hiddenReason?.message ?: "rate hidden"}"
         return "Video processing: $sourceName ${settings.mode.label} ${settings.lowCutHz.oneDecimal()}-${settings.highCutHz.oneDecimal()} Hz, " +
             "${report.frameCount} frames, ${report.averageFps.oneDecimal()} fps, energy ${report.bandpassedEnergy.oneDecimal()}, " +
-            "peak ${report.maxBandpassedMagnitude.oneDecimal()}, $timing"
+            "peak ${report.maxBandpassedMagnitude.oneDecimal()}, $timing$rate"
     }
 }
 

@@ -181,6 +181,10 @@ The default screen is intentionally compact so the preview remains visible.
   settling, stable, too dark, likely flicker, exposure pumping, and lighting
   changes mixed with ROI motion. Live recording metadata includes the lighting
   diagnostic when available.
+- Experimental rate estimates: recorded-video summaries and metadata can include
+  a pulse or breathing rate only when strict quality gates pass. Estimates are
+  hidden when timing, ROI, lighting, motion, FPS, or signal strength is not good
+  enough, and visible estimates are non-diagnostic.
 - `Output`: expanded-controls label that spells out the active pipeline:
   `Color amplification`, `Breathing signal`, or
   `Experimental fast-motion analysis`.

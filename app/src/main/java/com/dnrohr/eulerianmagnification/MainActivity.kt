@@ -1563,6 +1563,7 @@ private fun processRecordedVideoExport(
             bandpassedEnergy = report.bandpassedEnergy,
             maxBandpassedMagnitude = report.maxBandpassedMagnitude,
             timestampsMonotonic = report.timestampsMonotonic,
+            rateEstimate = report.rateEstimate,
             debugVideoPath = outputVideo.takeIf { it.exists() }?.absolutePath,
             timelinePath = timelineFile.takeIf { it.exists() }?.absolutePath,
             evidenceReportPath = evidenceReportFile.takeIf { it.exists() }?.absolutePath,
@@ -1598,6 +1599,7 @@ private fun recordedVideoExportMetadata(
     bandpassedEnergy: Double,
     maxBandpassedMagnitude: Double,
     timestampsMonotonic: Boolean,
+    rateEstimate: com.dnrohr.eulerianmagnification.analysis.GatedRateEstimate,
     debugVideoPath: String?,
     timelinePath: String?,
     evidenceReportPath: String?,
@@ -1635,6 +1637,11 @@ private fun recordedVideoExportMetadata(
         appendLine("  \"bandpassedEnergy\": ${bandpassedEnergy.formatJsonNumber()},")
         appendLine("  \"maxBandpassedMagnitude\": ${maxBandpassedMagnitude.formatJsonNumber()},")
         appendLine("  \"timestampsMonotonic\": $timestampsMonotonic,")
+        appendLine("  \"experimentalRateVisible\": ${rateEstimate.visible},")
+        appendLine("  \"experimentalRatePerMinute\": ${rateEstimate.estimate?.perMinute?.formatJsonNumber() ?: "null"},")
+        appendLine("  \"experimentalRateUnit\": ${rateEstimate.estimate?.kind?.unitLabel?.quoteJson() ?: "null"},")
+        appendLine("  \"experimentalRateNonDiagnostic\": ${rateEstimate.estimate?.diagnostic?.not() ?: true},")
+        appendLine("  \"experimentalRateHiddenReason\": ${rateEstimate.hiddenReason?.message?.quoteJson() ?: "null"},")
         appendLine("  \"qualitySummary\": ${qualitySummary.quoteJson()}")
         appendLine("}")
     }

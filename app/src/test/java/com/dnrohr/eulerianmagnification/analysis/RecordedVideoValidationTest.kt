@@ -44,11 +44,15 @@ class RecordedVideoValidationTest {
                 bandpassedEnergy = 42.24,
                 maxBandpassedMagnitude = 2.75,
                 timestampsMonotonic = true,
+                rateEstimate = GatedRateEstimate(
+                    estimate = null,
+                    hiddenReason = RateEstimateHiddenReason.LightingUnstable,
+                ),
             ),
         )
 
         assertEquals(
-            "Video processing: clip.mp4 Breathing 0.1-0.6 Hz, 90 frames, 30.0 fps, energy 42.2, peak 2.8, timing OK",
+            "Video processing: clip.mp4 Breathing 0.1-0.6 Hz, 90 frames, 30.0 fps, energy 42.2, peak 2.8, timing OK, rate hidden: lighting is not stable",
             result.summary(),
         )
     }

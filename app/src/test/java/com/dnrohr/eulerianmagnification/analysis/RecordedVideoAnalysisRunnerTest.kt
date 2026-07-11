@@ -33,6 +33,9 @@ class RecordedVideoAnalysisRunnerTest {
         assertTrue(pulseReport.averageFps > 29.0)
         assertTrue(pulseReport.bandpassedEnergy > driftReport.bandpassedEnergy * 1.8)
         assertTrue(pulseReport.maxBandpassedMagnitude > driftReport.maxBandpassedMagnitude)
+        assertTrue(pulseReport.rateEstimate.visible)
+        assertEquals(72.0, pulseReport.rateEstimate.estimate!!.perMinute, 1.0)
+        assertFalse(driftReport.rateEstimate.visible)
     }
 
     @Test

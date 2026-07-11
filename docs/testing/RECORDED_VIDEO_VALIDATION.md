@@ -17,6 +17,13 @@ Recorded-video validation comes before phone testing. It gives the signal path r
 
 `RecordedVideoValidator` ties the decode and report steps together for a local video file. It returns a concise `Video processing` summary string that includes the source name, selected mode/band, frame count, FPS, energy, peak bandpassed magnitude, and timing status.
 
+Experimental rate estimates are gated separately from visual validation. The
+gate requires enough frames, usable FPS, monotonic timestamps, an ROI, stable
+lighting, low motion, and enough bandpassed signal energy before showing a pulse
+or breathing rate. When any prerequisite fails, summaries and metadata keep the
+estimate hidden with a reason. Any visible estimate is explicitly experimental
+and non-diagnostic.
+
 `RecordedVideoProcessor` is the first export-pipeline building block. It consumes decoded `RgbFrame` inputs and produces processed `RgbFrame` outputs for `Raw`, `Amplified`, `Difference`, and `Split` views. This is app-native CPU color processing, not the earlier Python diagnostic render.
 
 `RecordedEvmParityValidator` runs decoded or synthetic `RgbFrame` sequences
