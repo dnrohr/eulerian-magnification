@@ -2,7 +2,9 @@ package com.dnrohr.eulerianmagnification.analysis
 
 import kotlin.math.roundToInt
 
-class RgbPyramidReconstructor {
+class RgbPyramidReconstructor(
+    private val outputClamp: ColorOutputClamp = ColorOutputClamp(),
+) {
     fun reconstruct(
         base: RgbFrame,
         bandpass: RgbPyramidBandpass,
@@ -36,12 +38,13 @@ class RgbPyramidReconstructor {
             rgb(red, green, blue)
         }
 
-        return RgbFrame(
+        val candidate = RgbFrame(
             width = base.width,
             height = base.height,
             timestampNanos = base.timestampNanos,
             pixels = outputPixels,
         )
+        return outputClamp.clampFrame(base, candidate)
     }
 
     private fun rgb(red: Int, green: Int, blue: Int): Int {

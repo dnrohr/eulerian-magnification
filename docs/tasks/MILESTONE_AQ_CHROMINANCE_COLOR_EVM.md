@@ -12,7 +12,7 @@ Goal: improve pulse/color magnification quality by separating luminance from chr
 - [x] Compare green-only, RGB, and chrominance amplification on synthetic pulse and face/skin samples.
 - [x] Add skin/ROI weighting or background suppression so non-skin regions are not amplified as strongly as the target region.
 - [x] Gate color amplification when exposure, white balance, saturation, or lighting flicker diagnostics indicate unreliable input.
-- [ ] Add output clamps that avoid posterization, skin-color inversion, and full-frame color pulses.
+- [x] Add output clamps that avoid posterization, skin-color inversion, and full-frame color pulses.
 - [ ] Document recommended pulse setup and why the app may reject or dampen unstable color conditions.
 
 ## Done When
@@ -81,5 +81,20 @@ Goal: improve pulse/color magnification quality by separating luminance from chr
 - Added JVM coverage for gate policy and processor-level flicker attenuation.
 - This is recorded-side behavior; the live GL path still needs the same gate
   exposed as a renderer uniform.
+- Installed the debug build on the Pixel 8a after focused and full
+  JVM/build verification.
+
+## Completed Slice: Recorded Color Output Clamp
+
+- Added `ColorOutputClamp`, a recorded reconstruction clamp for channel deltas,
+  chroma-vector shifts, display-rail headroom, and broad full-frame color
+  pulses.
+- Wired the clamp into `RgbPyramidReconstructor` and `RieszPhaseMotionRenderer`
+  so recorded linear and phase output are bounded before frames are emitted.
+- Added JVM coverage for channel rail avoidance, chroma-shift limiting,
+  full-frame pulse damping, localized-change preservation, and reconstructor
+  output headroom.
+- This is recorded-side reconstruction behavior; the live GL shader still needs
+  an equivalent clamp before final RGB output.
 - Installed the debug build on the Pixel 8a after focused and full
   JVM/build verification.

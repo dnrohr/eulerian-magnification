@@ -11,6 +11,7 @@ import kotlin.math.sin
 class RieszPhaseMotionRenderer(
     private val settings: AnalysisSettings,
     private val amplitudeThreshold: Double = DEFAULT_AMPLITUDE_THRESHOLD,
+    private val outputClamp: ColorOutputClamp = ColorOutputClamp(),
 ) {
     private var state: PhaseState? = null
 
@@ -56,7 +57,10 @@ class RieszPhaseMotionRenderer(
         }
 
         currentState.lastTimestampNanos = frame.timestampNanos
-        return frame.copy(pixels = outputPixels)
+        return outputClamp.clampFrame(
+            base = frame,
+            candidate = frame.copy(pixels = outputPixels),
+        )
     }
 
     private fun dominantOrientation(rieszX: DoubleArray, rieszY: DoubleArray): Double {

@@ -73,7 +73,7 @@ class RgbPyramidReconstructorTest {
     }
 
     @Test
-    fun clampsAmplifiedOutputToDisplayRange() {
+    fun clampsAmplifiedOutputAwayFromDisplayRails() {
         val base = frame(width = 1, height = 1, green = 250)
         val bandpass = RgbPyramidBandpass(
             levels = listOf(deltaFrame(width = 1, height = 1, red = 10, green = 10, blue = 10)),
@@ -85,7 +85,10 @@ class RgbPyramidReconstructorTest {
             amplification = 4.0f,
         )
 
-        assertEquals(rgb(136, 255, 136), output.pixels.single())
+        assertTrue(green(output.pixels.single()) < 255)
+        assertTrue(green(output.pixels.single()) >= 250)
+        assertTrue(red(output.pixels.single()) > 96)
+        assertTrue(blue(output.pixels.single()) > 96)
     }
 
     @Test
@@ -135,4 +138,8 @@ class RgbPyramidReconstructorTest {
             (green.coerceIn(0, 255) shl 8) or
             blue.coerceIn(0, 255)
     }
+
+    private fun red(pixel: Int): Int = (pixel shr 16) and 0xFF
+    private fun green(pixel: Int): Int = (pixel shr 8) and 0xFF
+    private fun blue(pixel: Int): Int = pixel and 0xFF
 }

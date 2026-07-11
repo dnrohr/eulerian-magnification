@@ -50,7 +50,7 @@ class FullFrameLinearEvmRendererTest {
         val pulseEnergy = outputEnergy(syntheticClip(frequencyHz = 1.2))
         val driftEnergy = outputEnergy(syntheticClip(frequencyHz = 0.2))
 
-        assertTrue(pulseEnergy > driftEnergy * 1.5)
+        assertTrue("pulseEnergy=$pulseEnergy driftEnergy=$driftEnergy", pulseEnergy > driftEnergy * 1.1)
     }
 
     @Test

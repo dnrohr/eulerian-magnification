@@ -65,6 +65,14 @@ pixel fraction so exports can explain when the app intentionally dampened color
 output instead of letting unstable input flash the whole frame. This is the
 recorded-side contract; the live GL path still needs an equivalent uniform.
 
+## Color Output Clamp
+
+Recorded full-frame reconstruction now runs through `ColorOutputClamp` before
+frames are exported. The clamp limits per-channel deltas, limits YIQ chroma
+shifts relative to the source pixel, keeps changed pixels away from hard display
+rails, and dampens broad frame-wide color changes that look like exposure or
+white-balance pulses rather than useful pulse-color magnification.
+
 ## Next Work
 
 - Verify AE/AWB lock behavior on Pixel 8a under stable lighting.

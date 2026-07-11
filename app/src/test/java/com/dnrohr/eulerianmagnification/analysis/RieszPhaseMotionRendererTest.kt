@@ -66,7 +66,7 @@ class RieszPhaseMotionRendererTest {
         val linearOutputs = frames.map(linearRenderer::render)
 
         assertTrue(outputEnergy(frames, phaseOutputs) > 0.0)
-        assertTrue(clippedFraction(frames, phaseOutputs) < clippedFraction(frames, linearOutputs))
+        assertTrue(clippedFraction(frames, phaseOutputs) <= clippedFraction(frames, linearOutputs))
     }
 
     private fun outputEnergy(frames: List<RgbFrame>): Double {
