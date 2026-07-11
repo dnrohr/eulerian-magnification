@@ -9,6 +9,7 @@ build/
 .externalNativeBuild/
 captures/
 sample-videos/
+parity-output/
 app/src/androidTest/assets/*.mp4
 app/release/
 __pycache__/

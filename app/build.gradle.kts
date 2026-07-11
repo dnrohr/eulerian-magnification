@@ -1,3 +1,5 @@
+import org.gradle.api.tasks.testing.Test
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.plugin.compose")
@@ -20,6 +22,16 @@ android {
     buildFeatures {
         compose = true
     }
+
+}
+
+tasks.withType<Test>().configureEach {
+    systemProperty(
+        "parityHarnessOutputDir",
+        providers.gradleProperty("parityHarnessOutputDir")
+            .map { rootProject.file(it).absolutePath }
+            .orNull ?: "",
+    )
 }
 
 dependencies {

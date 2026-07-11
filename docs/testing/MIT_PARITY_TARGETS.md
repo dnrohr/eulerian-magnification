@@ -95,8 +95,23 @@ For the deterministic parity harness core:
 The harness currently runs app-native renderer paths against deterministic
 synthetic color-pulse and moving-edge frame sequences, then produces manifest
 JSON, timeline CSV, objective metrics, and a compact HTML summary in memory.
-The next AO slice should add a file-writing wrapper that decodes `mit-baby` and
-`local-euler` and writes reviewable artifacts under an ignored output directory.
+
+For durable synthetic harness artifacts:
+
+```powershell
+.\gradlew.bat testDebugUnitTest --tests "com.dnrohr.eulerianmagnification.analysis.ParityHarnessArtifactWriterTest" -PparityHarnessOutputDir=parity-output
+```
+
+This writes ignored evidence bundles to:
+
+- `parity-output/synthetic-color-pulse/`
+- `parity-output/synthetic-moving-edge/`
+
+Each bundle contains `manifest.json`, `artifact_index.json`,
+`evidence_report.html`, per-view `signal_timeline.csv`, and first/middle/last
+PPM frame snapshots for Raw, Amplified, Difference, and Split views. The next AO
+slice should add a decode wrapper that feeds `mit-baby` and `local-euler` into
+the same writer.
 
 For local file integrity:
 
