@@ -41,6 +41,24 @@ class RecordedVideoProcessorTest {
     }
 
     @Test
+    fun pulseAmplifiedViewReportsLightingGateForAlternatingBrightness() {
+        val result = RecordedVideoProcessor(
+            settings = AnalysisSettings(
+                mode = MagnificationMode.Pulse,
+                amplification = 20.0f,
+                viewMode = ViewMode.Amplified,
+            ),
+        ).process(alternatingLightingClip())
+
+        val flickerFrame = result.processedFrames.first {
+            it.colorGate.reason == ColorAmplificationGateReason.LightingFlicker
+        }
+
+        assertTrue(flickerFrame.colorGate.attenuated)
+        assertTrue(flickerFrame.colorGate.gain < 1.0f)
+    }
+
+    @Test
     fun differenceViewRendersSignedRoiSignalWithDimContext() {
         val frames = syntheticClip(frequencyHz = 1.2)
         val result = RecordedVideoProcessor(
@@ -139,6 +157,19 @@ class RecordedVideoProcessorTest {
             val seconds = frameIndex / FPS
             val timestampNanos = (seconds * NANOS_PER_SECOND).toLong()
             val green = 128 + (10.0 * sin(2.0 * PI * frequencyHz * seconds)).roundToInt()
+            RgbFrame(
+                width = WIDTH,
+                height = HEIGHT,
+                timestampNanos = timestampNanos,
+                pixels = IntArray(WIDTH * HEIGHT) { rgb(96, green, 96) },
+            )
+        }
+    }
+
+    private fun alternatingLightingClip(): List<RgbFrame> {
+        return (0 until FRAME_COUNT).map { frameIndex ->
+            val timestampNanos = (frameIndex / FPS * NANOS_PER_SECOND).toLong()
+            val green = if (frameIndex % 2 == 0) 104 else 114
             RgbFrame(
                 width = WIDTH,
                 height = HEIGHT,

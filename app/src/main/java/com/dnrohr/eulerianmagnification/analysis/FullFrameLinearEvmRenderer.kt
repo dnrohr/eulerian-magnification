@@ -8,13 +8,16 @@ class FullFrameLinearEvmRenderer(
     private val temporalBandpass = RgbPyramidTemporalBandpass(settings)
     private val reconstructor = RgbPyramidReconstructor()
 
-    fun render(frame: RgbFrame): RgbFrame {
+    fun render(
+        frame: RgbFrame,
+        amplification: Float = settings.amplification,
+    ): RgbFrame {
         val pyramid = pyramidBuilder.build(frame)
         val bandpass = temporalBandpass.update(pyramid)
         return reconstructor.reconstruct(
             base = frame,
             bandpass = bandpass,
-            amplification = settings.amplification,
+            amplification = amplification,
             startLevel = startLevelFor(settings.mode),
         )
     }

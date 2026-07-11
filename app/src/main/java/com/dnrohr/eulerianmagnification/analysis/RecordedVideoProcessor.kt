@@ -1,10 +1,12 @@
 package com.dnrohr.eulerianmagnification.analysis
 
 import com.dnrohr.eulerianmagnification.quality.ArtifactSuppressor
+import com.dnrohr.eulerianmagnification.quality.LightingStabilityAnalyzer
 
 data class RecordedVideoProcessedFrame(
     val frame: RgbFrame,
     val sample: AnalysisSample,
+    val colorGate: ColorAmplificationGateResult = ColorAmplificationGateResult.Stable,
 )
 
 data class RecordedVideoProcessingResult(
@@ -18,9 +20,11 @@ class RecordedVideoProcessor(
     private val settings: AnalysisSettings,
     private val roi: NormalizedRect = RecordedVideoAnalyzer.DEFAULT_ROI,
     private val artifactSuppressor: ArtifactSuppressor = ArtifactSuppressor(),
+    private val colorAmplificationGate: ColorAmplificationGate = ColorAmplificationGate(),
 ) {
     fun process(frames: Iterable<RgbFrame>): RecordedVideoProcessingResult {
         val analyzer = RecordedVideoAnalyzer(settings, roi)
+        val lightingAnalyzer = LightingStabilityAnalyzer()
         val linearRenderer = FullFrameLinearEvmRenderer(settings)
         val phaseMotionRenderer = RieszPhaseMotionRenderer(settings)
         val processed = mutableListOf<RecordedVideoProcessedFrame>()
@@ -28,9 +32,18 @@ class RecordedVideoProcessor(
         frames.forEach { frame ->
             sourceFrameCount++
             val sample = analyzer.analyze(frame)
+            val lightingDiagnostic = lightingAnalyzer.update(sample)
+            val colorGate = colorAmplificationGate.evaluate(
+                mode = settings.mode,
+                lighting = lightingDiagnostic,
+                saturatedPixelFraction = saturatedPixelFraction(frame),
+            )
             val fullFrameEvm = if (settings.viewMode == ViewMode.Amplified || settings.viewMode == ViewMode.Split) {
                 if (settings.mode == MagnificationMode.Pulse) {
-                    linearRenderer.render(frame)
+                    linearRenderer.render(
+                        frame = frame,
+                        amplification = settings.amplification * colorGate.effectiveAmplificationScale,
+                    )
                 } else {
                     phaseMotionRenderer.render(frame)
                 }
@@ -40,6 +53,7 @@ class RecordedVideoProcessor(
             processed += RecordedVideoProcessedFrame(
                 frame = render(frame, sample, fullFrameEvm),
                 sample = sample,
+                colorGate = colorGate,
             )
         }
         return RecordedVideoProcessingResult(
@@ -119,5 +133,30 @@ class RecordedVideoProcessor(
                 block(y * frame.width + x)
             }
         }
+    }
+
+    private fun saturatedPixelFraction(frame: RgbFrame): Double {
+        var saturated = 0
+        var total = 0
+        forEachRoiPixel(frame) { index ->
+            total++
+            val pixel = frame.pixels[index]
+            if (red(pixel) <= SATURATION_LOW || red(pixel) >= SATURATION_HIGH ||
+                green(pixel) <= SATURATION_LOW || green(pixel) >= SATURATION_HIGH ||
+                blue(pixel) <= SATURATION_LOW || blue(pixel) >= SATURATION_HIGH
+            ) {
+                saturated++
+            }
+        }
+        return if (total == 0) 0.0 else saturated / total.toDouble()
+    }
+
+    private fun red(pixel: Int): Int = (pixel shr 16) and 0xFF
+    private fun green(pixel: Int): Int = (pixel shr 8) and 0xFF
+    private fun blue(pixel: Int): Int = pixel and 0xFF
+
+    companion object {
+        private const val SATURATION_LOW = 2
+        private const val SATURATION_HIGH = 253
     }
 }

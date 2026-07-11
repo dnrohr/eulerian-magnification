@@ -5,7 +5,7 @@ import java.util.Locale
 object RecordedVideoEvidenceTimeline {
     fun toCsv(frames: List<RecordedVideoProcessedFrame>): String {
         return buildString {
-            appendLine("frameIndex,timestampMillis,analysisFps,averageGreen,bandpassedGreen")
+            appendLine("frameIndex,timestampMillis,analysisFps,averageGreen,bandpassedGreen,colorGate,colorGateGain,saturatedPixelFraction")
             frames.forEachIndexed { index, frame ->
                 val sample = frame.sample
                 append(index)
@@ -17,6 +17,12 @@ object RecordedVideoEvidenceTimeline {
                 append(format(sample.averageGreen))
                 append(',')
                 append(format(sample.bandpassedGreen))
+                append(',')
+                append(frame.colorGate.reason.code)
+                append(',')
+                append(format(frame.colorGate.gain.toDouble()))
+                append(',')
+                append(format(frame.colorGate.saturatedPixelFraction))
                 appendLine()
             }
         }

@@ -11,7 +11,7 @@ Goal: improve pulse/color magnification quality by separating luminance from chr
 - [x] Add an RGB-to-luminance/chrominance processing path for recorded output first, then live GL if the recorded result is better.
 - [x] Compare green-only, RGB, and chrominance amplification on synthetic pulse and face/skin samples.
 - [x] Add skin/ROI weighting or background suppression so non-skin regions are not amplified as strongly as the target region.
-- [ ] Gate color amplification when exposure, white balance, saturation, or lighting flicker diagnostics indicate unreliable input.
+- [x] Gate color amplification when exposure, white balance, saturation, or lighting flicker diagnostics indicate unreliable input.
 - [ ] Add output clamps that avoid posterization, skin-color inversion, and full-frame color pulses.
 - [ ] Document recommended pulse setup and why the app may reject or dampen unstable color conditions.
 
@@ -68,3 +68,18 @@ Goal: improve pulse/color magnification quality by separating luminance from chr
 - Installed the debug build on the Pixel 8a after full JVM/build verification;
   live camera validation was not run because this slice is recorded/synthetic
   comparison behavior only.
+
+## Completed Slice: Recorded Color Amplification Gate
+
+- Added `ColorAmplificationGate`, which maps recorded-side lighting diagnostics
+  and ROI saturation/clipping into an amplification gain and user-facing reason.
+- Recorded pulse processing now reduces the full-frame linear renderer
+  amplification when lighting is settling, flickering, exposure-pumping,
+  motion-contaminated, too dark, or clipped.
+- Added the gate reason, gain, and saturated pixel fraction to the recorded
+  evidence timeline CSV so exports can explain dampened color output.
+- Added JVM coverage for gate policy and processor-level flicker attenuation.
+- This is recorded-side behavior; the live GL path still needs the same gate
+  exposed as a renderer uniform.
+- Installed the debug build on the Pixel 8a after focused and full
+  JVM/build verification.

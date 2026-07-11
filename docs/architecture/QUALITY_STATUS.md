@@ -52,6 +52,19 @@ High-frequency modes are more sensitive to small camera motion and aggressive am
 
 The live ROI tint and debug MP4 renderer both use this same suppressor, so preview and recorded debug output share the same basic artifact-control behavior.
 
+## Color Amplification Gate
+
+Recorded pulse processing now converts lighting diagnostics and ROI color
+clipping into a color-amplification gate. Stable pulse input keeps full
+amplification. Lighting settling, flicker, exposure pumping, motion-contaminated
+lighting, darkness, and saturated/clipped ROI pixels reduce or disable color
+amplification before the full-frame linear renderer reconstructs the frame.
+
+The processed-frame timeline CSV includes the gate reason, gain, and saturated
+pixel fraction so exports can explain when the app intentionally dampened color
+output instead of letting unstable input flash the whole frame. This is the
+recorded-side contract; the live GL path still needs an equivalent uniform.
+
 ## Next Work
 
 - Verify AE/AWB lock behavior on Pixel 8a under stable lighting.

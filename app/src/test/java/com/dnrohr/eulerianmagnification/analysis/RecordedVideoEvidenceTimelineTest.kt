@@ -26,8 +26,8 @@ class RecordedVideoEvidenceTimelineTest {
         )
 
         assertEquals(
-            "frameIndex,timestampMillis,analysisFps,averageGreen,bandpassedGreen\n" +
-                "0,16.000000,30.000000,128.250000,-0.500000\n",
+            "frameIndex,timestampMillis,analysisFps,averageGreen,bandpassedGreen,colorGate,colorGateGain,saturatedPixelFraction\n" +
+                "0,16.000000,30.000000,128.250000,-0.500000,stable,1.000000,0.000000\n",
             csv.replace("\r\n", "\n"),
         )
     }
