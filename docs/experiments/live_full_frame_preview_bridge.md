@@ -63,6 +63,11 @@ This is locally build-verified only. Phone validation was not run because the
 device is unavailable today, so AE remains open until the Pixel portrait check
 confirms the image is upright, nonblank, and visibly magnified.
 
+The temporal path now checks whether the GL context supports renderable
+half-float or float color buffers before allocating signed bandpass targets. If
+unsupported, the renderer intentionally falls back to the earlier GL color
+preview bridge.
+
 ## Verification
 
 ```powershell
@@ -79,6 +84,10 @@ confirms the image is upright, nonblank, and visibly magnified.
 
 ```powershell
 .\gradlew.bat testDebugUnitTest --tests "com.dnrohr.eulerianmagnification.gl.*"
+```
+
+```powershell
+.\gradlew.bat testDebugUnitTest --tests "com.dnrohr.eulerianmagnification.gl.GlRenderTargetTest"
 ```
 
 Result: pass.

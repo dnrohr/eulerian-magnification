@@ -75,6 +75,17 @@ Goal: integrate the full-frame EVM renderer into the live preview path.
   the Pixel portrait run proves the output is nonblank, upright, and visibly
   magnified.
 
+## Completed Slice: Half-Float Capability Fallback
+
+- Added a GL extension capability check for renderable half-float/float color
+  buffers before allocating temporal bandpass targets.
+- If the device does not advertise support, or if temporal target allocation
+  fails, the renderer disables the live reconstruction path and falls back to
+  the previous GL color preview bridge instead of crashing the camera surface.
+- Added JVM coverage for extension parsing so the fallback gate stays explicit.
+- Device behavior still needs to be confirmed on the Pixel because local JVM
+  tests can prove the gate logic, not the actual driver capability.
+
 ## Evidence
 
 - `docs/experiments/live_full_frame_preview_bridge.md`

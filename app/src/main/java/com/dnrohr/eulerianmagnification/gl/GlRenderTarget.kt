@@ -97,3 +97,20 @@ data class GlTextureSize(
         require(height > 0) { "height must be positive" }
     }
 }
+
+object GlRenderTargetCapabilities {
+    fun supportsHalfFloatColorBuffer(extensions: String?): Boolean {
+        val tokens = extensions
+            ?.split(' ')
+            ?.filter(String::isNotBlank)
+            ?.toSet()
+            .orEmpty()
+        return tokens.any { it in HALF_FLOAT_COLOR_BUFFER_EXTENSIONS }
+    }
+
+    private val HALF_FLOAT_COLOR_BUFFER_EXTENSIONS = setOf(
+        "GL_EXT_color_buffer_half_float",
+        "GL_EXT_color_buffer_float",
+        "GL_KHR_color_buffer_float",
+    )
+}

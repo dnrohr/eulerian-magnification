@@ -58,6 +58,7 @@ class CameraOesRenderer(
     private var surfaceSize = GlTextureSize(1, 1)
     private var cameraTextureSize = GlTextureSize(1, 1)
     private var lastTemporalTimestampNanos: Long? = null
+    private var supportsHalfFloatTemporalTargets = false
     private var hasNewFrame = false
     @Volatile private var colorUniforms = ColorMagnificationUniforms(
         roi = com.dnrohr.eulerianmagnification.analysis.NormalizedRect(0.0f, 0.0f, 0.0f, 0.0f),
@@ -92,6 +93,9 @@ class CameraOesRenderer(
         oesProgram = GlProgram.compileProgram(OesShaderSource.VERTEX, OesShaderSource.FRAGMENT)
         rgbProgram = GlProgram.compileProgram(RgbTextureShaderSource.VERTEX, RgbTextureShaderSource.FRAGMENT)
         colorProgram = GlProgram.compileProgram(ColorMagnificationShaderSource.VERTEX, ColorMagnificationShaderSource.FRAGMENT)
+        supportsHalfFloatTemporalTargets = GlRenderTargetCapabilities.supportsHalfFloatColorBuffer(
+            GLES30.glGetString(GLES30.GL_EXTENSIONS),
+        )
         downsampleProgram = GlProgram.compileProgram(
             LivePyramidShaderSource.VERTEX,
             LivePyramidShaderSource.DOWNSAMPLE_FRAGMENT,
@@ -154,7 +158,7 @@ class CameraOesRenderer(
             ),
             levelCount = DOWNSAMPLE_LEVELS,
         ).also { pyramid ->
-            temporalState = GlTemporalState(GlTemporalStateLayout.levelSizesFor(pyramid))
+            temporalState = createTemporalStateIfSupported(pyramid)
         }
         GLES30.glViewport(0, 0, width, height)
     }
@@ -282,7 +286,7 @@ class CameraOesRenderer(
 
     private fun renderLivePyramidReconstruction(): Boolean {
         val uniforms = colorUniforms
-        if (!uniforms.fullFrameMode || uniforms.differenceMode) {
+        if (!supportsHalfFloatTemporalTargets || !uniforms.fullFrameMode || uniforms.differenceMode) {
             lastTemporalTimestampNanos = null
             return false
         }
@@ -301,6 +305,18 @@ class CameraOesRenderer(
         GLES30.glBindFramebuffer(GLES30.GL_FRAMEBUFFER, 0)
         GlProgram.checkNoGlError("renderLivePyramidReconstruction")
         return true
+    }
+
+    private fun createTemporalStateIfSupported(pyramid: GlPyramid): GlTemporalState? {
+        if (!supportsHalfFloatTemporalTargets) {
+            return null
+        }
+        return try {
+            GlTemporalState(GlTemporalStateLayout.levelSizesFor(pyramid))
+        } catch (_: GlException) {
+            supportsHalfFloatTemporalTargets = false
+            null
+        }
     }
 
     private fun renderDownsamplePyramid(

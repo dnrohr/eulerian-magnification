@@ -30,4 +30,27 @@ class GlRenderTargetTest {
         assertEquals(GLES30.GL_HALF_FLOAT, GlRenderTargetFormat.Rgba16f.type)
         assertEquals(GLES30.GL_NEAREST, GlRenderTargetFormat.Rgba16f.filter)
     }
+
+    @Test
+    fun detectsHalfFloatColorBufferSupportFromExtensions() {
+        assertEquals(
+            true,
+            GlRenderTargetCapabilities.supportsHalfFloatColorBuffer(
+                "GL_OES_EGL_image_external GL_EXT_color_buffer_half_float GL_EXT_texture_filter_anisotropic",
+            ),
+        )
+        assertEquals(
+            true,
+            GlRenderTargetCapabilities.supportsHalfFloatColorBuffer(
+                "GL_OES_EGL_image_external GL_EXT_color_buffer_float",
+            ),
+        )
+        assertEquals(
+            false,
+            GlRenderTargetCapabilities.supportsHalfFloatColorBuffer(
+                "GL_OES_EGL_image_external GL_EXT_texture_filter_anisotropic",
+            ),
+        )
+        assertEquals(false, GlRenderTargetCapabilities.supportsHalfFloatColorBuffer(null))
+    }
 }

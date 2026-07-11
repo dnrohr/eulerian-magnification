@@ -61,6 +61,11 @@ for reconstruction. This replaces the visible Pulse color bridge on the
 full-frame path in local builds, but it still needs Pixel portrait validation
 before the milestone can be treated as complete.
 
+Because the temporal path depends on renderable half-float color buffers, the
+renderer checks GL extensions before allocating temporal state. Unsupported
+contexts fall back to the previous full-frame GL color bridge instead of failing
+surface creation.
+
 ## Verification
 
 - Unit tests verify ROI-limited shader source expectations, difference-mode source expectations, split-mode uniform mapping, viewport layout, benchmark summary mapping, and uniform mapping from analysis/settings.
