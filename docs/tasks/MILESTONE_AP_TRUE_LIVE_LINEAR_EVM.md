@@ -183,6 +183,25 @@ showing true pyramid reconstruction or a fallback bridge.
 - Phone validation was not run for this slice because the phone is currently
   unavailable.
 
+## Completed Slice: Pixel Live Reconstruction Diagnostic Backfill
+
+- Installed/launched the current debug build on Pixel 8a `47091JEKB05516`.
+- Switched to Pulse and enabled GL preview from expanded controls.
+- Captured a portrait screenshot showing `Preview: Full-frame linear EVM
+  preview`, `Renderer: Live linear EVM reconstruction`, `GL renderer: Live
+  reconstruction`, and a ready three-level pyramid at `540x1200`.
+- The diagnostic line reported active temporal state, Pulse band
+  `0.70-3.00Hz`, start level `L0`, gains `0.35/0.75/1.00`, and clamp
+  `+/-0.18`.
+- Evidence is documented in
+  `docs/experiments/pixel8a_ap_live_reconstruction_backfill_2026-07-11.md`
+  with screenshot
+  `docs/experiments/pixel8a_ap_gl_pulse_2026-07-11.png`.
+- This backfills on-device path evidence only. The known motion/color target
+  validation remains open because the camera scene was incidental and static.
+- Re-ran the standard JVM/build verification and reinstalled the current debug
+  build on the Pixel 8a after capturing evidence.
+
 ## Done When
 
 - Live amplified preview shows visible reconstructed output for at least one color sample and one slow-motion sample.
