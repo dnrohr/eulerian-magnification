@@ -66,7 +66,8 @@ confirms the image is upright, nonblank, and visibly magnified.
 The temporal path now checks whether the GL context supports renderable
 half-float or float color buffers before allocating signed bandpass targets. If
 unsupported, the renderer intentionally falls back to the earlier GL color
-preview bridge.
+preview bridge. The same fallback is used if a GL error appears while executing
+the reconstruction passes.
 
 The first reconstructed frame now warm-starts temporal state by copying the
 current pyramid level into lowpass and highpass history while emitting zero

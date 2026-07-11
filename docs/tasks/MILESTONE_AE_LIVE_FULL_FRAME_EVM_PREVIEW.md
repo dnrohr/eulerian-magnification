@@ -82,6 +82,9 @@ Goal: integrate the full-frame EVM renderer into the live preview path.
 - If the device does not advertise support, or if temporal target allocation
   fails, the renderer disables the live reconstruction path and falls back to
   the previous GL color preview bridge instead of crashing the camera surface.
+- If the live reconstruction pass later raises a GL error, the renderer disables
+  the reconstruction path for the session and renders the same frame with the
+  GL color bridge fallback.
 - Added JVM coverage for extension parsing so the fallback gate stays explicit.
 - Device behavior still needs to be confirmed on the Pixel because local JVM
   tests can prove the gate logic, not the actual driver capability.

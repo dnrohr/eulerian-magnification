@@ -300,14 +300,21 @@ class CameraOesRenderer(
             return false
         }
 
-        renderDownsamplePyramid(source, pyramid)
-        state.swap()
-        val temporalInitialized = lastTemporalTimestampNanos != null
-        renderTemporalBandpass(pyramid, state, uniforms, temporalInitialized)
-        renderReconstruction(source, state, output, uniforms)
-        GLES30.glBindFramebuffer(GLES30.GL_FRAMEBUFFER, 0)
-        GlProgram.checkNoGlError("renderLivePyramidReconstruction")
-        return true
+        return try {
+            renderDownsamplePyramid(source, pyramid)
+            state.swap()
+            val temporalInitialized = lastTemporalTimestampNanos != null
+            renderTemporalBandpass(pyramid, state, uniforms, temporalInitialized)
+            renderReconstruction(source, state, output, uniforms)
+            GLES30.glBindFramebuffer(GLES30.GL_FRAMEBUFFER, 0)
+            GlProgram.checkNoGlError("renderLivePyramidReconstruction")
+            true
+        } catch (_: GlException) {
+            GLES30.glBindFramebuffer(GLES30.GL_FRAMEBUFFER, 0)
+            supportsHalfFloatTemporalTargets = false
+            lastTemporalTimestampNanos = null
+            false
+        }
     }
 
     private fun createTemporalStateIfSupported(pyramid: GlPyramid): GlTemporalState? {

@@ -64,7 +64,9 @@ before the milestone can be treated as complete.
 Because the temporal path depends on renderable half-float color buffers, the
 renderer checks GL extensions before allocating temporal state. Unsupported
 contexts fall back to the previous full-frame GL color bridge instead of failing
-surface creation.
+surface creation. If a GL error occurs while running the reconstruction passes,
+the renderer disables live reconstruction for that session and redraws through
+the color bridge fallback.
 
 The temporal shader also has an explicit warm-start path. The first
 reconstructed frame seeds lowpass and highpass history from the current frame and
