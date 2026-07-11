@@ -42,6 +42,17 @@ The GL preview overlay also reports a benchmark summary from `PerformanceBenchma
 For now, CPU analysis still supplies the ROI and bandpassed signal uniforms.
 True GPU temporal-filter updates are still pending.
 
+The live GL path now has a tested reconstruction pass plan and shader-source
+contracts for the next stage:
+
+- downsample the RGB texture into a reduced pyramid
+- update low/high temporal state per pyramid level
+- reconstruct the frame from amplified bandpass levels
+
+These sources are not wired into `CameraOesRenderer` yet. The current visible
+live full-frame mode remains the Pulse color bridge until the runtime pass graph
+is connected and checked on device.
+
 ## Verification
 
 - Unit tests verify ROI-limited shader source expectations, difference-mode source expectations, split-mode uniform mapping, viewport layout, benchmark summary mapping, and uniform mapping from analysis/settings.

@@ -29,6 +29,19 @@ Goal: integrate the full-frame EVM renderer into the live preview path.
   is to wire temporal pyramid state into GL reconstruction and validate on the
   Pixel in portrait orientation.
 
+## Completed Slice: Reconstruction Shader Plan
+
+- Added `LivePyramidReconstructionPlan` to describe the half-resolution pyramid,
+  temporal ping-pong target count, and pass count expected by the live GL path.
+- Added `TemporalBandpassCoefficients` using the same first-order low/high
+  alpha formula as the CPU temporal pyramid.
+- Added shader-source contracts for downsample, temporal bandpass, and
+  reconstruction passes.
+- Added JVM coverage for pyramid sizing, temporal coefficients, invalid band
+  rejection, and shader uniform/source expectations.
+- This still does not wire the runtime GL pass into `CameraOesRenderer`, so AE
+  remains in progress until reconstructed output is rendered and validated.
+
 ## Evidence
 
 - `docs/experiments/live_full_frame_preview_bridge.md`

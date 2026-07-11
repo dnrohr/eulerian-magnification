@@ -40,10 +40,21 @@ The recorded-video path has that CPU renderer; the live GL path still needs
 temporal pyramid reconstruction or phase-motion integration before AE can be
 marked complete.
 
+## Next Reconstruction Slice
+
+`LivePyramidReconstructionPlan` and `LivePyramidShaderSource` now define the
+planned downsample, temporal bandpass, and reconstruction shader contracts. This
+is still source-level scaffolding: `CameraOesRenderer` must still connect the
+pass graph before the live preview is true reconstructed EVM output.
+
 ## Verification
 
 ```powershell
 .\gradlew.bat testDebugUnitTest --tests "com.dnrohr.eulerianmagnification.LiveEvmPreviewPolicyTest" --tests "com.dnrohr.eulerianmagnification.gl.ColorMagnificationPassTest"
+```
+
+```powershell
+.\gradlew.bat testDebugUnitTest --tests "com.dnrohr.eulerianmagnification.gl.LivePyramidReconstructionTest"
 ```
 
 Result: pass.
