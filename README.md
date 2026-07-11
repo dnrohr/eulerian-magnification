@@ -172,6 +172,10 @@ The default screen is intentionally compact so the preview remains visible.
   from low FPS, camera/ROI motion, lighting flicker, timestamp jumps, or risky
   high-frequency/amplification combinations. The compact preview stays terse;
   expanded controls show a short action for each warning.
+- `Lighting`: expanded-controls diagnostic for lighting stability. It separates
+  settling, stable, too dark, likely flicker, exposure pumping, and lighting
+  changes mixed with ROI motion. Live recording metadata includes the lighting
+  diagnostic when available.
 - `Output`: expanded-controls label that spells out the active pipeline:
   `Color amplification`, `Breathing signal`, or
   `Experimental fast-motion analysis`.

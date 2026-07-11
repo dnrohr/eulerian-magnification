@@ -98,7 +98,9 @@ import com.dnrohr.eulerianmagnification.gl.GlFrameStats
 import com.dnrohr.eulerianmagnification.gl.ProcessedGlFrame
 import com.dnrohr.eulerianmagnification.profiling.PerformanceBenchmark
 import com.dnrohr.eulerianmagnification.quality.ArtifactSuppressor
-import com.dnrohr.eulerianmagnification.quality.LightingFlickerDetector
+import com.dnrohr.eulerianmagnification.quality.LightingDiagnostic
+import com.dnrohr.eulerianmagnification.quality.LightingDiagnosticStatus
+import com.dnrohr.eulerianmagnification.quality.LightingStabilityAnalyzer
 import com.dnrohr.eulerianmagnification.quality.QualityEvaluator
 import com.dnrohr.eulerianmagnification.quality.QualityStatus
 import com.dnrohr.eulerianmagnification.recording.DebugProcessedMp4Recorder
@@ -167,7 +169,7 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
     var manualRoiEditing by remember { mutableStateOf(false) }
     var glFrameStats by remember { mutableStateOf(GlFrameStats()) }
     val qualityEvaluator = remember { QualityEvaluator() }
-    val lightingFlickerDetector = remember { LightingFlickerDetector() }
+    val lightingStabilityAnalyzer = remember { LightingStabilityAnalyzer() }
     val artifactSuppressor = remember { ArtifactSuppressor() }
     val breathingMotionFilter = remember(analysisSettings.mode, analysisSettings.amplification) {
         BreathingMotionFilter(amplification = analysisSettings.amplification)
@@ -182,7 +184,9 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
         usingGlPreview = usingGlPreview,
         glFrameStats = glFrameStats,
     )
-    var lightingFlickerLikely by remember { mutableStateOf(false) }
+    var lightingDiagnostic by remember {
+        mutableStateOf<LightingDiagnostic?>(null)
+    }
     var breathingMotionSample by remember { mutableStateOf(BreathingMotionSample()) }
     val signalHistory = remember { mutableStateListOf<Double>() }
     val breathingMotionHistory = remember { mutableStateListOf<Double>() }
@@ -251,7 +255,7 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
 
     fun handleSample(sample: AnalysisSample): Long {
         analysisSample = sample
-        lightingFlickerLikely = lightingFlickerDetector.update(sample.averageGreen)
+        lightingDiagnostic = lightingStabilityAnalyzer.update(sample)
         val presentationTimestampNanos = recordingSession
             ?.record(sample, analysisSettings)
             ?.presentationTimestampNanos
@@ -360,10 +364,12 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
             recentRecordings = recentRecordings,
             validationSummary = validationSummary,
             validationRunning = validationRunning,
+            lightingDiagnostic = lightingDiagnostic,
             qualityStatuses = qualityEvaluator.evaluate(
                 sample = analysisSample,
                 settings = analysisSettings,
-                lightingFlickerLikely = lightingFlickerLikely,
+                lightingFlickerLikely = lightingDiagnostic?.flickerLikely == true,
+                lightingUnstable = lightingDiagnostic?.status == LightingDiagnosticStatus.ExposurePumping,
             ),
             controlsExpanded = controlsExpanded,
             cleanPreview = cleanPreview,
@@ -398,6 +404,7 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
                         val output = activeSession.stop(
                             settings = analysisSettings,
                             thermalStatus = thermalStatus(context),
+                            lightingDiagnostic = lightingDiagnostic,
                             visualizationModel = VisualizationModel.live(
                                 settings = analysisSettings,
                                 fullFrameColorPreview = liveEvmPreviewDecision.fullFrameColorPreview,
@@ -930,6 +937,7 @@ private fun StatusOverlay(
     recentRecordings: List<RecordingGalleryItem>,
     validationSummary: String?,
     validationRunning: Boolean,
+    lightingDiagnostic: LightingDiagnostic?,
     qualityStatuses: List<QualityStatus>,
     controlsExpanded: Boolean,
     cleanPreview: Boolean,
@@ -1049,6 +1057,13 @@ private fun StatusOverlay(
         }
         Spacer(modifier = Modifier.height(4.dp))
         QualityStatusRow(qualityStatuses)
+        lightingDiagnostic?.let { diagnostic ->
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Lighting: ${diagnostic.label} - ${diagnostic.action}",
+                color = Color.White,
+            )
+        }
         Spacer(modifier = Modifier.height(8.dp))
         DemoPresetControls(
             settings = settings,

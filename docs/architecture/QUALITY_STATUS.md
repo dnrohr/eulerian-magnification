@@ -12,6 +12,7 @@ Current statuses:
 - `Low FPS`: close apps or reduce device load.
 - `Timing unstable`: restart the preview if timing keeps jumping.
 - `Lighting flicker`: try daylight or a non-flickering lamp.
+- `Exposure unstable`: wait for exposure to settle, then lock AE/AWB.
 - `ROI motion`: mount the phone or redraw a stable ROI.
 - `Mode motion risk`: use a tripod for high-frequency modes.
 - `Amplification risk`: lower amplification below 18x.
@@ -23,7 +24,20 @@ mostly unobstructed preview.
 
 The evaluator is intentionally conservative. It does not decide whether the visualization is medically meaningful; it only flags capture and timing conditions that commonly produce poor Eulerian magnification output.
 
-Lighting flicker detection uses a rolling average-green heuristic. It looks for repeated, above-threshold alternation in brightness deltas, which catches obvious unstable LED/light-source behavior. It is not yet a 50/60 Hz frequency-domain detector.
+Lighting diagnostics use a rolling average-green history. The app reports:
+
+- `Lighting settling` while the history is too short to judge.
+- `Lighting stable` when brightness variance is low.
+- `Lighting too dark` when ROI brightness is below the low-light threshold.
+- `Lighting flicker` when above-threshold brightness deltas alternate repeatedly.
+- `Exposure unstable` when brightness varies without the alternation pattern.
+- `Lighting mixed with ROI motion` when brightness instability coincides with
+  enough ROI motion that the app should not blame lighting alone.
+
+The expanded controls show the lighting label and action. Live recording
+metadata stores the lighting status code, label, action, average green, and
+variation when a diagnostic is available. The detector is still heuristic; it is
+not yet a 50/60 Hz frequency-domain detector.
 
 ROI motion detection currently uses `TranslationEstimator`, which estimates normalized frame-to-frame movement from the smoothed/tracked ROI center. This can be caused by phone movement, head or torso movement, heartbeat-visible face motion, or detector/tracker drift. It is a practical warning signal for the CPU MVP, not a full global optical-flow compensation pass.
 

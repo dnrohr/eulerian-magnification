@@ -4,6 +4,7 @@ import com.dnrohr.eulerianmagnification.analysis.AnalysisSample
 import com.dnrohr.eulerianmagnification.analysis.AnalysisSettings
 import com.dnrohr.eulerianmagnification.analysis.VisualizationModel
 import com.dnrohr.eulerianmagnification.gl.ProcessedGlFrame
+import com.dnrohr.eulerianmagnification.quality.LightingDiagnostic
 import java.io.File
 import java.time.Instant
 import java.time.format.DateTimeFormatter
@@ -55,6 +56,7 @@ class ProcessedRecordingSession(
     fun stop(
         settings: AnalysisSettings,
         thermalStatus: String,
+        lightingDiagnostic: LightingDiagnostic? = null,
         visualizationModel: VisualizationModel = VisualizationModel.live(
             settings = settings,
             fullFrameColorPreview = false,
@@ -62,7 +64,7 @@ class ProcessedRecordingSession(
     ): File {
         videoRecorder?.stop()
         val output = File(sessionDirectory, "metadata.json")
-        output.writeText(toJson(settings, thermalStatus, visualizationModel))
+        output.writeText(toJson(settings, thermalStatus, lightingDiagnostic, visualizationModel))
         return output
     }
 
@@ -76,6 +78,7 @@ class ProcessedRecordingSession(
     private fun toJson(
         settings: AnalysisSettings,
         thermalStatus: String,
+        lightingDiagnostic: LightingDiagnostic?,
         visualizationModel: VisualizationModel,
     ): String {
         return buildString {
@@ -83,6 +86,11 @@ class ProcessedRecordingSession(
             appendLine("  \"startedAtMillis\": $startedAtMillis,")
             appendLine("  \"durationMillis\": $elapsedMillis,")
             appendLine("  \"thermalStatus\": \"$thermalStatus\",")
+            appendLine("  \"lightingStatus\": ${lightingDiagnostic?.metadataValue?.quoteJson() ?: "null"},")
+            appendLine("  \"lightingStatusLabel\": ${lightingDiagnostic?.label?.quoteJson() ?: "null"},")
+            appendLine("  \"lightingAction\": ${lightingDiagnostic?.action?.quoteJson() ?: "null"},")
+            appendLine("  \"lightingAverageGreen\": ${lightingDiagnostic?.averageGreen?.format() ?: "null"},")
+            appendLine("  \"lightingVariation\": ${lightingDiagnostic?.coefficientOfVariation?.format() ?: "null"},")
             appendLine("  \"mode\": \"${settings.mode.label}\",")
             appendLine("  \"viewMode\": \"${settings.viewMode.label}\",")
             appendLine("  \"signalSource\": \"${visualizationModel.signalSource.id}\",")
@@ -110,6 +118,10 @@ class ProcessedRecordingSession(
 
     private fun String.quoteJson(): String {
         return "\"" + replace("\\", "\\\\").replace("\"", "\\\"") + "\""
+    }
+
+    private fun Number.format(): String {
+        return String.format(Locale.US, "%.6f", toDouble())
     }
 }
 

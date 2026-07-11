@@ -73,6 +73,21 @@ class QualityEvaluatorTest {
     }
 
     @Test
+    fun includesLightingUnstableWarning() {
+        val statuses = QualityEvaluator().evaluate(
+            sample = AnalysisSample(
+                roi = NormalizedRect(0.1f, 0.1f, 0.3f, 0.3f),
+                averageGreen = 120.0,
+                bandpassedGreen = 0.2,
+                analysisFps = 30.0,
+            ),
+            lightingUnstable = true,
+        )
+
+        assertTrue(QualityStatus.LightingUnstable in statuses)
+    }
+
+    @Test
     fun detectsCameraMotionFromTranslationEstimate() {
         val statuses = QualityEvaluator().evaluate(
             sample = AnalysisSample(
@@ -147,6 +162,7 @@ class QualityEvaluatorTest {
         assertEquals("Close apps or reduce device load.", QualityStatus.LowFps.action)
         assertEquals("Restart the preview if timing keeps jumping.", QualityStatus.TimingUnstable.action)
         assertEquals("Try daylight or a non-flickering lamp.", QualityStatus.LightingFlicker.action)
+        assertEquals("Wait for exposure to settle, then lock AE/AWB.", QualityStatus.LightingUnstable.action)
         assertEquals("Mount the phone or redraw a stable ROI.", QualityStatus.CameraMotion.action)
         assertEquals("Use a tripod for high-frequency modes.", QualityStatus.ModeMotionRisk.action)
         assertEquals("Lower amplification below 18x.", QualityStatus.AmplificationRisk.action)

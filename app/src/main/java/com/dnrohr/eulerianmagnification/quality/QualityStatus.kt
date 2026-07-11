@@ -10,6 +10,7 @@ class QualityEvaluator {
         sample: AnalysisSample,
         settings: AnalysisSettings = AnalysisSettings(),
         lightingFlickerLikely: Boolean = false,
+        lightingUnstable: Boolean = false,
     ): List<QualityStatus> {
         return buildList {
             if (sample.roi == null) add(QualityStatus.FaceMissing)
@@ -17,6 +18,7 @@ class QualityEvaluator {
             if (sample.analysisFps in 0.01..LOW_FPS_THRESHOLD) add(QualityStatus.LowFps)
             if (!sample.timestampMonotonic) add(QualityStatus.TimingUnstable)
             if (lightingFlickerLikely) add(QualityStatus.LightingFlicker)
+            if (lightingUnstable) add(QualityStatus.LightingUnstable)
             if (sample.translation.magnitude >= CAMERA_MOTION_THRESHOLD) add(QualityStatus.CameraMotion)
             if (settings.mode.isHighFrequencyMode && sample.translation.magnitude >= HIGH_FREQUENCY_MOTION_THRESHOLD) {
                 add(QualityStatus.ModeMotionRisk)
@@ -53,6 +55,7 @@ enum class QualityStatus(
     LowFps("Low FPS", "Close apps or reduce device load."),
     TimingUnstable("Timing unstable", "Restart the preview if timing keeps jumping."),
     LightingFlicker("Lighting flicker", "Try daylight or a non-flickering lamp."),
+    LightingUnstable("Exposure unstable", "Wait for exposure to settle, then lock AE/AWB."),
     CameraMotion("ROI motion", "Mount the phone or redraw a stable ROI."),
     ModeMotionRisk("Mode motion risk", "Use a tripod for high-frequency modes."),
     AmplificationRisk("Amplification risk", "Lower amplification below 18x."),

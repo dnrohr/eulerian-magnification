@@ -9,6 +9,8 @@ import com.dnrohr.eulerianmagnification.analysis.VisualizationModel
 import com.dnrohr.eulerianmagnification.analysis.ViewMode
 import com.dnrohr.eulerianmagnification.gl.GlTextureSize
 import com.dnrohr.eulerianmagnification.gl.ProcessedGlFrame
+import com.dnrohr.eulerianmagnification.quality.LightingDiagnostic
+import com.dnrohr.eulerianmagnification.quality.LightingDiagnosticStatus
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -83,6 +85,31 @@ class ProcessedRecordingSessionTest {
         assertTrue(json.contains("\"signalSource\": \"roi_green_bandpass\""))
         assertTrue(json.contains("\"renderer\": \"live_gl_full_frame_color_bridge\""))
         assertTrue(json.contains("\"visualizationStyle\": \"split_comparison\""))
+    }
+
+    @Test
+    fun writesLightingDiagnosticMetadataWhenProvided() {
+        val directory = Files.createTempDirectory("recording-session").toFile()
+        val session = ProcessedRecordingSession(directory, startedAtMillis = 1_700_000_000_000L)
+
+        val output = session.stop(
+            settings = AnalysisSettings(),
+            thermalStatus = "none",
+            lightingDiagnostic = LightingDiagnostic(
+                status = LightingDiagnosticStatus.ExposurePumping,
+                averageGreen = 101.25,
+                coefficientOfVariation = 0.071,
+                flickerLikely = false,
+                motionMagnitude = 0.002f,
+            ),
+        )
+        val json = output.readText()
+
+        assertTrue(json.contains("\"lightingStatus\": \"exposure_pumping\""))
+        assertTrue(json.contains("\"lightingStatusLabel\": \"Exposure unstable\""))
+        assertTrue(json.contains("\"lightingAction\": \"Wait for exposure to settle, then lock AE/AWB.\""))
+        assertTrue(json.contains("\"lightingAverageGreen\": 101.250000"))
+        assertTrue(json.contains("\"lightingVariation\": 0.071000"))
     }
 
     @Test
