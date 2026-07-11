@@ -79,3 +79,17 @@ Goal: bring the recorded Riesz/phase motion renderer into a live-preview path fo
   remains open.
 - Installed the debug build on the Pixel 8a after focused diagnostics coverage
   and full JVM/build verification.
+
+## Completed Slice: Live Phase Preview Eligibility Policy
+
+- Added `LivePhasePreviewPolicy` to decide when Motion/Object modes may request
+  the future live phase ROI renderer.
+- The policy requires GL preview, live phase resources, a manual ROI, a valid
+  ROI phase plan, and healthy settled GL timing before enabling the phase path.
+- The policy reports `LivePhaseDiagnostics` fallback reasons when phase is not
+  requested or cannot run.
+- Added JVM coverage for enabled Motion phase, non-motion no-op, missing GL,
+  missing manual ROI, unhealthy timing, timing warmup, and unavailable resources.
+- Runtime renderer wiring remains open.
+- Installed the debug build on the Pixel 8a after focused policy coverage and
+  full JVM/build verification.
