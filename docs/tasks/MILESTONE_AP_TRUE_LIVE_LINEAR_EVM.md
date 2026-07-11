@@ -165,6 +165,24 @@ showing true pyramid reconstruction or a fallback bridge.
 - Phone validation was not run for this slice because the phone is currently
   unavailable.
 
+## Completed Slice: Controlled Reconstruction Contract
+
+- Added `LiveReconstructionContract`, a local structural validator for the live
+  GL reconstruction path.
+- The contract checks for at least three pyramid levels, per-level temporal
+  targets, Pulse/Breathing reconstruction start levels, per-level bandpass
+  texture use, no dependency on the old ROI scalar `uAmplifiedSignal`, and
+  Laplacian-style reconstruction deltas.
+- Added JVM coverage for the passing current contract and a failing
+  under-structured contract.
+- Documented the local result in
+  `docs/experiments/live_reconstruction_controlled_contract.md`.
+- This proves the live path has enough structural machinery to be more than an
+  ROI tint/color bridge. It does not prove controlled-target visual output or
+  phone-visible magnification quality.
+- Phone validation was not run for this slice because the phone is currently
+  unavailable.
+
 ## Done When
 
 - Live amplified preview shows visible reconstructed output for at least one color sample and one slow-motion sample.
