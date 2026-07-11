@@ -1,6 +1,6 @@
 # Milestone AQ - Chrominance Color EVM
 
-Status: Planned
+Status: In progress
 
 Importance: High. MIT-style pulse/color results rely on color handling that amplifies subtle chrominance changes without making the whole frame flash.
 
@@ -8,7 +8,7 @@ Goal: improve pulse/color magnification quality by separating luminance from chr
 
 ## Tasks
 
-- [ ] Add an RGB-to-luminance/chrominance processing path for recorded output first, then live GL if the recorded result is better.
+- [x] Add an RGB-to-luminance/chrominance processing path for recorded output first, then live GL if the recorded result is better.
 - [ ] Compare green-only, RGB, and chrominance amplification on synthetic pulse and face/skin samples.
 - [ ] Add skin/ROI weighting or background suppression so non-skin regions are not amplified as strongly as the target region.
 - [ ] Gate color amplification when exposure, white balance, saturation, or lighting flicker diagnostics indicate unreliable input.
@@ -20,3 +20,17 @@ Goal: improve pulse/color magnification quality by separating luminance from chr
 - Pulse/color samples show stronger target color variation with less background pumping than the current full-frame color path.
 - Quality warnings and metadata explain when color magnification is being attenuated.
 - Relevant tests/device checks pass, documentation is updated, and the task is committed and pushed to `main`.
+
+## Completed Slice: Recorded Chrominance Frame Foundation
+
+- Added `ChrominanceFrame`, a recorded-frame luminance/chrominance
+  representation based on YIQ-style `Y`, `I`, and `Q` channels.
+- Added RGB-to-chrominance and chrominance-to-RGB conversion utilities that
+  preserve frame dimensions and timestamps.
+- Added JVM coverage for RGB round-trip behavior, luminance-only output,
+  chroma-only shifts, and invalid plane sizes.
+- This is a foundation for recorded chrominance EVM comparison; it does not yet
+  replace the existing recorded linear EVM renderer or prove better pulse
+  output.
+- Phone validation was not run for this slice because the phone is currently
+  unavailable.
