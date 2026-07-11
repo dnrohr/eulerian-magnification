@@ -32,4 +32,6 @@ unavailable. The next Pixel run should verify:
 - Pyramid diagnostics show active levels and warm temporal state.
 - Amplified view does not flash or clip aggressively under the same target used
   before the clamp.
+- Difference view shows full-frame reconstructed-delta heatmap rather than an
+  ROI signal tint.
 - Split view still shows visible reconstructed change rather than an ROI tint.

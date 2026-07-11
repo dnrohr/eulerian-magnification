@@ -82,4 +82,18 @@ class VisualizationModelTest {
         assertEquals(RendererKind.RoiSignalDiagnostic, model.renderer)
         assertEquals(VisualizationStyle.RoiDifference, model.visualizationStyle)
     }
+
+    @Test
+    fun livePulseDifferenceUsesFullFrameDifferenceWhenGlPreviewIsActive() {
+        val model = VisualizationModel.live(
+            settings = AnalysisSettings(
+                mode = MagnificationMode.Pulse,
+                viewMode = ViewMode.Difference,
+            ),
+            fullFrameColorPreview = true,
+        )
+
+        assertEquals(RendererKind.LiveGlFullFrameColorBridge, model.renderer)
+        assertEquals(VisualizationStyle.FullFrameDifference, model.visualizationStyle)
+    }
 }

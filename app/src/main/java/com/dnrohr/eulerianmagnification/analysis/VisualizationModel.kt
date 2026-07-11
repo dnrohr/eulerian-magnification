@@ -31,7 +31,11 @@ data class VisualizationModel(
         ): VisualizationModel {
             val renderer = when (settings.viewMode) {
                 ViewMode.Raw -> RendererKind.RawPassthrough
-                ViewMode.Difference -> RendererKind.RoiSignalDiagnostic
+                ViewMode.Difference -> if (fullFrameColorPreview) {
+                    RendererKind.LiveGlFullFrameColorBridge
+                } else {
+                    RendererKind.RoiSignalDiagnostic
+                }
                 ViewMode.Amplified,
                 ViewMode.Split,
                 -> if (fullFrameColorPreview) {
@@ -63,7 +67,13 @@ data class VisualizationModel(
         ): VisualizationStyle {
             return when (viewMode) {
                 ViewMode.Raw -> VisualizationStyle.Raw
-                ViewMode.Difference -> VisualizationStyle.RoiDifference
+                ViewMode.Difference -> when (renderer) {
+                    RendererKind.LiveGlFullFrameColorBridge,
+                    RendererKind.RecordedLinearEvm,
+                    RendererKind.RecordedRieszPhaseMotion,
+                    -> VisualizationStyle.FullFrameDifference
+                    else -> VisualizationStyle.RoiDifference
+                }
                 ViewMode.Split -> VisualizationStyle.SplitComparison
                 ViewMode.Amplified -> when (renderer) {
                     RendererKind.RecordedLinearEvm,
@@ -107,5 +117,6 @@ enum class VisualizationStyle(
     RoiSignalOverlay("roi_signal_overlay", "ROI signal overlay"),
     RoiDifference("roi_difference", "ROI difference"),
     FullFrameAmplified("full_frame_amplified", "Full-frame amplified"),
+    FullFrameDifference("full_frame_difference", "Full-frame difference"),
     SplitComparison("split_comparison", "Split comparison"),
 }

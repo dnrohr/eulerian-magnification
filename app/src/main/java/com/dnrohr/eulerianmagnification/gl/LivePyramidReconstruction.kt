@@ -136,6 +136,7 @@ object LivePyramidShaderSource {
         uniform float uLevelGain1;
         uniform float uLevelGain2;
         uniform float uMaxDelta;
+        uniform int uDifferenceMode;
         uniform int uStartLevel;
         in vec2 vTexCoord;
         out vec4 outColor;
@@ -160,6 +161,13 @@ object LivePyramidShaderSource {
                 }
             }
             vec3 amplifiedDelta = clamp(delta * uAmplification, vec3(-uMaxDelta), vec3(uMaxDelta));
+            if (uDifferenceMode == 1) {
+                float strength = clamp(length(amplifiedDelta) * 4.0, 0.0, 1.0);
+                vec3 baseDiff = vec3(0.06);
+                vec3 activeDiff = vec3(1.0, 0.45, 0.05);
+                outColor = vec4(mix(baseDiff, activeDiff, strength), base.a);
+                return;
+            }
             outColor = vec4(clamp(base.rgb + amplifiedDelta, 0.0, 1.0), base.a);
         }
     """

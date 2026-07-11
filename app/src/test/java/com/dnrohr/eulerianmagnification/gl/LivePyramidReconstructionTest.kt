@@ -93,8 +93,11 @@ class LivePyramidReconstructionTest {
         assertTrue(reconstruct.contains("uLevelGain1"))
         assertTrue(reconstruct.contains("uLevelGain2"))
         assertTrue(reconstruct.contains("uMaxDelta"))
+        assertTrue(reconstruct.contains("uDifferenceMode"))
         assertTrue(reconstruct.contains("uStartLevel"))
         assertTrue(reconstruct.contains("levelDelta(level) * gain"))
         assertTrue(reconstruct.contains("clamp(delta * uAmplification"))
+        assertTrue(reconstruct.contains("if (uDifferenceMode == 1)"))
+        assertTrue(reconstruct.contains("length(amplifiedDelta)"))
     }
 }

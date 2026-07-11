@@ -53,6 +53,7 @@ class CameraOesRenderer(
     private val reconstructLevelGainLocations = IntArray(DOWNSAMPLE_LEVELS) { -1 }
     private var reconstructAmplificationLocation = -1
     private var reconstructMaxDeltaLocation = -1
+    private var reconstructDifferenceModeLocation = -1
     private var reconstructStartLevelLocation = -1
     private var rgbRenderTarget: GlRenderTarget? = null
     private var processedRenderTarget: GlRenderTarget? = null
@@ -140,6 +141,7 @@ class CameraOesRenderer(
         }
         reconstructAmplificationLocation = GLES30.glGetUniformLocation(reconstructProgram, "uAmplification")
         reconstructMaxDeltaLocation = GLES30.glGetUniformLocation(reconstructProgram, "uMaxDelta")
+        reconstructDifferenceModeLocation = GLES30.glGetUniformLocation(reconstructProgram, "uDifferenceMode")
         reconstructStartLevelLocation = GLES30.glGetUniformLocation(reconstructProgram, "uStartLevel")
         oesTextureId = createOesTexture()
         surfaceTexture = SurfaceTexture(oesTextureId).apply {
@@ -366,7 +368,7 @@ class CameraOesRenderer(
     }
 
     private fun liveReconstructionRequested(uniforms: ColorMagnificationUniforms): Boolean {
-        return uniforms.fullFrameMode && !uniforms.differenceMode
+        return uniforms.fullFrameMode
     }
 
     private fun createTemporalStateIfSupported(pyramid: GlPyramid): GlTemporalState? {
@@ -451,6 +453,7 @@ class CameraOesRenderer(
             GLES30.glUniform1f(reconstructLevelGainLocations[index], RECONSTRUCTION_LEVEL_POLICY.gainFor(index))
         }
         GLES30.glUniform1f(reconstructMaxDeltaLocation, RECONSTRUCTION_LEVEL_POLICY.maxDelta)
+        GLES30.glUniform1i(reconstructDifferenceModeLocation, if (uniforms.differenceMode) 1 else 0)
         GLES30.glUniform1i(reconstructStartLevelLocation, RECONSTRUCTION_START_LEVEL)
         GLES30.glActiveTexture(GLES30.GL_TEXTURE0)
         GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, source.textureId)

@@ -70,17 +70,24 @@ class LiveEvmPreviewPolicyTest {
     }
 
     @Test
-    fun rawAndDifferenceRemainDiagnosticViews() {
+    fun enablesFullFrameColorForPulseDifferenceOnHealthyGlPreview() {
+        val decision = LiveEvmPreviewPolicy.decide(
+            settings = AnalysisSettings(
+                mode = MagnificationMode.Pulse,
+                viewMode = ViewMode.Difference,
+            ),
+            usingGlPreview = true,
+            glFrameStats = healthyStats(),
+        )
+
+        assertTrue(decision.fullFrameColorPreview)
+    }
+
+    @Test
+    fun rawRemainsDiagnosticView() {
         assertFalse(
             LiveEvmPreviewPolicy.decide(
                 settings = AnalysisSettings(viewMode = ViewMode.Raw),
-                usingGlPreview = true,
-                glFrameStats = healthyStats(),
-            ).fullFrameColorPreview,
-        )
-        assertFalse(
-            LiveEvmPreviewPolicy.decide(
-                settings = AnalysisSettings(viewMode = ViewMode.Difference),
                 usingGlPreview = true,
                 glFrameStats = healthyStats(),
             ).fullFrameColorPreview,

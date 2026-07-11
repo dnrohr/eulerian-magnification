@@ -49,6 +49,22 @@ showing true pyramid reconstruction or a fallback bridge.
 - Phone validation was not run for this slice because the phone is currently
   unavailable.
 
+## Completed Slice: Full-Frame Difference Contract
+
+- Pulse Difference mode now requests the live full-frame GL path when GL preview
+  is active and timing is healthy.
+- The live reconstruction shader accepts `uDifferenceMode` and emits a
+  full-frame reconstructed-delta heatmap based on the clamped amplified pyramid
+  delta.
+- `CameraOesRenderer` no longer blocks live reconstruction solely because the
+  view is Difference.
+- `VisualizationModel.live` now labels active GL Pulse Difference as
+  full-frame difference instead of ROI signal diagnostic.
+- Added JVM coverage for the live preview policy, visualization model, and
+  shader source contracts.
+- Phone validation was not run for this slice because the phone is currently
+  unavailable.
+
 ## Done When
 
 - Live amplified preview shows visible reconstructed output for at least one color sample and one slow-motion sample.

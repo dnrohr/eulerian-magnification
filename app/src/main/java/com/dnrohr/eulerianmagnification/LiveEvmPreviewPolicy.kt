@@ -31,11 +31,15 @@ object LiveEvmPreviewPolicy {
                 reason = "Full-frame live preview is currently limited to Pulse color",
             )
         }
-        if (settings.viewMode != ViewMode.Amplified && settings.viewMode != ViewMode.Split) {
+        if (
+            settings.viewMode != ViewMode.Amplified &&
+            settings.viewMode != ViewMode.Split &&
+            settings.viewMode != ViewMode.Difference
+        ) {
             return LiveEvmPreviewDecision(
                 fullFrameColorPreview = false,
                 label = "ROI diagnostic preview",
-                reason = "Raw and Difference keep their diagnostic behavior",
+                reason = "Raw keeps its diagnostic behavior",
             )
         }
         if (!hasSettledStats(glFrameStats)) {
@@ -55,7 +59,7 @@ object LiveEvmPreviewPolicy {
         return LiveEvmPreviewDecision(
             fullFrameColorPreview = true,
             label = "Full-frame color preview",
-            reason = "Pulse Amplified/Split can use GL full-frame color output",
+            reason = "Pulse Amplified/Difference/Split can use GL full-frame color output",
         )
     }
 
