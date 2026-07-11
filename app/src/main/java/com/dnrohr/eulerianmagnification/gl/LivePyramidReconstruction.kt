@@ -80,6 +80,7 @@ object LivePyramidShaderSource {
         uniform sampler2D uPreviousHighTexture;
         uniform float uLowAlpha;
         uniform float uHighAlpha;
+        uniform int uInitialized;
         in vec2 vTexCoord;
         layout(location = 0) out vec4 outLowpass;
         layout(location = 1) out vec4 outHighpass;
@@ -89,6 +90,12 @@ object LivePyramidShaderSource {
             vec4 current = texture(uCurrentTexture, vTexCoord);
             vec4 previousLow = texture(uPreviousLowTexture, vTexCoord);
             vec4 previousHigh = texture(uPreviousHighTexture, vTexCoord);
+            if (uInitialized == 0) {
+                outLowpass = current;
+                outHighpass = current;
+                outBandpass = vec4(0.0);
+                return;
+            }
             vec4 low = mix(previousLow, current, uLowAlpha);
             vec4 high = mix(previousHigh, current, uHighAlpha);
             outLowpass = low;

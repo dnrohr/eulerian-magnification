@@ -47,6 +47,7 @@ class CameraOesRenderer(
     private var temporalPreviousHighTextureLocation = -1
     private var temporalLowAlphaLocation = -1
     private var temporalHighAlphaLocation = -1
+    private var temporalInitializedLocation = -1
     private var reconstructBaseTextureLocation = -1
     private val reconstructBandpassTextureLocations = IntArray(DOWNSAMPLE_LEVELS) { -1 }
     private var reconstructAmplificationLocation = -1
@@ -122,6 +123,7 @@ class CameraOesRenderer(
         temporalPreviousHighTextureLocation = GLES30.glGetUniformLocation(temporalProgram, "uPreviousHighTexture")
         temporalLowAlphaLocation = GLES30.glGetUniformLocation(temporalProgram, "uLowAlpha")
         temporalHighAlphaLocation = GLES30.glGetUniformLocation(temporalProgram, "uHighAlpha")
+        temporalInitializedLocation = GLES30.glGetUniformLocation(temporalProgram, "uInitialized")
         reconstructBaseTextureLocation = GLES30.glGetUniformLocation(reconstructProgram, "uBaseTexture")
         repeat(DOWNSAMPLE_LEVELS) { index ->
             reconstructBandpassTextureLocations[index] = GLES30.glGetUniformLocation(
@@ -300,7 +302,8 @@ class CameraOesRenderer(
 
         renderDownsamplePyramid(source, pyramid)
         state.swap()
-        renderTemporalBandpass(pyramid, state, uniforms)
+        val temporalInitialized = lastTemporalTimestampNanos != null
+        renderTemporalBandpass(pyramid, state, uniforms, temporalInitialized)
         renderReconstruction(source, state, output, uniforms)
         GLES30.glBindFramebuffer(GLES30.GL_FRAMEBUFFER, 0)
         GlProgram.checkNoGlError("renderLivePyramidReconstruction")
@@ -346,6 +349,7 @@ class CameraOesRenderer(
         pyramid: GlPyramid,
         state: GlTemporalState,
         uniforms: ColorMagnificationUniforms,
+        temporalInitialized: Boolean,
     ) {
         val coefficients = TemporalBandpassCoefficients.from(
             lowCutHz = uniforms.lowCutHz,
@@ -360,6 +364,7 @@ class CameraOesRenderer(
             GLES30.glUniform1i(temporalPreviousHighTextureLocation, 2)
             GLES30.glUniform1f(temporalLowAlphaLocation, coefficients.lowAlpha)
             GLES30.glUniform1f(temporalHighAlphaLocation, coefficients.highAlpha)
+            GLES30.glUniform1i(temporalInitializedLocation, if (temporalInitialized) 1 else 0)
             GLES30.glActiveTexture(GLES30.GL_TEXTURE0)
             GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, currentLevel.textureId)
             GLES30.glActiveTexture(GLES30.GL_TEXTURE1)

@@ -86,6 +86,16 @@ Goal: integrate the full-frame EVM renderer into the live preview path.
 - Device behavior still needs to be confirmed on the Pixel because local JVM
   tests can prove the gate logic, not the actual driver capability.
 
+## Completed Slice: Temporal Warm Start
+
+- Added a temporal initialization uniform to the live bandpass shader.
+- On the first reconstructed frame after enabling/resetting the live path, the
+  shader seeds lowpass and highpass history from the current pyramid level and
+  emits zero bandpass.
+- Subsequent frames use the normal high-minus-low bandpass output.
+- This matches the CPU `BandpassFilter` startup behavior and avoids a startup
+  flash that could be mistaken for real magnified motion.
+
 ## Evidence
 
 - `docs/experiments/live_full_frame_preview_bridge.md`

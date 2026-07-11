@@ -68,6 +68,11 @@ half-float or float color buffers before allocating signed bandpass targets. If
 unsupported, the renderer intentionally falls back to the earlier GL color
 preview bridge.
 
+The first reconstructed frame now warm-starts temporal state by copying the
+current pyramid level into lowpass and highpass history while emitting zero
+bandpass. This keeps startup behavior consistent with the CPU filter and avoids
+an artificial first-frame pulse.
+
 ## Verification
 
 ```powershell

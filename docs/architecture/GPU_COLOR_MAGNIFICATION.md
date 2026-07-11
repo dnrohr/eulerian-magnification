@@ -66,6 +66,12 @@ renderer checks GL extensions before allocating temporal state. Unsupported
 contexts fall back to the previous full-frame GL color bridge instead of failing
 surface creation.
 
+The temporal shader also has an explicit warm-start path. The first
+reconstructed frame seeds lowpass and highpass history from the current frame and
+emits zero bandpass, then later frames use the normal high-minus-low bandpass
+output. This mirrors the CPU filter startup behavior and avoids an artificial
+first-frame flash.
+
 ## Verification
 
 - Unit tests verify ROI-limited shader source expectations, difference-mode source expectations, split-mode uniform mapping, viewport layout, benchmark summary mapping, and uniform mapping from analysis/settings.

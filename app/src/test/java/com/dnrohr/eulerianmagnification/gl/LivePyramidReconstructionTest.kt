@@ -56,6 +56,8 @@ class LivePyramidReconstructionTest {
         assertTrue(temporal.startsWith("#version 300 es"))
         assertTrue(temporal.contains("uPreviousLowTexture"))
         assertTrue(temporal.contains("uPreviousHighTexture"))
+        assertTrue(temporal.contains("uInitialized"))
+        assertTrue(temporal.contains("outBandpass = vec4(0.0)"))
         assertTrue(temporal.contains("outHighpass = high"))
         assertTrue(temporal.contains("outBandpass = high - low"))
 
