@@ -8,10 +8,12 @@ data class RecordedVideoDecodeOptions(
     val targetFps: Double = 30.0,
     val maxFrames: Int = 900,
     val frameOption: Int = MediaMetadataRetriever.OPTION_CLOSEST,
+    val maxFrameWidth: Int? = null,
 ) {
     init {
         require(targetFps > 0.0) { "targetFps must be positive" }
         require(maxFrames > 0) { "maxFrames must be positive" }
+        require(maxFrameWidth == null || maxFrameWidth > 0) { "maxFrameWidth must be positive" }
     }
 }
 
@@ -53,16 +55,47 @@ class RecordedVideoFrameDecoder {
                 .extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
                 ?.toLongOrNull()
                 ?: 0L
+            val sourceSize = retriever.sourceSize()
             RecordedVideoDecodePlan
                 .timestampsMicros(durationMillis, options.targetFps, options.maxFrames)
                 .mapNotNull { timestampMicros ->
-                    retriever
-                        .getFrameAtTime(timestampMicros, options.frameOption)
+                    retriever.frameAt(timestampMicros, options, sourceSize)
                         ?.toRgbFrame(timestampMicros * NANOS_PER_MICROSECOND)
                 }
         } finally {
             retriever.release()
         }
+    }
+
+    private fun MediaMetadataRetriever.frameAt(
+        timestampMicros: Long,
+        options: RecordedVideoDecodeOptions,
+        sourceSize: VideoSize?,
+    ): Bitmap? {
+        val maxWidth = options.maxFrameWidth
+        if (maxWidth != null && sourceSize != null && sourceSize.width > maxWidth) {
+            val targetWidth = maxWidth
+            val targetHeight = (sourceSize.height * (targetWidth / sourceSize.width.toDouble()))
+                .toInt()
+                .coerceAtLeast(1)
+            return getScaledFrameAtTime(
+                timestampMicros,
+                options.frameOption,
+                targetWidth,
+                targetHeight,
+            )
+        }
+        return getFrameAtTime(timestampMicros, options.frameOption)
+    }
+
+    private fun MediaMetadataRetriever.sourceSize(): VideoSize? {
+        val width = extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)
+            ?.toIntOrNull()
+            ?: return null
+        val height = extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)
+            ?.toIntOrNull()
+            ?: return null
+        return VideoSize(width = width, height = height)
     }
 
     private fun Bitmap.toRgbFrame(timestampNanos: Long): RgbFrame {
@@ -80,3 +113,8 @@ class RecordedVideoFrameDecoder {
         private const val NANOS_PER_MICROSECOND = 1_000L
     }
 }
+
+private data class VideoSize(
+    val width: Int,
+    val height: Int,
+)

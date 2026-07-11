@@ -109,9 +109,43 @@ This writes ignored evidence bundles to:
 
 Each bundle contains `manifest.json`, `artifact_index.json`,
 `evidence_report.html`, per-view `signal_timeline.csv`, and first/middle/last
-PPM frame snapshots for Raw, Amplified, Difference, and Split views. The next AO
-slice should add a decode wrapper that feeds `mit-baby` and `local-euler` into
-the same writer.
+PPM frame snapshots for Raw, Amplified, Difference, and Split views.
+
+For decoded-video parity artifacts on a connected device, run the bundled MIT
+sample:
+
+```powershell
+.\gradlew.bat connectedDebugAndroidTest "-Pandroid.testInstrumentationRunnerArguments.class=com.dnrohr.eulerianmagnification.analysis.ParityHarnessInstrumentedTest" "-Pandroid.testInstrumentationRunnerArguments.sampleId=mit-baby" "-Pandroid.testInstrumentationRunnerArguments.outputDirPath=/sdcard/Download/eulerian-parity-output"
+```
+
+The output directory used above is:
+
+```text
+/sdcard/Download/eulerian-parity-output/
+```
+
+To run the local `euler` sample, copy the ignored local video into ignored
+androidTest assets before building the test APK:
+
+```powershell
+Copy-Item -LiteralPath sample-videos\euler.mp4 -Destination app\src\androidTest\assets\euler.mp4 -Force
+.\gradlew.bat connectedDebugAndroidTest "-Pandroid.testInstrumentationRunnerArguments.class=com.dnrohr.eulerianmagnification.analysis.ParityHarnessInstrumentedTest" "-Pandroid.testInstrumentationRunnerArguments.sampleId=local-euler" "-Pandroid.testInstrumentationRunnerArguments.sampleAssetName=euler.mp4" "-Pandroid.testInstrumentationRunnerArguments.outputDirPath=/sdcard/Download/eulerian-parity-output"
+```
+
+Pull results with:
+
+```powershell
+& "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe" pull /sdcard/Download/eulerian-parity-output sample-videos\exports\eulerian-parity-output
+```
+
+Pixel 8a evidence from 2026-07-11:
+
+- `mit-baby`: 36 decoded frames at 160x90, `recorded_riesz_phase_motion`,
+  amplified mean absolute delta `0.314350`, changed-pixel fraction `0.142095`,
+  clipped fraction `0.004720`.
+- `local-euler`: 36 decoded frames at 51x90, `recorded_linear_evm`, amplified
+  mean absolute delta `14.687229`, changed-pixel fraction `0.711002`, clipped
+  fraction `0.059150`.
 
 For local file integrity:
 

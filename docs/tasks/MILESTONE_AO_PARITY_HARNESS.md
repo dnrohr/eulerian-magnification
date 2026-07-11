@@ -1,6 +1,6 @@
 # Milestone AO - Parity Harness
 
-Status: Planned
+Status: Complete
 
 Importance: Critical. We need a repeatable comparison harness before tuning the app against MIT-style output, otherwise visual claims stay subjective.
 
@@ -15,7 +15,8 @@ Goal: create a local validation workflow that runs known samples through the app
 - [x] Add a compact HTML evidence report summary that places settings and metrics on one page.
 - [x] Write artifact paths, timeline CSVs, HTML reports, manifests, and preview image snapshots for synthetic pulse and synthetic moving-edge samples.
 - [x] Document the exact command sequence for synthetic harness artifacts in `docs/testing/MIT_PARITY_TARGETS.md`.
-- [ ] Extend the harness to decode `mit-baby` and `local-euler`, then write the same artifact bundle for those local videos.
+- [x] Add an instrumented device runner that decodes `mit-baby` or a supplied local video path, then writes the same artifact bundle.
+- [x] Pull and inspect evidence notes for `mit-baby` and `local-euler` after running the device harness on both samples.
 
 ## Completed Slice: Deterministic Harness Core
 
@@ -47,12 +48,51 @@ Goal: create a local validation workflow that runs known samples through the app
 - Verified the command creates output for `synthetic-color-pulse` and
   `synthetic-moving-edge`.
 
-## Remaining Work
+## Completed Slice: Decoded Video Device Runner
 
-- Add an Android/device or desktop decode wrapper for `mit-baby` and
-  `local-euler` so real-video frames feed the same harness and artifact writer.
-- Add playable processed video outputs once the harness can run decoded
-  real-video samples outside manual picker interaction.
+- Added `ParityHarnessInstrumentedTest`, which uses Android
+  `MediaMetadataRetriever` through `RecordedVideoFrameDecoder`.
+- The runner defaults to the bundled `mit-evm-baby.mp4` androidTest asset and
+  also accepts a `sampleVideoPath` instrumentation argument for local-only
+  samples such as `euler.mp4`.
+- The runner writes the same parity bundle as the JVM synthetic writer:
+  manifest, artifact index, HTML report, timelines, and PPM preview frames.
+- It records source path and SHA-256 in the manifest so local video evidence can
+  be tied back to the expected sample.
+- The runner requests scaled frames from `RecordedVideoFrameDecoder` so large
+  local videos do not exhaust the instrumented test process before downsampling.
+
+## Device Evidence: Pixel 8a Decoded Samples
+
+Date: 2026-07-11
+
+- Connected device: Pixel 8a `47091JEKB05516`.
+- `mit-baby`: decoded the bundled `mit-evm-baby.mp4` androidTest asset,
+  verified SHA-256
+  `2C5E744384AB88FCCD3AA4883959B33EB4CDB7384C3E46E788CEDE821B2478EE`, wrote
+  pulled files under ignored
+  `sample-videos/exports/eulerian-parity-output/mit-baby/`, and recorded 36
+  frames at 160x90. Amplified view used `recorded_riesz_phase_motion` with
+  mean absolute delta `0.314350`, changed-pixel fraction `0.142095`, clipped
+  fraction `0.004720`, and in-band signal energy `3.567199`.
+- `local-euler`: copied ignored local `sample-videos/euler.mp4` to ignored
+  `app/src/androidTest/assets/euler.mp4`, decoded it as a test asset, verified
+  SHA-256
+  `BF549FEAA994104817A6AFCC39037FB80A013D4074E0AC00EC167F4471B0ACBF`, wrote
+  pulled files under ignored
+  `sample-videos/exports/eulerian-parity-output/local-euler/`, and recorded 36
+  frames at 51x90. Amplified view used `recorded_linear_evm` with mean absolute
+  delta `14.687229`, changed-pixel fraction `0.711002`, clipped fraction
+  `0.059150`, and in-band signal energy `16.698975`.
+- Both bundles include manifest JSON, artifact index JSON, HTML report,
+  per-view signal timelines, and first/middle/last PPM snapshots for Raw,
+  Amplified, Difference, and Split views.
+
+## Future Work
+
+- Add playable processed video outputs if visual inspection needs motion rather
+  than still snapshots; the current AO evidence bundle is static snapshots plus
+  metrics/timelines.
 
 ## Done When
 
