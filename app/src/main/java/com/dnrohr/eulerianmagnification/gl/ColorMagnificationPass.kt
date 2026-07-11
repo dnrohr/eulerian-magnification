@@ -81,6 +81,7 @@ class ColorMagnificationParameters(
             amplification = settings.amplification,
             lowCutHz = settings.lowCutHz,
             highCutHz = settings.highCutHz,
+            reconstructionProfile = LivePyramidReconstructionProfile.forMode(settings.mode),
         )
     }
 }
@@ -95,4 +96,5 @@ data class ColorMagnificationUniforms(
     val amplification: Float = 0.0f,
     val lowCutHz: Double = 0.7,
     val highCutHz: Double = 3.0,
+    val reconstructionProfile: LivePyramidReconstructionProfile = LivePyramidReconstructionProfile.PulseColor,
 )

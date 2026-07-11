@@ -345,8 +345,9 @@ class CameraOesRenderer(
                 activePyramidLevels = pyramid.levels.size,
                 internalSize = pyramid.levels.first().size,
                 temporalWarm = temporalInitialized,
-                levelGains = (0 until DOWNSAMPLE_LEVELS).map(RECONSTRUCTION_LEVEL_POLICY::gainFor),
-                maxDelta = RECONSTRUCTION_LEVEL_POLICY.maxDelta,
+                startLevel = uniforms.reconstructionProfile.startLevel,
+                levelGains = (0 until DOWNSAMPLE_LEVELS).map(uniforms.reconstructionProfile.levelPolicy::gainFor),
+                maxDelta = uniforms.reconstructionProfile.levelPolicy.maxDelta,
             )
             true
         } catch (_: GlException) {
@@ -452,11 +453,14 @@ class CameraOesRenderer(
         }
         GLES30.glUniform1f(reconstructAmplificationLocation, uniforms.amplification)
         repeat(DOWNSAMPLE_LEVELS) { index ->
-            GLES30.glUniform1f(reconstructLevelGainLocations[index], RECONSTRUCTION_LEVEL_POLICY.gainFor(index))
+            GLES30.glUniform1f(
+                reconstructLevelGainLocations[index],
+                uniforms.reconstructionProfile.levelPolicy.gainFor(index),
+            )
         }
-        GLES30.glUniform1f(reconstructMaxDeltaLocation, RECONSTRUCTION_LEVEL_POLICY.maxDelta)
+        GLES30.glUniform1f(reconstructMaxDeltaLocation, uniforms.reconstructionProfile.levelPolicy.maxDelta)
         GLES30.glUniform1i(reconstructDifferenceModeLocation, if (uniforms.differenceMode) 1 else 0)
-        GLES30.glUniform1i(reconstructStartLevelLocation, RECONSTRUCTION_START_LEVEL)
+        GLES30.glUniform1i(reconstructStartLevelLocation, uniforms.reconstructionProfile.startLevel)
         GLES30.glActiveTexture(GLES30.GL_TEXTURE0)
         GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, source.textureId)
         repeat(DOWNSAMPLE_LEVELS) { index ->
@@ -547,8 +551,6 @@ class CameraOesRenderer(
         private const val FLOAT_BYTES = 4
         private const val VERTEX_STRIDE_BYTES = 4 * FLOAT_BYTES
         private const val DOWNSAMPLE_LEVELS = 3
-        private const val RECONSTRUCTION_START_LEVEL = 0
-        private val RECONSTRUCTION_LEVEL_POLICY = LivePyramidLevelPolicy()
         private const val DEFAULT_FRAME_NANOS = 33_333_333L
         private const val NANOS_PER_SECOND = 1_000_000_000.0
     }

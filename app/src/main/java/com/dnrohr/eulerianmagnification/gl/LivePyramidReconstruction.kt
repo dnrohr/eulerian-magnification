@@ -1,5 +1,6 @@
 package com.dnrohr.eulerianmagnification.gl
 
+import com.dnrohr.eulerianmagnification.analysis.MagnificationMode
 import kotlin.math.PI
 import kotlin.math.exp
 
@@ -71,6 +72,36 @@ data class LivePyramidLevelPolicy(
     companion object {
         val DEFAULT_LEVEL_GAINS = listOf(0.35f, 0.75f, 1.0f)
         const val DEFAULT_MAX_DELTA = 0.18f
+    }
+}
+
+data class LivePyramidReconstructionProfile(
+    val startLevel: Int,
+    val levelPolicy: LivePyramidLevelPolicy,
+) {
+    init {
+        require(startLevel >= 0) { "startLevel must be non-negative" }
+    }
+
+    companion object {
+        val PulseColor = LivePyramidReconstructionProfile(
+            startLevel = 0,
+            levelPolicy = LivePyramidLevelPolicy(
+                levelGains = listOf(0.35f, 0.75f, 1.0f),
+                maxDelta = 0.18f,
+            ),
+        )
+        val SlowMotion = LivePyramidReconstructionProfile(
+            startLevel = 1,
+            levelPolicy = LivePyramidLevelPolicy(
+                levelGains = listOf(0.0f, 0.85f, 1.0f),
+                maxDelta = 0.16f,
+            ),
+        )
+
+        fun forMode(mode: MagnificationMode): LivePyramidReconstructionProfile {
+            return if (mode == MagnificationMode.Breathing) SlowMotion else PulseColor
+        }
     }
 }
 

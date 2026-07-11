@@ -9,7 +9,7 @@ Goal: promote the live GL path to a truthful MIT-style linear EVM renderer with 
 ## Tasks
 
 - [ ] Verify the existing live reconstruction path against a controlled target and identify whether it is using enough spatial structure to produce visible motion magnification.
-- [ ] Add explicit Gaussian/Laplacian pyramid levels for live color and slow-motion presets.
+- [x] Add explicit Gaussian/Laplacian pyramid levels for live color and slow-motion presets.
 - [ ] Apply temporal bandpass state per pyramid level instead of only applying an ROI-derived scalar signal.
 - [ ] Reconstruct a full processed frame for Raw, Amplified, Difference, and Split views.
 - [x] Add per-level attenuation and gain clamps to reduce halos, clipping, and full-frame flashing.
@@ -96,8 +96,8 @@ showing true pyramid reconstruction or a fallback bridge.
 - Live reconstruction diagnostics now include the active per-level pyramid gains
   and amplified-delta clamp uploaded by `CameraOesRenderer`.
 - The expanded GL debug line reports the current policy, for example
-  `gains 0.35/0.75/1.00 / clamp +/-0.18`, alongside pyramid level count,
-  internal size, and warmup state.
+  `start L0 / gains 0.35/0.75/1.00 / clamp +/-0.18`, alongside pyramid level
+  count, internal size, and warmup state.
 - Fallback diagnostics remain concise and continue to show the fallback reason
   without policy details.
 - Added JVM coverage for reconstruction policy summary formatting.
@@ -115,6 +115,24 @@ showing true pyramid reconstruction or a fallback bridge.
   Gaussian bandpass textures.
 - Updated the live level-policy experiment note with the reconstruction formula.
 - Added JVM coverage for the shader source contract.
+- Phone validation was not run for this slice because the phone is currently
+  unavailable.
+
+## Completed Slice: Mode-Specific Reconstruction Profiles
+
+- Added explicit live reconstruction profiles for Pulse color and Breathing /
+  slow motion.
+- Pulse starts at pyramid level `0` with the fine-level attenuation policy used
+  for color magnification.
+- Breathing starts at pyramid level `1`, skips fine texture shimmer, uses
+  mid/coarse gains, and applies a slightly tighter amplified-delta clamp.
+- `ColorMagnificationUniforms` now carries the selected reconstruction profile
+  into `CameraOesRenderer`, which uploads the profile gains, clamp, and start
+  level instead of using one fixed renderer policy for every mode.
+- GL reconstruction diagnostics now report the active start level along with
+  gains and clamp, making Pixel validation easier to interpret.
+- Added JVM coverage for profile selection, uniform mapping, diagnostics, and
+  shader profile contracts.
 - Phone validation was not run for this slice because the phone is currently
   unavailable.
 

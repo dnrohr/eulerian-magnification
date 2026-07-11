@@ -1,5 +1,6 @@
 package com.dnrohr.eulerianmagnification.gl
 
+import com.dnrohr.eulerianmagnification.analysis.MagnificationMode
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
@@ -67,6 +68,31 @@ class LivePyramidReconstructionTest {
         }
         assertThrows(IllegalArgumentException::class.java) {
             LivePyramidLevelPolicy(maxDelta = 0.0f)
+        }
+    }
+
+    @Test
+    fun profilesChooseFineColorOrCoarseSlowMotionLevels() {
+        val pulse = LivePyramidReconstructionProfile.forMode(MagnificationMode.Pulse)
+        val breathing = LivePyramidReconstructionProfile.forMode(MagnificationMode.Breathing)
+
+        assertEquals(0, pulse.startLevel)
+        assertEquals(0.35f, pulse.levelPolicy.gainFor(0), 0.0f)
+        assertEquals(0.18f, pulse.levelPolicy.maxDelta, 0.0f)
+
+        assertEquals(1, breathing.startLevel)
+        assertEquals(0.0f, breathing.levelPolicy.gainFor(0), 0.0f)
+        assertEquals(0.85f, breathing.levelPolicy.gainFor(1), 0.0f)
+        assertEquals(0.16f, breathing.levelPolicy.maxDelta, 0.0f)
+    }
+
+    @Test
+    fun profileRejectsInvalidStartLevel() {
+        assertThrows(IllegalArgumentException::class.java) {
+            LivePyramidReconstructionProfile(
+                startLevel = -1,
+                levelPolicy = LivePyramidLevelPolicy(),
+            )
         }
     }
 

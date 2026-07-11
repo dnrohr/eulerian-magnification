@@ -13,14 +13,28 @@ clamping.
 
 ## Policy
 
+### Pulse Color
+
 | Level | Gain | Intent |
 | --- | ---: | --- |
 | 0 | 0.35 | Suppress fine-level shimmer and edge halos. |
 | 1 | 0.75 | Keep mid-level motion/color contribution visible. |
 | 2 | 1.00 | Preserve coarser low-frequency reconstruction. |
 
-The amplified delta is clamped to `+/-0.18` in normalized RGB space before
-being added to the base frame.
+Pulse starts reconstruction at level `0` and clamps the amplified delta to
+`+/-0.18` in normalized RGB space before adding it to the base frame.
+
+### Breathing / Slow Motion
+
+| Level | Gain | Intent |
+| --- | ---: | --- |
+| 0 | 0.00 | Skip fine texture shimmer for slow motion. |
+| 1 | 0.85 | Preserve torso/shoulder-scale motion contribution. |
+| 2 | 1.00 | Preserve coarse low-frequency reconstruction. |
+
+Breathing starts reconstruction at level `1` and clamps the amplified delta to
+`+/-0.16`. This is intentionally more conservative than Pulse until Pixel
+validation shows how stable the live GL reconstruction is on a real target.
 
 ## Reconstruction Delta
 
@@ -47,7 +61,8 @@ Phone validation was not run for this slice because the phone is currently
 unavailable. The next Pixel run should verify:
 
 - GL debug reports `Live reconstruction`.
-- Pyramid diagnostics show active levels and warm temporal state.
+- Pyramid diagnostics show active levels, warm temporal state, start level,
+  per-level gains, and clamp.
 - Amplified view does not flash or clip aggressively under the same target used
   before the clamp.
 - Difference view shows full-frame reconstructed-delta heatmap rather than an

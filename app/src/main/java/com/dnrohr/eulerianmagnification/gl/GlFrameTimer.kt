@@ -71,6 +71,7 @@ data class GlReconstructionDiagnostics(
     val activePyramidLevels: Int = 0,
     val internalSize: GlTextureSize? = null,
     val temporalWarm: Boolean = false,
+    val startLevel: Int = 0,
     val levelGains: List<Float> = emptyList(),
     val maxDelta: Float? = null,
     val fallbackReason: GlReconstructionFallbackReason = GlReconstructionFallbackReason.None,
@@ -90,6 +91,7 @@ data class GlReconstructionDiagnostics(
 
     private fun policySummary(): String {
         val labels = mutableListOf<String>()
+        labels += "start L$startLevel"
         if (levelGains.isNotEmpty()) {
             labels += "gains ${levelGains.joinToString(separator = "/") { it.policyFormat() }}"
         }
