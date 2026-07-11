@@ -63,3 +63,19 @@ Goal: bring the recorded Riesz/phase motion renderer into a live-preview path fo
   invocation remain open.
 - Installed the debug build on the Pixel 8a after focused shader coverage and
   full JVM/build verification.
+
+## Completed Slice: Live Phase Diagnostics Contract
+
+- Added `LivePhaseDiagnostics` for the future live phase UI/debug metadata.
+- Diagnostics summarize whether phase rendering was requested, whether it is
+  active, warmup status, ROI processing size, amplitude gate status, and fallback
+  reason.
+- Added explicit fallback reasons for missing manual ROI, unsupported GL phase
+  resources, memory-budget overflow, unhealthy timing, low amplitude, and
+  renderer errors.
+- Added JVM coverage for inactive, fallback, warming, ready, and low-amplitude
+  summaries.
+- This is a diagnostics contract; wiring it into `CameraOesRenderer` and the UI
+  remains open.
+- Installed the debug build on the Pixel 8a after focused diagnostics coverage
+  and full JVM/build verification.
