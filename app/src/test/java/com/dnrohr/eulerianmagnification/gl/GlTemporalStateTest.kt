@@ -22,20 +22,15 @@ class GlTemporalStateTest {
     }
 
     @Test
-    fun temporalPlanHasTwoTargetsPerLevel() {
-        val plan = TemporalStatePlan(
+    fun temporalPlanHasLowHighPingPongAndBandpassTargetsPerLevel() {
+        val plan = GlTemporalStatePlan(
             levelSizes = listOf(
                 GlTextureSize(320, 180),
                 GlTextureSize(160, 90),
             ),
         )
 
-        assertEquals(4, plan.renderTargetCount)
+        assertEquals(10, plan.renderTargetCount)
+        assertEquals(5, GlTemporalStatePlan.TARGETS_PER_LEVEL)
     }
-}
-
-data class TemporalStatePlan(
-    val levelSizes: List<GlTextureSize>,
-) {
-    val renderTargetCount: Int get() = levelSizes.size * 2
 }

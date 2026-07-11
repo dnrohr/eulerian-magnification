@@ -15,12 +15,11 @@ data class LivePyramidReconstructionPlan(
         levelCount = levelCount,
     )
 
-    val temporalRenderTargetCount: Int get() = pyramidSizes.size * TEMPORAL_TARGETS_PER_LEVEL
-    val passCount: Int get() = 1 + pyramidSizes.size + 1
+    val temporalRenderTargetCount: Int get() = GlTemporalStatePlan(pyramidSizes).renderTargetCount
+    val passCount: Int get() = pyramidSizes.size + pyramidSizes.size + 1
 
     companion object {
         const val DEFAULT_LEVEL_COUNT = 3
-        private const val TEMPORAL_TARGETS_PER_LEVEL = 2
     }
 }
 
@@ -83,7 +82,8 @@ object LivePyramidShaderSource {
         uniform float uHighAlpha;
         in vec2 vTexCoord;
         layout(location = 0) out vec4 outLowpass;
-        layout(location = 1) out vec4 outBandpass;
+        layout(location = 1) out vec4 outHighpass;
+        layout(location = 2) out vec4 outBandpass;
 
         void main() {
             vec4 current = texture(uCurrentTexture, vTexCoord);
@@ -92,6 +92,7 @@ object LivePyramidShaderSource {
             vec4 low = mix(previousLow, current, uLowAlpha);
             vec4 high = mix(previousHigh, current, uHighAlpha);
             outLowpass = low;
+            outHighpass = high;
             outBandpass = high - low;
         }
     """

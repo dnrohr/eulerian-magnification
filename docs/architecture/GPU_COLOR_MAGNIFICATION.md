@@ -49,6 +49,11 @@ contracts for the next stage:
 - update low/high temporal state per pyramid level
 - reconstruct the frame from amplified bandpass levels
 
+`GlTemporalState` now allocates the targets needed for that temporal update:
+lowpass ping-pong, highpass ping-pong, and a current bandpass output per
+pyramid level. Each level also has a framebuffer binding for the temporal
+shader's multiple render outputs.
+
 These sources are not wired into `CameraOesRenderer` yet. The current visible
 live full-frame mode remains the Pulse color bridge until the runtime pass graph
 is connected and checked on device.

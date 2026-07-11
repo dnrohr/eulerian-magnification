@@ -47,6 +47,10 @@ planned downsample, temporal bandpass, and reconstruction shader contracts. This
 is still source-level scaffolding: `CameraOesRenderer` must still connect the
 pass graph before the live preview is true reconstructed EVM output.
 
+`GlTemporalState` now matches the temporal bandpass contract: each pyramid level
+has lowpass and highpass ping-pong textures plus a current bandpass texture, and
+can bind those outputs for a future multiple-render-target shader pass.
+
 ## Verification
 
 ```powershell
@@ -55,6 +59,10 @@ pass graph before the live preview is true reconstructed EVM output.
 
 ```powershell
 .\gradlew.bat testDebugUnitTest --tests "com.dnrohr.eulerianmagnification.gl.LivePyramidReconstructionTest"
+```
+
+```powershell
+.\gradlew.bat testDebugUnitTest --tests "com.dnrohr.eulerianmagnification.gl.GlTemporalStateTest" --tests "com.dnrohr.eulerianmagnification.gl.LivePyramidReconstructionTest"
 ```
 
 Result: pass.

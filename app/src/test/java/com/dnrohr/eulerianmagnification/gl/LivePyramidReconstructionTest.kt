@@ -18,8 +18,8 @@ class LivePyramidReconstructionTest {
             ),
             plan.pyramidSizes,
         )
-        assertEquals(6, plan.temporalRenderTargetCount)
-        assertEquals(5, plan.passCount)
+        assertEquals(15, plan.temporalRenderTargetCount)
+        assertEquals(7, plan.passCount)
     }
 
     @Test
@@ -56,6 +56,7 @@ class LivePyramidReconstructionTest {
         assertTrue(temporal.startsWith("#version 300 es"))
         assertTrue(temporal.contains("uPreviousLowTexture"))
         assertTrue(temporal.contains("uPreviousHighTexture"))
+        assertTrue(temporal.contains("outHighpass = high"))
         assertTrue(temporal.contains("outBandpass = high - low"))
 
         val reconstruct = LivePyramidShaderSource.RECONSTRUCT_FRAGMENT

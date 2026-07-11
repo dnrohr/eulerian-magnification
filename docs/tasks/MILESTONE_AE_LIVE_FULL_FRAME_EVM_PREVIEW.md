@@ -42,6 +42,21 @@ Goal: integrate the full-frame EVM renderer into the live preview path.
 - This still does not wire the runtime GL pass into `CameraOesRenderer`, so AE
   remains in progress until reconstructed output is rendered and validated.
 
+## Completed Slice: Temporal State Targets
+
+- Updated `GlTemporalState` so each pyramid level owns separate lowpass and
+  highpass ping-pong targets plus a current bandpass target.
+- Added a temporal update framebuffer that binds lowpass, highpass, and
+  bandpass textures as multiple render outputs for the temporal shader.
+- Updated `LivePyramidReconstructionPlan` to count five temporal render targets
+  per level and to represent downsample, temporal update, and reconstruction
+  passes.
+- Updated shader contracts and JVM coverage so the temporal pass exposes both
+  highpass history output and bandpass reconstruction output.
+- This still does not call the temporal shader from `CameraOesRenderer`; the
+  next AE slice should compile/link the pass programs and invoke them between
+  RGB capture and output display.
+
 ## Evidence
 
 - `docs/experiments/live_full_frame_preview_bridge.md`
