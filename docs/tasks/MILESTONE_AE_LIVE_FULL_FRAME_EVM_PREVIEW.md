@@ -108,6 +108,25 @@ Goal: integrate the full-frame EVM renderer into the live preview path.
 - This gives the Pixel validation run a direct way to confirm which path is
   visible before evaluating magnification quality.
 
+## Completed Slice: Scrollable Expanded Controls
+
+- During Pixel validation, expanded controls overflowed below the screen and the
+  GL preview toggle could not be reached.
+- Made the expanded controls vertically scrollable so renderer diagnostics,
+  preview toggles, recording controls, and validation actions remain accessible
+  on the Pixel 8a portrait layout.
+
+## Completed Slice: Pixel Live Reconstruction Smoke
+
+- Installed the updated debug APK on connected Pixel 8a `47091JEKB05516`.
+- Enabled GL preview from the now-scrollable expanded controls.
+- Captured an unattended portrait screenshot showing `GL renderer: Live
+  reconstruction`.
+- The preview was upright and nonblank in the screenshot.
+- The frame did not include a known pulse target, so this does not complete AE
+  visual magnification validation. A deliberate target/face run is still needed
+  before marking AE complete.
+
 ## Evidence
 
 - `docs/experiments/live_full_frame_preview_bridge.md`

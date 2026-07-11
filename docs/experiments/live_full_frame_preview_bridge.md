@@ -78,6 +78,20 @@ The expanded debug UI now includes `GL renderer:` so validation can distinguish
 the color bridge, live reconstruction, and live reconstruction fallback before
 judging visual output.
 
+## Pixel Smoke Probe
+
+Date: 2026-07-11
+
+- Device: Pixel 8a `47091JEKB05516`
+- Installed latest debug APK with the scrollable expanded-controls fix.
+- Enabled GL preview from expanded controls.
+- Captured an unattended portrait screenshot with `GL renderer: Live
+  reconstruction`.
+- Result: preview was upright and nonblank, and the live reconstruction path was
+  active.
+- Limit: no known pulse target or visible face target was deliberately framed,
+  so this does not prove visible magnification quality or complete AE.
+
 ## Verification
 
 ```powershell
