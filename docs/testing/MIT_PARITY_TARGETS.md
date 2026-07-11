@@ -86,6 +86,18 @@ media decode:
 .\gradlew.bat testDebugUnitTest --tests "com.dnrohr.eulerianmagnification.analysis.RecordedEvmParityValidatorTest"
 ```
 
+For the deterministic parity harness core:
+
+```powershell
+.\gradlew.bat testDebugUnitTest --tests "com.dnrohr.eulerianmagnification.analysis.ParityHarnessTest"
+```
+
+The harness currently runs app-native renderer paths against deterministic
+synthetic color-pulse and moving-edge frame sequences, then produces manifest
+JSON, timeline CSV, objective metrics, and a compact HTML summary in memory.
+The next AO slice should add a file-writing wrapper that decodes `mit-baby` and
+`local-euler` and writes reviewable artifacts under an ignored output directory.
+
 For local file integrity:
 
 ```powershell
