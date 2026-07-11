@@ -50,7 +50,9 @@ class CameraOesRenderer(
     private var temporalInitializedLocation = -1
     private var reconstructBaseTextureLocation = -1
     private val reconstructBandpassTextureLocations = IntArray(DOWNSAMPLE_LEVELS) { -1 }
+    private val reconstructLevelGainLocations = IntArray(DOWNSAMPLE_LEVELS) { -1 }
     private var reconstructAmplificationLocation = -1
+    private var reconstructMaxDeltaLocation = -1
     private var reconstructStartLevelLocation = -1
     private var rgbRenderTarget: GlRenderTarget? = null
     private var processedRenderTarget: GlRenderTarget? = null
@@ -131,8 +133,13 @@ class CameraOesRenderer(
                 reconstructProgram,
                 "uBandpassTexture$index",
             )
+            reconstructLevelGainLocations[index] = GLES30.glGetUniformLocation(
+                reconstructProgram,
+                "uLevelGain$index",
+            )
         }
         reconstructAmplificationLocation = GLES30.glGetUniformLocation(reconstructProgram, "uAmplification")
+        reconstructMaxDeltaLocation = GLES30.glGetUniformLocation(reconstructProgram, "uMaxDelta")
         reconstructStartLevelLocation = GLES30.glGetUniformLocation(reconstructProgram, "uStartLevel")
         oesTextureId = createOesTexture()
         surfaceTexture = SurfaceTexture(oesTextureId).apply {
@@ -440,6 +447,10 @@ class CameraOesRenderer(
             GLES30.glUniform1i(reconstructBandpassTextureLocations[index], index + 1)
         }
         GLES30.glUniform1f(reconstructAmplificationLocation, uniforms.amplification)
+        repeat(DOWNSAMPLE_LEVELS) { index ->
+            GLES30.glUniform1f(reconstructLevelGainLocations[index], RECONSTRUCTION_LEVEL_POLICY.gainFor(index))
+        }
+        GLES30.glUniform1f(reconstructMaxDeltaLocation, RECONSTRUCTION_LEVEL_POLICY.maxDelta)
         GLES30.glUniform1i(reconstructStartLevelLocation, RECONSTRUCTION_START_LEVEL)
         GLES30.glActiveTexture(GLES30.GL_TEXTURE0)
         GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, source.textureId)
@@ -532,6 +543,7 @@ class CameraOesRenderer(
         private const val VERTEX_STRIDE_BYTES = 4 * FLOAT_BYTES
         private const val DOWNSAMPLE_LEVELS = 3
         private const val RECONSTRUCTION_START_LEVEL = 0
+        private val RECONSTRUCTION_LEVEL_POLICY = LivePyramidLevelPolicy()
         private const val DEFAULT_FRAME_NANOS = 33_333_333L
         private const val NANOS_PER_SECOND = 1_000_000_000.0
     }

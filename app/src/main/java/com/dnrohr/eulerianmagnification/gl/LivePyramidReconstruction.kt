@@ -53,6 +53,27 @@ data class TemporalBandpassCoefficients(
     }
 }
 
+data class LivePyramidLevelPolicy(
+    val levelGains: List<Float> = DEFAULT_LEVEL_GAINS,
+    val maxDelta: Float = DEFAULT_MAX_DELTA,
+) {
+    init {
+        require(levelGains.isNotEmpty()) { "levelGains must not be empty" }
+        require(levelGains.all { it >= 0.0f }) { "level gains must be non-negative" }
+        require(maxDelta > 0.0f) { "maxDelta must be positive" }
+    }
+
+    fun gainFor(level: Int): Float {
+        require(level >= 0) { "level must be non-negative" }
+        return levelGains.getOrElse(level) { levelGains.last() }
+    }
+
+    companion object {
+        val DEFAULT_LEVEL_GAINS = listOf(0.35f, 0.75f, 1.0f)
+        const val DEFAULT_MAX_DELTA = 0.18f
+    }
+}
+
 object LivePyramidShaderSource {
     const val VERTEX = RgbTextureShaderSource.VERTEX
 
@@ -111,6 +132,10 @@ object LivePyramidShaderSource {
         uniform sampler2D uBandpassTexture1;
         uniform sampler2D uBandpassTexture2;
         uniform float uAmplification;
+        uniform float uLevelGain0;
+        uniform float uLevelGain1;
+        uniform float uLevelGain2;
+        uniform float uMaxDelta;
         uniform int uStartLevel;
         in vec2 vTexCoord;
         out vec4 outColor;
@@ -130,10 +155,12 @@ object LivePyramidShaderSource {
             vec3 delta = vec3(0.0);
             for (int level = 0; level < 3; level++) {
                 if (level >= uStartLevel) {
-                    delta += levelDelta(level);
+                    float gain = level == 0 ? uLevelGain0 : (level == 1 ? uLevelGain1 : uLevelGain2);
+                    delta += levelDelta(level) * gain;
                 }
             }
-            outColor = vec4(clamp(base.rgb + delta * uAmplification, 0.0, 1.0), base.a);
+            vec3 amplifiedDelta = clamp(delta * uAmplification, vec3(-uMaxDelta), vec3(uMaxDelta));
+            outColor = vec4(clamp(base.rgb + amplifiedDelta, 0.0, 1.0), base.a);
         }
     """
 }

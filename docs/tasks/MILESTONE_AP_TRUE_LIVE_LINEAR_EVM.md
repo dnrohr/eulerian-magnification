@@ -12,7 +12,7 @@ Goal: promote the live GL path to a truthful MIT-style linear EVM renderer with 
 - [ ] Add explicit Gaussian/Laplacian pyramid levels for live color and slow-motion presets.
 - [ ] Apply temporal bandpass state per pyramid level instead of only applying an ROI-derived scalar signal.
 - [ ] Reconstruct a full processed frame for Raw, Amplified, Difference, and Split views.
-- [ ] Add per-level attenuation and gain clamps to reduce halos, clipping, and full-frame flashing.
+- [x] Add per-level attenuation and gain clamps to reduce halos, clipping, and full-frame flashing.
 - [x] Add renderer diagnostics that report active pyramid levels, internal resolution, temporal warmup state, fallback reason, and display FPS.
 - [ ] Validate on Pixel 8a with a known motion/color target and store screenshots or exported evidence notes.
 
@@ -32,6 +32,22 @@ Goal: promote the live GL path to a truthful MIT-style linear EVM renderer with 
 This slice does not prove visible motion magnification yet; it makes the next
 Pixel validation run interpretable enough to tell whether the live preview is
 showing true pyramid reconstruction or a fallback bridge.
+
+## Completed Slice: Level Attenuation And Delta Clamp
+
+- Added `LivePyramidLevelPolicy` for live reconstruction level gains and a max
+  amplified-delta clamp.
+- The live reconstruction shader now weights each bandpass level before summing
+  the reconstruction delta.
+- The shader clamps the amplified delta before final RGB clamping. This reduces
+  full-frame flashing and clipping risk while still preserving reconstructed
+  spatial changes.
+- `CameraOesRenderer` now uploads level gains and max delta uniforms for the
+  live reconstruction path.
+- Added JVM coverage for policy defaults, invalid policy rejection, and shader
+  uniform/source contracts.
+- Phone validation was not run for this slice because the phone is currently
+  unavailable.
 
 ## Done When
 

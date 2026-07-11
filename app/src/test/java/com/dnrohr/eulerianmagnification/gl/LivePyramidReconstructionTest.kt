@@ -47,6 +47,30 @@ class LivePyramidReconstructionTest {
     }
 
     @Test
+    fun levelPolicyAttenuatesFineLevelsAndClampsDelta() {
+        val policy = LivePyramidLevelPolicy()
+
+        assertEquals(0.35f, policy.gainFor(0), 0.0f)
+        assertEquals(0.75f, policy.gainFor(1), 0.0f)
+        assertEquals(1.0f, policy.gainFor(2), 0.0f)
+        assertEquals(1.0f, policy.gainFor(10), 0.0f)
+        assertEquals(0.18f, policy.maxDelta, 0.0f)
+    }
+
+    @Test
+    fun levelPolicyRejectsInvalidValues() {
+        assertThrows(IllegalArgumentException::class.java) {
+            LivePyramidLevelPolicy(levelGains = emptyList())
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            LivePyramidLevelPolicy(levelGains = listOf(1.0f, -0.1f))
+        }
+        assertThrows(IllegalArgumentException::class.java) {
+            LivePyramidLevelPolicy(maxDelta = 0.0f)
+        }
+    }
+
+    @Test
     fun shadersExposeDownsampleTemporalAndReconstructionUniforms() {
         assertTrue(LivePyramidShaderSource.VERTEX.startsWith("#version 300 es"))
         assertTrue(LivePyramidShaderSource.DOWNSAMPLE_FRAGMENT.contains("uTexelSize"))
@@ -65,7 +89,12 @@ class LivePyramidReconstructionTest {
         assertTrue(reconstruct.startsWith("#version 300 es"))
         assertTrue(reconstruct.contains("uBandpassTexture0"))
         assertTrue(reconstruct.contains("uAmplification"))
+        assertTrue(reconstruct.contains("uLevelGain0"))
+        assertTrue(reconstruct.contains("uLevelGain1"))
+        assertTrue(reconstruct.contains("uLevelGain2"))
+        assertTrue(reconstruct.contains("uMaxDelta"))
         assertTrue(reconstruct.contains("uStartLevel"))
-        assertTrue(reconstruct.contains("delta * uAmplification"))
+        assertTrue(reconstruct.contains("levelDelta(level) * gain"))
+        assertTrue(reconstruct.contains("clamp(delta * uAmplification"))
     }
 }
