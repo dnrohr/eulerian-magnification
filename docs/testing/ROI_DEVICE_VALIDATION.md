@@ -29,6 +29,19 @@ Use this procedure to verify that analysis ROI coordinates match the visible pre
 6. Move slightly and confirm short detection misses show `Frozen ROI` without visible wandering.
 7. If the ROI remains far from the face while `Tracking`, capture non-sensitive evidence and inspect `PreviewRoiMapper`.
 
+## Live Reconstruction Procedure
+
+1. Install the latest debug APK.
+2. Launch the app and switch to `Pulse` mode.
+3. Enable GL preview from expanded controls.
+4. Use `Amplified` view first, then repeat with `Split`.
+5. Keep expanded controls visible long enough to read `GL renderer:`.
+6. Confirm `GL renderer:` reports either `Live reconstruction` or `Live reconstruction fallback`.
+7. If it reports `Live reconstruction`, confirm the preview is upright, nonblank, not stretched, and shows visible full-frame magnification on a stable pulse target.
+8. If it reports `Live reconstruction fallback`, record that the device fell back to the GL color bridge and inspect GL half-float support or runtime GL errors before marking AE complete.
+9. In `Split`, confirm the left side is raw preview and the right side is reconstructed or fallback processed output.
+10. Keep the phone in portrait orientation for the validation note.
+
 ## Current Unattended Probe
 
 Date: 2026-07-05
@@ -45,3 +58,4 @@ Date: 2026-07-05
 - Automatic ROI: face detector output maps to the same visible face/skin region in portrait/front-camera preview.
 - No duplicate ROI boxes are visible during normal manual ROI use.
 - CameraX and GL preview paths document any intentional differences.
+- AE live reconstruction: expanded controls identify the active GL renderer path, and `Live reconstruction` output is upright, nonblank, not stretched, and visibly magnified before AE is marked complete.

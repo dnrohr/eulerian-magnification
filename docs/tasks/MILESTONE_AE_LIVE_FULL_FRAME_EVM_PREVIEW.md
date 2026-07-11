@@ -111,6 +111,7 @@ Goal: integrate the full-frame EVM renderer into the live preview path.
 ## Evidence
 
 - `docs/experiments/live_full_frame_preview_bridge.md`
+- `docs/testing/ROI_DEVICE_VALIDATION.md`
 
 ## Done When
 
