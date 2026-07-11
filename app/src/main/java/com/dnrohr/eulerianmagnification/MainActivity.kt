@@ -151,18 +151,22 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
         hasCameraPermission = granted
     }
     val recordingRootDirectory = remember(context) { recordingsRoot(context) }
+    val appSettingsStore = remember(context) { AppSettingsStore(context) }
+    val persistedAppSettings = remember(context, featureAvailability) {
+        appSettingsStore.load(featureAvailability.availableModes)
+    }
     val validationExecutor = remember { Executors.newSingleThreadExecutor() }
     var analysisSample by remember { mutableStateOf(AnalysisSample()) }
     var analysisSettings by remember {
-        mutableStateOf(AnalysisSettings(mode = featureAvailability.availableModes.firstOrNull() ?: MagnificationMode.Pulse))
+        mutableStateOf(persistedAppSettings.analysisSettings)
     }
     var recordingSession by remember { mutableStateOf<ProcessedRecordingSession?>(null) }
     var lastRecordingPath by remember { mutableStateOf<String?>(null) }
     var recentRecordings by remember { mutableStateOf(RecordingGallery.listRecent(recordingRootDirectory)) }
     var validationSummary by remember { mutableStateOf<String?>(null) }
     var validationRunning by remember { mutableStateOf(false) }
-    var cameraControlsLocked by remember { mutableStateOf(false) }
-    var showGlDebug by remember { mutableStateOf(false) }
+    var cameraControlsLocked by remember { mutableStateOf(persistedAppSettings.cameraControlsLocked) }
+    var showGlDebug by remember { mutableStateOf(persistedAppSettings.requestedGlPreview) }
     var controlsExpanded by remember { mutableStateOf(false) }
     var cleanPreview by remember { mutableStateOf(false) }
     var manualRoi by remember { mutableStateOf<NormalizedRect?>(null) }
@@ -251,6 +255,16 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
         if (showGlDebug && !featureAvailability.glPreviewAvailable) {
             showGlDebug = false
         }
+    }
+
+    LaunchedEffect(analysisSettings, showGlDebug, cameraControlsLocked) {
+        appSettingsStore.save(
+            PersistedAppSettings(
+                analysisSettings = analysisSettings,
+                requestedGlPreview = showGlDebug,
+                cameraControlsLocked = cameraControlsLocked,
+            )
+        )
     }
 
     fun handleSample(sample: AnalysisSample): Long {
@@ -349,6 +363,15 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
             manualRoiEditing = manualRoiEditing,
             onManualRoiEditingChanged = { manualRoiEditing = it },
             onClearManualRoi = {
+                manualRoi = null
+                manualRoiEditing = ManualRoiEditState.afterClearRoi()
+            },
+            onResetSettings = {
+                val defaults = PersistedAppSettings.defaultFor(featureAvailability.availableModes)
+                appSettingsStore.reset()
+                analysisSettings = defaults.analysisSettings
+                showGlDebug = defaults.requestedGlPreview
+                cameraControlsLocked = defaults.cameraControlsLocked
                 manualRoi = null
                 manualRoiEditing = ManualRoiEditState.afterClearRoi()
             },
@@ -925,6 +948,7 @@ private fun StatusOverlay(
     manualRoiEditing: Boolean,
     onManualRoiEditingChanged: (Boolean) -> Unit,
     onClearManualRoi: () -> Unit,
+    onResetSettings: () -> Unit,
     showGlDebug: Boolean,
     onShowGlDebugChanged: (Boolean) -> Unit,
     usingGlPreview: Boolean,
@@ -1082,6 +1106,7 @@ private fun StatusOverlay(
             manualRoiEditing = manualRoiEditing,
             onManualRoiEditingChanged = onManualRoiEditingChanged,
             onClearManualRoi = onClearManualRoi,
+            onResetSettings = onResetSettings,
             showGlDebug = showGlDebug,
             onShowGlDebugChanged = onShowGlDebugChanged,
             usingGlPreview = usingGlPreview,
@@ -1629,6 +1654,7 @@ private fun ModeControls(
     manualRoiEditing: Boolean,
     onManualRoiEditingChanged: (Boolean) -> Unit,
     onClearManualRoi: () -> Unit,
+    onResetSettings: () -> Unit,
     showGlDebug: Boolean,
     onShowGlDebugChanged: (Boolean) -> Unit,
     usingGlPreview: Boolean,
@@ -1715,6 +1741,10 @@ private fun ModeControls(
                 style = MaterialTheme.typography.bodySmall,
             )
         }
+    }
+    Spacer(modifier = Modifier.height(8.dp))
+    Button(onClick = onResetSettings) {
+        Text("Reset Settings")
     }
 }
 

@@ -146,6 +146,9 @@ The default screen is intentionally compact so the preview remains visible.
 - `Lock AE/AWB`: locks auto-exposure and auto-white-balance after the camera has
   settled. This helps reduce brightness/color pumping.
 - `Unlock AE/AWB`: returns exposure and white balance to camera auto mode.
+- `Reset Settings`: clears saved preferences and returns mode, view,
+  amplification, preview path, and AE/AWB lock to first-launch defaults. Manual
+  ROI is intentionally not persisted.
 - `Edit ROI`: enables manual ROI placement by dragging on the preview. Normal
   viewing ignores preview drags so accidental touches do not move the ROI.
 - `Done ROI`: exits ROI edit mode and hides corner handles.
@@ -216,6 +219,11 @@ and phone recordings there rather than committing them. The current sample
 catalog is documented in `docs/testing/SAMPLE_VIDEO_SOURCES.md`; it records
 sample IDs, local paths, hashes, recommended modes, and redistribution notes
 without bundling the videos into the app.
+
+The app stores the last durable test setup in SharedPreferences: mode, view
+mode, amplification, requested preview path, and AE/AWB lock preference. It does
+not store transient ROI placement, signal history, validation summaries, or
+recording state.
 
 ## Build
 
