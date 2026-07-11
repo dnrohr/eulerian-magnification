@@ -31,22 +31,15 @@ object LiveEvmPreviewPolicy {
                 reason = "Full-frame live linear EVM is currently limited to Pulse and Breathing",
             )
         }
-        if (
-            settings.viewMode != ViewMode.Amplified &&
-            settings.viewMode != ViewMode.Split &&
-            settings.viewMode != ViewMode.Difference
-        ) {
-            return LiveEvmPreviewDecision(
-                fullFrameColorPreview = false,
-                label = "ROI diagnostic preview",
-                reason = "Raw keeps its diagnostic behavior",
-            )
-        }
         if (!hasSettledStats(glFrameStats)) {
             return LiveEvmPreviewDecision(
                 fullFrameColorPreview = true,
-                label = "Full-frame linear EVM preview",
-                reason = "GL timing is still settling",
+                label = settings.fullFramePreviewLabel(),
+                reason = if (settings.viewMode == ViewMode.Raw) {
+                    "Raw uses the GL reconstruction graph with zero amplification"
+                } else {
+                    "GL timing is still settling"
+                },
             )
         }
         if (glFrameStats.averageFps < MIN_GL_FPS || glFrameStats.averageFrameMillis > MAX_GL_FRAME_MILLIS) {
@@ -58,9 +51,17 @@ object LiveEvmPreviewPolicy {
         }
         return LiveEvmPreviewDecision(
             fullFrameColorPreview = true,
-            label = "Full-frame linear EVM preview",
-            reason = "Pulse/Breathing Amplified/Difference/Split can use GL full-frame reconstruction",
+            label = settings.fullFramePreviewLabel(),
+            reason = if (settings.viewMode == ViewMode.Raw) {
+                "Raw uses the GL reconstruction graph with zero amplification"
+            } else {
+                "Pulse/Breathing Raw/Amplified/Difference/Split can use GL full-frame reconstruction"
+            },
         )
+    }
+
+    private fun AnalysisSettings.fullFramePreviewLabel(): String {
+        return if (viewMode == ViewMode.Raw) "Raw full-frame preview" else "Full-frame linear EVM preview"
     }
 
     private fun MagnificationMode.supportsLiveLinearEvm(): Boolean {

@@ -47,6 +47,7 @@ class ColorMagnificationPassTest {
         assertFalse(uniforms.splitMode)
         assertFalse(uniforms.fullFrameMode)
         assertEquals(8.0f, uniforms.amplification, 0.0f)
+        assertEquals(8.0f, uniforms.reconstructionAmplification, 0.0f)
         assertEquals(0.7, uniforms.lowCutHz, 0.0)
         assertEquals(3.0, uniforms.highCutHz, 0.0)
         assertEquals(LivePyramidReconstructionProfile.PulseColor, uniforms.reconstructionProfile)
@@ -119,6 +120,8 @@ class ColorMagnificationPassTest {
         )
 
         assertEquals(0.0f, uniforms.amplifiedSignal, 0.0f)
+        assertEquals(8.0f, uniforms.amplification, 0.0f)
+        assertEquals(0.0f, uniforms.reconstructionAmplification, 0.0f)
     }
 
     @Test

@@ -11,7 +11,7 @@ Goal: promote the live GL path to a truthful MIT-style linear EVM renderer with 
 - [ ] Verify the existing live reconstruction path against a controlled target and identify whether it is using enough spatial structure to produce visible motion magnification.
 - [x] Add explicit Gaussian/Laplacian pyramid levels for live color and slow-motion presets.
 - [ ] Apply temporal bandpass state per pyramid level instead of only applying an ROI-derived scalar signal.
-- [ ] Reconstruct a full processed frame for Raw, Amplified, Difference, and Split views.
+- [x] Reconstruct a full processed frame for Raw, Amplified, Difference, and Split views.
 - [x] Add per-level attenuation and gain clamps to reduce halos, clipping, and full-frame flashing.
 - [x] Add renderer diagnostics that report active pyramid levels, internal resolution, temporal warmup state, fallback reason, and display FPS.
 - [ ] Validate on Pixel 8a with a known motion/color target and store screenshots or exported evidence notes.
@@ -133,6 +133,22 @@ showing true pyramid reconstruction or a fallback bridge.
   gains and clamp, making Pixel validation easier to interpret.
 - Added JVM coverage for profile selection, uniform mapping, diagnostics, and
   shader profile contracts.
+- Phone validation was not run for this slice because the phone is currently
+  unavailable.
+
+## Completed Slice: Raw Reconstruction Passthrough
+
+- Added `reconstructionAmplification` to the GL uniform contract so the
+  reconstruction shader can use zero amplification for Raw while preserving the
+  selected amplification for Amplified, Difference, and Split.
+- Raw Pulse/Breathing live preview can now request the same full-frame GL
+  reconstruction pass graph as the other live EVM views.
+- Raw remains labeled and exported as raw passthrough; the reconstruction graph
+  simply renders the base frame with zero amplified delta.
+- Updated the live preview policy reason and architecture mapping to cover
+  Raw/Amplified/Difference/Split reconstruction behavior.
+- Added JVM coverage for Raw full-frame policy eligibility and the zero
+  reconstruction-amplification uniform.
 - Phone validation was not run for this slice because the phone is currently
   unavailable.
 

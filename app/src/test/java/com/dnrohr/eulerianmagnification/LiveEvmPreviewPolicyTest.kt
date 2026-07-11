@@ -100,14 +100,16 @@ class LiveEvmPreviewPolicyTest {
     }
 
     @Test
-    fun rawRemainsDiagnosticView() {
-        assertFalse(
-            LiveEvmPreviewPolicy.decide(
-                settings = AnalysisSettings(viewMode = ViewMode.Raw),
-                usingGlPreview = true,
-                glFrameStats = healthyStats(),
-            ).fullFrameColorPreview,
+    fun enablesFullFrameRawPassthroughOnHealthyGlPreview() {
+        val decision = LiveEvmPreviewPolicy.decide(
+            settings = AnalysisSettings(viewMode = ViewMode.Raw),
+            usingGlPreview = true,
+            glFrameStats = healthyStats(),
         )
+
+        assertTrue(decision.fullFrameColorPreview)
+        assertTrue(decision.label.contains("Raw"))
+        assertTrue(decision.reason.contains("zero amplification"))
     }
 
     private fun healthyStats(): GlFrameStats {

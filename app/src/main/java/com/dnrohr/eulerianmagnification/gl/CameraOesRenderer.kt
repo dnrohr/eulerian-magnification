@@ -451,7 +451,7 @@ class CameraOesRenderer(
         repeat(DOWNSAMPLE_LEVELS) { index ->
             GLES30.glUniform1i(reconstructBandpassTextureLocations[index], index + 1)
         }
-        GLES30.glUniform1f(reconstructAmplificationLocation, uniforms.amplification)
+        GLES30.glUniform1f(reconstructAmplificationLocation, uniforms.reconstructionAmplification)
         repeat(DOWNSAMPLE_LEVELS) { index ->
             GLES30.glUniform1f(
                 reconstructLevelGainLocations[index],
