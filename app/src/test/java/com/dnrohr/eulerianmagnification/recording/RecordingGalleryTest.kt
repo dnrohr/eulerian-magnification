@@ -20,7 +20,12 @@ class RecordingGalleryTest {
         assertEquals("Breathing", recordings[0].mode)
         assertEquals(7, recordings[0].sampleCount)
         assertTrue(recordings[0].summary.contains("Breathing"))
+        assertTrue(recordings[0].detail.contains("signal present"))
         assertEquals("report.html", recordings[0].evidenceReportPath)
+        assertEquals(
+            listOf("metadata", "video", "signal CSV", "report"),
+            recordings[0].artifacts.map { it.label },
+        )
     }
 
     @Test
@@ -49,6 +54,31 @@ class RecordingGalleryTest {
         assertEquals(listOf("processed-3", "processed-2"), recordings.map { it.sessionName })
     }
 
+    @Test
+    fun deletesOnlyAppOwnedProcessedSession() {
+        val root = Files.createTempDirectory("recording-gallery").toFile()
+        writeMetadata(root, "processed-delete-me", startedAtMillis = 1L)
+        val item = RecordingGallery.listRecent(root).single()
+
+        val deleted = RecordingGallery.deleteItem(root, item)
+
+        assertTrue(deleted)
+        assertTrue(root.resolve("processed-delete-me").exists().not())
+    }
+
+    @Test
+    fun refusesToDeleteOutsideRoot() {
+        val root = Files.createTempDirectory("recording-gallery").toFile()
+        val otherRoot = Files.createTempDirectory("recording-gallery-other").toFile()
+        writeMetadata(otherRoot, "processed-other", startedAtMillis = 1L)
+        val externalItem = RecordingGallery.listRecent(otherRoot).single()
+
+        val deleted = RecordingGallery.deleteItem(root, externalItem)
+
+        assertTrue(deleted.not())
+        assertTrue(otherRoot.resolve("processed-other").exists())
+    }
+
     private fun writeMetadata(
         root: File,
         sessionName: String,
@@ -64,8 +94,10 @@ class RecordingGalleryTest {
               "durationMillis": 1500,
               "mode": "$mode",
               "viewMode": "Amplified",
-              "debugVideoPath": null,
+              "debugVideoPath": "debug_processed.mp4",
+              "timelinePath": "signal_timeline.csv",
               "evidenceReportPath": "report.html",
+              "qualitySummary": "signal present",
               "sampleCount": $sampleCount
             }
             """.trimIndent(),

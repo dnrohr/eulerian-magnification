@@ -171,8 +171,10 @@ The default screen is intentionally compact so the preview remains visible.
   verification, but the required evidence bundle and state transitions are
   tested in code.
 - `Share Metadata`: shares the JSON metadata for the latest recording.
-- `Metadata` / `Video`: shares recent recording/export metadata or processed
-  MP4 output.
+- Recent recordings: shows the newest app-owned processed sessions with a short
+  quality/artifact summary plus `Metadata`, `Video`, `Report`, and `Delete`
+  actions where artifacts exist. Delete removes only that app-owned `processed-*`
+  session directory.
 - `Quality`: summarizes whether the current run looks usable. Warnings can come
   from low FPS, camera/ROI motion, lighting flicker, timestamp jumps, or risky
   high-frequency/amplification combinations. The compact preview stays terse;

@@ -483,6 +483,14 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
             onShareRecordingReport = { path ->
                 shareRecordingReport(context, File(path))
             },
+            onDeleteRecording = { item ->
+                if (RecordingGallery.deleteItem(recordingRootDirectory, item)) {
+                    recentRecordings = RecordingGallery.listRecent(recordingRootDirectory)
+                    if (lastRecordingPath == item.metadataFile.absolutePath) {
+                        lastRecordingPath = null
+                    }
+                }
+            },
             onValidateVideo = {
                 videoPickerLauncher.launch("video/*")
             },
@@ -1007,6 +1015,7 @@ private fun StatusOverlay(
     onShareRecordingPath: (String) -> Unit,
     onShareRecordingVideo: (String) -> Unit,
     onShareRecordingReport: (String) -> Unit,
+    onDeleteRecording: (RecordingGalleryItem) -> Unit,
     onValidateVideo: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -1159,6 +1168,7 @@ private fun StatusOverlay(
             onShareRecordingPath = onShareRecordingPath,
             onShareRecordingVideo = onShareRecordingVideo,
             onShareRecordingReport = onShareRecordingReport,
+            onDeleteRecording = onDeleteRecording,
             recordingAvailable = featureAvailability.processedRecordingAvailable,
             validationAvailable = featureAvailability.recordedVideoValidationAvailable,
             validationSummary = validationSummary,
@@ -1395,6 +1405,7 @@ private fun RecordingControls(
     onShareRecordingPath: (String) -> Unit,
     onShareRecordingVideo: (String) -> Unit,
     onShareRecordingReport: (String) -> Unit,
+    onDeleteRecording: (RecordingGalleryItem) -> Unit,
     recordingAvailable: Boolean,
     validationAvailable: Boolean,
     validationSummary: String?,
@@ -1461,7 +1472,7 @@ private fun RecordingControls(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = item.summary,
+                    text = item.detail,
                     color = Color.White,
                     modifier = Modifier.weight(1.0f),
                     maxLines = 1,
@@ -1479,6 +1490,9 @@ private fun RecordingControls(
                     Button(onClick = { onShareRecordingReport(reportPath) }) {
                         Text("Report")
                     }
+                }
+                Button(onClick = { onDeleteRecording(item) }) {
+                    Text("Delete")
                 }
             }
         }
