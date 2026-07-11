@@ -58,8 +58,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -101,6 +104,8 @@ import com.dnrohr.eulerianmagnification.quality.ArtifactSuppressor
 import com.dnrohr.eulerianmagnification.quality.LightingDiagnostic
 import com.dnrohr.eulerianmagnification.quality.LightingDiagnosticStatus
 import com.dnrohr.eulerianmagnification.quality.LightingStabilityAnalyzer
+import com.dnrohr.eulerianmagnification.quality.QualityCuePolicy
+import com.dnrohr.eulerianmagnification.quality.QualityCueState
 import com.dnrohr.eulerianmagnification.quality.QualityEvaluator
 import com.dnrohr.eulerianmagnification.quality.QualityStatus
 import com.dnrohr.eulerianmagnification.recording.DebugProcessedMp4Recorder
@@ -139,6 +144,8 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun MainScreen(featureAvailability: FeatureAvailability) {
     val context = LocalContext.current
+    val view = LocalView.current
+    val hapticFeedback = LocalHapticFeedback.current
     var hasCameraPermission by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) ==
@@ -166,6 +173,7 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
     var validationSummary by remember { mutableStateOf<String?>(null) }
     var validationRunning by remember { mutableStateOf(false) }
     var cameraControlsLocked by remember { mutableStateOf(persistedAppSettings.cameraControlsLocked) }
+    var qualityCuesEnabled by remember { mutableStateOf(persistedAppSettings.qualityCuesEnabled) }
     var showGlDebug by remember { mutableStateOf(persistedAppSettings.requestedGlPreview) }
     var controlsExpanded by remember { mutableStateOf(false) }
     var cleanPreview by remember { mutableStateOf(false) }
@@ -194,6 +202,8 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
     var breathingMotionSample by remember { mutableStateOf(BreathingMotionSample()) }
     val signalHistory = remember { mutableStateListOf<Double>() }
     val breathingMotionHistory = remember { mutableStateListOf<Double>() }
+    var previousQualityStatuses by remember { mutableStateOf(listOf(QualityStatus.Good)) }
+    var qualityCueState by remember { mutableStateOf(QualityCueState()) }
     val videoPickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent(),
     ) { uri: Uri? ->
@@ -257,12 +267,13 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
         }
     }
 
-    LaunchedEffect(analysisSettings, showGlDebug, cameraControlsLocked) {
+    LaunchedEffect(analysisSettings, showGlDebug, cameraControlsLocked, qualityCuesEnabled) {
         appSettingsStore.save(
             PersistedAppSettings(
                 analysisSettings = analysisSettings,
                 requestedGlPreview = showGlDebug,
                 cameraControlsLocked = cameraControlsLocked,
+                qualityCuesEnabled = qualityCuesEnabled,
             )
         )
     }
@@ -290,6 +301,29 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
             }
         }
         return presentationTimestampNanos
+    }
+
+    val qualityStatuses = qualityEvaluator.evaluate(
+        sample = analysisSample,
+        settings = analysisSettings,
+        lightingFlickerLikely = lightingDiagnostic?.flickerLikely == true,
+        lightingUnstable = lightingDiagnostic?.status == LightingDiagnosticStatus.ExposurePumping,
+    )
+
+    LaunchedEffect(qualityStatuses, qualityCuesEnabled) {
+        val decision = QualityCuePolicy.decide(
+            previousStatuses = previousQualityStatuses,
+            currentStatuses = qualityStatuses,
+            state = qualityCueState,
+            nowMillis = System.currentTimeMillis(),
+            enabled = qualityCuesEnabled,
+            systemHapticsAllowed = view.isHapticFeedbackEnabled,
+        )
+        qualityCueState = decision.nextState
+        previousQualityStatuses = qualityStatuses
+        if (decision.shouldCue) {
+            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+        }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -359,6 +393,8 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
             onSettingsChanged = { analysisSettings = it },
             cameraControlsLocked = cameraControlsLocked,
             onCameraControlsLockedChanged = { cameraControlsLocked = it },
+            qualityCuesEnabled = qualityCuesEnabled,
+            onQualityCuesEnabledChanged = { qualityCuesEnabled = it },
             manualRoi = manualRoi,
             manualRoiEditing = manualRoiEditing,
             onManualRoiEditingChanged = { manualRoiEditing = it },
@@ -372,6 +408,7 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
                 analysisSettings = defaults.analysisSettings
                 showGlDebug = defaults.requestedGlPreview
                 cameraControlsLocked = defaults.cameraControlsLocked
+                qualityCuesEnabled = defaults.qualityCuesEnabled
                 manualRoi = null
                 manualRoiEditing = ManualRoiEditState.afterClearRoi()
             },
@@ -388,12 +425,7 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
             validationSummary = validationSummary,
             validationRunning = validationRunning,
             lightingDiagnostic = lightingDiagnostic,
-            qualityStatuses = qualityEvaluator.evaluate(
-                sample = analysisSample,
-                settings = analysisSettings,
-                lightingFlickerLikely = lightingDiagnostic?.flickerLikely == true,
-                lightingUnstable = lightingDiagnostic?.status == LightingDiagnosticStatus.ExposurePumping,
-            ),
+            qualityStatuses = qualityStatuses,
             controlsExpanded = controlsExpanded,
             cleanPreview = cleanPreview,
             onShowControls = {
@@ -944,6 +976,8 @@ private fun StatusOverlay(
     onSettingsChanged: (AnalysisSettings) -> Unit,
     cameraControlsLocked: Boolean,
     onCameraControlsLockedChanged: (Boolean) -> Unit,
+    qualityCuesEnabled: Boolean,
+    onQualityCuesEnabledChanged: (Boolean) -> Unit,
     manualRoi: NormalizedRect?,
     manualRoiEditing: Boolean,
     onManualRoiEditingChanged: (Boolean) -> Unit,
@@ -1102,6 +1136,8 @@ private fun StatusOverlay(
             availableModes = featureAvailability.availableModes,
             cameraControlsLocked = cameraControlsLocked,
             onCameraControlsLockedChanged = onCameraControlsLockedChanged,
+            qualityCuesEnabled = qualityCuesEnabled,
+            onQualityCuesEnabledChanged = onQualityCuesEnabledChanged,
             manualRoi = manualRoi,
             manualRoiEditing = manualRoiEditing,
             onManualRoiEditingChanged = onManualRoiEditingChanged,
@@ -1650,6 +1686,8 @@ private fun ModeControls(
     availableModes: List<MagnificationMode>,
     cameraControlsLocked: Boolean,
     onCameraControlsLockedChanged: (Boolean) -> Unit,
+    qualityCuesEnabled: Boolean,
+    onQualityCuesEnabledChanged: (Boolean) -> Unit,
     manualRoi: NormalizedRect?,
     manualRoiEditing: Boolean,
     onManualRoiEditingChanged: (Boolean) -> Unit,
@@ -1705,6 +1743,15 @@ private fun ModeControls(
     Button(onClick = { onCameraControlsLockedChanged(!cameraControlsLocked) }) {
         Text(if (cameraControlsLocked) "Unlock AE/AWB" else "Lock AE/AWB")
     }
+    Spacer(modifier = Modifier.height(8.dp))
+    Button(onClick = { onQualityCuesEnabledChanged(!qualityCuesEnabled) }) {
+        Text(if (qualityCuesEnabled) "Quality Cues On" else "Quality Cues Off")
+    }
+    Text(
+        text = "Optional haptic cue for major quality changes, rate-limited.",
+        color = Color(0xFFC8D3DC),
+        style = MaterialTheme.typography.bodySmall,
+    )
     Spacer(modifier = Modifier.height(8.dp))
     Button(onClick = {
         onManualRoiEditingChanged(

@@ -10,6 +10,7 @@ data class PersistedAppSettings(
     val analysisSettings: AnalysisSettings,
     val requestedGlPreview: Boolean = false,
     val cameraControlsLocked: Boolean = false,
+    val qualityCuesEnabled: Boolean = false,
 ) {
     fun toMap(): Map<String, String> {
         return mapOf(
@@ -18,6 +19,7 @@ data class PersistedAppSettings(
             KEY_AMPLIFICATION to analysisSettings.amplification.toString(),
             KEY_REQUESTED_GL_PREVIEW to requestedGlPreview.toString(),
             KEY_CAMERA_CONTROLS_LOCKED to cameraControlsLocked.toString(),
+            KEY_QUALITY_CUES_ENABLED to qualityCuesEnabled.toString(),
         )
     }
 
@@ -55,6 +57,7 @@ data class PersistedAppSettings(
                 ),
                 requestedGlPreview = values[KEY_REQUESTED_GL_PREVIEW]?.toBooleanStrictOrNull() ?: false,
                 cameraControlsLocked = values[KEY_CAMERA_CONTROLS_LOCKED]?.toBooleanStrictOrNull() ?: false,
+                qualityCuesEnabled = values[KEY_QUALITY_CUES_ENABLED]?.toBooleanStrictOrNull() ?: false,
             )
         }
 
@@ -63,6 +66,7 @@ data class PersistedAppSettings(
         const val KEY_AMPLIFICATION = "amplification"
         const val KEY_REQUESTED_GL_PREVIEW = "requestedGlPreview"
         const val KEY_CAMERA_CONTROLS_LOCKED = "cameraControlsLocked"
+        const val KEY_QUALITY_CUES_ENABLED = "qualityCuesEnabled"
         private const val MIN_AMPLIFICATION = 1.0f
         private const val MAX_AMPLIFICATION = 30.0f
     }
@@ -83,6 +87,7 @@ class AppSettingsStore(
                 KEY_AMPLIFICATION to preferences.getString(KEY_AMPLIFICATION, null),
                 KEY_REQUESTED_GL_PREVIEW to preferences.getString(KEY_REQUESTED_GL_PREVIEW, null),
                 KEY_CAMERA_CONTROLS_LOCKED to preferences.getString(KEY_CAMERA_CONTROLS_LOCKED, null),
+                KEY_QUALITY_CUES_ENABLED to preferences.getString(KEY_QUALITY_CUES_ENABLED, null),
             )
         }.mapNotNull { (key, value) -> value?.let { key to it } }.toMap()
         return PersistedAppSettings.fromMap(values, availableModes)

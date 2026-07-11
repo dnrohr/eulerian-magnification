@@ -18,6 +18,7 @@ class PersistedAppSettingsTest {
         assertEquals(12.0f, settings.analysisSettings.amplification)
         assertFalse(settings.requestedGlPreview)
         assertFalse(settings.cameraControlsLocked)
+        assertFalse(settings.qualityCuesEnabled)
         assertFalse(settings.toMap().containsKey("manualRoi"))
     }
 
@@ -31,6 +32,7 @@ class PersistedAppSettingsTest {
             ),
             requestedGlPreview = true,
             cameraControlsLocked = true,
+            qualityCuesEnabled = true,
         )
 
         val restored = PersistedAppSettings.fromMap(original.toMap())
@@ -47,6 +49,7 @@ class PersistedAppSettingsTest {
                 PersistedAppSettings.KEY_AMPLIFICATION to "bad",
                 PersistedAppSettings.KEY_REQUESTED_GL_PREVIEW to "not-bool",
                 PersistedAppSettings.KEY_CAMERA_CONTROLS_LOCKED to "not-bool",
+                PersistedAppSettings.KEY_QUALITY_CUES_ENABLED to "not-bool",
             ),
             availableModes = listOf(MagnificationMode.Pulse),
         )
@@ -88,10 +91,12 @@ class PersistedAppSettingsTest {
             values = mapOf(
                 PersistedAppSettings.KEY_REQUESTED_GL_PREVIEW to "true",
                 PersistedAppSettings.KEY_CAMERA_CONTROLS_LOCKED to "true",
+                PersistedAppSettings.KEY_QUALITY_CUES_ENABLED to "true",
             ),
         )
 
         assertTrue(restored.requestedGlPreview)
         assertTrue(restored.cameraControlsLocked)
+        assertTrue(restored.qualityCuesEnabled)
     }
 }

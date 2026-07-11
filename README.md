@@ -149,6 +149,8 @@ The default screen is intentionally compact so the preview remains visible.
 - `Reset Settings`: clears saved preferences and returns mode, view,
   amplification, preview path, and AE/AWB lock to first-launch defaults. Manual
   ROI is intentionally not persisted.
+- `Quality Cues`: opt-in haptic feedback for major quality changes. It is off
+  by default, rate-limited, and skipped when system haptic feedback is disabled.
 - `Edit ROI`: enables manual ROI placement by dragging on the preview. Normal
   viewing ignores preview drags so accidental touches do not move the ROI.
 - `Done ROI`: exits ROI edit mode and hides corner handles.
@@ -221,9 +223,9 @@ sample IDs, local paths, hashes, recommended modes, and redistribution notes
 without bundling the videos into the app.
 
 The app stores the last durable test setup in SharedPreferences: mode, view
-mode, amplification, requested preview path, and AE/AWB lock preference. It does
-not store transient ROI placement, signal history, validation summaries, or
-recording state.
+mode, amplification, requested preview path, AE/AWB lock preference, and the
+opt-in quality-cue preference. It does not store transient ROI placement, signal
+history, validation summaries, or recording state.
 
 ## Build
 
