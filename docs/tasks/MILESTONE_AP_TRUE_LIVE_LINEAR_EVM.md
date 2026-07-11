@@ -10,7 +10,7 @@ Goal: promote the live GL path to a truthful MIT-style linear EVM renderer with 
 
 - [ ] Verify the existing live reconstruction path against a controlled target and identify whether it is using enough spatial structure to produce visible motion magnification.
 - [x] Add explicit Gaussian/Laplacian pyramid levels for live color and slow-motion presets.
-- [ ] Apply temporal bandpass state per pyramid level instead of only applying an ROI-derived scalar signal.
+- [x] Apply temporal bandpass state per pyramid level instead of only applying an ROI-derived scalar signal.
 - [x] Reconstruct a full processed frame for Raw, Amplified, Difference, and Split views.
 - [x] Add per-level attenuation and gain clamps to reduce halos, clipping, and full-frame flashing.
 - [x] Add renderer diagnostics that report active pyramid levels, internal resolution, temporal warmup state, fallback reason, and display FPS.
@@ -149,6 +149,19 @@ showing true pyramid reconstruction or a fallback bridge.
   Raw/Amplified/Difference/Split reconstruction behavior.
 - Added JVM coverage for Raw full-frame policy eligibility and the zero
   reconstruction-amplification uniform.
+- Phone validation was not run for this slice because the phone is currently
+  unavailable.
+
+## Completed Slice: Per-Level Temporal Bandpass Diagnostics
+
+- Live reconstruction diagnostics now report the temporal state level count and
+  active frequency band, for example `temporal 3L / band 0.70-3.00Hz`.
+- `CameraOesRenderer` fills those diagnostics from the actual GL temporal state
+  and current mode band after a successful reconstruction pass.
+- Added shader-source coverage showing the reconstruction shader samples
+  per-level bandpass textures and does not depend on the ROI scalar
+  `uAmplifiedSignal`.
+- Added JVM coverage for temporal diagnostic summary formatting.
 - Phone validation was not run for this slice because the phone is currently
   unavailable.
 

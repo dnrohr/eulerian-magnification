@@ -52,17 +52,28 @@ plain sum of blurred color changes. Each delta level is sampled in normalized
 texture coordinates, so the coarser levels are upsampled by the texture sampler
 before they are subtracted or added.
 
+## Temporal Filtering
+
+Each pyramid level owns independent lowpass/highpass ping-pong render targets
+and a current bandpass texture. The reconstruction shader samples those
+per-level bandpass textures directly; it does not consume the older ROI scalar
+`uAmplifiedSignal`.
+
+The expanded GL diagnostics should report both the temporal state level count
+and active band, for example `temporal 3L / band 0.70-3.00Hz`.
+
 ## Validation
 
 Local JVM coverage verifies policy defaults, invalid policy rejection,
-Laplacian reconstruction source contracts, and shader uniform/source contracts.
+Laplacian reconstruction source contracts, per-level temporal diagnostics, and
+shader uniform/source contracts.
 
 Phone validation was not run for this slice because the phone is currently
 unavailable. The next Pixel run should verify:
 
 - GL debug reports `Live reconstruction`.
-- Pyramid diagnostics show active levels, warm temporal state, start level,
-  per-level gains, and clamp.
+- Pyramid diagnostics show active levels, warm temporal state, temporal level
+  count, active band, start level, per-level gains, and clamp.
 - Amplified view does not flash or clip aggressively under the same target used
   before the clamp.
 - Difference view shows full-frame reconstructed-delta heatmap rather than an

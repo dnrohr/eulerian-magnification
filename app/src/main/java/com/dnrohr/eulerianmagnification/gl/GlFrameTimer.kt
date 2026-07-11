@@ -71,6 +71,9 @@ data class GlReconstructionDiagnostics(
     val activePyramidLevels: Int = 0,
     val internalSize: GlTextureSize? = null,
     val temporalWarm: Boolean = false,
+    val temporalStateLevels: Int = 0,
+    val lowCutHz: Double? = null,
+    val highCutHz: Double? = null,
     val startLevel: Int = 0,
     val levelGains: List<Float> = emptyList(),
     val maxDelta: Float? = null,
@@ -91,6 +94,12 @@ data class GlReconstructionDiagnostics(
 
     private fun policySummary(): String {
         val labels = mutableListOf<String>()
+        if (temporalStateLevels > 0) {
+            labels += "temporal ${temporalStateLevels}L"
+        }
+        if (lowCutHz != null && highCutHz != null) {
+            labels += "band ${lowCutHz.policyFormat()}-${highCutHz.policyFormat()}Hz"
+        }
         labels += "start L$startLevel"
         if (levelGains.isNotEmpty()) {
             labels += "gains ${levelGains.joinToString(separator = "/") { it.policyFormat() }}"
@@ -103,6 +112,7 @@ data class GlReconstructionDiagnostics(
 }
 
 private fun Float.policyFormat(): String = String.format(Locale.US, "%.2f", this)
+private fun Double.policyFormat(): String = String.format(Locale.US, "%.2f", this)
 
 enum class GlReconstructionFallbackReason(val label: String) {
     None("none"),

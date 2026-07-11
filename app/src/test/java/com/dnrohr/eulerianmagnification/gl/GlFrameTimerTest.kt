@@ -65,6 +65,9 @@ class GlFrameTimerTest {
             activePyramidLevels = 3,
             internalSize = GlTextureSize(320, 180),
             temporalWarm = true,
+            temporalStateLevels = 3,
+            lowCutHz = 0.7,
+            highCutHz = 3.0,
             startLevel = 1,
             levelGains = listOf(0.35f, 0.75f, 1.0f),
             maxDelta = 0.18f,
@@ -76,7 +79,7 @@ class GlFrameTimerTest {
         )
 
         assertEquals(
-            "Pyramid: 3 levels / 320x180 / ready / start L1 / gains 0.35/0.75/1.00 / clamp +/-0.18",
+            "Pyramid: 3 levels / 320x180 / ready / temporal 3L / band 0.70-3.00Hz / start L1 / gains 0.35/0.75/1.00 / clamp +/-0.18",
             ready.summary(),
         )
         assertEquals(

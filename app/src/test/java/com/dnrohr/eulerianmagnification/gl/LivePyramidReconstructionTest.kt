@@ -114,7 +114,10 @@ class LivePyramidReconstructionTest {
         val reconstruct = LivePyramidShaderSource.RECONSTRUCT_FRAGMENT
         assertTrue(reconstruct.startsWith("#version 300 es"))
         assertTrue(reconstruct.contains("uBandpassTexture0"))
+        assertTrue(reconstruct.contains("uBandpassTexture1"))
+        assertTrue(reconstruct.contains("uBandpassTexture2"))
         assertTrue(reconstruct.contains("uAmplification"))
+        assertTrue(!reconstruct.contains("uAmplifiedSignal"))
         assertTrue(reconstruct.contains("uLevelGain0"))
         assertTrue(reconstruct.contains("uLevelGain1"))
         assertTrue(reconstruct.contains("uLevelGain2"))
