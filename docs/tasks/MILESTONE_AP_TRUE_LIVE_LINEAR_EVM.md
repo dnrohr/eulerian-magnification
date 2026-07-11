@@ -1,6 +1,6 @@
 # Milestone AP - True Live Linear EVM
 
-Status: Planned
+Status: In progress
 
 Importance: Critical. The live app should visibly magnify reconstructed motion/color across the frame, not merely change the boxed ROI color.
 
@@ -13,8 +13,25 @@ Goal: promote the live GL path to a truthful MIT-style linear EVM renderer with 
 - [ ] Apply temporal bandpass state per pyramid level instead of only applying an ROI-derived scalar signal.
 - [ ] Reconstruct a full processed frame for Raw, Amplified, Difference, and Split views.
 - [ ] Add per-level attenuation and gain clamps to reduce halos, clipping, and full-frame flashing.
-- [ ] Add renderer diagnostics that report active pyramid levels, internal resolution, temporal warmup state, fallback reason, and display FPS.
+- [x] Add renderer diagnostics that report active pyramid levels, internal resolution, temporal warmup state, fallback reason, and display FPS.
 - [ ] Validate on Pixel 8a with a known motion/color target and store screenshots or exported evidence notes.
+
+## Completed Slice: Live Reconstruction Diagnostics
+
+- Added `GlReconstructionDiagnostics` to `GlFrameStats`.
+- `CameraOesRenderer` now reports whether live reconstruction is not requested,
+  missing render targets, blocked by half-float support, incomplete, warming,
+  ready, or disabled after a GL error.
+- Successful live reconstruction reports active pyramid level count and first
+  internal pyramid size, for example `3 levels / 540x1200 / ready` on a
+  portrait surface.
+- Expanded GL debug UI now shows the pyramid diagnostic line directly below
+  `GL renderer`.
+- Added JVM coverage for diagnostic propagation and summary formatting.
+
+This slice does not prove visible motion magnification yet; it makes the next
+Pixel validation run interpretable enough to tell whether the live preview is
+showing true pyramid reconstruction or a fallback bridge.
 
 ## Done When
 

@@ -34,9 +34,19 @@ class GlFrameTimerTest {
         val timer = GlFrameTimer()
 
         timer.beginFrame(0L)
-        val stats = timer.endFrame(16_000_000L, GlRenderPath.LiveReconstruction)
+        val diagnostics = GlReconstructionDiagnostics(
+            activePyramidLevels = 3,
+            internalSize = GlTextureSize(640, 360),
+            temporalWarm = true,
+        )
+        val stats = timer.endFrame(
+            timestampNanos = 16_000_000L,
+            renderPath = GlRenderPath.LiveReconstruction,
+            reconstructionDiagnostics = diagnostics,
+        )
 
         assertEquals(GlRenderPath.LiveReconstruction, stats.renderPath)
+        assertEquals(diagnostics, stats.reconstructionDiagnostics)
     }
 
     @Test
@@ -47,5 +57,25 @@ class GlFrameTimerTest {
         val stats = timer.endFrame(10L)
 
         assertEquals(0, stats.sampleCount)
+    }
+
+    @Test
+    fun summarizesLivePyramidDiagnostics() {
+        val ready = GlReconstructionDiagnostics(
+            activePyramidLevels = 3,
+            internalSize = GlTextureSize(320, 180),
+            temporalWarm = true,
+        )
+        val fallback = GlReconstructionDiagnostics(
+            activePyramidLevels = 0,
+            internalSize = null,
+            fallbackReason = GlReconstructionFallbackReason.HalfFloatUnsupported,
+        )
+
+        assertEquals("Pyramid: 3 levels / 320x180 / ready", ready.summary())
+        assertEquals(
+            "Pyramid: 0 levels / n/a / fallback half-float unsupported",
+            fallback.summary(),
+        )
     }
 }

@@ -61,6 +61,7 @@ class CameraOesRenderer(
     private var lastTemporalTimestampNanos: Long? = null
     private var supportsHalfFloatTemporalTargets = false
     private var hasNewFrame = false
+    private var reconstructionDiagnostics = GlReconstructionDiagnostics()
     @Volatile private var colorUniforms = ColorMagnificationUniforms(
         roi = com.dnrohr.eulerianmagnification.analysis.NormalizedRect(0.0f, 0.0f, 0.0f, 0.0f),
         amplifiedSignal = 0.0f,
@@ -189,7 +190,7 @@ class CameraOesRenderer(
         emitProcessedFrame()
         drawOutputToScreen()
         providePendingSurfaceIfReady()
-        onStats(timer.endFrame(System.nanoTime(), renderPath))
+        onStats(timer.endFrame(System.nanoTime(), renderPath, reconstructionDiagnostics))
     }
 
     fun release() {
@@ -296,15 +297,30 @@ class CameraOesRenderer(
 
     private fun renderLivePyramidReconstruction(): Boolean {
         val uniforms = colorUniforms
-        if (!supportsHalfFloatTemporalTargets || !liveReconstructionRequested(uniforms)) {
+        if (!liveReconstructionRequested(uniforms)) {
             lastTemporalTimestampNanos = null
+            reconstructionDiagnostics = GlReconstructionDiagnostics(
+                fallbackReason = GlReconstructionFallbackReason.NotRequested,
+            )
             return false
         }
-        val source = rgbRenderTarget ?: return false
-        val pyramid = downsamplePyramid ?: return false
-        val state = temporalState ?: return false
-        val output = processedRenderTarget ?: return false
+        if (!supportsHalfFloatTemporalTargets) {
+            lastTemporalTimestampNanos = null
+            reconstructionDiagnostics = GlReconstructionDiagnostics(
+                fallbackReason = GlReconstructionFallbackReason.HalfFloatUnsupported,
+            )
+            return false
+        }
+        val source = rgbRenderTarget ?: return missingTargets()
+        val pyramid = downsamplePyramid ?: return missingTargets()
+        val state = temporalState ?: return missingTargets()
+        val output = processedRenderTarget ?: return missingTargets()
         if (pyramid.levels.size < DOWNSAMPLE_LEVELS || state.levels.size < DOWNSAMPLE_LEVELS) {
+            reconstructionDiagnostics = GlReconstructionDiagnostics(
+                activePyramidLevels = minOf(pyramid.levels.size, state.levels.size),
+                internalSize = pyramid.levels.firstOrNull()?.size,
+                fallbackReason = GlReconstructionFallbackReason.IncompletePyramid,
+            )
             return false
         }
 
@@ -316,13 +332,30 @@ class CameraOesRenderer(
             renderReconstruction(source, state, output, uniforms)
             GLES30.glBindFramebuffer(GLES30.GL_FRAMEBUFFER, 0)
             GlProgram.checkNoGlError("renderLivePyramidReconstruction")
+            reconstructionDiagnostics = GlReconstructionDiagnostics(
+                activePyramidLevels = pyramid.levels.size,
+                internalSize = pyramid.levels.first().size,
+                temporalWarm = temporalInitialized,
+            )
             true
         } catch (_: GlException) {
             GLES30.glBindFramebuffer(GLES30.GL_FRAMEBUFFER, 0)
             supportsHalfFloatTemporalTargets = false
             lastTemporalTimestampNanos = null
+            reconstructionDiagnostics = GlReconstructionDiagnostics(
+                activePyramidLevels = pyramid.levels.size,
+                internalSize = pyramid.levels.firstOrNull()?.size,
+                fallbackReason = GlReconstructionFallbackReason.GlError,
+            )
             false
         }
+    }
+
+    private fun missingTargets(): Boolean {
+        reconstructionDiagnostics = GlReconstructionDiagnostics(
+            fallbackReason = GlReconstructionFallbackReason.MissingRenderTargets,
+        )
+        return false
     }
 
     private fun liveReconstructionRequested(uniforms: ColorMagnificationUniforms): Boolean {
