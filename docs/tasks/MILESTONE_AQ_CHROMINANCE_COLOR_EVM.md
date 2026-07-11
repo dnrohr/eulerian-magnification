@@ -9,7 +9,7 @@ Goal: improve pulse/color magnification quality by separating luminance from chr
 ## Tasks
 
 - [x] Add an RGB-to-luminance/chrominance processing path for recorded output first, then live GL if the recorded result is better.
-- [ ] Compare green-only, RGB, and chrominance amplification on synthetic pulse and face/skin samples.
+- [x] Compare green-only, RGB, and chrominance amplification on synthetic pulse and face/skin samples.
 - [ ] Add skin/ROI weighting or background suppression so non-skin regions are not amplified as strongly as the target region.
 - [ ] Gate color amplification when exposure, white balance, saturation, or lighting flicker diagnostics indicate unreliable input.
 - [ ] Add output clamps that avoid posterization, skin-color inversion, and full-frame color pulses.
@@ -34,3 +34,21 @@ Goal: improve pulse/color magnification quality by separating luminance from chr
   output.
 - Phone validation was not run for this slice because the phone is currently
   unavailable.
+
+## Completed Slice: Synthetic Chrominance Strategy Comparison
+
+- Added `ChrominanceAmplificationComparison`, a deterministic recorded-side
+  comparison for green-only, RGB, and chrominance-only amplification.
+- The synthetic sample uses a skin-toned pulse target with mild background
+  exposure flicker so the metrics can distinguish target chroma response from
+  background pumping.
+- Added metrics for target chroma response, background pumping, background
+  luminance shift, and target-response-to-pumping ratio.
+- Added JVM coverage showing chrominance amplification improves the
+  response-to-pumping ratio versus RGB and lowers background luminance pumping
+  versus both RGB and green-only on the synthetic skin pulse.
+- Documented the comparison in
+  `docs/experiments/chrominance_color_evm_comparison.md`.
+- This does not yet replace the recorded renderer or tune production clamps.
+- Phone validation was not run for this slice because the comparison is
+  recorded/synthetic only.
