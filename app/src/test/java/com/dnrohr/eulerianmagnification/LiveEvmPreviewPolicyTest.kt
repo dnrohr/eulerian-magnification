@@ -24,6 +24,22 @@ class LiveEvmPreviewPolicyTest {
     }
 
     @Test
+    fun enablesFullFrameLinearEvmForBreathingAmplifiedOnHealthyGlPreview() {
+        val decision = LiveEvmPreviewPolicy.decide(
+            settings = AnalysisSettings(
+                mode = MagnificationMode.Breathing,
+                viewMode = ViewMode.Amplified,
+            ),
+            usingGlPreview = true,
+            glFrameStats = healthyStats(),
+        )
+
+        assertTrue(decision.fullFrameColorPreview)
+        assertTrue(decision.label.contains("linear EVM"))
+        assertTrue(decision.reason.contains("Pulse/Breathing"))
+    }
+
+    @Test
     fun enablesFullFrameColorForPulseSplitWhileStatsSettle() {
         val decision = LiveEvmPreviewPolicy.decide(
             settings = AnalysisSettings(
@@ -38,7 +54,7 @@ class LiveEvmPreviewPolicyTest {
     }
 
     @Test
-    fun keepsMotionModesOnRoiSignalPreview() {
+    fun keepsHighFrequencyMotionModesOnRoiSignalPreview() {
         val decision = LiveEvmPreviewPolicy.decide(
             settings = AnalysisSettings(
                 mode = MagnificationMode.Tremor,

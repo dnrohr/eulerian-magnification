@@ -65,6 +65,19 @@ showing true pyramid reconstruction or a fallback bridge.
 - Phone validation was not run for this slice because the phone is currently
   unavailable.
 
+## Completed Slice: Breathing Linear EVM Policy
+
+- The live full-frame reconstruction policy now allows Breathing mode in
+  Amplified, Difference, and Split views when GL preview timing is healthy.
+- The policy label now calls this path `Full-frame linear EVM preview` instead
+  of color-only preview.
+- High-frequency Tremor/Object modes remain on ROI signal preview until device
+  performance and artifacts are validated.
+- Added JVM coverage proving Breathing can request the GL reconstruction path
+  while high-frequency motion modes remain gated.
+- Phone validation was not run for this slice because the phone is currently
+  unavailable.
+
 ## Done When
 
 - Live amplified preview shows visible reconstructed output for at least one color sample and one slow-motion sample.

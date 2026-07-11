@@ -24,11 +24,11 @@ object LiveEvmPreviewPolicy {
                 reason = "GL preview is not active",
             )
         }
-        if (settings.mode != MagnificationMode.Pulse) {
+        if (!settings.mode.supportsLiveLinearEvm()) {
             return LiveEvmPreviewDecision(
                 fullFrameColorPreview = false,
                 label = "ROI signal preview",
-                reason = "Full-frame live preview is currently limited to Pulse color",
+                reason = "Full-frame live linear EVM is currently limited to Pulse and Breathing",
             )
         }
         if (
@@ -45,7 +45,7 @@ object LiveEvmPreviewPolicy {
         if (!hasSettledStats(glFrameStats)) {
             return LiveEvmPreviewDecision(
                 fullFrameColorPreview = true,
-                label = "Full-frame color preview",
+                label = "Full-frame linear EVM preview",
                 reason = "GL timing is still settling",
             )
         }
@@ -58,9 +58,13 @@ object LiveEvmPreviewPolicy {
         }
         return LiveEvmPreviewDecision(
             fullFrameColorPreview = true,
-            label = "Full-frame color preview",
-            reason = "Pulse Amplified/Difference/Split can use GL full-frame color output",
+            label = "Full-frame linear EVM preview",
+            reason = "Pulse/Breathing Amplified/Difference/Split can use GL full-frame reconstruction",
         )
+    }
+
+    private fun MagnificationMode.supportsLiveLinearEvm(): Boolean {
+        return this == MagnificationMode.Pulse || this == MagnificationMode.Breathing
     }
 
     private fun hasSettledStats(glFrameStats: GlFrameStats): Boolean {
