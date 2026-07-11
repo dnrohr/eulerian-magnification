@@ -49,3 +49,17 @@ Goal: bring the recorded Riesz/phase motion renderer into a live-preview path fo
   next AR slice.
 - Installed the debug build on the Pixel 8a after focused and full
   JVM/build verification.
+
+## Completed Slice: Live Phase Temporal Shader Contract
+
+- Added `LIVE_PHASE_TEMPORAL_FRAGMENT` to `RieszPhaseShaderSource`.
+- The shader contract ports the recorded phase-state update model into a
+  live-capable GLSL pass: wrapped phase delta, unwrapped phase accumulation,
+  temporal low/high state, high-minus-low bandpass phase, warmup seeding, and
+  amplitude-gated amplification.
+- Added shader-source coverage for the live temporal state inputs, warmup path,
+  wrapped phase update, temporal bandpass, and amplitude gate.
+- This is still a contract slice; runtime render-target allocation and
+  invocation remain open.
+- Installed the debug build on the Pixel 8a after focused shader coverage and
+  full JVM/build verification.
