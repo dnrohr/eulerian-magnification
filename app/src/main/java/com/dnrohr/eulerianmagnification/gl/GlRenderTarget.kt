@@ -4,6 +4,7 @@ import android.opengl.GLES30
 
 class GlRenderTarget(
     val size: GlTextureSize,
+    private val format: GlRenderTargetFormat = GlRenderTargetFormat.Rgba8,
 ) {
     val textureId: Int
     val framebufferId: Int
@@ -13,19 +14,19 @@ class GlRenderTarget(
         val framebuffers = IntArray(1)
         GLES30.glGenTextures(1, textures, 0)
         GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, textures[0])
-        GLES30.glTexParameteri(GLES30.GL_TEXTURE_2D, GLES30.GL_TEXTURE_MIN_FILTER, GLES30.GL_LINEAR)
-        GLES30.glTexParameteri(GLES30.GL_TEXTURE_2D, GLES30.GL_TEXTURE_MAG_FILTER, GLES30.GL_LINEAR)
+        GLES30.glTexParameteri(GLES30.GL_TEXTURE_2D, GLES30.GL_TEXTURE_MIN_FILTER, format.filter)
+        GLES30.glTexParameteri(GLES30.GL_TEXTURE_2D, GLES30.GL_TEXTURE_MAG_FILTER, format.filter)
         GLES30.glTexParameteri(GLES30.GL_TEXTURE_2D, GLES30.GL_TEXTURE_WRAP_S, GLES30.GL_CLAMP_TO_EDGE)
         GLES30.glTexParameteri(GLES30.GL_TEXTURE_2D, GLES30.GL_TEXTURE_WRAP_T, GLES30.GL_CLAMP_TO_EDGE)
         GLES30.glTexImage2D(
             GLES30.GL_TEXTURE_2D,
             0,
-            GLES30.GL_RGBA,
+            format.internalFormat,
             size.width,
             size.height,
             0,
-            GLES30.GL_RGBA,
-            GLES30.GL_UNSIGNED_BYTE,
+            format.format,
+            format.type,
             null,
         )
 
@@ -42,6 +43,7 @@ class GlRenderTarget(
         if (status != GLES30.GL_FRAMEBUFFER_COMPLETE) {
             throw GlException("Framebuffer incomplete: 0x${status.toString(16)}")
         }
+        GLES30.glClearBufferfv(GLES30.GL_COLOR, 0, CLEAR_COLOR, 0)
         GLES30.glBindFramebuffer(GLES30.GL_FRAMEBUFFER, 0)
         GlProgram.checkNoGlError("GlRenderTarget")
 
@@ -51,6 +53,7 @@ class GlRenderTarget(
 
     fun bind() {
         GLES30.glBindFramebuffer(GLES30.GL_FRAMEBUFFER, framebufferId)
+        GLES30.glDrawBuffers(1, COLOR_ATTACHMENT0, 0)
         GLES30.glViewport(0, 0, size.width, size.height)
     }
 
@@ -58,6 +61,31 @@ class GlRenderTarget(
         GLES30.glDeleteFramebuffers(1, intArrayOf(framebufferId), 0)
         GLES30.glDeleteTextures(1, intArrayOf(textureId), 0)
     }
+
+    companion object {
+        private val COLOR_ATTACHMENT0 = intArrayOf(GLES30.GL_COLOR_ATTACHMENT0)
+        private val CLEAR_COLOR = floatArrayOf(0.0f, 0.0f, 0.0f, 0.0f)
+    }
+}
+
+enum class GlRenderTargetFormat(
+    val internalFormat: Int,
+    val format: Int,
+    val type: Int,
+    val filter: Int,
+) {
+    Rgba8(
+        internalFormat = GLES30.GL_RGBA,
+        format = GLES30.GL_RGBA,
+        type = GLES30.GL_UNSIGNED_BYTE,
+        filter = GLES30.GL_LINEAR,
+    ),
+    Rgba16f(
+        internalFormat = GLES30.GL_RGBA16F,
+        format = GLES30.GL_RGBA,
+        type = GLES30.GL_HALF_FLOAT,
+        filter = GLES30.GL_NEAREST,
+    ),
 }
 
 data class GlTextureSize(

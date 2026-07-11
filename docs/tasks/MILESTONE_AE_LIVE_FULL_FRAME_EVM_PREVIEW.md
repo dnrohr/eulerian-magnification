@@ -9,8 +9,8 @@ Goal: integrate the full-frame EVM renderer into the live preview path.
 ## Tasks
 
 - [x] Choose the first live implementation path: GL Pulse full-frame color preview bridge first, then GPU pyramid reconstruction.
-- [ ] Maintain temporal state across live frames for each pyramid level.
-- [ ] Render reconstructed output into GL preview.
+- [x] Maintain temporal state across live frames for each pyramid level.
+- [x] Render reconstructed output into GL preview.
 - [x] Keep Raw, Amp, Diff, and Split views truthful while the bridge is limited to Pulse color.
 - [x] Add frame-rate and latency safeguards that disable or degrade gracefully.
 - [ ] Validate on Pixel in portrait orientation with a known target.
@@ -56,6 +56,24 @@ Goal: integrate the full-frame EVM renderer into the live preview path.
 - This still does not call the temporal shader from `CameraOesRenderer`; the
   next AE slice should compile/link the pass programs and invoke them between
   RGB capture and output display.
+
+## Completed Slice: Live Reconstruction Pass Graph
+
+- Added explicit `GlRenderTargetFormat` support so temporal lowpass, highpass,
+  and bandpass textures use signed half-float storage instead of clamping
+  negative deltas into unsigned RGBA.
+- Passed amplification and mode frequency bands into the GL uniform model so
+  live reconstruction uses the same UI-selected settings as CPU analysis.
+- Wired `CameraOesRenderer` to compile the downsample, temporal bandpass, and
+  reconstruction shaders.
+- When the existing full-frame preview policy enables GL full-frame output, the
+  renderer now downsamples the RGB frame, updates temporal state per pyramid
+  level, reconstructs into the processed render target, and uses that target for
+  amplified and split display/export.
+- The path builds and has JVM coverage for settings/format contracts, but it
+  has not been visually checked on the phone yet. AE remains in progress until
+  the Pixel portrait run proves the output is nonblank, upright, and visibly
+  magnified.
 
 ## Evidence
 

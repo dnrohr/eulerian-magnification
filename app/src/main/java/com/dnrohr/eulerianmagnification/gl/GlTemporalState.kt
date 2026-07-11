@@ -18,14 +18,14 @@ class GlTemporalState(
 
 class GlTemporalLevel(size: GlTextureSize) {
     private val lowpassTargets = listOf(
-        GlRenderTarget(size),
-        GlRenderTarget(size),
+        GlRenderTarget(size, GlRenderTargetFormat.Rgba16f),
+        GlRenderTarget(size, GlRenderTargetFormat.Rgba16f),
     )
     private val highpassTargets = listOf(
-        GlRenderTarget(size),
-        GlRenderTarget(size),
+        GlRenderTarget(size, GlRenderTargetFormat.Rgba16f),
+        GlRenderTarget(size, GlRenderTargetFormat.Rgba16f),
     )
-    val bandpass: GlRenderTarget = GlRenderTarget(size)
+    val bandpass: GlRenderTarget = GlRenderTarget(size, GlRenderTargetFormat.Rgba16f)
     private var currentIndex = 0
 
     val currentLowpass: GlRenderTarget get() = lowpassTargets[currentIndex]

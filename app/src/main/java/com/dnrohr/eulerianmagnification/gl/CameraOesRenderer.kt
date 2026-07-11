@@ -30,6 +30,9 @@ class CameraOesRenderer(
     private var oesProgram = 0
     private var rgbProgram = 0
     private var colorProgram = 0
+    private var downsampleProgram = 0
+    private var temporalProgram = 0
+    private var reconstructProgram = 0
     private var oesTexTransformLocation = -1
     private var rgbInputTextureLocation = -1
     private var colorInputTextureLocation = -1
@@ -37,12 +40,24 @@ class CameraOesRenderer(
     private var colorSignalLocation = -1
     private var colorDifferenceModeLocation = -1
     private var colorFullFrameModeLocation = -1
+    private var downsampleInputTextureLocation = -1
+    private var downsampleTexelSizeLocation = -1
+    private var temporalCurrentTextureLocation = -1
+    private var temporalPreviousLowTextureLocation = -1
+    private var temporalPreviousHighTextureLocation = -1
+    private var temporalLowAlphaLocation = -1
+    private var temporalHighAlphaLocation = -1
+    private var reconstructBaseTextureLocation = -1
+    private val reconstructBandpassTextureLocations = IntArray(DOWNSAMPLE_LEVELS) { -1 }
+    private var reconstructAmplificationLocation = -1
+    private var reconstructStartLevelLocation = -1
     private var rgbRenderTarget: GlRenderTarget? = null
     private var processedRenderTarget: GlRenderTarget? = null
     private var downsamplePyramid: GlPyramid? = null
     private var temporalState: GlTemporalState? = null
     private var surfaceSize = GlTextureSize(1, 1)
     private var cameraTextureSize = GlTextureSize(1, 1)
+    private var lastTemporalTimestampNanos: Long? = null
     private var hasNewFrame = false
     @Volatile private var colorUniforms = ColorMagnificationUniforms(
         roi = com.dnrohr.eulerianmagnification.analysis.NormalizedRect(0.0f, 0.0f, 0.0f, 0.0f),
@@ -51,6 +66,9 @@ class CameraOesRenderer(
         splitMode = false,
         fullFrameMode = false,
         presentationTimestampNanos = 0L,
+        amplification = 0.0f,
+        lowCutHz = 0.7,
+        highCutHz = 3.0,
     )
 
     fun setSurfaceRequest(
@@ -74,6 +92,18 @@ class CameraOesRenderer(
         oesProgram = GlProgram.compileProgram(OesShaderSource.VERTEX, OesShaderSource.FRAGMENT)
         rgbProgram = GlProgram.compileProgram(RgbTextureShaderSource.VERTEX, RgbTextureShaderSource.FRAGMENT)
         colorProgram = GlProgram.compileProgram(ColorMagnificationShaderSource.VERTEX, ColorMagnificationShaderSource.FRAGMENT)
+        downsampleProgram = GlProgram.compileProgram(
+            LivePyramidShaderSource.VERTEX,
+            LivePyramidShaderSource.DOWNSAMPLE_FRAGMENT,
+        )
+        temporalProgram = GlProgram.compileProgram(
+            LivePyramidShaderSource.VERTEX,
+            LivePyramidShaderSource.TEMPORAL_BANDPASS_FRAGMENT,
+        )
+        reconstructProgram = GlProgram.compileProgram(
+            LivePyramidShaderSource.VERTEX,
+            LivePyramidShaderSource.RECONSTRUCT_FRAGMENT,
+        )
         oesTexTransformLocation = GLES30.glGetUniformLocation(oesProgram, "uTexTransform")
         rgbInputTextureLocation = GLES30.glGetUniformLocation(rgbProgram, "uInputTexture")
         colorInputTextureLocation = GLES30.glGetUniformLocation(colorProgram, "uInputTexture")
@@ -81,6 +111,22 @@ class CameraOesRenderer(
         colorSignalLocation = GLES30.glGetUniformLocation(colorProgram, "uAmplifiedSignal")
         colorDifferenceModeLocation = GLES30.glGetUniformLocation(colorProgram, "uDifferenceMode")
         colorFullFrameModeLocation = GLES30.glGetUniformLocation(colorProgram, "uFullFrameMode")
+        downsampleInputTextureLocation = GLES30.glGetUniformLocation(downsampleProgram, "uInputTexture")
+        downsampleTexelSizeLocation = GLES30.glGetUniformLocation(downsampleProgram, "uTexelSize")
+        temporalCurrentTextureLocation = GLES30.glGetUniformLocation(temporalProgram, "uCurrentTexture")
+        temporalPreviousLowTextureLocation = GLES30.glGetUniformLocation(temporalProgram, "uPreviousLowTexture")
+        temporalPreviousHighTextureLocation = GLES30.glGetUniformLocation(temporalProgram, "uPreviousHighTexture")
+        temporalLowAlphaLocation = GLES30.glGetUniformLocation(temporalProgram, "uLowAlpha")
+        temporalHighAlphaLocation = GLES30.glGetUniformLocation(temporalProgram, "uHighAlpha")
+        reconstructBaseTextureLocation = GLES30.glGetUniformLocation(reconstructProgram, "uBaseTexture")
+        repeat(DOWNSAMPLE_LEVELS) { index ->
+            reconstructBandpassTextureLocations[index] = GLES30.glGetUniformLocation(
+                reconstructProgram,
+                "uBandpassTexture$index",
+            )
+        }
+        reconstructAmplificationLocation = GLES30.glGetUniformLocation(reconstructProgram, "uAmplification")
+        reconstructStartLevelLocation = GLES30.glGetUniformLocation(reconstructProgram, "uStartLevel")
         oesTextureId = createOesTexture()
         surfaceTexture = SurfaceTexture(oesTextureId).apply {
             setOnFrameAvailableListener {
@@ -100,6 +146,7 @@ class CameraOesRenderer(
         processedRenderTarget?.release()
         rgbRenderTarget = GlRenderTarget(surfaceSize)
         processedRenderTarget = GlRenderTarget(surfaceSize)
+        lastTemporalTimestampNanos = null
         downsamplePyramid = GlPyramid(
             baseSize = GlTextureSize(
                 width = (width / 2).coerceAtLeast(1),
@@ -122,8 +169,9 @@ class CameraOesRenderer(
             hasNewFrame = false
         }
         renderCameraTextureToRgb()
-        temporalState?.swap()
-        renderColorMagnification()
+        if (!renderLivePyramidReconstruction()) {
+            renderColorMagnification()
+        }
         emitProcessedFrame()
         drawOutputToScreen()
         providePendingSurfaceIfReady()
@@ -232,6 +280,114 @@ class CameraOesRenderer(
         GlProgram.checkNoGlError("renderColorMagnification")
     }
 
+    private fun renderLivePyramidReconstruction(): Boolean {
+        val uniforms = colorUniforms
+        if (!uniforms.fullFrameMode || uniforms.differenceMode) {
+            lastTemporalTimestampNanos = null
+            return false
+        }
+        val source = rgbRenderTarget ?: return false
+        val pyramid = downsamplePyramid ?: return false
+        val state = temporalState ?: return false
+        val output = processedRenderTarget ?: return false
+        if (pyramid.levels.size < DOWNSAMPLE_LEVELS || state.levels.size < DOWNSAMPLE_LEVELS) {
+            return false
+        }
+
+        renderDownsamplePyramid(source, pyramid)
+        state.swap()
+        renderTemporalBandpass(pyramid, state, uniforms)
+        renderReconstruction(source, state, output, uniforms)
+        GLES30.glBindFramebuffer(GLES30.GL_FRAMEBUFFER, 0)
+        GlProgram.checkNoGlError("renderLivePyramidReconstruction")
+        return true
+    }
+
+    private fun renderDownsamplePyramid(
+        source: GlRenderTarget,
+        pyramid: GlPyramid,
+    ) {
+        var inputTextureId = source.textureId
+        var inputSize = source.size
+        pyramid.levels.forEach { level ->
+            level.bind()
+            GLES30.glUseProgram(downsampleProgram)
+            GLES30.glUniform1i(downsampleInputTextureLocation, 0)
+            GLES30.glUniform2f(
+                downsampleTexelSizeLocation,
+                1.0f / inputSize.width,
+                1.0f / inputSize.height,
+            )
+            GLES30.glActiveTexture(GLES30.GL_TEXTURE0)
+            GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, inputTextureId)
+            drawFramebufferQuad()
+            inputTextureId = level.textureId
+            inputSize = level.size
+        }
+    }
+
+    private fun renderTemporalBandpass(
+        pyramid: GlPyramid,
+        state: GlTemporalState,
+        uniforms: ColorMagnificationUniforms,
+    ) {
+        val coefficients = TemporalBandpassCoefficients.from(
+            lowCutHz = uniforms.lowCutHz,
+            highCutHz = uniforms.highCutHz,
+            dtSeconds = temporalDeltaSeconds(uniforms.presentationTimestampNanos),
+        )
+        pyramid.levels.zip(state.levels).forEach { (currentLevel, temporalLevel) ->
+            temporalLevel.bindForTemporalUpdate()
+            GLES30.glUseProgram(temporalProgram)
+            GLES30.glUniform1i(temporalCurrentTextureLocation, 0)
+            GLES30.glUniform1i(temporalPreviousLowTextureLocation, 1)
+            GLES30.glUniform1i(temporalPreviousHighTextureLocation, 2)
+            GLES30.glUniform1f(temporalLowAlphaLocation, coefficients.lowAlpha)
+            GLES30.glUniform1f(temporalHighAlphaLocation, coefficients.highAlpha)
+            GLES30.glActiveTexture(GLES30.GL_TEXTURE0)
+            GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, currentLevel.textureId)
+            GLES30.glActiveTexture(GLES30.GL_TEXTURE1)
+            GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, temporalLevel.previousLowpass.textureId)
+            GLES30.glActiveTexture(GLES30.GL_TEXTURE2)
+            GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, temporalLevel.previousHighpass.textureId)
+            drawFramebufferQuad()
+        }
+    }
+
+    private fun renderReconstruction(
+        source: GlRenderTarget,
+        state: GlTemporalState,
+        output: GlRenderTarget,
+        uniforms: ColorMagnificationUniforms,
+    ) {
+        output.bind()
+        GLES30.glUseProgram(reconstructProgram)
+        GLES30.glUniform1i(reconstructBaseTextureLocation, 0)
+        repeat(DOWNSAMPLE_LEVELS) { index ->
+            GLES30.glUniform1i(reconstructBandpassTextureLocations[index], index + 1)
+        }
+        GLES30.glUniform1f(reconstructAmplificationLocation, uniforms.amplification)
+        GLES30.glUniform1i(reconstructStartLevelLocation, RECONSTRUCTION_START_LEVEL)
+        GLES30.glActiveTexture(GLES30.GL_TEXTURE0)
+        GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, source.textureId)
+        repeat(DOWNSAMPLE_LEVELS) { index ->
+            GLES30.glActiveTexture(GLES30.GL_TEXTURE1 + index)
+            GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, state.levels[index].bandpass.textureId)
+        }
+        drawFramebufferQuad()
+    }
+
+    private fun temporalDeltaSeconds(timestampNanos: Long): Double {
+        val previousTimestamp = lastTemporalTimestampNanos
+        lastTemporalTimestampNanos = timestampNanos.takeIf { it > 0L }
+        val deltaNanos = if (timestampNanos > 0L && previousTimestamp != null) {
+            timestampNanos - previousTimestamp
+        } else {
+            DEFAULT_FRAME_NANOS
+        }
+        return deltaNanos.coerceAtLeast(1L) / NANOS_PER_SECOND
+    }
+
     private fun drawOutputToScreen() {
         val rawTarget = rgbRenderTarget ?: return
         val processedTarget = processedRenderTarget ?: rawTarget
@@ -274,6 +430,18 @@ class CameraOesRenderer(
         GlProgram.checkNoGlError("drawRgbTextureToScreen")
     }
 
+    private fun drawFramebufferQuad() {
+        GLES30.glEnableVertexAttribArray(0)
+        GLES30.glEnableVertexAttribArray(1)
+        framebufferTextureVertexBuffer.position(0)
+        GLES30.glVertexAttribPointer(0, 2, GLES30.GL_FLOAT, false, VERTEX_STRIDE_BYTES, framebufferTextureVertexBuffer)
+        framebufferTextureVertexBuffer.position(2)
+        GLES30.glVertexAttribPointer(1, 2, GLES30.GL_FLOAT, false, VERTEX_STRIDE_BYTES, framebufferTextureVertexBuffer)
+        GLES30.glDrawArrays(GLES30.GL_TRIANGLE_STRIP, 0, 4)
+        GLES30.glDisableVertexAttribArray(0)
+        GLES30.glDisableVertexAttribArray(1)
+    }
+
     private fun createOesTexture(): Int {
         val textures = IntArray(1)
         GLES30.glGenTextures(1, textures, 0)
@@ -290,6 +458,9 @@ class CameraOesRenderer(
         private const val FLOAT_BYTES = 4
         private const val VERTEX_STRIDE_BYTES = 4 * FLOAT_BYTES
         private const val DOWNSAMPLE_LEVELS = 3
+        private const val RECONSTRUCTION_START_LEVEL = 0
+        private const val DEFAULT_FRAME_NANOS = 33_333_333L
+        private const val NANOS_PER_SECOND = 1_000_000_000.0
     }
 }
 

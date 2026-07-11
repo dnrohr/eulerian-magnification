@@ -54,9 +54,12 @@ lowpass ping-pong, highpass ping-pong, and a current bandpass output per
 pyramid level. Each level also has a framebuffer binding for the temporal
 shader's multiple render outputs.
 
-These sources are not wired into `CameraOesRenderer` yet. The current visible
-live full-frame mode remains the Pulse color bridge until the runtime pass graph
-is connected and checked on device.
+`CameraOesRenderer` now compiles and invokes those live reconstruction passes
+when the existing full-frame preview policy enables GL full-frame output. The
+temporal targets use half-float storage so signed bandpass deltas are preserved
+for reconstruction. This replaces the visible Pulse color bridge on the
+full-frame path in local builds, but it still needs Pixel portrait validation
+before the milestone can be treated as complete.
 
 ## Verification
 

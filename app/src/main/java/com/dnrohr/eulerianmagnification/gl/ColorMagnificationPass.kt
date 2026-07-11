@@ -78,6 +78,9 @@ class ColorMagnificationParameters(
             splitMode = settings.viewMode == ViewMode.Split,
             fullFrameMode = fullFrameMode,
             presentationTimestampNanos = presentationTimestampNanos.coerceAtLeast(0L),
+            amplification = settings.amplification,
+            lowCutHz = settings.lowCutHz,
+            highCutHz = settings.highCutHz,
         )
     }
 }
@@ -89,4 +92,7 @@ data class ColorMagnificationUniforms(
     val splitMode: Boolean,
     val fullFrameMode: Boolean = false,
     val presentationTimestampNanos: Long = 0L,
+    val amplification: Float = 0.0f,
+    val lowCutHz: Double = 0.7,
+    val highCutHz: Double = 3.0,
 )

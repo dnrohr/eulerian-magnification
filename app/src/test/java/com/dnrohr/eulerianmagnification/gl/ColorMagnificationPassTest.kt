@@ -2,6 +2,7 @@ package com.dnrohr.eulerianmagnification.gl
 
 import com.dnrohr.eulerianmagnification.analysis.AnalysisSample
 import com.dnrohr.eulerianmagnification.analysis.AnalysisSettings
+import com.dnrohr.eulerianmagnification.analysis.MagnificationMode
 import com.dnrohr.eulerianmagnification.analysis.NormalizedRect
 import com.dnrohr.eulerianmagnification.analysis.ViewMode
 import org.junit.Assert.assertEquals
@@ -45,6 +46,9 @@ class ColorMagnificationPassTest {
         assertFalse(uniforms.differenceMode)
         assertFalse(uniforms.splitMode)
         assertFalse(uniforms.fullFrameMode)
+        assertEquals(8.0f, uniforms.amplification, 0.0f)
+        assertEquals(0.7, uniforms.lowCutHz, 0.0)
+        assertEquals(3.0, uniforms.highCutHz, 0.0)
     }
 
     @Test
@@ -86,6 +90,17 @@ class ColorMagnificationPassTest {
         )
 
         assertTrue(uniforms.fullFrameMode)
+    }
+
+    @Test
+    fun mapsModeBandForLiveReconstruction() {
+        val uniforms = ColorMagnificationParameters().from(
+            sample = AnalysisSample(),
+            settings = AnalysisSettings(mode = MagnificationMode.Breathing),
+        )
+
+        assertEquals(0.1, uniforms.lowCutHz, 0.0)
+        assertEquals(0.6, uniforms.highCutHz, 0.0)
     }
 
     @Test
