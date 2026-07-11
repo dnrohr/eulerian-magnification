@@ -104,6 +104,20 @@ showing true pyramid reconstruction or a fallback bridge.
 - Phone validation was not run for this slice because the phone is currently
   unavailable.
 
+## Completed Slice: Laplacian Reconstruction Delta
+
+- The live reconstruction shader now derives Laplacian-style spatial deltas from
+  the temporally filtered Gaussian bandpass levels.
+- Fine and mid pyramid deltas subtract the next coarser Gaussian bandpass level;
+  the coarsest level is preserved as the residual.
+- Existing per-level gains and the max delta clamp now apply to those
+  Laplacian-style reconstruction deltas instead of a plain sum of blurred
+  Gaussian bandpass textures.
+- Updated the live level-policy experiment note with the reconstruction formula.
+- Added JVM coverage for the shader source contract.
+- Phone validation was not run for this slice because the phone is currently
+  unavailable.
+
 ## Done When
 
 - Live amplified preview shows visible reconstructed output for at least one color sample and one slow-motion sample.

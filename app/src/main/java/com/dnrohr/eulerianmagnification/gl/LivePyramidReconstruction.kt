@@ -141,7 +141,7 @@ object LivePyramidShaderSource {
         in vec2 vTexCoord;
         out vec4 outColor;
 
-        vec3 levelDelta(int level) {
+        vec3 gaussianBandpass(int level) {
             if (level == 0) {
                 return texture(uBandpassTexture0, vTexCoord).rgb;
             }
@@ -151,13 +151,23 @@ object LivePyramidShaderSource {
             return texture(uBandpassTexture2, vTexCoord).rgb;
         }
 
+        vec3 laplacianDelta(int level) {
+            if (level == 0) {
+                return gaussianBandpass(0) - gaussianBandpass(1);
+            }
+            if (level == 1) {
+                return gaussianBandpass(1) - gaussianBandpass(2);
+            }
+            return gaussianBandpass(2);
+        }
+
         void main() {
             vec4 base = texture(uBaseTexture, vTexCoord);
             vec3 delta = vec3(0.0);
             for (int level = 0; level < 3; level++) {
                 if (level >= uStartLevel) {
                     float gain = level == 0 ? uLevelGain0 : (level == 1 ? uLevelGain1 : uLevelGain2);
-                    delta += levelDelta(level) * gain;
+                    delta += laplacianDelta(level) * gain;
                 }
             }
             vec3 amplifiedDelta = clamp(delta * uAmplification, vec3(-uMaxDelta), vec3(uMaxDelta));
