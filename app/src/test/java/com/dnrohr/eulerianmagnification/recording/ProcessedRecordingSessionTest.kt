@@ -83,7 +83,7 @@ class ProcessedRecordingSessionTest {
         val json = output.readText()
 
         assertTrue(json.contains("\"signalSource\": \"roi_green_bandpass\""))
-        assertTrue(json.contains("\"renderer\": \"live_gl_full_frame_color_bridge\""))
+        assertTrue(json.contains("\"renderer\": \"live_linear_evm_reconstruction\""))
         assertTrue(json.contains("\"visualizationStyle\": \"split_comparison\""))
     }
 

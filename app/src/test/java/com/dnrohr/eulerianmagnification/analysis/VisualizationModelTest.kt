@@ -46,7 +46,7 @@ class VisualizationModelTest {
     }
 
     @Test
-    fun livePulseFullFrameBridgeIsDistinctFromRoiTint() {
+    fun livePulseFullFrameReconstructionIsDistinctFromRoiTint() {
         val fullFrame = VisualizationModel.live(
             settings = AnalysisSettings(
                 mode = MagnificationMode.Pulse,
@@ -62,7 +62,7 @@ class VisualizationModelTest {
             fullFrameColorPreview = false,
         )
 
-        assertEquals(RendererKind.LiveGlFullFrameColorBridge, fullFrame.renderer)
+        assertEquals(RendererKind.LiveLinearEvmReconstruction, fullFrame.renderer)
         assertEquals(VisualizationStyle.FullFrameAmplified, fullFrame.visualizationStyle)
         assertEquals(RendererKind.LiveRoiSignalTint, roiTint.renderer)
         assertEquals(VisualizationStyle.RoiSignalOverlay, roiTint.visualizationStyle)
@@ -93,7 +93,7 @@ class VisualizationModelTest {
             fullFrameColorPreview = true,
         )
 
-        assertEquals(RendererKind.LiveGlFullFrameColorBridge, model.renderer)
+        assertEquals(RendererKind.LiveLinearEvmReconstruction, model.renderer)
         assertEquals(VisualizationStyle.FullFrameDifference, model.visualizationStyle)
     }
 }

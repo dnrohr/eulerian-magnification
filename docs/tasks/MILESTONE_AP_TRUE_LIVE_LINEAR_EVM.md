@@ -78,6 +78,19 @@ showing true pyramid reconstruction or a fallback bridge.
 - Phone validation was not run for this slice because the phone is currently
   unavailable.
 
+## Completed Slice: Truthful Live Renderer Label
+
+- `VisualizationModel.live` now names the active GL full-frame path `Live
+  linear EVM reconstruction` instead of the older `Live GL full-frame color
+  bridge`.
+- The explicit `GL color bridge` render path remains available for fallback
+  diagnostics when reconstruction is requested but unavailable.
+- Updated the signal/renderer/visualization architecture table for Pulse and
+  Breathing live reconstruction.
+- Added JVM coverage for the renamed renderer contract.
+- Phone validation was not run for this slice because the phone is currently
+  unavailable.
+
 ## Done When
 
 - Live amplified preview shows visible reconstructed output for at least one color sample and one slow-motion sample.

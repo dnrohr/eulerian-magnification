@@ -32,14 +32,14 @@ data class VisualizationModel(
             val renderer = when (settings.viewMode) {
                 ViewMode.Raw -> RendererKind.RawPassthrough
                 ViewMode.Difference -> if (fullFrameColorPreview) {
-                    RendererKind.LiveGlFullFrameColorBridge
+                    RendererKind.LiveLinearEvmReconstruction
                 } else {
                     RendererKind.RoiSignalDiagnostic
                 }
                 ViewMode.Amplified,
                 ViewMode.Split,
                 -> if (fullFrameColorPreview) {
-                    RendererKind.LiveGlFullFrameColorBridge
+                    RendererKind.LiveLinearEvmReconstruction
                 } else {
                     RendererKind.LiveRoiSignalTint
                 }
@@ -68,7 +68,7 @@ data class VisualizationModel(
             return when (viewMode) {
                 ViewMode.Raw -> VisualizationStyle.Raw
                 ViewMode.Difference -> when (renderer) {
-                    RendererKind.LiveGlFullFrameColorBridge,
+                    RendererKind.LiveLinearEvmReconstruction,
                     RendererKind.RecordedLinearEvm,
                     RendererKind.RecordedRieszPhaseMotion,
                     -> VisualizationStyle.FullFrameDifference
@@ -78,7 +78,7 @@ data class VisualizationModel(
                 ViewMode.Amplified -> when (renderer) {
                     RendererKind.RecordedLinearEvm,
                     RendererKind.RecordedRieszPhaseMotion,
-                    RendererKind.LiveGlFullFrameColorBridge,
+                    RendererKind.LiveLinearEvmReconstruction,
                     -> VisualizationStyle.FullFrameAmplified
                     else -> VisualizationStyle.RoiSignalOverlay
                 }
@@ -104,7 +104,7 @@ enum class RendererKind(
     RawPassthrough("raw_passthrough", "Raw passthrough"),
     RoiSignalDiagnostic("roi_signal_diagnostic", "ROI signal diagnostic"),
     LiveRoiSignalTint("live_roi_signal_tint", "Live ROI signal tint"),
-    LiveGlFullFrameColorBridge("live_gl_full_frame_color_bridge", "Live GL full-frame color bridge"),
+    LiveLinearEvmReconstruction("live_linear_evm_reconstruction", "Live linear EVM reconstruction"),
     RecordedLinearEvm("recorded_linear_evm", "Recorded full-frame linear EVM"),
     RecordedRieszPhaseMotion("recorded_riesz_phase_motion", "Recorded Riesz phase motion"),
 }

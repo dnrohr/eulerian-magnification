@@ -28,9 +28,9 @@ Live preview:
 
 | Mode / View | Signal source | Renderer | Visualization |
 | --- | --- | --- | --- |
-| Pulse / Amplified or Split with healthy GL bridge | ROI green bandpass | Live GL full-frame color bridge | Full-frame amplified or split comparison |
-| Pulse / Amplified without bridge | ROI green bandpass | Live ROI signal tint | ROI signal overlay |
-| Breathing / any diagnostic view | ROI vertical translation | ROI signal diagnostic or tint | Diagnostic/overlay |
+| Pulse / Amplified, Difference, or Split with healthy GL reconstruction | ROI green bandpass | Live linear EVM reconstruction | Full-frame amplified, full-frame difference, or split comparison |
+| Breathing / Amplified, Difference, or Split with healthy GL reconstruction | ROI vertical translation | Live linear EVM reconstruction | Full-frame amplified, full-frame difference, or split comparison |
+| Pulse or Breathing without reconstruction | ROI green bandpass / ROI vertical translation | Live ROI signal tint or ROI signal diagnostic | ROI signal overlay or ROI difference |
 | Fast Motion / diagnostic views | ROI motion estimate | ROI signal diagnostic or tint | Diagnostic/overlay |
 
 ## Export Compatibility
