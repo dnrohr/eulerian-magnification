@@ -65,6 +65,8 @@ class GlFrameTimerTest {
             activePyramidLevels = 3,
             internalSize = GlTextureSize(320, 180),
             temporalWarm = true,
+            levelGains = listOf(0.35f, 0.75f, 1.0f),
+            maxDelta = 0.18f,
         )
         val fallback = GlReconstructionDiagnostics(
             activePyramidLevels = 0,
@@ -72,7 +74,10 @@ class GlFrameTimerTest {
             fallbackReason = GlReconstructionFallbackReason.HalfFloatUnsupported,
         )
 
-        assertEquals("Pyramid: 3 levels / 320x180 / ready", ready.summary())
+        assertEquals(
+            "Pyramid: 3 levels / 320x180 / ready / gains 0.35/0.75/1.00 / clamp +/-0.18",
+            ready.summary(),
+        )
         assertEquals(
             "Pyramid: 0 levels / n/a / fallback half-float unsupported",
             fallback.summary(),

@@ -91,6 +91,19 @@ showing true pyramid reconstruction or a fallback bridge.
 - Phone validation was not run for this slice because the phone is currently
   unavailable.
 
+## Completed Slice: Reconstruction Policy Diagnostics
+
+- Live reconstruction diagnostics now include the active per-level pyramid gains
+  and amplified-delta clamp uploaded by `CameraOesRenderer`.
+- The expanded GL debug line reports the current policy, for example
+  `gains 0.35/0.75/1.00 / clamp +/-0.18`, alongside pyramid level count,
+  internal size, and warmup state.
+- Fallback diagnostics remain concise and continue to show the fallback reason
+  without policy details.
+- Added JVM coverage for reconstruction policy summary formatting.
+- Phone validation was not run for this slice because the phone is currently
+  unavailable.
+
 ## Done When
 
 - Live amplified preview shows visible reconstructed output for at least one color sample and one slow-motion sample.

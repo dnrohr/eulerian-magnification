@@ -1,5 +1,7 @@
 package com.dnrohr.eulerianmagnification.gl
 
+import java.util.Locale
+
 class GlFrameTimer(private val windowSize: Int = 60) {
     private val frameDurationsNanos = ArrayDeque<Long>()
     private var frameStartNanos: Long? = null
@@ -69,6 +71,8 @@ data class GlReconstructionDiagnostics(
     val activePyramidLevels: Int = 0,
     val internalSize: GlTextureSize? = null,
     val temporalWarm: Boolean = false,
+    val levelGains: List<Float> = emptyList(),
+    val maxDelta: Float? = null,
     val fallbackReason: GlReconstructionFallbackReason = GlReconstructionFallbackReason.None,
 ) {
     val hasLivePyramid: Boolean get() = activePyramidLevels > 0 && internalSize != null
@@ -77,12 +81,26 @@ data class GlReconstructionDiagnostics(
         val sizeLabel = internalSize?.let { "${it.width}x${it.height}" } ?: "n/a"
         val warmupLabel = if (temporalWarm) "ready" else "warming"
         return if (fallbackReason == GlReconstructionFallbackReason.None) {
-            "Pyramid: ${activePyramidLevels} levels / $sizeLabel / $warmupLabel"
+            val policyLabel = policySummary()
+            "Pyramid: ${activePyramidLevels} levels / $sizeLabel / $warmupLabel$policyLabel"
         } else {
             "Pyramid: ${activePyramidLevels} levels / $sizeLabel / fallback ${fallbackReason.label}"
         }
     }
+
+    private fun policySummary(): String {
+        val labels = mutableListOf<String>()
+        if (levelGains.isNotEmpty()) {
+            labels += "gains ${levelGains.joinToString(separator = "/") { it.policyFormat() }}"
+        }
+        maxDelta?.let {
+            labels += "clamp +/-${it.policyFormat()}"
+        }
+        return if (labels.isEmpty()) "" else " / ${labels.joinToString(separator = " / ")}"
+    }
 }
+
+private fun Float.policyFormat(): String = String.format(Locale.US, "%.2f", this)
 
 enum class GlReconstructionFallbackReason(val label: String) {
     None("none"),

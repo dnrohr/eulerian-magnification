@@ -345,6 +345,8 @@ class CameraOesRenderer(
                 activePyramidLevels = pyramid.levels.size,
                 internalSize = pyramid.levels.first().size,
                 temporalWarm = temporalInitialized,
+                levelGains = (0 until DOWNSAMPLE_LEVELS).map(RECONSTRUCTION_LEVEL_POLICY::gainFor),
+                maxDelta = RECONSTRUCTION_LEVEL_POLICY.maxDelta,
             )
             true
         } catch (_: GlException) {
