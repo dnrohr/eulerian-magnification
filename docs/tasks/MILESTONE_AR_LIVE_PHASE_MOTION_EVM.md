@@ -31,3 +31,21 @@ Goal: bring the recorded Riesz/phase motion renderer into a live-preview path fo
   latency, and thermal behavior on Pixel 8a.
 - Re-ran the standard JVM/build verification and reinstalled the current debug
   build on the Pixel 8a.
+
+## Completed Slice: Live Phase ROI Plan Contract
+
+- Added `LivePhaseRoiPlan` for the first live phase renderer path.
+- The plan computes source ROI pixel size, caps the processing texture to a
+  bounded dimension, estimates RGBA16F render-target memory, and reports whether
+  the plan fits the live phase budget.
+- Added `LivePhaseRoiStatePlan` for the per-pixel phase state targets needed by
+  the recorded phase update model: previous phase, unwrapped phase, lowpass,
+  highpass, and bandpass.
+- Added `LivePhaseWarmupStatus` labels for future live UI/debug diagnostics.
+- Added JVM coverage for ROI sizing, aspect preservation, target counts, memory
+  budget checks, invalid inputs, and warmup labels.
+- This is the bounded live state contract for porting recorded phase state
+  updates; the runtime GL renderer allocation and shader invocation remain the
+  next AR slice.
+- Installed the debug build on the Pixel 8a after focused and full
+  JVM/build verification.
