@@ -18,6 +18,14 @@ Goal: fix the trust-breaking mismatch where automatic ROI can be drawn away from
 - The automatic ROI overlay now maps analysis ROI through rotation, front-camera mirroring, and aspect-fill preview geometry before drawing.
 - Added JVM coverage for identity mapping, horizontal mirroring, 90-degree rotation, and portrait aspect-fill crop.
 
+## Current Status
+
+Status: In progress
+
+Device validation is underway on the Pixel 8a, but the milestone is not complete
+until a deliberate known target or visible face proves portrait/front-camera
+alignment.
+
 ## Remaining Work
 
 - Verify the front-camera mirror assumption on the Pixel 8a with a face or known target in frame.
@@ -38,6 +46,22 @@ Goal: fix the trust-breaking mismatch where automatic ROI can be drawn away from
 - It did reveal that the amplified tint rectangle was still using unmapped analysis ROI coordinates while the outline used mapped preview coordinates.
 - Updated `AmplifiedTintOverlay` to draw the tint through the same `PreviewRoiMapper.mapAnalysisToPreview` transform as the ROI outline.
 - Reinstalled the updated APK and captured a second non-committed Pixel screenshot; the tint and outline now overlap in portrait preview.
+
+## Device Probe: Pixel 8a GL Preview
+
+Date: 2026-07-11
+
+- Connected device: Pixel 8a `47091JEKB05516`.
+- Installed the latest debug APK.
+- Confirmed the app launches in portrait and the compact overlay reports
+  `Center ROI` when no deliberate face/known target is framed.
+- Enabled GL preview and confirmed the live reconstruction path is active.
+- Attempted unattended manual ROI placement over a visible non-sensitive object,
+  but the probe was inconclusive: the interaction remained in the expanded
+  controls/editing flow and did not produce a clean `Manual ROI` validation
+  screenshot over the target.
+- Result: no mapping failure was proven, but the required manual/automatic
+  target-alignment validation is still open.
 
 ## Coordinate Assumptions
 

@@ -1,5 +1,7 @@
 # Milestone U - ROI Device Validation
 
+Status: In progress
+
 Importance: Very high. If the ROI is not over the visible target, every output is suspect.
 
 Goal: prove that automatic and manual ROI coordinates align with the live preview on the target device.
@@ -20,6 +22,20 @@ Goal: prove that automatic and manual ROI coordinates align with the live previe
 - Installed and launched the latest debug APK on connected device `47091JEKB05516`.
 - Captured an unattended front-camera probe on 2026-07-05.
 - Result: no visible face target was in frame; the app showed `Center ROI`, which is expected fallback behavior but does not verify automatic face ROI alignment.
+
+## Pixel Probe: 2026-07-11
+
+- Connected device: Pixel 8a `47091JEKB05516`.
+- Installed latest debug APK after the scrollable expanded-controls fix.
+- Confirmed the app launches in portrait with camera permission granted.
+- Confirmed GL preview can be enabled and reports `GL renderer: Live
+  reconstruction`.
+- Captured unattended current-frame evidence showing `Center ROI`, which is
+  expected without a deliberate target but does not validate automatic ROI
+  placement.
+- Attempted unattended manual ROI placement over a non-sensitive visible object;
+  the result was inconclusive and is not counted as validation because the final
+  screenshot did not clearly show `Manual ROI` aligned to that target.
 
 ## Remaining Validation
 

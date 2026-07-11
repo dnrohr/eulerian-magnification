@@ -52,6 +52,22 @@ Date: 2026-07-05
 - The app showed `Center ROI`, which is expected when automatic face detection has no face to track.
 - This probe does not complete automatic face ROI validation.
 
+## Current Pixel Probe
+
+Date: 2026-07-11
+
+- Connected device: Pixel 8a `47091JEKB05516`
+- Latest debug APK installed successfully.
+- GL preview was enabled after making expanded controls scrollable.
+- Expanded controls reported `GL renderer: Live reconstruction`.
+- The unattended frame showed `Center ROI`, which is expected without a
+  deliberate face or known target.
+- An unattended manual ROI attempt over a visible object was inconclusive
+  because the final screenshot did not clearly show `Manual ROI` aligned to the
+  object.
+- Manual ROI validation should be repeated with a deliberately placed target and
+  the operator watching the screen.
+
 ## Pass Criteria
 
 - Manual ROI: selected preview rectangle maps back to the same analysis region and displays over the same visible target.
