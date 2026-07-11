@@ -1,6 +1,6 @@
 # Milestone AQ - Chrominance Color EVM
 
-Status: In progress
+Status: Complete
 
 Importance: High. MIT-style pulse/color results rely on color handling that amplifies subtle chrominance changes without making the whole frame flash.
 
@@ -13,7 +13,7 @@ Goal: improve pulse/color magnification quality by separating luminance from chr
 - [x] Add skin/ROI weighting or background suppression so non-skin regions are not amplified as strongly as the target region.
 - [x] Gate color amplification when exposure, white balance, saturation, or lighting flicker diagnostics indicate unreliable input.
 - [x] Add output clamps that avoid posterization, skin-color inversion, and full-frame color pulses.
-- [ ] Document recommended pulse setup and why the app may reject or dampen unstable color conditions.
+- [x] Document recommended pulse setup and why the app may reject or dampen unstable color conditions.
 
 ## Done When
 
@@ -98,3 +98,16 @@ Goal: improve pulse/color magnification quality by separating luminance from chr
   an equivalent clamp before final RGB output.
 - Installed the debug build on the Pixel 8a after focused and full
   JVM/build verification.
+
+## Completed Slice: Pulse Setup And Dampening Docs
+
+- Updated the README pulse setup guide to explain when the app dampens or hides
+  color amplification.
+- Documented the recorded Pulse color gate fields in
+  `docs/testing/RECORDED_VIDEO_VALIDATION.md`.
+- Marked AQ complete now that chrominance representation, comparison,
+  ROI/background weighting, gating, output clamps, and usage guidance are
+  documented.
+- This is documentation-only; no runtime behavior changed in this slice.
+- Re-ran the standard JVM/build verification and reinstalled the current debug
+  build on the Pixel 8a.

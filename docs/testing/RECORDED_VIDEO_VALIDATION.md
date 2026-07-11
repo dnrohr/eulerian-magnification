@@ -26,6 +26,13 @@ and non-diagnostic.
 
 `RecordedVideoProcessor` is the first export-pipeline building block. It consumes decoded `RgbFrame` inputs and produces processed `RgbFrame` outputs for `Raw`, `Amplified`, `Difference`, and `Split` views. This is app-native CPU color processing, not the earlier Python diagnostic render.
 
+For Pulse exports, the processor applies a color-amplification gate before
+full-frame reconstruction. Lighting that is settling, flickering, exposure
+pumping, motion-contaminated, too dark, or clipped/saturated reduces the
+effective amplification. The timeline CSV records `colorGate`,
+`colorGateGain`, and `saturatedPixelFraction`, which should be checked whenever
+an export looks weaker than expected.
+
 `RecordedEvmParityValidator` runs decoded or synthetic `RgbFrame` sequences
 through the full-frame renderer and reports changed-frame, mean-delta,
 changed-pixel, and clipping metrics. Use it for deterministic local parity
@@ -91,6 +98,19 @@ calling the one-tap live capture path complete.
 4. Select `euler.mp4`.
 5. Use the displayed frame count, FPS, energy, peak, and timing status as the repeatable baseline for that mode.
 6. Use the recent recording/export row's `Video` button to share the processed MP4, or `Metadata` to inspect the JSON.
+
+## Pulse Setup And Dampening
+
+Use pulse validation clips or phone recordings with steady, diffuse light, a
+stable forehead/cheek ROI, minimal head motion, and exposure/white balance
+settled before capture. A good color-magnification setup should make skin color
+variation stronger without making the whole frame flash.
+
+If the processed output looks muted, inspect `signal_timeline.csv` first. A
+`colorGateGain` below `1.0` means the app intentionally reduced amplification
+because the input looked unreliable. Common causes are lighting flicker,
+exposure/white-balance pumping, too-dark ROI values, motion-contaminated
+lighting, or saturated skin pixels near the 0/255 channel rails.
 
 ## Next Sample Step
 

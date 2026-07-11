@@ -92,6 +92,13 @@ The first target definition is tracked in
 - Stay still and avoid talking, smiling, or moving your head.
 - Expect a subtle color pulse, not motion.
 
+Pulse color magnification is intentionally conservative. The app may dampen or
+hide color amplification when lighting is still settling, the ROI is too dark,
+LED flicker or exposure pumping is likely, the ROI is moving, or skin pixels are
+near channel clipping. In recorded exports, `signal_timeline.csv` includes
+`colorGate`, `colorGateGain`, and `saturatedPixelFraction` so you can tell when
+the app reduced the effect on purpose.
+
 ### Best Breathing Setup
 
 - Put the phone on a stand several feet away.
@@ -182,7 +189,8 @@ The default screen is intentionally compact so the preview remains visible.
 - `Lighting`: expanded-controls diagnostic for lighting stability. It separates
   settling, stable, too dark, likely flicker, exposure pumping, and lighting
   changes mixed with ROI motion. Live recording metadata includes the lighting
-  diagnostic when available.
+  diagnostic when available. Recorded Pulse exports use these diagnostics to
+  dampen color amplification when the input is likely unreliable.
 - Experimental rate estimates: recorded-video summaries and metadata can include
   a pulse or breathing rate only when strict quality gates pass. Estimates are
   hidden when timing, ROI, lighting, motion, FPS, or signal strength is not good
