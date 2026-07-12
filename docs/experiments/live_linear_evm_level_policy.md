@@ -22,7 +22,10 @@ clamping.
 | 2 | 1.00 | Preserve coarser low-frequency reconstruction. |
 
 Pulse starts reconstruction at level `0` and clamps the amplified delta to
-`+/-0.18` in normalized RGB space before adding it to the base frame.
+`+/-0.18` in normalized RGB space before adding it to the base frame. Changed
+pixels are also kept away from display rails with the same 4/251 channel
+headroom used by the recorded color output clamp, so live output should avoid
+hard black/white clipping when the reconstructed delta is strong.
 
 ### Breathing / Slow Motion
 
@@ -35,6 +38,7 @@ Pulse starts reconstruction at level `0` and clamps the amplified delta to
 Breathing starts reconstruction at level `1` and clamps the amplified delta to
 `+/-0.16`. This is intentionally more conservative than Pulse until Pixel
 validation shows how stable the live GL reconstruction is on a real target.
+The same display-rail headroom applies after the slow-motion delta is added.
 
 ## Reconstruction Delta
 
@@ -66,7 +70,10 @@ and active band, for example `temporal 3L / band 0.70-3.00Hz`.
 
 Local JVM coverage verifies policy defaults, invalid policy rejection,
 Laplacian reconstruction source contracts, per-level temporal diagnostics, and
-shader uniform/source contracts.
+shader uniform/source contracts, including live display-rail headroom. The live
+shader does not yet implement the recorded renderer's full chroma-vector clamp;
+that remains a separate quality slice if live Pulse still shows color inversion
+or objectionable chroma shifts on a watched target.
 
 Phone validation was not run for this slice because the phone is currently
 unavailable. The next Pixel run should verify:

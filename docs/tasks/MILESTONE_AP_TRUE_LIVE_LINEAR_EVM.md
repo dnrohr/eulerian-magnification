@@ -266,6 +266,24 @@ showing true pyramid reconstruction or a fallback bridge.
 - This improves AP evidence hygiene after full-frame debug-overlay jank was
   observed. Known motion/color target validation remains open.
 
+## Completed Slice: Live Display-Rail Headroom
+
+- Added display-rail headroom to the live GL reconstruction shader after the
+  amplified pyramid delta is added to the base frame.
+- The live shader now keeps changed pixels inside the same normalized 4/251
+  channel headroom used by the recorded color output clamp instead of clamping
+  changed output directly to 0.0 or 1.0.
+- Difference view is unchanged; the headroom applies to reconstructed
+  full-frame output.
+- Added JVM shader-source coverage and documented the policy in
+  `docs/experiments/live_linear_evm_level_policy.md`.
+- Pixel 8a clean GL smoke bundle
+  `sample-videos/exports/live-validation/20260712-164452-live-headroom-gl-smoke`
+  passed runtime smoke with no crash, ANR, or GL-error findings. Clean-mode
+  frame pacing was 5.19% janky frames, 8 ms median, and 11 ms p90.
+- This reduces obvious live clipping/posterization risk, but does not replace
+  watched-target AP visual validation.
+
 ## Done When
 
 - Live amplified preview shows visible reconstructed output for at least one color sample and one slow-motion sample.

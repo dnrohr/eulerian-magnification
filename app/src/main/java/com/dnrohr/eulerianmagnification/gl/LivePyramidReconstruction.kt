@@ -192,6 +192,22 @@ object LivePyramidShaderSource {
             return gaussianBandpass(2);
         }
 
+        float displayHeadroom(float base, float value) {
+            float bounded = clamp(value, 0.0, 1.0);
+            if (abs(bounded - base) < 0.0001) {
+                return bounded;
+            }
+            return clamp(bounded, 0.015686, 0.984314);
+        }
+
+        vec3 applyDisplayHeadroom(vec3 base, vec3 candidate) {
+            return vec3(
+                displayHeadroom(base.r, candidate.r),
+                displayHeadroom(base.g, candidate.g),
+                displayHeadroom(base.b, candidate.b)
+            );
+        }
+
         void main() {
             vec4 base = texture(uBaseTexture, vTexCoord);
             vec3 delta = vec3(0.0);
@@ -209,7 +225,7 @@ object LivePyramidShaderSource {
                 outColor = vec4(mix(baseDiff, activeDiff, strength), base.a);
                 return;
             }
-            outColor = vec4(clamp(base.rgb + amplifiedDelta, 0.0, 1.0), base.a);
+            outColor = vec4(applyDisplayHeadroom(base.rgb, base.rgb + amplifiedDelta), base.a);
         }
     """
 }

@@ -132,5 +132,8 @@ class LivePyramidReconstructionTest {
         assertTrue(reconstruct.contains("clamp(delta * uAmplification"))
         assertTrue(reconstruct.contains("if (uDifferenceMode == 1)"))
         assertTrue(reconstruct.contains("length(amplifiedDelta)"))
+        assertTrue(reconstruct.contains("float displayHeadroom(float base, float value)"))
+        assertTrue(reconstruct.contains("clamp(bounded, 0.015686, 0.984314)"))
+        assertTrue(reconstruct.contains("applyDisplayHeadroom(base.rgb, base.rgb + amplifiedDelta)"))
     }
 }
