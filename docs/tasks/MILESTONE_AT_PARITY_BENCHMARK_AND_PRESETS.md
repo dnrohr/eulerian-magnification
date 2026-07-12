@@ -1,6 +1,6 @@
 # Milestone AT - Parity Benchmark And Presets
 
-Status: Planned
+Status: In Progress
 
 Importance: Medium-high. Once the real renderer paths exist, users need reliable presets and the project needs benchmark gates before claiming parity.
 
@@ -8,12 +8,25 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 
 ## Tasks
 
-- [ ] Define locked presets for pulse color, breathing/slow motion, object vibration, and fast tremor with known frequency bands and amplification limits.
-- [ ] Add preset-specific setup guidance that tells users what target, lighting, support, and distance are needed to see the effect.
+- [x] Define locked presets for pulse color, breathing/slow motion, object vibration, and fast tremor with known frequency bands and amplification limits.
+- [x] Add preset-specific setup guidance that tells users what target, lighting, support, and distance are needed to see the effect.
 - [ ] Benchmark each preset on Pixel 8a for preview FPS, dropped frames, latency, thermal state, and recording stability.
-- [ ] Add warnings when selected frequencies are too close to each other, too high for the measured FPS, or likely to overlap with camera motion/heartbeat artifacts.
-- [ ] Document why tremor and object-vibration bands overlap and when the setup, target, and renderer choice matter more than the label.
+- [x] Add warnings when selected frequencies are too close to each other, too high for the measured FPS, or likely to overlap with camera motion/heartbeat artifacts.
+- [x] Document why tremor and object-vibration bands overlap and when the setup, target, and renderer choice matter more than the label.
 - [ ] Update README and parity docs with the presets that are actually validated.
+
+## Completed Slice: Locked Presets And Warnings
+
+- Added a tested `ParityPreset` model for Pulse color, Breathing, Object vibration, and Fast tremor.
+- Connected demo buttons to the locked preset settings and added an Object demo preset.
+- Added preset setup guidance for target, lighting, support, distance, and expected output.
+- Added runtime warnings for low measured FPS relative to the selected band and for overlapping high-frequency motion bands.
+- Updated README and MIT parity docs with locked preset definitions and the overlap explanation; validation-specific claims remain pending.
+
+## Remaining
+
+- Capture Pixel 8a benchmark evidence for each preset: preview FPS, dropped/unstable frames, latency, thermal state, recording stability, and a known-good artifact.
+- Mark the README/parity docs as validated only after those benchmark notes and artifacts exist.
 
 ## Done When
 

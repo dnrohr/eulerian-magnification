@@ -10,9 +10,9 @@ class SetupGuideTest {
     fun pulseGuideUsesSkinTargetAndColorExpectation() {
         val guide = SetupGuide.forMode(MagnificationMode.Pulse)
 
-        assertEquals("Pulse setup", guide.title)
+        assertEquals("Pulse color setup", guide.title)
         assertTrue(guide.target.contains("forehead"))
-        assertTrue(guide.expected.contains("color pulse"))
+        assertTrue(guide.expected.contains("skin-color change"))
     }
 
     @Test
@@ -28,8 +28,8 @@ class SetupGuideTest {
     fun fastMotionGuideUsesHighContrastTarget() {
         val guide = SetupGuide.forMode(MagnificationMode.Tremor)
 
-        assertEquals("Fast motion setup", guide.title)
-        assertTrue(guide.target.contains("high-contrast edge"))
-        assertTrue(guide.expected.contains("camera shake"))
+        assertEquals("Fast tremor setup", guide.title)
+        assertTrue(guide.target.contains("high-contrast"))
+        assertTrue(guide.expected.contains("camera motion"))
     }
 }

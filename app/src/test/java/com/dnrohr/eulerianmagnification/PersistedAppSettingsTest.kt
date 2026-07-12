@@ -22,7 +22,7 @@ class PersistedAppSettingsTest {
         assertFalse(settings.cameraControlsLocked)
         assertFalse(settings.qualityCuesEnabled)
         assertEquals(RecordingOutputMode.Clean, settings.recordingOutputMode)
-        assertEquals(RoiSource.FullFrame, settings.roiSource)
+        assertEquals(RoiSource.Auto, settings.roiSource)
         assertFalse(settings.toMap().containsKey("manualRoi"))
     }
 
@@ -32,7 +32,7 @@ class PersistedAppSettingsTest {
 
         assertEquals(MagnificationMode.Breathing, settings.analysisSettings.mode)
         assertFalse(settings.requestedGlPreview)
-        assertEquals(RoiSource.FullFrame, settings.roiSource)
+        assertEquals(RoiSource.Auto, settings.roiSource)
     }
 
     @Test
@@ -109,7 +109,7 @@ class PersistedAppSettingsTest {
         assertEquals(12.0f, defaults.analysisSettings.amplification)
         assertTrue(defaults.requestedGlPreview)
         assertEquals(RecordingOutputMode.Clean, defaults.recordingOutputMode)
-        assertEquals(RoiSource.FullFrame, defaults.roiSource)
+        assertEquals(RoiSource.Auto, defaults.roiSource)
     }
 
     @Test

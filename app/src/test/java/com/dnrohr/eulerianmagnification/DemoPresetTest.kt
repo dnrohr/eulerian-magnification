@@ -32,4 +32,13 @@ class DemoPresetTest {
         assertEquals(ViewMode.Split, settings.viewMode)
         assertEquals(20.0f, settings.amplification)
     }
+
+    @Test
+    fun objectPresetUsesObjectVibrationMode() {
+        val settings = DemoPreset.ObjectVibration.settings
+
+        assertEquals(MagnificationMode.ObjectVibration, settings.mode)
+        assertEquals(ViewMode.Split, settings.viewMode)
+        assertEquals(18.0f, settings.amplification)
+    }
 }

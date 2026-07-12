@@ -74,9 +74,10 @@ The first target definition is tracked in
    Switch to `Pulse` when you specifically want color/skin-pulse behavior.
 4. Let exposure settle for a few seconds, then tap `Controls` and use
    `Lock AE/AWB`.
-5. Leave `ROI Source` on `Full frame` for the default motion path, or use
-   `Auto ROI` for pulse/face tracking. Choose `Manual ROI` only when you need a
-   deliberately placed box for a difficult target, debugging, or comparison.
+5. Leave `ROI Source` on `Auto ROI` for the default path. Choose `Full frame`
+   only for controlled tests where FPS stays healthy, or `Manual ROI` when you
+   need a deliberately placed box for a difficult target, debugging, or
+   comparison.
 6. Tap `Hide` so the image is mostly unobstructed.
 7. Use `Raw`, `Amplified`, `Difference`, or `Split` from the compact preview to compare whether the
    processed view is adding useful signal or only noise.
@@ -129,9 +130,9 @@ The default screen is intentionally compact so the preview remains visible.
   image is easier to inspect. A small `Controls` button remains available.
 - Compact sparkline: shows the active signal history under the view buttons when
   enough samples are available. It is hidden in Clean preview.
-- `Pulse demo`, `Breathing demo`, `Motion demo`: expanded-controls presets that
-  apply mode, view, and amplification together before you follow the matching
-  setup recipe.
+- `Pulse demo`, `Breathing demo`, `Object demo`, `Motion demo`:
+  expanded-controls presets that apply locked mode, view, amplification, band,
+  and setup guidance together before you follow the matching recipe.
 - `Pulse setup`, `Breathing setup`, `Fast motion setup`: expanded-controls
   recipes that name the best target, stabilization steps, and realistic expected
   output for the active mode.
@@ -161,10 +162,11 @@ The default screen is intentionally compact so the preview remains visible.
 - `Quality Cues`: opt-in haptic feedback for major quality changes. It is off
   by default, rate-limited, and skipped when system haptic feedback is disabled.
 - `ROI Source`: chooses how the app selects the measured region. `Auto ROI`
-  uses face tracking when available and falls back to the center. `Full frame`
-  uses the whole image and is the first-launch/default motion source. `Manual
-  ROI` uses one explicit box for difficult targets, debugging, and repeatable
-  experiments.
+  uses face tracking when available and falls back to the center; it is the
+  first-launch/default source because it is lighter for live preview. `Full
+  frame` uses the whole image and is available for controlled tests when FPS
+  stays healthy. `Manual ROI` uses one explicit box for difficult targets,
+  debugging, and repeatable experiments.
 - `Edit ROI`: switches to `Manual ROI` and enables manual ROI placement by
   dragging on the preview. Normal viewing ignores preview drags so accidental
   touches do not move the ROI.
@@ -231,14 +233,16 @@ The presets are broad first-pass bands:
 
 - `Pulse`: `0.7-3.0 Hz`, roughly 42-180 beats per minute.
 - `Breath`: `0.1-0.6 Hz`, roughly 6-36 breaths per minute.
+- `Object`: `3.0-12.0 Hz`, intended for small mechanical vibration with a
+  visible high-contrast edge.
 - `Fast Motion`: `4.0-12.0 Hz`, intended for high-frequency biological or small
   mechanical motion experiments.
 
-Earlier builds exposed separate `Tremor` and `Object` buttons with heavily
-overlapping bands. They are merged in the UI for now because the current live
-pipeline does not yet give them distinct rendering, stabilization, ROI defaults,
-or quality behavior. The single `Fast Motion` preset is a more honest placeholder
-until true motion rendering matures.
+Object vibration and Fast Motion intentionally overlap. At this stage the setup,
+target, renderer path, and validation evidence matter more than the label:
+object vibration should use a controlled high-contrast mechanical target, while
+Fast Motion is for tremor-like or other small high-frequency motion where camera
+motion must be lower than target motion.
 
 ## Requirements
 
@@ -256,7 +260,7 @@ without bundling the videos into the app.
 The app stores the last durable test setup in SharedPreferences: mode, view
 mode, amplification, requested preview path, AE/AWB lock preference, recording
 output mode, ROI source, and the opt-in quality-cue preference. First launch and
-`Reset Settings` prefer the motion/GL/full-frame path when available. It does not store
+`Reset Settings` prefer the motion/GL/Auto ROI path when available. It does not store
 transient ROI placement, signal history, validation summaries, or recording
 state.
 

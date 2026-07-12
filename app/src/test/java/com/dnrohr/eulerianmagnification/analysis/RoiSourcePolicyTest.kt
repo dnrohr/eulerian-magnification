@@ -6,10 +6,10 @@ import org.junit.Test
 
 class RoiSourcePolicyTest {
     @Test
-    fun defaultsMotionModesToFullFrameAndPulseToAuto() {
-        assertEquals(RoiSource.FullFrame, RoiSourcePolicy.defaultFor(MagnificationMode.ObjectVibration))
-        assertEquals(RoiSource.FullFrame, RoiSourcePolicy.defaultFor(MagnificationMode.Tremor))
-        assertEquals(RoiSource.FullFrame, RoiSourcePolicy.defaultFor(MagnificationMode.Breathing))
+    fun defaultsAllModesToAutoRoi() {
+        assertEquals(RoiSource.Auto, RoiSourcePolicy.defaultFor(MagnificationMode.ObjectVibration))
+        assertEquals(RoiSource.Auto, RoiSourcePolicy.defaultFor(MagnificationMode.Tremor))
+        assertEquals(RoiSource.Auto, RoiSourcePolicy.defaultFor(MagnificationMode.Breathing))
         assertEquals(RoiSource.Auto, RoiSourcePolicy.defaultFor(MagnificationMode.Pulse))
     }
 

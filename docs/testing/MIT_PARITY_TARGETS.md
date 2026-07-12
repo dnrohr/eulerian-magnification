@@ -147,6 +147,24 @@ Pixel 8a evidence from 2026-07-11:
   mean absolute delta `14.687229`, changed-pixel fraction `0.711002`, clipped
   fraction `0.059150`.
 
+## Locked App Presets
+
+The app exposes four locked parity presets in expanded controls:
+
+| Preset | Mode | Band | View | Amplification | Target |
+| --- | --- | --- | --- | --- | --- |
+| Pulse color | Pulse | 0.7-3.0 Hz | Amplified | 12x | forehead or cheek skin |
+| Breathing | Breathing | 0.1-0.6 Hz | Difference | 16x | torso, shoulder, or clothing edge |
+| Object vibration | Object | 3.0-12.0 Hz | Split | 18x | high-contrast vibrating object edge |
+| Fast tremor | Fast Motion | 4.0-12.0 Hz | Split | 20x | small high-frequency biological or mechanical motion |
+
+Object vibration and Fast Motion overlap by design. They are separated by setup
+and evidence rather than frequency alone: controlled mechanical object tests
+should isolate the object from the phone support, while tremor-like tests need a
+stable target region and stricter camera-motion rejection. Pixel 8a benchmark
+rows still need live captured evidence before these presets can be called
+validated.
+
 For local file integrity:
 
 ```powershell

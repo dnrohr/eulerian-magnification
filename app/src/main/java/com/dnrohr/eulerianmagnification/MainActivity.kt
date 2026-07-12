@@ -1229,6 +1229,10 @@ private fun StatusOverlay(
         )
         Spacer(modifier = Modifier.height(8.dp))
         SetupGuidePanel(settings.mode)
+        ParityPresetPanel(
+            mode = settings.mode,
+            analysisFps = sample.analysisFps,
+        )
         Spacer(modifier = Modifier.height(8.dp))
         ModeControls(
             settings = settings,
@@ -1499,6 +1503,34 @@ private fun SetupGuidePanel(mode: MagnificationMode) {
             color = Color(0xFFC8D3DC),
             style = MaterialTheme.typography.bodySmall,
         )
+    }
+}
+
+@Composable
+private fun ParityPresetPanel(
+    mode: MagnificationMode,
+    analysisFps: Double,
+) {
+    val preset = ParityPreset.forMode(mode)
+    val warnings = ParityPresetWarnings.forPreset(preset, analysisFps)
+    Column {
+        Text(
+            text = "Locked preset: ${preset.label} ${preset.bandLabel}",
+            color = Color.White,
+            style = MaterialTheme.typography.labelLarge,
+        )
+        Text(
+            text = "Light: ${preset.lighting}; support: ${preset.support}; distance: ${preset.distance}.",
+            color = Color(0xFFC8D3DC),
+            style = MaterialTheme.typography.bodySmall,
+        )
+        warnings.forEach { warning ->
+            Text(
+                text = warning,
+                color = Color(0xFFFFC857),
+                style = MaterialTheme.typography.bodySmall,
+            )
+        }
     }
 }
 

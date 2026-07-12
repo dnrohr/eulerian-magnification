@@ -10,26 +10,18 @@ enum class DemoPreset(
 ) {
     Pulse(
         label = "Pulse demo",
-        settings = AnalysisSettings(
-            mode = MagnificationMode.Pulse,
-            amplification = 12.0f,
-            viewMode = ViewMode.Amplified,
-        ),
+        settings = ParityPreset.PulseColor.settings,
     ),
     Breathing(
         label = "Breathing demo",
-        settings = AnalysisSettings(
-            mode = MagnificationMode.Breathing,
-            amplification = 16.0f,
-            viewMode = ViewMode.Difference,
-        ),
+        settings = ParityPreset.BreathingSlowMotion.settings,
+    ),
+    ObjectVibration(
+        label = "Object demo",
+        settings = ParityPreset.ObjectVibration.settings,
     ),
     FastMotion(
         label = "Motion demo",
-        settings = AnalysisSettings(
-            mode = MagnificationMode.Tremor,
-            amplification = 20.0f,
-            viewMode = ViewMode.Split,
-        ),
+        settings = ParityPreset.FastTremor.settings,
     );
 }

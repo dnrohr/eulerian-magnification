@@ -25,12 +25,18 @@ Goal: add a clear ROI source selector and make the normal motion experience star
 ## Completed Slice: Selectable ROI Source
 
 - Added `RoiSource` and `RoiSourcePolicy` with `Auto`, `Full frame`, and `Manual`.
-- First launch and Reset Settings now default motion-capable modes to `Full frame`; Pulse-only availability defaults to `Auto`.
+- First launch and Reset Settings now default to `Auto` after Pixel testing showed the full-frame source can freeze or run at very low FPS.
 - Controls exposes an `ROI Source` selector. `Edit ROI` switches to Manual and enables drag placement.
 - The live analyzer uses the selected source: automatic face/center ROI, whole-frame ROI, or manual ROI.
 - Live phase planning now receives the selected active ROI and distinguishes missing manual ROI from waiting for automatic ROI.
 - Compact status reports `Full frame` or `Manual ROI` plainly when those sources are selected.
 - SharedPreferences persists the selected source, while manual rectangle coordinates remain transient.
+
+## Follow-up Slice: Full-frame Default Reverted
+
+- Pixel observation: full-frame ROI source appeared frozen or extremely low-FPS in live preview.
+- Changed first launch and Reset Settings to use `Auto ROI` for all modes.
+- Kept `Full frame` selectable for controlled validation instead of making it the default.
 
 ## Done When
 

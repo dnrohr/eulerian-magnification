@@ -14,10 +14,10 @@ object RoiSourcePolicy {
 
     fun defaultFor(mode: MagnificationMode): RoiSource {
         return when (mode) {
-            MagnificationMode.Pulse -> RoiSource.Auto
             MagnificationMode.Breathing,
+            MagnificationMode.Pulse,
             MagnificationMode.Tremor,
-            MagnificationMode.ObjectVibration -> RoiSource.FullFrame
+            MagnificationMode.ObjectVibration -> RoiSource.Auto
         }
     }
 
