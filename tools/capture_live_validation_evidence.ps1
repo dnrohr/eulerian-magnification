@@ -31,12 +31,18 @@ param(
     [int]$WarnPreflightThermalStatus = 2,
     [int]$AbortPreflightThermalStatus = 4,
     [switch]$AllowThermalLaunch,
+    [switch]$WaitForThermalReady,
+    [int]$ThermalReadyBelowStatus = 4,
+    [int]$ThermalReadySamples = 2,
+    [int]$ThermalReadyTimeoutSeconds = 900,
+    [int]$ThermalReadyPollSeconds = 30,
     [switch]$PreserveLogcat,
     [switch]$PersistLaunchSettings,
     [switch]$Summarize
 )
 
 $ErrorActionPreference = "Stop"
+$scriptParameters = $PSBoundParameters
 
 function Find-Adb {
     $sdkAdb = Join-Path $env:LOCALAPPDATA "Android\Sdk\platform-tools\adb.exe"
@@ -210,9 +216,118 @@ if ($Controls -eq $true -and $Panel -eq "Debug") {
     $warnings += "Debug controls are useful for renderer diagnostics but can add UI jank; use hidden controls or Clean mode for visual-quality captures."
 }
 
+function Write-AbortedBundle {
+    param(
+        [string]$AbortReason,
+        [object]$ThermalPreflight = $null,
+        [bool]$LogcatCleared = $false
+    )
+
+    $warnings += "capture aborted before app launch: $AbortReason"
+    $manifestPath = Join-Path $outputDir "manifest.json"
+    $manifest = [ordered]@{
+        createdAt = (Get-Date).ToString("o")
+        label = $safeLabel
+        package = $Package
+        source = $source
+        aborted = $true
+        abortReason = $AbortReason
+        launch = [ordered]@{
+            skipped = $true
+            requestedLaunchSkipped = [bool]$SkipLaunch
+            mode = $Mode
+            view = $View
+            roiSource = $RoiSource
+            manualRoi = $ManualRoi
+            panel = $Panel
+            amplification = if ($scriptParameters.ContainsKey("Amplification")) { $Amplification } else { $null }
+            glPreview = if ($scriptParameters.ContainsKey("GlPreview")) { $GlPreview } else { $null }
+            controls = if ($scriptParameters.ContainsKey("Controls")) { $Controls } else { $null }
+            clean = if ($scriptParameters.ContainsKey("Clean")) { $Clean } else { $null }
+            lockAeAwb = if ($scriptParameters.ContainsKey("LockAeAwb")) { $LockAeAwb } else { $null }
+            measureRoiExpected = $MeasureRoiExpected
+            measureRoiKind = $MeasureRoiKind
+            requireUiText = @($RequireUiText)
+            persistSettings = [bool]$PersistLaunchSettings
+            thermalWait = [ordered]@{
+                requested = [bool]$WaitForThermalReady
+                readyBelowStatus = $ThermalReadyBelowStatus
+                requiredReadySamples = $ThermalReadySamples
+                timeoutSeconds = $ThermalReadyTimeoutSeconds
+                pollSeconds = $ThermalReadyPollSeconds
+            }
+        }
+        visualReview = [ordered]@{
+            targetDescription = $TargetDescription
+            visualClaim = $VisualClaim
+            targetVisible = if ($scriptParameters.ContainsKey("TargetVisible")) { $TargetVisible } else { $null }
+            visualValidated = if ($scriptParameters.ContainsKey("VisualValidated")) { $VisualValidated } else { $null }
+            operatorNotes = $OperatorNotes
+        }
+        adb = $adb
+        outputDir = (Resolve-Path -LiteralPath $outputDir).Path
+        screenRecordSeconds = 0
+        thermalPreflight = $ThermalPreflight
+        launchedApp = $false
+        logcatCleared = $LogcatCleared
+        artifacts = $artifacts
+        warnings = $warnings
+        notes = @(
+            "This bundle aborted before launching the app.",
+            "It is not runtime smoke evidence and does not prove visual parity."
+        )
+    }
+    $manifest | ConvertTo-Json -Depth 5 | Out-File -LiteralPath $manifestPath -Encoding utf8
+
+    if ($Summarize) {
+        $summaryScript = Join-Path $PSScriptRoot "summarize_live_validation_evidence.ps1"
+        if (-not (Test-Path -LiteralPath $summaryScript)) {
+            Write-Warning "Summary requested, but summarize_live_validation_evidence.ps1 was not found."
+        } else {
+            & $summaryScript -BundlePath $outputDir
+        }
+    }
+
+    Write-Output "Live validation evidence aborted:"
+    Write-Output (Resolve-Path -LiteralPath $outputDir).Path
+    exit 4
+}
+
 $devicesPath = Join-Path $outputDir "adb_devices.txt"
 Run-AdbText -Adb $adb -Arguments @("devices") -OutputPath $devicesPath
 $artifacts.devices = $devicesPath
+
+if ($WaitForThermalReady) {
+    $thermalReadyScript = Join-Path $PSScriptRoot "wait_for_device_thermal_ready.ps1"
+    $thermalReadyPath = Join-Path $outputDir "thermal_ready_wait.json"
+    $thermalReadyLogPath = Join-Path $outputDir "thermal_ready_wait_stdout.txt"
+    $artifacts.thermalReadyWait = $thermalReadyPath
+    $artifacts.thermalReadyWaitLog = $thermalReadyLogPath
+    if (-not (Test-Path -LiteralPath $thermalReadyScript)) {
+        Write-AbortedBundle -AbortReason "thermal readiness wait requested, but wait_for_device_thermal_ready.ps1 was not found"
+    }
+
+    & $thermalReadyScript `
+        -ReadyBelowThermalStatus $ThermalReadyBelowStatus `
+        -RequiredReadySamples $ThermalReadySamples `
+        -TimeoutSeconds $ThermalReadyTimeoutSeconds `
+        -PollSeconds $ThermalReadyPollSeconds `
+        -OutputPath $thermalReadyPath *> $thermalReadyLogPath
+    $thermalReadyExitCode = $LASTEXITCODE
+    if ($thermalReadyExitCode -ne 0) {
+        $thermalReadySummary = if (Test-Path -LiteralPath $thermalReadyPath) {
+            Get-Content -LiteralPath $thermalReadyPath -Raw | ConvertFrom-Json
+        } else {
+            $null
+        }
+        $thermalWaitPreflight = if ($thermalReadySummary -and $thermalReadySummary.PSObject.Properties.Name -contains "lastThermal") {
+            $thermalReadySummary.lastThermal
+        } else {
+            $null
+        }
+        Write-AbortedBundle -AbortReason "thermal readiness wait exited $thermalReadyExitCode before app launch" -ThermalPreflight $thermalWaitPreflight
+    }
+}
 
 $thermalPreflightPath = Join-Path $outputDir "thermalservice_preflight.txt"
 Run-AdbText -Adb $adb -Arguments @("shell", "dumpsys", "thermalservice") -OutputPath $thermalPreflightPath
@@ -239,67 +354,7 @@ $shouldAbortForThermal = (-not $AllowThermalLaunch) -and
 
 if ($shouldAbortForThermal) {
     $abortReason = "thermal preflight status $thermalPreflightStatus at or above abort threshold $AbortPreflightThermalStatus"
-    $warnings += "capture aborted before app launch: $abortReason"
-    $manifestPath = Join-Path $outputDir "manifest.json"
-    $manifest = [ordered]@{
-        createdAt = (Get-Date).ToString("o")
-        label = $safeLabel
-        package = $Package
-        source = $source
-        aborted = $true
-        abortReason = $abortReason
-        launch = [ordered]@{
-            skipped = $true
-            requestedLaunchSkipped = [bool]$SkipLaunch
-            mode = $Mode
-            view = $View
-            roiSource = $RoiSource
-            manualRoi = $ManualRoi
-            panel = $Panel
-            amplification = if ($PSBoundParameters.ContainsKey("Amplification")) { $Amplification } else { $null }
-            glPreview = if ($PSBoundParameters.ContainsKey("GlPreview")) { $GlPreview } else { $null }
-            controls = if ($PSBoundParameters.ContainsKey("Controls")) { $Controls } else { $null }
-            clean = if ($PSBoundParameters.ContainsKey("Clean")) { $Clean } else { $null }
-            lockAeAwb = if ($PSBoundParameters.ContainsKey("LockAeAwb")) { $LockAeAwb } else { $null }
-            measureRoiExpected = $MeasureRoiExpected
-            measureRoiKind = $MeasureRoiKind
-            requireUiText = @($RequireUiText)
-            persistSettings = [bool]$PersistLaunchSettings
-        }
-        visualReview = [ordered]@{
-            targetDescription = $TargetDescription
-            visualClaim = $VisualClaim
-            targetVisible = if ($PSBoundParameters.ContainsKey("TargetVisible")) { $TargetVisible } else { $null }
-            visualValidated = if ($PSBoundParameters.ContainsKey("VisualValidated")) { $VisualValidated } else { $null }
-            operatorNotes = $OperatorNotes
-        }
-        adb = $adb
-        outputDir = (Resolve-Path -LiteralPath $outputDir).Path
-        screenRecordSeconds = 0
-        thermalPreflight = $thermalPreflight
-        launchedApp = $false
-        logcatCleared = $false
-        artifacts = $artifacts
-        warnings = $warnings
-        notes = @(
-            "This bundle aborted before launching the app because thermal preflight was too high.",
-            "It is not runtime smoke evidence and does not prove visual parity."
-        )
-    }
-    $manifest | ConvertTo-Json -Depth 5 | Out-File -LiteralPath $manifestPath -Encoding utf8
-
-    if ($Summarize) {
-        $summaryScript = Join-Path $PSScriptRoot "summarize_live_validation_evidence.ps1"
-        if (-not (Test-Path -LiteralPath $summaryScript)) {
-            Write-Warning "Summary requested, but summarize_live_validation_evidence.ps1 was not found."
-        } else {
-            & $summaryScript -BundlePath $outputDir
-        }
-    }
-
-    Write-Output "Live validation evidence aborted:"
-    Write-Output (Resolve-Path -LiteralPath $outputDir).Path
-    exit 4
+    Write-AbortedBundle -AbortReason $abortReason -ThermalPreflight $thermalPreflight
 }
 
 if (-not $PreserveLogcat) {
@@ -507,6 +562,13 @@ $manifest = [ordered]@{
         measureRoiKind = $MeasureRoiKind
         requireUiText = @($RequireUiText)
         persistSettings = [bool]$PersistLaunchSettings
+        thermalWait = [ordered]@{
+            requested = [bool]$WaitForThermalReady
+            readyBelowStatus = $ThermalReadyBelowStatus
+            requiredReadySamples = $ThermalReadySamples
+            timeoutSeconds = $ThermalReadyTimeoutSeconds
+            pollSeconds = $ThermalReadyPollSeconds
+        }
     }
     visualReview = [ordered]@{
         targetDescription = $TargetDescription

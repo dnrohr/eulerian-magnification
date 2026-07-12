@@ -95,6 +95,22 @@ The helper exits `0` when both Android thermal status and max sensor status are
 below the threshold for the requested number of consecutive samples. It exits
 `2` on timeout and can write the polling history to JSON.
 
+For a single capture command, pass `-WaitForThermalReady`. The capture writes
+`thermal_ready_wait.json` and aborts before launch if the wait times out:
+
+```powershell
+.\tools\capture_live_validation_evidence.ps1 `
+  -Label "watched-target" `
+  -WaitForThermalReady `
+  -ThermalReadyBelowStatus 4 `
+  -ThermalReadySamples 2 `
+  -ThermalReadyTimeoutSeconds 900 `
+  -ThermalReadyPollSeconds 30 `
+  -Mode Pulse `
+  -View Split `
+  -Summarize
+```
+
 Screenshot content metrics include sampled luminance mean, luminance standard
 deviation, dark/light pixel fractions, a `nonBlank` flag, and a portrait
 orientation flag. These checks catch blank, near-uniform, or wrongly oriented
@@ -238,6 +254,11 @@ Available launch parameters:
   before app launch; defaults to `4` (`critical`).
 - `-AllowThermalLaunch`: overrides the preflight abort. Use only for deliberate
   diagnostics where extra device heat is acceptable.
+- `-WaitForThermalReady`: polls thermal state before preflight and aborts before
+  app launch if the device does not become ready.
+- `-ThermalReadyBelowStatus`, `-ThermalReadySamples`,
+  `-ThermalReadyTimeoutSeconds`, and `-ThermalReadyPollSeconds`: thresholds
+  forwarded to the thermal wait helper.
 - `-PreserveLogcat`: keeps existing device logcat instead of clearing it before
   the capture starts.
 - `-Summarize`: writes `evidence_summary.json` immediately after capture.

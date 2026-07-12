@@ -114,6 +114,9 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   sensor status are below the chosen threshold before launching the app. The
   helper requires consecutive ready samples by default so one transient thermal
   dip does not start a watched validation run too early.
+- `tools/capture_live_validation_evidence.ps1` can now run that wait directly
+  with `-WaitForThermalReady`, attach `thermal_ready_wait.json`, and abort
+  before launch if readiness is not reached.
 
 ## Supporting Slice: Visual Review Metadata
 
