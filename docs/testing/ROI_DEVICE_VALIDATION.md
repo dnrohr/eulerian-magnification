@@ -8,6 +8,8 @@ Use this procedure to verify that analysis ROI coordinates match the visible pre
 - App package: `com.dnrohr.eulerianmagnification`
 - Orientation: portrait
 - Preview path: CameraX first; repeat with GL preview when the GL path is under test
+- Evidence capture: use `tools\capture_live_validation_evidence.ps1` as
+  described in `docs/testing/LIVE_VISUAL_VALIDATION_CAPTURE.md`.
 
 ## Manual ROI Procedure
 
@@ -75,3 +77,6 @@ Date: 2026-07-11
 - No duplicate ROI boxes are visible during normal manual ROI use.
 - CameraX and GL preview paths document any intentional differences.
 - AE live reconstruction: expanded controls identify the active GL renderer path, and `Live reconstruction` output is upright, nonblank, not stretched, and visibly magnified before AE is marked complete.
+- A captured evidence bundle alone is not sufficient unless the target is
+  visible and the screenshot or recording has been inspected against these pass
+  criteria.

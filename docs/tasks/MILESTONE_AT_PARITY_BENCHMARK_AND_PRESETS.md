@@ -54,7 +54,11 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   setup for each preset. The current automated benchmark covers rendered frame
   jank, thermal status, metadata recording stability, and encoded MP4 validity,
   but not visual parity.
-- Mark the README/parity docs as validated only after those benchmark notes and artifacts exist.
+- Use `tools/capture_live_validation_evidence.ps1` for watched preset runs so
+  each visual claim has a screenshot or recording plus logcat, gfxinfo, thermal,
+  battery, focused-window, and manifest context.
+- Mark the README/parity docs as visually validated only after those watched
+  target notes and artifacts exist.
 
 ## Done When
 

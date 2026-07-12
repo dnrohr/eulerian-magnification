@@ -300,6 +300,17 @@ Goal: bring the recorded Riesz/phase motion renderer into a live-preview path fo
 - Ran a Pixel 8a launch smoke check after granting camera permission. The camera
   stream opened and recent logcat contained no fatal exception or GL error.
 
+## Supporting Slice: Live Evidence Capture Tool
+
+- Added `tools/capture_live_validation_evidence.ps1` and linked it from the
+  Pixel live phase validation protocol.
+- The tool captures a screenshot, optional screen recording, logcat, gfxinfo,
+  thermal state, battery state, focused window, and manifest into ignored
+  `sample-videos/exports/live-validation/` bundles.
+- This standardizes the artifact capture path for the controlled object-motion
+  run, but the AR visual validation checkbox remains open until a moving target
+  is visible and inspected.
+
 ## Next Gate For Manual ROI As Non-Default
 
 - Run the controlled Pixel object-motion setup from

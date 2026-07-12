@@ -80,7 +80,13 @@ Failure artifacts:
 
 ## Evidence To Capture
 
-Run these commands after installing the debug build:
+Preferred capture command after installing the debug build:
+
+```powershell
+.\tools\capture_live_validation_evidence.ps1 -Label "live-phase-object" -ScreenRecordSeconds 15
+```
+
+Manual ADB fallback:
 
 ```powershell
 & "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe" logcat -c

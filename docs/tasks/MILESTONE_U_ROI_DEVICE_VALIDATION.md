@@ -47,6 +47,17 @@ Goal: prove that automatic and manual ROI coordinates align with the live previe
   crop. Remaining validation is visual alignment on the Pixel, not uncovered
   crop arithmetic.
 
+## Supporting Slice: Evidence Capture Tool
+
+- Added `tools/capture_live_validation_evidence.ps1` to capture a Pixel
+  screenshot, optional screen recording, logcat, gfxinfo, thermal state, battery
+  state, focused window, and a manifest into ignored
+  `sample-videos/exports/live-validation/` bundles.
+- Added `docs/testing/LIVE_VISUAL_VALIDATION_CAPTURE.md` and linked it from the
+  ROI validation guide.
+- This supports manual/automatic ROI validation, but does not count as passing
+  evidence unless the captured target is visible and inspected.
+
 ## Done When
 
 - Manual and automatic ROI overlays align with the visible target on device.
