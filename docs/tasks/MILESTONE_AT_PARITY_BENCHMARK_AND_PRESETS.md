@@ -48,6 +48,18 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - Kept visual parity marked unvalidated for all presets until each has a
   watched target setup and known-good visual artifact.
 
+## Supporting Slice: Live Evidence Thermal Summary
+
+- Live validation summaries now parse `thermalservice.txt` and report Android
+  thermal status, maximum sensor status, maximum temperature, and hottest
+  sensor name.
+- Summaries warn when Android thermal status or any sensor status reaches
+  `2` (`moderate`) or higher. These warnings keep runtime smoke separate from
+  thermal qualification: a run can remain crash-free while still being too hot
+  to treat as clean visual/performance evidence.
+- This strengthens the watched preset evidence flow, but does not replace the
+  remaining known-target visual artifacts.
+
 ## Remaining
 
 - Extend Pixel 8a evidence with a known-good visual artifact and watched target

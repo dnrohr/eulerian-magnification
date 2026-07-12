@@ -4,7 +4,8 @@ param(
 
     [string]$OutputPath = "",
     [double]$WarnJankyPercent = 50.0,
-    [int]$WarnMedianFrameMillis = 33
+    [int]$WarnMedianFrameMillis = 33,
+    [int]$WarnThermalStatus = 2
 )
 
 $ErrorActionPreference = "Stop"
@@ -37,12 +38,63 @@ function Get-RequiredPath {
     return Join-Path $Root $Name
 }
 
+function Thermal-StatusLabel {
+    param([Nullable[int]]$Status)
+    switch ($Status) {
+        0 { "none" }
+        1 { "light" }
+        2 { "moderate" }
+        3 { "severe" }
+        4 { "critical" }
+        5 { "emergency" }
+        6 { "shutdown" }
+        default { $null }
+    }
+}
+
+function Parse-ThermalSummary {
+    param([string]$Text)
+
+    $thermalStatus = $null
+    $statusMatch = [regex]::Match($Text, 'Thermal Status:\s+(\d+)')
+    if ($statusMatch.Success) {
+        $thermalStatus = [int]::Parse($statusMatch.Groups[1].Value, [Globalization.CultureInfo]::InvariantCulture)
+    }
+
+    $maxSensorStatus = $null
+    $maxTemperatureC = $null
+    $hottestSensorName = $null
+    $temperaturePattern = 'Temperature\{mValue=([-+]?[0-9]+(?:\.[0-9]+)?),\s*mType=[^,]+,\s*mName=([^,}]+),\s*mStatus=(\d+)\}'
+    foreach ($match in [regex]::Matches($Text, $temperaturePattern)) {
+        $temperature = [double]::Parse($match.Groups[1].Value, [Globalization.CultureInfo]::InvariantCulture)
+        $name = $match.Groups[2].Value
+        $sensorStatus = [int]::Parse($match.Groups[3].Value, [Globalization.CultureInfo]::InvariantCulture)
+        if ($null -eq $maxSensorStatus -or $sensorStatus -gt $maxSensorStatus) {
+            $maxSensorStatus = $sensorStatus
+        }
+        if ($null -eq $maxTemperatureC -or $temperature -gt $maxTemperatureC) {
+            $maxTemperatureC = $temperature
+            $hottestSensorName = $name
+        }
+    }
+
+    return [ordered]@{
+        status = $thermalStatus
+        statusLabel = Thermal-StatusLabel $thermalStatus
+        maxSensorStatus = $maxSensorStatus
+        maxSensorStatusLabel = Thermal-StatusLabel $maxSensorStatus
+        maxTemperatureC = $maxTemperatureC
+        hottestSensorName = $hottestSensorName
+    }
+}
+
 $bundle = (Resolve-Path -LiteralPath $BundlePath).Path
 $manifestPath = Get-RequiredPath $bundle "manifest.json"
 $gfxPath = Get-RequiredPath $bundle "gfxinfo.txt"
 $logcatPath = Get-RequiredPath $bundle "logcat_tail.txt"
 $screenshotPath = Get-RequiredPath $bundle "screenshot.png"
 $roiMeasurementPath = Get-RequiredPath $bundle "roi_overlay_measurement.json"
+$thermalPath = Get-RequiredPath $bundle "thermalservice.txt"
 
 $missing = @()
 foreach ($required in @($manifestPath, $gfxPath, $logcatPath, $screenshotPath)) {
@@ -58,6 +110,8 @@ if (Test-Path -LiteralPath $manifestPath) {
 
 $gfx = Read-TextIfExists $gfxPath
 $logcat = Read-TextIfExists $logcatPath
+$thermalText = Read-TextIfExists $thermalPath
+$thermalSummary = Parse-ThermalSummary $thermalText
 
 $jankyPercent = Match-FirstNumber $gfx 'Janky frames:\s+\d+\s+\(([0-9.]+)%\)'
 $totalFrames = Match-FirstNumber $gfx 'Total frames rendered:\s+(\d+)'
@@ -93,6 +147,12 @@ if ($null -ne $jankyPercent -and $jankyPercent -gt $WarnJankyPercent) {
 }
 if ($null -ne $medianFrameMs -and $medianFrameMs -gt $WarnMedianFrameMillis) {
     $warnings += "median frame time above $WarnMedianFrameMillis ms"
+}
+if ($null -ne $thermalSummary.status -and $thermalSummary.status -ge $WarnThermalStatus) {
+    $warnings += "thermal status $($thermalSummary.status) ($($thermalSummary.statusLabel)) at or above warning threshold $WarnThermalStatus"
+}
+if ($null -ne $thermalSummary.maxSensorStatus -and $thermalSummary.maxSensorStatus -ge $WarnThermalStatus) {
+    $warnings += "thermal sensor status $($thermalSummary.maxSensorStatus) ($($thermalSummary.maxSensorStatusLabel)) at or above warning threshold $WarnThermalStatus"
 }
 foreach ($entry in $runtimeFindings.GetEnumerator()) {
     if ($entry.Value) {
@@ -145,6 +205,7 @@ $result = [ordered]@{
         missedVsync = $missedVsync
     }
     runtimeFindings = $runtimeFindings
+    thermal = $thermalSummary
     roiMeasurement = $roiMeasurement
     warnings = $warnings
     passedRuntimeSmoke = ($missing.Count -eq 0) -and
