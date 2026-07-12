@@ -45,6 +45,26 @@ function Write-JsonFile {
     $Value | ConvertTo-Json -Depth 8 | Out-File -LiteralPath $Path -Encoding utf8
 }
 
+function Write-TestScreenshot {
+    param([string]$Path)
+
+    Add-Type -AssemblyName System.Drawing
+    $bitmap = [System.Drawing.Bitmap]::new(64, 96)
+    try {
+        for ($y = 0; $y -lt $bitmap.Height; $y++) {
+            for ($x = 0; $x -lt $bitmap.Width; $x++) {
+                $red = [Math]::Min(255, 40 + ($x * 3))
+                $green = [Math]::Min(255, 60 + ($y * 2))
+                $blue = 120
+                $bitmap.SetPixel($x, $y, [System.Drawing.Color]::FromArgb($red, $green, $blue))
+            }
+        }
+        $bitmap.Save($Path, [System.Drawing.Imaging.ImageFormat]::Png)
+    } finally {
+        $bitmap.Dispose()
+    }
+}
+
 $root = if ([string]::IsNullOrWhiteSpace($OutputRoot)) {
     Join-Path ([System.IO.Path]::GetTempPath()) ("eulerian-live-summary-test-" + [Guid]::NewGuid().ToString("N"))
 } else {
@@ -151,6 +171,43 @@ try {
     Assert-Equal -Actual $incompleteSummary.aborted -Expected $false -Message "Incomplete summary should not be marked aborted."
     Assert-Equal -Actual $incompleteSummary.evidenceVerdict.status -Expected "runtime_failed" -Message "Incomplete verdict mismatch."
     Assert-True -Condition (@($incompleteSummary.artifacts.missingRequired).Count -ge 3) -Message "Incomplete bundle should report missing runtime artifacts."
+
+    $uiMissingBundle = Join-Path $root "ui-missing"
+    New-Item -ItemType Directory -Force -Path $uiMissingBundle | Out-Null
+    Write-TestScreenshot -Path (Join-Path $uiMissingBundle "screenshot.png")
+    @"
+Total frames rendered: 120
+Janky frames: 2 (1.67%)
+50th percentile: 9ms
+90th percentile: 12ms
+Number Missed Vsync: 1
+"@ | Out-File -LiteralPath (Join-Path $uiMissingBundle "gfxinfo.txt") -Encoding utf8
+    "Camera FPS: 30.0" | Out-File -LiteralPath (Join-Path $uiMissingBundle "logcat_tail.txt") -Encoding utf8
+    "<hierarchy><node text=`"Controls`" /></hierarchy>" |
+        Out-File -LiteralPath (Join-Path $uiMissingBundle "ui_dump.xml") -Encoding utf8
+    Write-JsonFile -Path (Join-Path $uiMissingBundle "manifest.json") -Value ([ordered]@{
+        createdAt = "2026-07-12T00:00:00.0000000-04:00"
+        label = "ui-missing"
+        launch = [ordered]@{
+            skipped = $false
+            requireUiText = @("GL renderer")
+        }
+        visualReview = [ordered]@{
+            targetDescription = "synthetic UI text"
+            visualClaim = ""
+            targetVisible = $false
+            visualValidated = $false
+            operatorNotes = "tool self-test"
+        }
+        warnings = @()
+    })
+
+    $uiMissingExitCode = Invoke-Summary -BundlePath $uiMissingBundle
+    $uiMissingSummary = Get-Content -LiteralPath (Join-Path $uiMissingBundle "evidence_summary.json") -Raw | ConvertFrom-Json
+    Assert-Equal -Actual $uiMissingExitCode -Expected 3 -Message "Missing UI summary exit code mismatch."
+    Assert-Equal -Actual $uiMissingSummary.passedRuntimeSmoke -Expected $true -Message "Missing UI case should pass runtime smoke."
+    Assert-Equal -Actual $uiMissingSummary.uiTextAssertions.passed -Expected $false -Message "Missing UI assertion should fail."
+    Assert-Equal -Actual $uiMissingSummary.evidenceVerdict.status -Expected "ui_assertion_failed" -Message "Missing UI verdict mismatch."
 
     Write-Output "Live validation summary self-test passed: $root"
 } finally {

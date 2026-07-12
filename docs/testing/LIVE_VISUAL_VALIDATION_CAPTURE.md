@@ -72,6 +72,11 @@ warnings are advisory by default: they flag conditions that may affect a visual
 or benchmark run, but they do not make runtime smoke fail unless a crash, ANR,
 or GL error is also present. A passing runtime smoke summary still does not
 prove visual validation unless the target is visible and inspected.
+When `-Summarize` is used, the capture script exits with the summary result:
+`0` for a passing runtime/evidence gate, `2` for runtime smoke failure, `3` for
+missing required UI text, and `4` for a thermal/preflight abort. This keeps
+automated validation commands from silently passing when an explicit evidence
+assertion failed.
 If preflight thermal status or sensor status is `critical` or worse, do not use
 the run to judge full-frame FPS, apparent camera freeze, or visual parity. Let
 the phone cool, then repeat with a short capture. By default, the capture script

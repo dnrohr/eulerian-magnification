@@ -592,6 +592,7 @@ $manifest = [ordered]@{
 }
 $manifest | ConvertTo-Json -Depth 5 | Out-File -LiteralPath $manifestPath -Encoding utf8
 
+$summaryExitCode = 0
 if ($Summarize) {
     $summaryScript = Join-Path $PSScriptRoot "summarize_live_validation_evidence.ps1"
     if (-not (Test-Path -LiteralPath $summaryScript)) {
@@ -603,8 +604,13 @@ if ($Summarize) {
         } else {
             & $summaryScript -BundlePath $outputDir
         }
+        $summaryExitCode = $LASTEXITCODE
     }
 }
 
 Write-Output "Live validation evidence captured:"
 Write-Output (Resolve-Path -LiteralPath $outputDir).Path
+
+if ($summaryExitCode -ne 0) {
+    exit $summaryExitCode
+}

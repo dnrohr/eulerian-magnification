@@ -329,6 +329,32 @@ showing true pyramid reconstruction or a fallback bridge.
 - Controlled motion/color target validation remains required before AP can be
   marked complete.
 
+## Supporting Slice: Camera Cadence Full-Frame Backfill
+
+- Installed and launched commit `6ec27d4` on Pixel 8a `47091JEKB05516`.
+- Ran a clean full-frame Pulse/Split/GL capture after the thermal readiness gate
+  passed below critical for two consecutive samples. Runtime smoke passed with
+  no crash, ANR, or GL error; camera HAL averaged `29.9957` fps, UI jank was
+  `2.42%`, median frame time was `10 ms`, and the screenshot was nonblank and
+  portrait.
+- Ran a diagnostics-panel capture for the same launch state. The screenshot
+  visibly showed `Preview: Full-frame linear EVM preview`, `Renderer: Live
+  linear EVM reconstruction`, `GL renderer: Live reconstruction`, `GL camera:
+  30.1 fps`, and ready three-level pyramid diagnostics at `540x1200`.
+- The diagnostics run also confirmed the known overlay cost: visible debug
+  controls raised jank to `24.17%` while camera HAL stayed near `29.84` fps.
+- `uiautomator dump` could not get idle state during the diagnostics run, so the
+  required UI-text assertion failed despite the screenshot containing the
+  labels. The capture tooling now propagates summary exit codes so this kind of
+  failed evidence assertion cannot silently pass.
+- Evidence bundles:
+  `sample-videos/exports/live-validation/20260712-182553-full-frame-camera-cadence-fallback-smoke`
+  and
+  `sample-videos/exports/live-validation/20260712-182649-full-frame-camera-cadence-fallback-debug`.
+- This backfills runtime and renderer-state evidence for the full-frame
+  low-FPS/frozen-preview report. It still does not close AP visual validation
+  because the scene was not a controlled motion/color target.
+
 ## Done When
 
 - Live amplified preview shows visible reconstructed output for at least one color sample and one slow-motion sample.
