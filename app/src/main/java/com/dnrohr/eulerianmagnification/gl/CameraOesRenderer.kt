@@ -35,6 +35,7 @@ class CameraOesRenderer(
     private var reconstructProgram = 0
     private var phaseExtractProgram = 0
     private var phaseRieszProgram = 0
+    private var phaseProjectProgram = 0
     private var oesTexTransformLocation = -1
     private var rgbInputTextureLocation = -1
     private var colorInputTextureLocation = -1
@@ -61,6 +62,7 @@ class CameraOesRenderer(
     private var phaseExtractRoiLocation = -1
     private var phaseRieszInputTextureLocation = -1
     private var phaseRieszTexelSizeLocation = -1
+    private var phaseProjectRieszTextureLocation = -1
     private var rgbRenderTarget: GlRenderTarget? = null
     private var processedRenderTarget: GlRenderTarget? = null
     private var downsamplePyramid: GlPyramid? = null
@@ -128,6 +130,10 @@ class CameraOesRenderer(
             RieszPhaseShaderSource.VERTEX,
             RieszPhaseShaderSource.RIESZ_COMPONENT_FRAGMENT,
         )
+        phaseProjectProgram = GlProgram.compileProgram(
+            RieszPhaseShaderSource.VERTEX,
+            RieszPhaseShaderSource.LIVE_PHASE_PROJECT_FRAGMENT,
+        )
         oesTexTransformLocation = GLES30.glGetUniformLocation(oesProgram, "uTexTransform")
         rgbInputTextureLocation = GLES30.glGetUniformLocation(rgbProgram, "uInputTexture")
         colorInputTextureLocation = GLES30.glGetUniformLocation(colorProgram, "uInputTexture")
@@ -162,6 +168,7 @@ class CameraOesRenderer(
         phaseExtractRoiLocation = GLES30.glGetUniformLocation(phaseExtractProgram, "uRoi")
         phaseRieszInputTextureLocation = GLES30.glGetUniformLocation(phaseRieszProgram, "uInputTexture")
         phaseRieszTexelSizeLocation = GLES30.glGetUniformLocation(phaseRieszProgram, "uTexelSize")
+        phaseProjectRieszTextureLocation = GLES30.glGetUniformLocation(phaseProjectProgram, "uRieszTexture")
         oesTextureId = createOesTexture()
         surfaceTexture = SurfaceTexture(oesTextureId).apply {
             setOnFrameAvailableListener {
@@ -460,6 +467,7 @@ class CameraOesRenderer(
             val state = livePhaseRoiState ?: return diagnostics
             renderLivePhaseExtractRoi(source, state, plan)
             renderLivePhaseRieszComponents(state)
+            renderLivePhaseProjection(state)
             diagnostics.copy(processingSize = plan.processingSize)
         } catch (_: GlException) {
             livePhaseRoiState?.release()
@@ -507,6 +515,17 @@ class CameraOesRenderer(
         drawFramebufferQuad()
         GLES30.glBindFramebuffer(GLES30.GL_FRAMEBUFFER, 0)
         GlProgram.checkNoGlError("renderLivePhaseRieszComponents")
+    }
+
+    private fun renderLivePhaseProjection(state: LivePhaseRoiState) {
+        state.projectedPhase.bind()
+        GLES30.glUseProgram(phaseProjectProgram)
+        GLES30.glUniform1i(phaseProjectRieszTextureLocation, 0)
+        GLES30.glActiveTexture(GLES30.GL_TEXTURE0)
+        GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, state.rieszComponents.textureId)
+        drawFramebufferQuad()
+        GLES30.glBindFramebuffer(GLES30.GL_FRAMEBUFFER, 0)
+        GlProgram.checkNoGlError("renderLivePhaseProjection")
     }
 
     private fun renderDownsamplePyramid(

@@ -9,6 +9,7 @@ class RieszPhaseShaderSourceTest {
         assertTrue(RieszPhaseShaderSource.VERTEX.startsWith("#version 300 es"))
         assertTrue(RieszPhaseShaderSource.RIESZ_COMPONENT_FRAGMENT.startsWith("#version 300 es"))
         assertTrue(RieszPhaseShaderSource.PHASE_PROJECT_FRAGMENT.startsWith("#version 300 es"))
+        assertTrue(RieszPhaseShaderSource.LIVE_PHASE_PROJECT_FRAGMENT.startsWith("#version 300 es"))
         assertTrue(RieszPhaseShaderSource.PHASE_AMPLIFY_FRAGMENT.startsWith("#version 300 es"))
         assertTrue(RieszPhaseShaderSource.LIVE_PHASE_EXTRACT_ROI_FRAGMENT.startsWith("#version 300 es"))
         assertTrue(RieszPhaseShaderSource.LIVE_PHASE_TEMPORAL_FRAGMENT.startsWith("#version 300 es"))
@@ -35,6 +36,17 @@ class RieszPhaseShaderSourceTest {
         assertTrue(shader.contains("cos(uOrientationRadians)"))
         assertTrue(shader.contains("sin(uOrientationRadians)"))
         assertTrue(shader.contains("atan(oriented, source)"))
+    }
+
+    @Test
+    fun livePhaseProjectShaderDerivesLocalOrientation() {
+        val shader = RieszPhaseShaderSource.LIVE_PHASE_PROJECT_FRAGMENT
+
+        assertTrue(shader.contains("uniform sampler2D uRieszTexture"))
+        assertTrue(shader.contains("float orientation = atan(rieszY, rieszX)"))
+        assertTrue(shader.contains("rieszX * cos(orientation) + rieszY * sin(orientation)"))
+        assertTrue(shader.contains("atan(oriented, source)"))
+        assertTrue(shader.contains("orientation / (2.0 * PI) + 0.5"))
     }
 
     @Test

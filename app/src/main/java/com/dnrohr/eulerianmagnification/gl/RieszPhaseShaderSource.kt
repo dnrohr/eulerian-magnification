@@ -62,6 +62,31 @@ object RieszPhaseShaderSource {
         }
     """
 
+    const val LIVE_PHASE_PROJECT_FRAGMENT = """#version 300 es
+        precision mediump float;
+        uniform sampler2D uRieszTexture;
+        in vec2 vTexCoord;
+        out vec4 outColor;
+
+        const float PI = 3.141592653589793;
+
+        float encodePhase(float phase) {
+            return phase / (2.0 * PI) + 0.5;
+        }
+
+        void main() {
+            vec4 packed = texture(uRieszTexture, vTexCoord);
+            float rieszX = packed.r * 2.0 - 1.0;
+            float rieszY = packed.g * 2.0 - 1.0;
+            float source = packed.a;
+            float orientation = atan(rieszY, rieszX);
+            float oriented = rieszX * cos(orientation) + rieszY * sin(orientation);
+            float amplitude = length(vec2(source, oriented));
+            float phase = atan(oriented, source);
+            outColor = vec4(encodePhase(phase), amplitude, orientation / (2.0 * PI) + 0.5, source);
+        }
+    """
+
     const val PHASE_AMPLIFY_FRAGMENT = """#version 300 es
         precision mediump float;
         uniform sampler2D uReferencePhaseTexture;

@@ -211,3 +211,17 @@ Goal: bring the recorded Riesz/phase motion renderer into a live-preview path fo
   invocation remain open.
 - Installed the debug build on the Pixel 8a after focused shader coverage and
   full JVM/build verification.
+
+## Completed Slice: Live Phase Projection Pass
+
+- Added `LIVE_PHASE_PROJECT_FRAGMENT`, a live shader variant that derives local
+  orientation from each ROI pixel's Riesz x/y response instead of requiring a
+  CPU-side dominant-orientation reduction.
+- `CameraOesRenderer` now compiles and invokes the phase projection pass after
+  ROI extraction and Riesz component generation.
+- The live renderer now produces `LivePhaseRoiState.projectedPhase` for the
+  upcoming temporal state update.
+- Temporal update, reconstruction, and visible phase compose invocation remain
+  open.
+- Installed the debug build on the Pixel 8a after focused shader coverage and
+  full JVM/build verification.
