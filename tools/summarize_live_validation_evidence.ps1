@@ -6,7 +6,8 @@ param(
     [double]$WarnJankyPercent = 50.0,
     [int]$WarnMedianFrameMillis = 33,
     [int]$WarnThermalStatus = 2,
-    [double]$WarnCameraFps = 23.5
+    [double]$WarnCameraFps = 23.5,
+    [double]$WarnBatteryTemperatureC = 40.0
 )
 
 $ErrorActionPreference = "Stop"
@@ -112,6 +113,59 @@ function Parse-CameraFpsSummary {
     }
 }
 
+function Match-FirstText {
+    param(
+        [string]$Text,
+        [string]$Pattern
+    )
+    $match = [regex]::Match(
+        $Text,
+        $Pattern,
+        [System.Text.RegularExpressions.RegexOptions]::IgnoreCase -bor [System.Text.RegularExpressions.RegexOptions]::Multiline
+    )
+    if (-not $match.Success) {
+        return $null
+    }
+    return $match.Groups[1].Value.Trim()
+}
+
+function Parse-BatterySummary {
+    param([string]$Text)
+
+    $levelText = Match-FirstText $Text '^\s*level:\s+(\d+)'
+    $temperatureText = Match-FirstText $Text '^\s*temperature:\s+(-?\d+)'
+    $statusText = Match-FirstText $Text '^\s*status:\s+(\d+)'
+    $chargingStateText = Match-FirstText $Text '^\s*Charging state:\s+(\d+)'
+    $acPowered = [regex]::IsMatch($Text, '^\s*AC powered:\s+true', [System.Text.RegularExpressions.RegexOptions]::IgnoreCase -bor [System.Text.RegularExpressions.RegexOptions]::Multiline)
+    $usbPowered = [regex]::IsMatch($Text, '^\s*USB powered:\s+true', [System.Text.RegularExpressions.RegexOptions]::IgnoreCase -bor [System.Text.RegularExpressions.RegexOptions]::Multiline)
+    $wirelessPowered = [regex]::IsMatch($Text, '^\s*Wireless powered:\s+true', [System.Text.RegularExpressions.RegexOptions]::IgnoreCase -bor [System.Text.RegularExpressions.RegexOptions]::Multiline)
+    $dockPowered = [regex]::IsMatch($Text, '^\s*Dock powered:\s+true', [System.Text.RegularExpressions.RegexOptions]::IgnoreCase -bor [System.Text.RegularExpressions.RegexOptions]::Multiline)
+
+    $powerSources = @()
+    if ($acPowered) { $powerSources += "AC" }
+    if ($usbPowered) { $powerSources += "USB" }
+    if ($wirelessPowered) { $powerSources += "Wireless" }
+    if ($dockPowered) { $powerSources += "Dock" }
+
+    $level = if ($null -ne $levelText) { [int]::Parse($levelText, [Globalization.CultureInfo]::InvariantCulture) } else { $null }
+    $temperatureC = if ($null -ne $temperatureText) {
+        [int]::Parse($temperatureText, [Globalization.CultureInfo]::InvariantCulture) / 10.0
+    } else {
+        $null
+    }
+    $status = if ($null -ne $statusText) { [int]::Parse($statusText, [Globalization.CultureInfo]::InvariantCulture) } else { $null }
+    $chargingState = if ($null -ne $chargingStateText) { [int]::Parse($chargingStateText, [Globalization.CultureInfo]::InvariantCulture) } else { $null }
+
+    return [ordered]@{
+        levelPercent = $level
+        temperatureC = $temperatureC
+        status = $status
+        chargingState = $chargingState
+        powered = $powerSources.Count -gt 0
+        powerSources = $powerSources
+    }
+}
+
 $bundle = (Resolve-Path -LiteralPath $BundlePath).Path
 $manifestPath = Get-RequiredPath $bundle "manifest.json"
 $gfxPath = Get-RequiredPath $bundle "gfxinfo.txt"
@@ -119,6 +173,7 @@ $logcatPath = Get-RequiredPath $bundle "logcat_tail.txt"
 $screenshotPath = Get-RequiredPath $bundle "screenshot.png"
 $roiMeasurementPath = Get-RequiredPath $bundle "roi_overlay_measurement.json"
 $thermalPath = Get-RequiredPath $bundle "thermalservice.txt"
+$batteryPath = Get-RequiredPath $bundle "battery.txt"
 
 $missing = @()
 foreach ($required in @($manifestPath, $gfxPath, $logcatPath, $screenshotPath)) {
@@ -137,6 +192,8 @@ $logcat = Read-TextIfExists $logcatPath
 $thermalText = Read-TextIfExists $thermalPath
 $thermalSummary = Parse-ThermalSummary $thermalText
 $cameraFpsSummary = Parse-CameraFpsSummary $logcat
+$batteryText = Read-TextIfExists $batteryPath
+$batterySummary = Parse-BatterySummary $batteryText
 
 $jankyPercent = Match-FirstNumber $gfx 'Janky frames:\s+\d+\s+\(([0-9.]+)%\)'
 $totalFrames = Match-FirstNumber $gfx 'Total frames rendered:\s+(\d+)'
@@ -181,6 +238,12 @@ if ($null -ne $thermalSummary.maxSensorStatus -and $thermalSummary.maxSensorStat
 }
 if ($cameraFpsSummary.sampleCount -gt 0 -and $null -ne $cameraFpsSummary.minFps -and $cameraFpsSummary.minFps -lt $WarnCameraFps) {
     $warnings += "camera HAL FPS below $WarnCameraFps fps"
+}
+if ($batterySummary.powered) {
+    $warnings += "device is externally powered during capture"
+}
+if ($null -ne $batterySummary.temperatureC -and $batterySummary.temperatureC -ge $WarnBatteryTemperatureC) {
+    $warnings += "battery temperature $($batterySummary.temperatureC) C at or above warning threshold $WarnBatteryTemperatureC C"
 }
 foreach ($entry in $runtimeFindings.GetEnumerator()) {
     if ($entry.Value) {
@@ -235,6 +298,7 @@ $result = [ordered]@{
     runtimeFindings = $runtimeFindings
     cameraHal = $cameraFpsSummary
     thermal = $thermalSummary
+    battery = $batterySummary
     roiMeasurement = $roiMeasurement
     warnings = $warnings
     passedRuntimeSmoke = ($missing.Count -eq 0) -and

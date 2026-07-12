@@ -71,6 +71,16 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   for watched preset evidence, while keeping visual parity marked unvalidated
   until known-target artifacts exist.
 
+## Supporting Slice: Battery Context Summary
+
+- Live validation summaries now parse `battery.txt` and report battery level,
+  battery temperature, charging state, and external power source.
+- Summaries warn when the device is externally powered or battery temperature is
+  at least `40 C`. This makes USB charging and warm-battery conditions explicit
+  when reviewing Pixel performance and visual-validation artifacts.
+- These warnings are advisory and do not replace known-target visual parity
+  artifacts.
+
 ## Remaining
 
 - Extend Pixel 8a evidence with a known-good visual artifact and watched target
