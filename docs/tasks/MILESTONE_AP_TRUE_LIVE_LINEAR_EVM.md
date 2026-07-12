@@ -295,12 +295,25 @@ showing true pyramid reconstruction or a fallback bridge.
   reconstruction amplification. Breathing and other non-Pulse modes continue to
   bypass the Pulse color gate.
 - Added JVM coverage for gated Pulse uniforms and non-Pulse bypass behavior.
-- Saturated-pixel gating remains recorded-only until the live analyzer exposes a
-  saturated-pixel fraction.
 - Pixel 8a clean GL smoke bundle
   `sample-videos/exports/live-validation/20260712-165046-live-color-gate-gl-smoke`
   passed runtime smoke with no crash, ANR, or GL-error findings. Clean-mode
   frame pacing was 3.51% janky frames, 10 ms median, and 13 ms p90.
+
+## Completed Slice: Live Saturation Gate
+
+- Added `saturatedPixelFraction` to `AnalysisSample`.
+- `PulseRoiAnalyzer` now computes average green and saturation fraction from
+  one shared ROI sample-grid pass, avoiding a second scan of the analysis frame.
+- Live Pulse color gating now uses the sampled saturated-pixel fraction instead
+  of a placeholder zero, so clipped ROI input can dampen both the ROI color
+  bridge signal and live linear reconstruction amplification.
+- Added JVM coverage for YUV-to-RGB saturation detection and saturated Pulse
+  uniform attenuation.
+- Pixel 8a clean GL smoke bundle
+  `sample-videos/exports/live-validation/20260712-165553-live-saturation-gate-gl-smoke`
+  passed runtime smoke with no crash, ANR, or GL-error findings. Clean-mode
+  frame pacing was 13.33% janky frames, 9 ms median, and 17 ms p90.
 
 ## Done When
 

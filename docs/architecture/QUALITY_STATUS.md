@@ -69,8 +69,9 @@ Live GL Pulse preview now applies the same lighting-based color gate to both
 the ROI color bridge signal and the live linear reconstruction amplification.
 Lighting settling, flicker, exposure pumping, motion-contaminated lighting, and
 darkness reduce or disable live Pulse color amplification before uniforms reach
-the renderer. Live saturation gating is not wired yet because the analyzer does
-not currently expose a per-frame saturated-pixel fraction.
+the renderer. The live analyzer also estimates saturated-pixel fraction from the
+same ROI sample grid used for green-channel analysis, so clipped ROI input can
+dampen Pulse color amplification before it reaches GL.
 
 ## Color Output Clamp
 

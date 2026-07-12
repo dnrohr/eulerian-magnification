@@ -80,8 +80,7 @@ Goal: improve pulse/color magnification quality by separating luminance from chr
   evidence timeline CSV so exports can explain dampened color output.
 - Added JVM coverage for gate policy and processor-level flicker attenuation.
 - The live GL path later reused the same gate for lighting-based Pulse
-  attenuation; saturated-pixel gating remains recorded-only until live analysis
-  exposes saturation statistics.
+  attenuation and sampled ROI saturation statistics.
 - Installed the debug build on the Pixel 8a after focused and full
   JVM/build verification.
 

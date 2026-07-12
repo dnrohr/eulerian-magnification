@@ -75,7 +75,7 @@ class ColorMagnificationParameters(
             colorAmplificationGate.evaluate(
                 mode = settings.mode,
                 lighting = it,
-                saturatedPixelFraction = 0.0,
+                saturatedPixelFraction = sample.saturatedPixelFraction,
             )
         } ?: ColorAmplificationGateResult.Stable
         val amplifiedSignal = if (settings.viewMode == ViewMode.Raw) {

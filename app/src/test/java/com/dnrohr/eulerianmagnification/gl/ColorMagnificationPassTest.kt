@@ -146,6 +146,26 @@ class ColorMagnificationPassTest {
     }
 
     @Test
+    fun saturatedPulseRoiDampensLiveColorAndReconstructionAmplification() {
+        val uniforms = ColorMagnificationParameters().from(
+            sample = AnalysisSample(
+                bandpassedGreen = 0.5,
+                saturatedPixelFraction = 0.2,
+            ),
+            settings = AnalysisSettings(
+                mode = MagnificationMode.Pulse,
+                amplification = 8.0f,
+            ),
+            lightingDiagnostic = diagnostic(LightingDiagnosticStatus.Stable),
+        )
+
+        assertEquals(0.4f, uniforms.colorGate.gain, 0.0f)
+        assertEquals(0.025f, uniforms.amplifiedSignal, 0.0001f)
+        assertEquals(3.2f, uniforms.reconstructionAmplification, 0.0001f)
+        assertEquals(0.2, uniforms.colorGate.saturatedPixelFraction, 0.0001)
+    }
+
+    @Test
     fun rawModeSuppressesAmplifiedSignal() {
         val uniforms = ColorMagnificationParameters().from(
             sample = AnalysisSample(

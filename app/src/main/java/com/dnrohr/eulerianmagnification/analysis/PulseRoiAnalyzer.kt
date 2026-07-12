@@ -79,8 +79,8 @@ class PulseRoiAnalyzer(
                 ?.let { skinSubregion(it, imageProxy.width, imageProxy.height) }
                 ?: centeredRoi(imageProxy.width, imageProxy.height)
         }
-        val averageGreen = averageGreen(imageProxy, roi)
-        val bandpassed = bandpassFilter.update(averageGreen, timestamp)
+        val colorStats = colorStats(imageProxy, roi)
+        val bandpassed = bandpassFilter.update(colorStats.averageGreen, timestamp)
         val normalizedRoi = roi.toNormalized(imageProxy.width, imageProxy.height)
         val translation = translationEstimator.update(normalizedRoi)
 
@@ -88,7 +88,8 @@ class PulseRoiAnalyzer(
             AnalysisSample(
                 analysisFps = fpsMeter.framesPerSecond(),
                 roi = normalizedRoi,
-                averageGreen = averageGreen,
+                averageGreen = colorStats.averageGreen,
+                saturatedPixelFraction = colorStats.saturatedPixelFraction,
                 bandpassedGreen = bandpassed,
                 latencyMillis = (System.nanoTime() - timestamp).coerceAtLeast(0L) / NANOS_PER_MILLISECOND,
                 timestampMonotonic = timestampStatus.isMonotonic,
@@ -165,12 +166,13 @@ class PulseRoiAnalyzer(
         ).clamped(width, height)
     }
 
-    private fun averageGreen(imageProxy: ImageProxy, roi: Rect): Double {
+    private fun colorStats(imageProxy: ImageProxy, roi: Rect): RoiColorStats {
         val yPlane = imageProxy.planes[0]
         val uPlane = imageProxy.planes[1]
         val vPlane = imageProxy.planes[2]
-        var sum = 0.0
+        var greenSum = 0.0
         var count = 0
+        var saturated = 0
         val stepX = (roi.width() / SAMPLE_GRID).coerceAtLeast(1)
         val stepY = (roi.height() / SAMPLE_GRID).coerceAtLeast(1)
 
@@ -178,38 +180,54 @@ class PulseRoiAnalyzer(
         while (y < roi.bottom) {
             var x = roi.left
             while (x < roi.right) {
-                sum += greenAt(
+                val sample = colorAt(
                     x = x,
                     y = y,
                     yPlane = yPlane,
                     uPlane = uPlane,
                     vPlane = vPlane,
                 )
+                greenSum += sample.green
+                if (sample.saturated) saturated++
                 count++
                 x += stepX
             }
             y += stepY
         }
 
-        return if (count == 0) 0.0 else sum / count
+        return if (count == 0) {
+            RoiColorStats()
+        } else {
+            RoiColorStats(
+                averageGreen = greenSum / count,
+                saturatedPixelFraction = saturated / count.toDouble(),
+            )
+        }
     }
 
-    private fun greenAt(
+    private fun colorAt(
         x: Int,
         y: Int,
         yPlane: ImageProxy.PlaneProxy,
         uPlane: ImageProxy.PlaneProxy,
         vPlane: ImageProxy.PlaneProxy,
-    ): Double {
+    ): YuvColorSample {
         val yValue = yPlane.buffer.unsigned(y * yPlane.rowStride + x)
         val uvX = x / 2
         val uvY = y / 2
         val uIndex = uvY * uPlane.rowStride + uvX * uPlane.pixelStride
         val vIndex = uvY * vPlane.rowStride + uvX * vPlane.pixelStride
-        val uValue = uPlane.buffer.unsigned(uIndex) - 128.0
-        val vValue = vPlane.buffer.unsigned(vIndex) - 128.0
-        return (yValue - 0.344136 * uValue - 0.714136 * vValue).coerceIn(0.0, 255.0)
+        return YuvColorSample.fromYuv(
+            y = yValue,
+            u = uPlane.buffer.unsigned(uIndex),
+            v = vPlane.buffer.unsigned(vIndex),
+        )
     }
+
+    private data class RoiColorStats(
+        val averageGreen: Double = 0.0,
+        val saturatedPixelFraction: Double = 0.0,
+    )
 
     private fun ByteBuffer.unsigned(index: Int): Double {
         return (get(index).toInt() and 0xFF).toDouble()

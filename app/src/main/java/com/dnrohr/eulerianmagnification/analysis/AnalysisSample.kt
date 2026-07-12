@@ -4,6 +4,7 @@ data class AnalysisSample(
     val analysisFps: Double = 0.0,
     val roi: NormalizedRect? = null,
     val averageGreen: Double = 0.0,
+    val saturatedPixelFraction: Double = 0.0,
     val bandpassedGreen: Double = 0.0,
     val latencyMillis: Double = 0.0,
     val timestampMonotonic: Boolean = true,
