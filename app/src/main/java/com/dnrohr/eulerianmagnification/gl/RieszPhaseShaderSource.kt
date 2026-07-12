@@ -100,15 +100,12 @@ object RieszPhaseShaderSource {
         uniform sampler2D uPreviousHighTexture;
         uniform float uLowAlpha;
         uniform float uHighAlpha;
-        uniform float uAmplification;
-        uniform float uAmplitudeThreshold;
         uniform int uInitialized;
         in vec2 vTexCoord;
         layout(location = 0) out vec4 outWrappedPhase;
         layout(location = 1) out vec4 outUnwrappedPhase;
         layout(location = 2) out vec4 outLowpass;
         layout(location = 3) out vec4 outHighpass;
-        layout(location = 4) out vec4 outAmplifiedPhase;
 
         const float PI = 3.141592653589793;
 
@@ -132,7 +129,6 @@ object RieszPhaseShaderSource {
                 outUnwrappedPhase = vec4(currentPhase, current.gba);
                 outLowpass = vec4(currentPhase, current.gba);
                 outHighpass = vec4(currentPhase, current.gba);
-                outAmplifiedPhase = vec4(encodePhase(currentPhase), current.gba);
                 return;
             }
 
@@ -144,15 +140,43 @@ object RieszPhaseShaderSource {
             float previousHigh = texture(uPreviousHighTexture, vTexCoord).r;
             float low = mix(previousLow, unwrappedPhase, uLowAlpha);
             float high = mix(previousHigh, unwrappedPhase, uHighAlpha);
-            float bandpassedPhase = high - low;
-            float gatedAmplification = current.g >= uAmplitudeThreshold ? uAmplification : 0.0;
-            float amplifiedPhase = currentPhase + bandpassedPhase * gatedAmplification;
 
             outWrappedPhase = vec4(encodePhase(currentPhase), current.gba);
             outUnwrappedPhase = vec4(unwrappedPhase, current.gba);
             outLowpass = vec4(low, current.gba);
             outHighpass = vec4(high, current.gba);
-            outAmplifiedPhase = vec4(encodePhase(amplifiedPhase), current.gba);
+        }
+    """
+
+    const val LIVE_PHASE_AMPLIFY_FRAGMENT = """#version 300 es
+        precision mediump float;
+        uniform sampler2D uCurrentPhaseTexture;
+        uniform sampler2D uLowTexture;
+        uniform sampler2D uHighTexture;
+        uniform float uAmplification;
+        uniform float uAmplitudeThreshold;
+        in vec2 vTexCoord;
+        out vec4 outColor;
+
+        const float PI = 3.141592653589793;
+
+        float decodePhase(float encoded) {
+            return (encoded - 0.5) * 2.0 * PI;
+        }
+
+        float encodePhase(float phase) {
+            return atan(sin(phase), cos(phase)) / (2.0 * PI) + 0.5;
+        }
+
+        void main() {
+            vec4 current = texture(uCurrentPhaseTexture, vTexCoord);
+            float currentPhase = decodePhase(current.r);
+            float low = texture(uLowTexture, vTexCoord).r;
+            float high = texture(uHighTexture, vTexCoord).r;
+            float bandpassedPhase = high - low;
+            float gatedAmplification = current.g >= uAmplitudeThreshold ? uAmplification : 0.0;
+            float amplifiedPhase = currentPhase + bandpassedPhase * gatedAmplification;
+            outColor = vec4(encodePhase(amplifiedPhase), current.gba);
         }
     """
 

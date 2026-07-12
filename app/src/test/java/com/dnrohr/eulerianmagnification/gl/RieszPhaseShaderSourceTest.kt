@@ -11,6 +11,7 @@ class RieszPhaseShaderSourceTest {
         assertTrue(RieszPhaseShaderSource.PHASE_PROJECT_FRAGMENT.startsWith("#version 300 es"))
         assertTrue(RieszPhaseShaderSource.PHASE_AMPLIFY_FRAGMENT.startsWith("#version 300 es"))
         assertTrue(RieszPhaseShaderSource.LIVE_PHASE_TEMPORAL_FRAGMENT.startsWith("#version 300 es"))
+        assertTrue(RieszPhaseShaderSource.LIVE_PHASE_AMPLIFY_FRAGMENT.startsWith("#version 300 es"))
         assertTrue(RieszPhaseShaderSource.PHASE_RECONSTRUCT_FRAGMENT.startsWith("#version 300 es"))
         assertTrue(RieszPhaseShaderSource.LIVE_PHASE_COMPOSE_FRAGMENT.startsWith("#version 300 es"))
     }
@@ -56,19 +57,41 @@ class RieszPhaseShaderSourceTest {
     }
 
     @Test
-    fun liveTemporalShaderUsesWarmupBandpassAndAmplitudeGate() {
+    fun liveTemporalShaderUsesWarmupAndFourStateOutputs() {
         val shader = RieszPhaseShaderSource.LIVE_PHASE_TEMPORAL_FRAGMENT
 
         assertTrue(shader.contains("uInitialized"))
         assertTrue(shader.contains("if (uInitialized == 0)"))
-        assertTrue(shader.contains("outAmplifiedPhase = vec4(encodePhase(currentPhase)"))
         assertTrue(shader.contains("uPreviousLowTexture"))
         assertTrue(shader.contains("uPreviousHighTexture"))
         assertTrue(shader.contains("mix(previousLow, unwrappedPhase, uLowAlpha)"))
         assertTrue(shader.contains("mix(previousHigh, unwrappedPhase, uHighAlpha)"))
+        assertTrue(shader.contains("layout(location = 0) out vec4 outWrappedPhase"))
+        assertTrue(shader.contains("layout(location = 3) out vec4 outHighpass"))
+    }
+
+    @Test
+    fun liveTemporalShaderStaysWithinGlesGuaranteedColorAttachments() {
+        val shader = RieszPhaseShaderSource.LIVE_PHASE_TEMPORAL_FRAGMENT
+
+        assertTrue(shader.contains("layout(location = 0)"))
+        assertTrue(shader.contains("layout(location = 1)"))
+        assertTrue(shader.contains("layout(location = 2)"))
+        assertTrue(shader.contains("layout(location = 3)"))
+        assertTrue(!shader.contains("layout(location = 4)"))
+    }
+
+    @Test
+    fun liveAmplifyShaderUsesBandpassAndAmplitudeGate() {
+        val shader = RieszPhaseShaderSource.LIVE_PHASE_AMPLIFY_FRAGMENT
+
+        assertTrue(shader.contains("uCurrentPhaseTexture"))
+        assertTrue(shader.contains("uLowTexture"))
+        assertTrue(shader.contains("uHighTexture"))
         assertTrue(shader.contains("float bandpassedPhase = high - low"))
         assertTrue(shader.contains("current.g >= uAmplitudeThreshold ? uAmplification : 0.0"))
         assertTrue(shader.contains("bandpassedPhase * gatedAmplification"))
+        assertTrue(shader.contains("outColor = vec4(encodePhase(amplifiedPhase)"))
     }
 
     @Test

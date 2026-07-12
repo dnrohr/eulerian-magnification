@@ -146,3 +146,15 @@ Goal: bring the recorded Riesz/phase motion renderer into a live-preview path fo
   same debug area as the live pyramid renderer.
 - Runtime phase rendering remains open.
 - Installed the debug build on the Pixel 8a after full JVM/build verification.
+
+## Completed Slice: Live Phase Temporal Pass Compatibility
+
+- Split the live phase temporal shader contract into a four-output state-update
+  pass and a separate amplified-phase pass.
+- This keeps the temporal update within the GLES 3.0 guaranteed color
+  attachment count before runtime renderer wiring depends on it.
+- The new amplified-phase pass applies the recorded renderer's high-minus-low
+  phase bandpass and amplitude gate before reconstruction.
+- Runtime phase rendering remains open.
+- Installed the debug build on the Pixel 8a after focused shader coverage and
+  full JVM/build verification.
