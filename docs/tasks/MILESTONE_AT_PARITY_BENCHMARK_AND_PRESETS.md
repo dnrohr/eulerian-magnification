@@ -106,6 +106,9 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - Aborted bundles are useful evidence that the phone was not in a valid state
   for preset benchmarking, full-frame FPS, apparent camera freeze, or visual
   parity.
+- Added `tools/test_live_validation_summary.ps1` to verify that thermal-aborted
+  bundles receive `thermal_preflight_aborted` with exit code `4`, while
+  incomplete non-aborted runtime bundles still fail as `runtime_failed`.
 
 ## Supporting Slice: Visual Review Metadata
 

@@ -132,7 +132,18 @@ The summary also writes `evidenceVerdict`, a compact classification for the
 bundle. Expected statuses include `runtime_smoke_only`, `visual_validated`,
 `target_visible_unvalidated`, `visual_claim_without_target`,
 `ui_assertion_failed`, `screenshot_blank`, `wrong_orientation`, and
-`runtime_failed`. Only `visual_validated` counts as visual validation.
+`runtime_failed`. A prelaunch thermal abort is reported as
+`thermal_preflight_aborted`. Only `visual_validated` counts as visual
+validation.
+
+Run the summary self-test after editing capture or summary tooling:
+
+```powershell
+.\tools\test_live_validation_summary.ps1
+```
+
+The test synthesizes a thermal-aborted bundle and an incomplete runtime bundle,
+then verifies the summary exit codes and verdicts.
 
 For ROI overlay validation, pass `-MeasureRoiExpected` with the expected
 normalized screenshot-space rectangle. The capture script then writes
