@@ -238,6 +238,21 @@ Run-AdbText -Adb $adb -Arguments @(
 ) -OutputPath $focusPath
 $artifacts.windowFocus = $focusPath
 
+$remoteUiDump = "/sdcard/Download/eulerian-live-validation-$timestamp-ui.xml"
+$uiDumpPath = Join-Path $outputDir "ui_dump.xml"
+Run-AdbText -Adb $adb -Arguments @(
+    "shell",
+    "uiautomator",
+    "dump",
+    "--compressed",
+    $remoteUiDump
+) -OutputPath (Join-Path $outputDir "ui_dump_stdout.txt")
+& $adb pull $remoteUiDump $uiDumpPath | Out-Null
+& $adb shell rm $remoteUiDump | Out-Null
+if (Test-Path -LiteralPath $uiDumpPath) {
+    $artifacts.uiDump = $uiDumpPath
+}
+
 $gfxPath = Join-Path $outputDir "gfxinfo.txt"
 Run-AdbText -Adb $adb -Arguments @("shell", "dumpsys", "gfxinfo", $Package) -OutputPath $gfxPath
 $artifacts.gfxinfo = $gfxPath

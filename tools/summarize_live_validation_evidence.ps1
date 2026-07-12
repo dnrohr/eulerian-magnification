@@ -166,6 +166,49 @@ function Parse-BatterySummary {
     }
 }
 
+function Parse-UiDumpSummary {
+    param([string]$Path)
+
+    if (-not (Test-Path -LiteralPath $Path)) {
+        return [ordered]@{
+            present = $false
+            text = @()
+            qualityLabels = @()
+            rendererLabels = @()
+            roiLabels = @()
+        }
+    }
+
+    $texts = @()
+    try {
+        [xml]$xml = Get-Content -LiteralPath $Path -Raw
+        foreach ($node in $xml.SelectNodes("//*[@text]")) {
+            $text = $node.GetAttribute("text")
+            if (-not [string]::IsNullOrWhiteSpace($text) -and $texts -notcontains $text) {
+                $texts += $text
+            }
+        }
+    } catch {
+        return [ordered]@{
+            present = $true
+            parseError = $_.Exception.Message
+            text = @()
+            qualityLabels = @()
+            rendererLabels = @()
+            roiLabels = @()
+        }
+    }
+
+    $qualityPattern = 'Good|Face missing|Too dark|Thermal high|Low FPS|Full frame slow|Camera FPS low|Timing unstable|Lighting flicker|Exposure unstable|ROI motion|Mode motion risk|Amplification risk|Signal weak'
+    return [ordered]@{
+        present = $true
+        text = $texts
+        qualityLabels = @($texts | Where-Object { $_ -match $qualityPattern })
+        rendererLabels = @($texts | Where-Object { $_ -match 'Renderer:|Preview:|GL renderer:|Pyramid:|Benchmark:' })
+        roiLabels = @($texts | Where-Object { $_ -match 'Auto ROI|Full frame|Manual ROI|Tracking|Center ROI|Frozen' })
+    }
+}
+
 $bundle = (Resolve-Path -LiteralPath $BundlePath).Path
 $manifestPath = Get-RequiredPath $bundle "manifest.json"
 $gfxPath = Get-RequiredPath $bundle "gfxinfo.txt"
@@ -174,6 +217,7 @@ $screenshotPath = Get-RequiredPath $bundle "screenshot.png"
 $roiMeasurementPath = Get-RequiredPath $bundle "roi_overlay_measurement.json"
 $thermalPath = Get-RequiredPath $bundle "thermalservice.txt"
 $batteryPath = Get-RequiredPath $bundle "battery.txt"
+$uiDumpPath = Get-RequiredPath $bundle "ui_dump.xml"
 
 $missing = @()
 foreach ($required in @($manifestPath, $gfxPath, $logcatPath, $screenshotPath)) {
@@ -194,6 +238,7 @@ $thermalSummary = Parse-ThermalSummary $thermalText
 $cameraFpsSummary = Parse-CameraFpsSummary $logcat
 $batteryText = Read-TextIfExists $batteryPath
 $batterySummary = Parse-BatterySummary $batteryText
+$uiDumpSummary = Parse-UiDumpSummary $uiDumpPath
 
 $jankyPercent = Match-FirstNumber $gfx 'Janky frames:\s+\d+\s+\(([0-9.]+)%\)'
 $totalFrames = Match-FirstNumber $gfx 'Total frames rendered:\s+(\d+)'
@@ -287,6 +332,7 @@ $result = [ordered]@{
         screenrecordPresent = Test-Path -LiteralPath (Join-Path $bundle "screenrecord.mp4")
         roiMeasurementPresent = $null -ne $roiMeasurement
         packageInfoPresent = Test-Path -LiteralPath (Join-Path $bundle "app_package.txt")
+        uiDumpPresent = Test-Path -LiteralPath $uiDumpPath
     }
     gfx = [ordered]@{
         totalFrames = $totalFrames
@@ -299,6 +345,7 @@ $result = [ordered]@{
     cameraHal = $cameraFpsSummary
     thermal = $thermalSummary
     battery = $batterySummary
+    uiDump = $uiDumpSummary
     roiMeasurement = $roiMeasurement
     warnings = $warnings
     passedRuntimeSmoke = ($missing.Count -eq 0) -and

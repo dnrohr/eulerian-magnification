@@ -155,6 +155,18 @@ Goal: prove that automatic and manual ROI coordinates align with the live previe
 - This improves auditability for remaining watched target/face validation, but
   does not close those target-alignment tasks by itself.
 
+## Supporting Slice: UI Text Evidence
+
+- Live validation captures now run `uiautomator dump` and store `ui_dump.xml`
+  beside the screenshot, logs, thermal, battery, and package artifacts.
+- `evidence_summary.json` now reports whether the UI dump is present and
+  extracts app-visible text, quality labels, renderer labels, and ROI labels.
+- This makes unattended captures easier to audit for states such as `Thermal
+  high`, `Full frame slow`, active ROI source, and live renderer diagnostics,
+  without relying on OCR or manual screenshot reading.
+- This improves evidence review for remaining ROI/live-preview validation, but
+  does not close watched target alignment without a visible target.
+
 ## Done When
 
 - Manual and automatic ROI overlays align with the visible target on device.

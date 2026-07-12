@@ -14,6 +14,7 @@ with:
 - `thermalservice.txt`
 - `battery.txt`
 - `window_focus.txt`
+- `ui_dump.xml`
 - `device_props.txt`
 - `app_package.txt`
 - `manifest.json`
@@ -54,7 +55,8 @@ worktree flag, short status lines, and installed package dump artifact. The
 summary carries the same source identity plus launch state, required artifact
 presence, screenshot dimensions, gfx frame pacing, runtime crash/ANR/GL-error
 signals, camera HAL FPS samples from logcat, Android thermal status, battery
-temperature/charging context, and optional ROI overlay measurement status.
+temperature/charging context, machine-readable UI text from `ui_dump.xml`, and
+optional ROI overlay measurement status.
 Thermal, external-power, high-battery-temperature, and low camera-cadence
 warnings are advisory by default: they flag conditions that may affect a visual
 or benchmark run, but they do not make runtime smoke fail unless a crash, ANR,
@@ -66,6 +68,11 @@ For visual-quality captures, prefer hidden controls or Clean mode. Use
 diagnostics, because the debug overlay can add enough UI jank to make the
 preview look worse than the camera/render path actually is. The capture manifest
 and summary include a warning when the debug panel is used.
+
+The UI dump is not OCR. It records Android view hierarchy text, which is useful
+for proving that the app reported labels such as `Thermal high`, `Full frame
+slow`, `Renderer: Live linear EVM reconstruction`, or the active ROI source
+during unattended captures.
 
 For ROI overlay validation, pass `-MeasureRoiExpected` with the expected
 normalized screenshot-space rectangle. The capture script then writes
