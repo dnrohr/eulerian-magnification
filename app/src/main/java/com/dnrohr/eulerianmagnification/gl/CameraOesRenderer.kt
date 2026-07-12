@@ -36,6 +36,7 @@ class CameraOesRenderer(
     private var phaseExtractProgram = 0
     private var phaseRieszProgram = 0
     private var phaseProjectProgram = 0
+    private var phaseTemporalProgram = 0
     private var oesTexTransformLocation = -1
     private var rgbInputTextureLocation = -1
     private var colorInputTextureLocation = -1
@@ -63,6 +64,14 @@ class CameraOesRenderer(
     private var phaseRieszInputTextureLocation = -1
     private var phaseRieszTexelSizeLocation = -1
     private var phaseProjectRieszTextureLocation = -1
+    private var phaseTemporalCurrentTextureLocation = -1
+    private var phaseTemporalPreviousWrappedTextureLocation = -1
+    private var phaseTemporalPreviousUnwrappedTextureLocation = -1
+    private var phaseTemporalPreviousLowTextureLocation = -1
+    private var phaseTemporalPreviousHighTextureLocation = -1
+    private var phaseTemporalLowAlphaLocation = -1
+    private var phaseTemporalHighAlphaLocation = -1
+    private var phaseTemporalInitializedLocation = -1
     private var rgbRenderTarget: GlRenderTarget? = null
     private var processedRenderTarget: GlRenderTarget? = null
     private var downsamplePyramid: GlPyramid? = null
@@ -71,6 +80,7 @@ class CameraOesRenderer(
     private var surfaceSize = GlTextureSize(1, 1)
     private var cameraTextureSize = GlTextureSize(1, 1)
     private var lastTemporalTimestampNanos: Long? = null
+    private var lastPhaseTimestampNanos: Long? = null
     private var supportsHalfFloatTemporalTargets = false
     private var hasNewFrame = false
     private var reconstructionDiagnostics = GlReconstructionDiagnostics()
@@ -134,6 +144,10 @@ class CameraOesRenderer(
             RieszPhaseShaderSource.VERTEX,
             RieszPhaseShaderSource.LIVE_PHASE_PROJECT_FRAGMENT,
         )
+        phaseTemporalProgram = GlProgram.compileProgram(
+            RieszPhaseShaderSource.VERTEX,
+            RieszPhaseShaderSource.LIVE_PHASE_TEMPORAL_FRAGMENT,
+        )
         oesTexTransformLocation = GLES30.glGetUniformLocation(oesProgram, "uTexTransform")
         rgbInputTextureLocation = GLES30.glGetUniformLocation(rgbProgram, "uInputTexture")
         colorInputTextureLocation = GLES30.glGetUniformLocation(colorProgram, "uInputTexture")
@@ -169,6 +183,14 @@ class CameraOesRenderer(
         phaseRieszInputTextureLocation = GLES30.glGetUniformLocation(phaseRieszProgram, "uInputTexture")
         phaseRieszTexelSizeLocation = GLES30.glGetUniformLocation(phaseRieszProgram, "uTexelSize")
         phaseProjectRieszTextureLocation = GLES30.glGetUniformLocation(phaseProjectProgram, "uRieszTexture")
+        phaseTemporalCurrentTextureLocation = GLES30.glGetUniformLocation(phaseTemporalProgram, "uCurrentPhaseTexture")
+        phaseTemporalPreviousWrappedTextureLocation = GLES30.glGetUniformLocation(phaseTemporalProgram, "uPreviousWrappedPhaseTexture")
+        phaseTemporalPreviousUnwrappedTextureLocation = GLES30.glGetUniformLocation(phaseTemporalProgram, "uPreviousUnwrappedPhaseTexture")
+        phaseTemporalPreviousLowTextureLocation = GLES30.glGetUniformLocation(phaseTemporalProgram, "uPreviousLowTexture")
+        phaseTemporalPreviousHighTextureLocation = GLES30.glGetUniformLocation(phaseTemporalProgram, "uPreviousHighTexture")
+        phaseTemporalLowAlphaLocation = GLES30.glGetUniformLocation(phaseTemporalProgram, "uLowAlpha")
+        phaseTemporalHighAlphaLocation = GLES30.glGetUniformLocation(phaseTemporalProgram, "uHighAlpha")
+        phaseTemporalInitializedLocation = GLES30.glGetUniformLocation(phaseTemporalProgram, "uInitialized")
         oesTextureId = createOesTexture()
         surfaceTexture = SurfaceTexture(oesTextureId).apply {
             setOnFrameAvailableListener {
@@ -190,6 +212,7 @@ class CameraOesRenderer(
         rgbRenderTarget = GlRenderTarget(surfaceSize)
         processedRenderTarget = GlRenderTarget(surfaceSize)
         lastTemporalTimestampNanos = null
+        lastPhaseTimestampNanos = null
         livePhaseRoiState = null
         downsamplePyramid = GlPyramid(
             baseSize = GlTextureSize(
@@ -259,6 +282,7 @@ class CameraOesRenderer(
         temporalState = null
         livePhaseRoiState?.release()
         livePhaseRoiState = null
+        lastPhaseTimestampNanos = null
     }
 
     private fun providePendingSurfaceIfReady() {
@@ -436,11 +460,13 @@ class CameraOesRenderer(
         if (!diagnostics.requested) {
             livePhaseRoiState?.release()
             livePhaseRoiState = null
+            lastPhaseTimestampNanos = null
             return diagnostics
         }
         if (diagnostics.fallbackReason != null) {
             livePhaseRoiState?.release()
             livePhaseRoiState = null
+            lastPhaseTimestampNanos = null
             return diagnostics
         }
         val plan = uniforms.livePhaseRoiPlan ?: return diagnostics.copy(
@@ -453,6 +479,7 @@ class CameraOesRenderer(
         if (!supportsHalfFloatTemporalTargets) {
             livePhaseRoiState?.release()
             livePhaseRoiState = null
+            lastPhaseTimestampNanos = null
             return diagnostics.copy(
                 processingSize = plan.processingSize,
                 fallbackReason = LivePhaseFallbackReason.UnsupportedGl,
@@ -463,15 +490,27 @@ class CameraOesRenderer(
             if (current == null || !current.matches(plan)) {
                 current?.release()
                 livePhaseRoiState = LivePhaseRoiState(plan)
+                lastPhaseTimestampNanos = null
             }
             val state = livePhaseRoiState ?: return diagnostics
             renderLivePhaseExtractRoi(source, state, plan)
             renderLivePhaseRieszComponents(state)
             renderLivePhaseProjection(state)
-            diagnostics.copy(processingSize = plan.processingSize)
+            val temporalInitialized = lastPhaseTimestampNanos != null
+            state.swap()
+            renderLivePhaseTemporalState(state, uniforms, temporalInitialized)
+            diagnostics.copy(
+                processingSize = plan.processingSize,
+                warmupStatus = if (temporalInitialized) {
+                    LivePhaseWarmupStatus.Ready
+                } else {
+                    LivePhaseWarmupStatus.Warming
+                },
+            )
         } catch (_: GlException) {
             livePhaseRoiState?.release()
             livePhaseRoiState = null
+            lastPhaseTimestampNanos = null
             diagnostics.copy(
                 processingSize = plan.processingSize,
                 fallbackReason = LivePhaseFallbackReason.RendererError,
@@ -526,6 +565,41 @@ class CameraOesRenderer(
         drawFramebufferQuad()
         GLES30.glBindFramebuffer(GLES30.GL_FRAMEBUFFER, 0)
         GlProgram.checkNoGlError("renderLivePhaseProjection")
+    }
+
+    private fun renderLivePhaseTemporalState(
+        state: LivePhaseRoiState,
+        uniforms: ColorMagnificationUniforms,
+        temporalInitialized: Boolean,
+    ) {
+        val coefficients = TemporalBandpassCoefficients.from(
+            lowCutHz = uniforms.lowCutHz,
+            highCutHz = uniforms.highCutHz,
+            dtSeconds = phaseTemporalDeltaSeconds(uniforms.presentationTimestampNanos),
+        )
+        state.bindForTemporalUpdate()
+        GLES30.glUseProgram(phaseTemporalProgram)
+        GLES30.glUniform1i(phaseTemporalCurrentTextureLocation, 0)
+        GLES30.glUniform1i(phaseTemporalPreviousWrappedTextureLocation, 1)
+        GLES30.glUniform1i(phaseTemporalPreviousUnwrappedTextureLocation, 2)
+        GLES30.glUniform1i(phaseTemporalPreviousLowTextureLocation, 3)
+        GLES30.glUniform1i(phaseTemporalPreviousHighTextureLocation, 4)
+        GLES30.glUniform1f(phaseTemporalLowAlphaLocation, coefficients.lowAlpha)
+        GLES30.glUniform1f(phaseTemporalHighAlphaLocation, coefficients.highAlpha)
+        GLES30.glUniform1i(phaseTemporalInitializedLocation, if (temporalInitialized) 1 else 0)
+        GLES30.glActiveTexture(GLES30.GL_TEXTURE0)
+        GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, state.projectedPhase.textureId)
+        GLES30.glActiveTexture(GLES30.GL_TEXTURE1)
+        GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, state.previousWrappedPhase.textureId)
+        GLES30.glActiveTexture(GLES30.GL_TEXTURE2)
+        GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, state.previousUnwrappedPhase.textureId)
+        GLES30.glActiveTexture(GLES30.GL_TEXTURE3)
+        GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, state.previousLowpass.textureId)
+        GLES30.glActiveTexture(GLES30.GL_TEXTURE4)
+        GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, state.previousHighpass.textureId)
+        drawFramebufferQuad()
+        GLES30.glBindFramebuffer(GLES30.GL_FRAMEBUFFER, 0)
+        GlProgram.checkNoGlError("renderLivePhaseTemporalState")
     }
 
     private fun renderDownsamplePyramid(
@@ -615,6 +689,17 @@ class CameraOesRenderer(
     private fun temporalDeltaSeconds(timestampNanos: Long): Double {
         val previousTimestamp = lastTemporalTimestampNanos
         lastTemporalTimestampNanos = timestampNanos.takeIf { it > 0L }
+        val deltaNanos = if (timestampNanos > 0L && previousTimestamp != null) {
+            timestampNanos - previousTimestamp
+        } else {
+            DEFAULT_FRAME_NANOS
+        }
+        return deltaNanos.coerceAtLeast(1L) / NANOS_PER_SECOND
+    }
+
+    private fun phaseTemporalDeltaSeconds(timestampNanos: Long): Double {
+        val previousTimestamp = lastPhaseTimestampNanos
+        lastPhaseTimestampNanos = timestampNanos.takeIf { it > 0L }
         val deltaNanos = if (timestampNanos > 0L && previousTimestamp != null) {
             timestampNanos - previousTimestamp
         } else {

@@ -225,3 +225,16 @@ Goal: bring the recorded Riesz/phase motion renderer into a live-preview path fo
   open.
 - Installed the debug build on the Pixel 8a after focused shader coverage and
   full JVM/build verification.
+
+## Completed Slice: Live Phase Temporal State Update Pass
+
+- `CameraOesRenderer` now compiles and invokes the live phase temporal shader
+  after ROI extraction, Riesz component generation, and phase projection.
+- The live phase path now ping-pongs wrapped phase, unwrapped phase, lowpass,
+  and highpass textures in `LivePhaseRoiState`.
+- Phase diagnostics now advance from warmup to ready after the ROI temporal
+  state has a previous phase frame.
+- Reconstruction, amplitude-gated amplification, and visible phase compose
+  invocation remain open.
+- Installed the debug build on the Pixel 8a after focused shader/graph coverage
+  and full JVM/build verification.
