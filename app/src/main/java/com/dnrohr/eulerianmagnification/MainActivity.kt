@@ -218,6 +218,7 @@ private fun MainScreen(
     var overlayQualityStatuses by remember { mutableStateOf(listOf(QualityStatus.Good)) }
     var lastOverlayTelemetryMillis by remember { mutableStateOf(0L) }
     var lastOverlayGlStatsMillis by remember { mutableStateOf(0L) }
+    var fullFrameRoiFallbackState by remember { mutableStateOf(FullFrameRoiFallbackState()) }
     val qualityEvaluator = remember { QualityEvaluator() }
     val lightingStabilityAnalyzer = remember { LightingStabilityAnalyzer() }
     val artifactSuppressor = remember { ArtifactSuppressor() }
@@ -233,6 +234,7 @@ private fun MainScreen(
         settings = analysisSettings,
         usingGlPreview = usingGlPreview,
         glFrameStats = glFrameStats,
+        analysisFps = analysisSample.analysisFps,
     )
     val activeRoi = RoiSourcePolicy.activeRoi(
         source = roiSource,
@@ -337,6 +339,17 @@ private fun MainScreen(
 
     fun handleSample(sample: AnalysisSample): CameraSampleResult {
         analysisSample = sample
+        val fullFrameFallbackDecision = FullFrameRoiFallbackPolicy.observe(
+            roiSource = roiSource,
+            analysisFps = sample.analysisFps,
+            state = fullFrameRoiFallbackState,
+        )
+        fullFrameRoiFallbackState = fullFrameFallbackDecision.nextState
+        if (fullFrameFallbackDecision.shouldFallbackToAuto) {
+            roiSource = RoiSource.Auto
+            manualRoiEditing = false
+            fullFrameRoiFallbackState = FullFrameRoiFallbackState()
+        }
         val currentLightingDiagnostic = lightingStabilityAnalyzer.update(sample)
         lightingDiagnostic = currentLightingDiagnostic
         val presentationTimestampNanos = recordingSession
@@ -384,6 +397,7 @@ private fun MainScreen(
         lightingUnstable = lightingDiagnostic?.status == LightingDiagnosticStatus.ExposurePumping,
         cameraFrameFps = glFrameStats.averageFps.takeIf { usingGlPreview },
         cameraFrameSampleCount = if (usingGlPreview) glFrameStats.sampleCount else 0,
+        roiSource = roiSource,
     )
 
     LaunchedEffect(lastOverlayTelemetryMillis) {

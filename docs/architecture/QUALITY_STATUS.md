@@ -10,6 +10,7 @@ Current statuses:
 - `Face missing`: frame the face or select a manual ROI.
 - `Too dark`: use brighter, steady light.
 - `Low FPS`: close apps or reduce device load.
+- `Full frame slow`: switch to Auto ROI for live preview.
 - `Camera FPS low`: hide controls or use Auto ROI.
 - `Timing unstable`: restart the preview if timing keeps jumping.
 - `Lighting flicker`: try daylight or a non-flickering lamp.
@@ -25,11 +26,16 @@ mostly unobstructed preview.
 
 The evaluator is intentionally conservative. It does not decide whether the visualization is medically meaningful; it only flags capture and timing conditions that commonly produce poor Eulerian magnification output.
 
-`Low FPS` is based on CPU analysis samples. `Camera FPS low` is based on GL
-camera frame-arrival cadence from `SurfaceTexture` callbacks and is only shown
-after enough camera frames have arrived to avoid startup-settling false
-warnings. This separates a slow analysis path from a camera stream that is
-actually delivering frames too slowly for full-frame live magnification.
+`Low FPS` is based on CPU analysis samples. If the selected source is `Full
+frame`, the same condition becomes `Full frame slow` so the user gets the
+specific recovery action. After repeated low-FPS full-frame samples, the app
+automatically switches ROI Source back to `Auto ROI`; full-frame analysis can
+make the image look frozen even when the camera and GL renderer are still
+delivering frames. `Camera FPS low` is based on GL camera frame-arrival cadence
+from `SurfaceTexture` callbacks and is only shown after enough camera frames
+have arrived to avoid startup-settling false warnings. This separates a slow
+analysis path from a camera stream that is actually delivering frames too slowly
+for full-frame live magnification.
 
 Lighting diagnostics use a rolling average-green history. The app reports:
 

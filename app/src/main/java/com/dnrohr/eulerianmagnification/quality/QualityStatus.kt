@@ -3,6 +3,7 @@ package com.dnrohr.eulerianmagnification.quality
 import com.dnrohr.eulerianmagnification.analysis.AnalysisSample
 import com.dnrohr.eulerianmagnification.analysis.AnalysisSettings
 import com.dnrohr.eulerianmagnification.analysis.MagnificationMode
+import com.dnrohr.eulerianmagnification.analysis.RoiSource
 import kotlin.math.abs
 
 class QualityEvaluator {
@@ -13,11 +14,14 @@ class QualityEvaluator {
         lightingUnstable: Boolean = false,
         cameraFrameFps: Double? = null,
         cameraFrameSampleCount: Int = 0,
+        roiSource: RoiSource = RoiSource.Auto,
     ): List<QualityStatus> {
         return buildList {
             if (sample.roi == null) add(QualityStatus.FaceMissing)
             if (sample.averageGreen in 0.01..LOW_LIGHT_GREEN_THRESHOLD) add(QualityStatus.TooDark)
-            if (sample.analysisFps in 0.01..<LOW_FPS_THRESHOLD) add(QualityStatus.LowFps)
+            if (sample.analysisFps in 0.01..<LOW_FPS_THRESHOLD) {
+                add(if (roiSource == RoiSource.FullFrame) QualityStatus.FullFrameSlow else QualityStatus.LowFps)
+            }
             if (
                 cameraFrameSampleCount >= MIN_CAMERA_FRAME_SAMPLES &&
                 cameraFrameFps != null &&
@@ -63,6 +67,7 @@ enum class QualityStatus(
     FaceMissing("Face missing", "Frame the face or select a manual ROI."),
     TooDark("Too dark", "Use brighter, steady light."),
     LowFps("Low FPS", "Close apps or reduce device load."),
+    FullFrameSlow("Full frame slow", "Switch to Auto ROI for live preview."),
     CameraFpsLow("Camera FPS low", "Hide controls or use Auto ROI."),
     TimingUnstable("Timing unstable", "Restart the preview if timing keeps jumping."),
     LightingFlicker("Lighting flicker", "Try daylight or a non-flickering lamp."),

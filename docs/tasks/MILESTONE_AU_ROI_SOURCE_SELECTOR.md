@@ -66,6 +66,17 @@ Goal: add a clear ROI source selector and make the normal motion experience star
 - Expanded guidance tells the user to hide controls or switch back to Auto ROI
   when the GL camera stream is too slow for full-frame validation.
 
+## Follow-up Slice: Full-frame Low-FPS Recovery
+
+- Added a source-aware `Full frame slow` quality status for low CPU analysis FPS
+  while ROI Source is `Full frame`.
+- Live full-frame reconstruction now falls back to ROI signal preview when
+  analysis FPS is below the live threshold, even if GL rendering and camera
+  cadence still look healthy.
+- Repeated low-FPS full-frame samples automatically switch ROI Source back to
+  `Auto ROI`, because the full-frame analysis path can make the image appear
+  frozen while the camera stream itself is still active.
+
 ## Done When
 
 - First launch and Reset Settings do not require the user to draw a manual ROI for the default motion path.

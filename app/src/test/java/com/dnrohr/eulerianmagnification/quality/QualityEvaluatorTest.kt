@@ -4,6 +4,7 @@ import com.dnrohr.eulerianmagnification.analysis.AnalysisSample
 import com.dnrohr.eulerianmagnification.analysis.AnalysisSettings
 import com.dnrohr.eulerianmagnification.analysis.MagnificationMode
 import com.dnrohr.eulerianmagnification.analysis.NormalizedRect
+import com.dnrohr.eulerianmagnification.analysis.RoiSource
 import com.dnrohr.eulerianmagnification.analysis.TranslationEstimate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -71,6 +72,23 @@ class QualityEvaluatorTest {
         )
 
         assertTrue(QualityStatus.LowFps in statuses)
+    }
+
+    @Test
+    fun warnsFullFrameSlowInsteadOfGenericLowFpsForFullFrameSource() {
+        val statuses = QualityEvaluator().evaluate(
+            sample = AnalysisSample(
+                roi = NormalizedRect(0.0f, 0.0f, 1.0f, 1.0f),
+                averageGreen = 120.0,
+                bandpassedGreen = 0.2,
+                analysisFps = 12.0,
+                timestampMonotonic = true,
+            ),
+            roiSource = RoiSource.FullFrame,
+        )
+
+        assertTrue(QualityStatus.FullFrameSlow in statuses)
+        assertTrue(QualityStatus.LowFps !in statuses)
     }
 
     @Test
@@ -225,6 +243,7 @@ class QualityEvaluatorTest {
         assertEquals("Frame the face or select a manual ROI.", QualityStatus.FaceMissing.action)
         assertEquals("Use brighter, steady light.", QualityStatus.TooDark.action)
         assertEquals("Close apps or reduce device load.", QualityStatus.LowFps.action)
+        assertEquals("Switch to Auto ROI for live preview.", QualityStatus.FullFrameSlow.action)
         assertEquals("Hide controls or use Auto ROI.", QualityStatus.CameraFpsLow.action)
         assertEquals("Restart the preview if timing keeps jumping.", QualityStatus.TimingUnstable.action)
         assertEquals("Try daylight or a non-flickering lamp.", QualityStatus.LightingFlicker.action)

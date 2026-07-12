@@ -16,6 +16,7 @@ object LiveEvmPreviewPolicy {
         settings: AnalysisSettings,
         usingGlPreview: Boolean,
         glFrameStats: GlFrameStats,
+        analysisFps: Double = 0.0,
     ): LiveEvmPreviewDecision {
         if (!usingGlPreview) {
             return LiveEvmPreviewDecision(
@@ -49,6 +50,13 @@ object LiveEvmPreviewPolicy {
                 reason = "GL preview timing is below the live full-frame threshold",
             )
         }
+        if (analysisFps in 0.01..<MIN_ANALYSIS_FPS) {
+            return LiveEvmPreviewDecision(
+                fullFrameColorPreview = false,
+                label = "ROI signal preview",
+                reason = "Analysis FPS is below the live full-frame threshold",
+            )
+        }
         return LiveEvmPreviewDecision(
             fullFrameColorPreview = true,
             label = settings.fullFramePreviewLabel(),
@@ -74,5 +82,6 @@ object LiveEvmPreviewPolicy {
 
     private const val MIN_SETTLED_SAMPLES = 10
     private const val MIN_GL_FPS = 23.5
+    private const val MIN_ANALYSIS_FPS = 23.5
     private const val MAX_GL_FRAME_MILLIS = 42.0
 }

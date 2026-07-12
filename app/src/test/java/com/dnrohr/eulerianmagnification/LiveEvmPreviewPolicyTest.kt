@@ -105,6 +105,22 @@ class LiveEvmPreviewPolicyTest {
     }
 
     @Test
+    fun disablesFullFrameColorWhenAnalysisCadenceFallsBelowThresholdDespiteFastRendering() {
+        val decision = LiveEvmPreviewPolicy.decide(
+            settings = AnalysisSettings(
+                mode = MagnificationMode.Pulse,
+                viewMode = ViewMode.Amplified,
+            ),
+            usingGlPreview = true,
+            glFrameStats = healthyStats(),
+            analysisFps = 12.0,
+        )
+
+        assertFalse(decision.fullFrameColorPreview)
+        assertTrue(decision.reason.contains("Analysis FPS"))
+    }
+
+    @Test
     fun keepsFullFrameColorEnabledForTwentyFourFpsCameraCadence() {
         val decision = LiveEvmPreviewPolicy.decide(
             settings = AnalysisSettings(

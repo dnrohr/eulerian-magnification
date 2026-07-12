@@ -110,4 +110,19 @@ class QualityCuePolicyTest {
 
         assertFalse(decision.shouldCue)
     }
+
+    @Test
+    fun cuesWhenFullFrameAnalysisFallsBehind() {
+        val decision = QualityCuePolicy.decide(
+            previousStatuses = listOf(QualityStatus.Good),
+            currentStatuses = listOf(QualityStatus.FullFrameSlow),
+            state = QualityCueState(),
+            nowMillis = 10_000L,
+            enabled = true,
+            systemHapticsAllowed = true,
+        )
+
+        assertTrue(decision.shouldCue)
+        assertEquals(QualityCueReason.QualityRegressed, decision.reason)
+    }
 }

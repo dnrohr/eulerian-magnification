@@ -84,6 +84,7 @@ object QualityCuePolicy {
             QualityStatus.FaceMissing,
             QualityStatus.TooDark,
             QualityStatus.LowFps,
+            QualityStatus.FullFrameSlow,
             QualityStatus.CameraFpsLow,
             QualityStatus.TimingUnstable,
             QualityStatus.LightingFlicker,
@@ -104,6 +105,7 @@ object QualityCuePolicy {
             QualityStatus.AmplificationRisk,
             -> 2
             QualityStatus.LowFps,
+            QualityStatus.FullFrameSlow,
             QualityStatus.CameraFpsLow,
             QualityStatus.LightingUnstable,
             -> 3
