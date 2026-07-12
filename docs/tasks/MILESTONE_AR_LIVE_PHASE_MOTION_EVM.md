@@ -12,7 +12,7 @@ Goal: bring the recorded Riesz/phase motion renderer into a live-preview path fo
 - [x] Port the recorded phase state update to a live-capable renderer path with bounded memory and latency.
 - [x] Add amplitude gating, phase wrapping, and temporal warmup diagnostics to the live UI/debug metadata.
 - [x] Add live Difference and Split views that compare raw video against phase-reconstructed output.
-- [ ] Validate on synthetic moving-edge and `local-euler` samples before phone-camera validation.
+- [x] Validate on synthetic moving-edge and `local-euler` samples before phone-camera validation.
 - [ ] Validate on Pixel 8a with a controlled object-motion setup and document expected artifacts.
 
 ## Done When
@@ -267,3 +267,23 @@ Goal: bring the recorded Riesz/phase motion renderer into a live-preview path fo
   visible live phase magnification complete.
 - Installed the debug build on the Pixel 8a after focused shader/graph coverage
   and full JVM/build verification.
+
+## Completed Slice: Synthetic And Local Euler Validation
+
+- Re-ran the JVM parity gate for synthetic samples:
+  `ParityHarnessTest`, `RecordedEvmParityValidatorTest`, and
+  `ParityHarnessArtifactWriterTest`.
+- The synthetic moving-edge sample still routes Motion amplified/split views
+  through the recorded Riesz phase renderer with nonzero changed-pixel metrics.
+- Verified the local `euler.mp4` hash:
+  `BF549FEAA994104817A6AFCC39037FB80A013D4074E0AC00EC167F4471B0ACBF`.
+- Ran the connected Pixel 8a parity harness for `local-euler` using the Android
+  media decoder and generated artifacts under
+  `/sdcard/Download/eulerian-parity-output/local-euler/`.
+- The generated `local-euler` manifest reported `36` decoded frames at `51x90`.
+  Amplified and Split outputs had `meanAbsDelta=12.500363`,
+  `changedPixelFraction=0.710899`, and `clippedPixelFraction=0.000000`.
+- Detailed metrics are recorded in
+  `docs/experiments/recorded_full_frame_evm_parity_validation.md`.
+- Live Pixel camera validation with a controlled object-motion setup remains
+  open.

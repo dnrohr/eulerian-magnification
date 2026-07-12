@@ -73,18 +73,41 @@ PASS horizontal edge translating down: 5 frames, linear_delta=0.175000, phase_de
 PASS mit-evm-baby.mp4: 60 frames, 59 pairs, linear_delta=0.001602, phase_delta=0.000472, ratio=0.294765, linear_roughness=0.071753, phase_roughness=0.071722
 ```
 
-## Current Gap
+## Local Euler Device Harness Check
 
-The workstation does not currently have `ffmpeg`/`ffprobe` or Python media
-packages, and the app's MP4 decoder/export path uses Android media APIs. Because
-phone testing is unavailable today, this validation did not render fresh MP4
-outputs from `sample-videos/euler.mp4` or `sample-videos/mit-evm-baby.mp4`.
+Date: 2026-07-12
 
-When device testing is available, rerun `Process Video` for:
+After the live phase ROI renderer was wired through visible preview output, the
+repeatable pre-phone-validation gate was rerun:
 
-- `sample-videos/mit-evm-baby.mp4` in a low-frequency motion/breathing setting
-- `sample-videos/euler.mp4` in Pulse and Fast Motion settings
+```powershell
+.\gradlew.bat testDebugUnitTest --tests "com.dnrohr.eulerianmagnification.analysis.ParityHarnessTest" --tests "com.dnrohr.eulerianmagnification.analysis.RecordedEvmParityValidatorTest" --tests "com.dnrohr.eulerianmagnification.analysis.ParityHarnessArtifactWriterTest"
+.\gradlew.bat connectedDebugAndroidTest "-Pandroid.testInstrumentationRunnerArguments.class=com.dnrohr.eulerianmagnification.analysis.ParityHarnessInstrumentedTest" "-Pandroid.testInstrumentationRunnerArguments.sampleId=local-euler" "-Pandroid.testInstrumentationRunnerArguments.sampleAssetName=euler.mp4" "-Pandroid.testInstrumentationRunnerArguments.outputDirPath=/sdcard/Download/eulerian-parity-output"
+```
 
-Then save the exported MP4, metadata, timeline, and evidence report under ignored
-local media storage and record qualitative notes here or in a follow-up
-experiment note.
+Results:
+
+- JVM synthetic parity checks passed, including synthetic translating-edge
+  motion through the recorded Riesz phase renderer.
+- Pixel 8a connected parity harness passed for `local-euler`.
+- `local-euler` source SHA-256:
+  `BF549FEAA994104817A6AFCC39037FB80A013D4074E0AC00EC167F4471B0ACBF`.
+- `local-euler` decoded `36` frames at `51x90`.
+- Generated artifact set on device:
+  `/sdcard/Download/eulerian-parity-output/local-euler/`.
+- The pulled ignored manifest reported:
+  - Raw: `meanAbsDelta=0.000000`, `changedPixelFraction=0.000000`.
+  - Amplified: `renderer=recorded_linear_evm`,
+    `meanAbsDelta=12.500363`, `changedPixelFraction=0.710899`,
+    `clippedPixelFraction=0.000000`.
+  - Difference: `renderer=roi_signal_diagnostic`,
+    `meanAbsDelta=122.949304`, `changedPixelFraction=1.000000`,
+    `clippedPixelFraction=0.001386`.
+  - Split: `renderer=recorded_linear_evm`, output `102x90`,
+    `meanAbsDelta=12.500363`, `changedPixelFraction=0.710899`,
+    `clippedPixelFraction=0.000000`.
+
+This validates the synthetic moving-edge and local recorded-sample gate before
+live Pixel camera validation. It does not prove live camera phase magnification;
+the remaining AR validation must use a controlled object-motion setup on the
+Pixel 8a and document expected live artifacts.
