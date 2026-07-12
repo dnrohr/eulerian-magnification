@@ -85,6 +85,7 @@ class ColorMagnificationParameters(
             lowCutHz = settings.lowCutHz,
             highCutHz = settings.highCutHz,
             reconstructionProfile = LivePyramidReconstructionProfile.forMode(settings.mode),
+            livePhaseRoiPlan = livePhasePreviewDecision?.roiPlan,
             livePhaseDiagnostics = livePhasePreviewDecision?.diagnostics ?: LivePhaseDiagnostics(requested = false),
         )
     }
@@ -102,5 +103,6 @@ data class ColorMagnificationUniforms(
     val lowCutHz: Double = 0.7,
     val highCutHz: Double = 3.0,
     val reconstructionProfile: LivePyramidReconstructionProfile = LivePyramidReconstructionProfile.PulseColor,
+    val livePhaseRoiPlan: LivePhaseRoiPlan? = null,
     val livePhaseDiagnostics: LivePhaseDiagnostics = LivePhaseDiagnostics(requested = false),
 )

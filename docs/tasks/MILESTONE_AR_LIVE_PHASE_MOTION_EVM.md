@@ -171,3 +171,17 @@ Goal: bring the recorded Riesz/phase motion renderer into a live-preview path fo
 - Runtime phase rendering remains open.
 - Installed the debug build on the Pixel 8a after focused graph/ROI/shader
   coverage and full JVM/build verification.
+
+## Completed Slice: Live Phase ROI State Allocation Path
+
+- `ColorMagnificationUniforms` now carries the selected `LivePhaseRoiPlan` into
+  the GL renderer alongside live phase diagnostics.
+- Added `LivePhaseRoiState`, which allocates the bounded ROI phase state:
+  ping-pong wrapped phase, unwrapped phase, lowpass, and highpass targets plus
+  the working ROI/Riesz/project/amplify/reconstruct textures.
+- `CameraOesRenderer` now prepares and releases the live phase ROI state from
+  the policy decision, avoids allocation during policy fallback, and reports
+  renderer errors through phase diagnostics.
+- Runtime phase shader invocation and visible phase output remain open.
+- Installed the debug build on the Pixel 8a after focused uniform/ROI/graph/
+  shader coverage and full JVM/build verification.

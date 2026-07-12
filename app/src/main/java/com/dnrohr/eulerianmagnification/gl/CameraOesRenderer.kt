@@ -59,6 +59,7 @@ class CameraOesRenderer(
     private var processedRenderTarget: GlRenderTarget? = null
     private var downsamplePyramid: GlPyramid? = null
     private var temporalState: GlTemporalState? = null
+    private var livePhaseRoiState: LivePhaseRoiState? = null
     private var surfaceSize = GlTextureSize(1, 1)
     private var cameraTextureSize = GlTextureSize(1, 1)
     private var lastTemporalTimestampNanos: Long? = null
@@ -159,10 +160,12 @@ class CameraOesRenderer(
         rgbRenderTarget?.release()
         downsamplePyramid?.release()
         temporalState?.release()
+        livePhaseRoiState?.release()
         processedRenderTarget?.release()
         rgbRenderTarget = GlRenderTarget(surfaceSize)
         processedRenderTarget = GlRenderTarget(surfaceSize)
         lastTemporalTimestampNanos = null
+        livePhaseRoiState = null
         downsamplePyramid = GlPyramid(
             baseSize = GlTextureSize(
                 width = (width / 2).coerceAtLeast(1),
@@ -196,6 +199,7 @@ class CameraOesRenderer(
                 GlRenderPath.ColorBridge
             }
         }
+        val phaseDiagnostics = prepareLivePhaseRoiState(colorUniforms)
         emitProcessedFrame()
         drawOutputToScreen()
         providePendingSurfaceIfReady()
@@ -205,7 +209,7 @@ class CameraOesRenderer(
                 renderPath = renderPath,
                 surfaceSize = surfaceSize,
                 reconstructionDiagnostics = reconstructionDiagnostics,
-                phaseDiagnostics = colorUniforms.livePhaseDiagnostics,
+                phaseDiagnostics = phaseDiagnostics,
             )
         )
     }
@@ -228,6 +232,8 @@ class CameraOesRenderer(
         downsamplePyramid = null
         temporalState?.release()
         temporalState = null
+        livePhaseRoiState?.release()
+        livePhaseRoiState = null
     }
 
     private fun providePendingSurfaceIfReady() {
@@ -394,6 +400,46 @@ class CameraOesRenderer(
         } catch (_: GlException) {
             supportsHalfFloatTemporalTargets = false
             null
+        }
+    }
+
+    private fun prepareLivePhaseRoiState(uniforms: ColorMagnificationUniforms): LivePhaseDiagnostics {
+        val diagnostics = uniforms.livePhaseDiagnostics
+        if (!diagnostics.requested) {
+            livePhaseRoiState?.release()
+            livePhaseRoiState = null
+            return diagnostics
+        }
+        if (diagnostics.fallbackReason != null) {
+            livePhaseRoiState?.release()
+            livePhaseRoiState = null
+            return diagnostics
+        }
+        val plan = uniforms.livePhaseRoiPlan ?: return diagnostics.copy(
+            fallbackReason = LivePhaseFallbackReason.MissingManualRoi,
+        )
+        if (!supportsHalfFloatTemporalTargets) {
+            livePhaseRoiState?.release()
+            livePhaseRoiState = null
+            return diagnostics.copy(
+                processingSize = plan.processingSize,
+                fallbackReason = LivePhaseFallbackReason.UnsupportedGl,
+            )
+        }
+        return try {
+            val current = livePhaseRoiState
+            if (current == null || !current.matches(plan)) {
+                current?.release()
+                livePhaseRoiState = LivePhaseRoiState(plan)
+            }
+            diagnostics.copy(processingSize = plan.processingSize)
+        } catch (_: GlException) {
+            livePhaseRoiState?.release()
+            livePhaseRoiState = null
+            diagnostics.copy(
+                processingSize = plan.processingSize,
+                fallbackReason = LivePhaseFallbackReason.RendererError,
+            )
         }
     }
 

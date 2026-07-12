@@ -150,8 +150,13 @@ class ColorMagnificationPassTest {
 
     @Test
     fun carriesLivePhaseDiagnosticsIntoUniforms() {
+        val roiPlan = LivePhaseRoiPlan(
+            surfaceSize = GlTextureSize(640, 480),
+            roi = NormalizedRect(0.25f, 0.25f, 0.75f, 0.75f),
+        )
         val decision = LivePhasePreviewDecision(
             useLivePhase = true,
+            roiPlan = roiPlan,
             diagnostics = LivePhaseDiagnostics(
                 requested = true,
                 warmupStatus = LivePhaseWarmupStatus.Warming,
@@ -165,6 +170,7 @@ class ColorMagnificationPassTest {
             livePhasePreviewDecision = decision,
         )
 
+        assertEquals(roiPlan, uniforms.livePhaseRoiPlan)
         assertTrue(uniforms.livePhaseDiagnostics.requested)
         assertEquals("phase: 160x120 / phase warmup: filling temporal state / amplitude unknown", uniforms.livePhaseDiagnostics.summary)
     }
