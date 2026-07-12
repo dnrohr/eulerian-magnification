@@ -16,6 +16,7 @@ with:
 - `window_focus.txt`
 - `device_props.txt`
 - `manifest.json`
+- optional `roi_overlay_measurement.json` when `-MeasureRoiExpected` is passed
 - optional `evidence_summary.json` when `-Summarize` is passed
 
 ## Command
@@ -56,6 +57,30 @@ diagnostics, because the debug overlay can add enough UI jank to make the
 preview look worse than the camera/render path actually is. The capture manifest
 and summary include a warning when the debug panel is used.
 
+For ROI overlay validation, pass `-MeasureRoiExpected` with the expected
+normalized screenshot-space rectangle. The capture script then writes
+`roi_overlay_measurement.json` and the summary embeds the result:
+
+```powershell
+.\tools\capture_live_validation_evidence.ps1 `
+  -Label "manual-roi-overlay" `
+  -Mode Tremor `
+  -View Raw `
+  -RoiSource Manual `
+  -ManualRoi "0.25,0.25,0.75,0.75" `
+  -GlPreview $true `
+  -Controls $false `
+  -Clean $true `
+  -MeasureRoiExpected "0.083,0.250,0.919,0.751" `
+  -MeasureRoiKind Manual `
+  -Summarize
+```
+
+`-MeasureRoiExpected` must use screenshot coordinates, not camera analysis
+coordinates. A passing measurement proves the visible overlay position; it only
+proves target alignment when the expected rectangle was derived from the visible
+known target in that screenshot.
+
 ## Scripted App State
 
 The capture script can launch the app into a specific validation state through
@@ -89,6 +114,15 @@ Available launch parameters:
 - `-Panel`: when expanded controls are open, selects `Controls`, `Setup`,
   `Recording`, or `Debug`.
 - `-LockAeAwb`: requests locked exposure/white balance.
+- `-MeasureRoiExpected`: optional normalized screenshot-space
+  `left,top,right,bottom` rectangle to check against the visible ROI overlay.
+- `-MeasureRoiKind`: `Manual` or `Auto`; defaults from `-RoiSource` when
+  omitted.
+- `-MeasureRoiColorTolerance`, `-MeasureRoiSearchMargin`,
+  `-MeasureRoiMaxEdgeError`, and `-MeasureRoiMinimumMatchedPixels`: optional
+  analyzer thresholds forwarded to the ROI overlay measurement script.
+- `-MeasureRoiAllowMultipleComponents`: allows more than one connected overlay
+  component when a test intentionally expects duplicate marks.
 - `-Summarize`: writes `evidence_summary.json` immediately after capture.
 - `-PersistLaunchSettings`: saves the launch settings. Omit this for normal
   validation captures so saved user settings are left unchanged.

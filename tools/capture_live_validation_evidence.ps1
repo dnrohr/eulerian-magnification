@@ -14,6 +14,14 @@ param(
     [Nullable[bool]]$Controls = $null,
     [Nullable[bool]]$Clean = $null,
     [Nullable[bool]]$LockAeAwb = $null,
+    [string]$MeasureRoiExpected = "",
+    [ValidateSet("", "Manual", "Auto")]
+    [string]$MeasureRoiKind = "",
+    [int]$MeasureRoiColorTolerance = 42,
+    [double]$MeasureRoiSearchMargin = 0.08,
+    [double]$MeasureRoiMaxEdgeError = 0.04,
+    [int]$MeasureRoiMinimumMatchedPixels = 24,
+    [switch]$MeasureRoiAllowMultipleComponents,
     [switch]$PersistLaunchSettings,
     [switch]$Summarize
 )
@@ -78,6 +86,18 @@ function Run-AdbText {
     }
 
     $text | Out-File -LiteralPath $OutputPath -Encoding utf8
+}
+
+function Find-PowerShell {
+    $pwsh = Get-Command pwsh -ErrorAction SilentlyContinue
+    if ($pwsh) {
+        return $pwsh.Source
+    }
+    $powershell = Get-Command powershell -ErrorAction SilentlyContinue
+    if ($powershell) {
+        return $powershell.Source
+    }
+    throw "No PowerShell executable was found for child validation scripts."
 }
 
 $adb = Find-Adb
@@ -193,6 +213,58 @@ if ($ScreenRecordSeconds -gt 0) {
     $artifacts.screenrecord = $videoPath
 }
 
+if (-not [string]::IsNullOrWhiteSpace($MeasureRoiExpected)) {
+    $measurementScript = Join-Path $PSScriptRoot "measure_roi_overlay_screenshot.ps1"
+    $measurementPath = Join-Path $outputDir "roi_overlay_measurement.json"
+    $measurementLogPath = Join-Path $outputDir "roi_overlay_measurement_stdout.txt"
+    if (-not (Test-Path -LiteralPath $measurementScript)) {
+        $warnings += "ROI measurement requested, but measure_roi_overlay_screenshot.ps1 was not found."
+    } else {
+        $resolvedMeasureKind = if ([string]::IsNullOrWhiteSpace($MeasureRoiKind)) {
+            if ($RoiSource -eq "Auto") { "Auto" } else { "Manual" }
+        } else {
+            $MeasureRoiKind
+        }
+        $measurementArgs = @(
+            "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+            $measurementScript,
+            "-ScreenshotPath",
+            $screenshotPath,
+            "-ExpectedRoi",
+            $MeasureRoiExpected,
+            "-OverlayKind",
+            $resolvedMeasureKind,
+            "-OutputPath",
+            $measurementPath,
+            "-ColorTolerance",
+            $MeasureRoiColorTolerance.ToString([Globalization.CultureInfo]::InvariantCulture),
+            "-SearchMargin",
+            $MeasureRoiSearchMargin.ToString([Globalization.CultureInfo]::InvariantCulture),
+            "-MaxEdgeError",
+            $MeasureRoiMaxEdgeError.ToString([Globalization.CultureInfo]::InvariantCulture),
+            "-MinimumMatchedPixels",
+            $MeasureRoiMinimumMatchedPixels.ToString([Globalization.CultureInfo]::InvariantCulture)
+        )
+        if ($MeasureRoiAllowMultipleComponents) {
+            $measurementArgs += "-AllowMultipleComponents"
+        }
+
+        $powerShell = Find-PowerShell
+        & $powerShell @measurementArgs *> $measurementLogPath
+        $measurementExitCode = $LASTEXITCODE
+        if (Test-Path -LiteralPath $measurementPath) {
+            $artifacts.roiMeasurement = $measurementPath
+        }
+        $artifacts.roiMeasurementLog = $measurementLogPath
+        if ($measurementExitCode -ne 0) {
+            $warnings += "ROI overlay measurement failed with exit code $measurementExitCode."
+        }
+    }
+}
+
 $logcatPath = Join-Path $outputDir "logcat_tail.txt"
 Run-AdbText -Adb $adb -Arguments @("logcat", "-d", "-t", "800") -OutputPath $logcatPath
 $artifacts.logcat = $logcatPath
@@ -214,6 +286,8 @@ $manifest = [ordered]@{
         controls = if ($PSBoundParameters.ContainsKey("Controls")) { $Controls } else { $null }
         clean = if ($PSBoundParameters.ContainsKey("Clean")) { $Clean } else { $null }
         lockAeAwb = if ($PSBoundParameters.ContainsKey("LockAeAwb")) { $LockAeAwb } else { $null }
+        measureRoiExpected = $MeasureRoiExpected
+        measureRoiKind = $MeasureRoiKind
         persistSettings = [bool]$PersistLaunchSettings
     }
     adb = $adb

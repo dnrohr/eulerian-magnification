@@ -35,13 +35,10 @@ rectangle:
   -GlPreview $true `
   -Controls $false `
   -Clean $true `
-  -ScreenRecordSeconds 0
-
-.\tools\measure_roi_overlay_screenshot.ps1 `
-  -ScreenshotPath "sample-videos\exports\live-validation\<bundle>\screenshot.png" `
-  -ExpectedRoi "0.083,0.250,0.919,0.751" `
-  -OverlayKind Manual `
-  -OutputPath "sample-videos\exports\live-validation\<bundle>\roi_overlay_measurement.json"
+  -MeasureRoiExpected "0.083,0.250,0.919,0.751" `
+  -MeasureRoiKind Manual `
+  -ScreenRecordSeconds 0 `
+  -Summarize
 ```
 
 `ExpectedRoi` is normalized screenshot space, not analysis-camera space. Derive
@@ -64,11 +61,16 @@ which catches duplicate visible ROI boxes in the search region.
 Use the same screenshot analyzer for the green automatic ROI outline:
 
 ```powershell
-.\tools\measure_roi_overlay_screenshot.ps1 `
-  -ScreenshotPath "sample-videos\exports\live-validation\<bundle>\screenshot.png" `
-  -ExpectedRoi "<visible-face-or-fallback-target-bounds>" `
-  -OverlayKind Auto `
-  -OutputPath "sample-videos\exports\live-validation\<bundle>\roi_overlay_measurement.json"
+.\tools\capture_live_validation_evidence.ps1 `
+  -Label "auto-face-roi" `
+  -Mode Pulse `
+  -RoiSource Auto `
+  -GlPreview $true `
+  -Controls $false `
+  -Clean $true `
+  -MeasureRoiExpected "<visible-face-or-fallback-target-bounds>" `
+  -MeasureRoiKind Auto `
+  -Summarize
 ```
 
 For automatic face validation, `ExpectedRoi` must come from the visible face or

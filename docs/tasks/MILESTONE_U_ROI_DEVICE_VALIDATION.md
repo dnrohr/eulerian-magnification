@@ -111,6 +111,28 @@ Goal: prove that automatic and manual ROI coordinates align with the live previe
 - This reduces manual audit errors for ROI validation evidence, but does not
   close manual or automatic target validation without a visible target.
 
+## Supporting Slice: Capture-Integrated ROI Measurement
+
+- Added optional ROI overlay measurement to
+  `tools/capture_live_validation_evidence.ps1`.
+- Passing `-MeasureRoiExpected` now runs the screenshot analyzer after capture,
+  writes `roi_overlay_measurement.json`, records the artifact in the manifest,
+  and lets `-Summarize` embed the measurement result in `evidence_summary.json`.
+- The capture script preserves measurement failures as warnings instead of
+  dropping the rest of the evidence bundle.
+- Updated ROI validation docs so manual and automatic ROI captures can produce
+  screenshot, logcat, gfxinfo, thermal, manifest, ROI measurement, and summary
+  artifacts in one command.
+- Verified on Pixel 8a with clean-preview manual ROI smoke bundle
+  `sample-videos/exports/live-validation/20260712-163701-integrated-manual-roi-measurement-smoke`.
+  The generated ROI measurement passed with one connected component, `33600`
+  matched pixels, measured ROI `0.0796,0.2483,0.9204,0.7517`, maximum edge
+  error `0.0034`, and the evidence summary embedded the measurement with no
+  runtime warnings.
+- This improves repeatability for the remaining known-target/visible-face ROI
+  validation, but does not close those tasks until a watched target capture is
+  inspected.
+
 ## Done When
 
 - Manual and automatic ROI overlays align with the visible target on device.
