@@ -1,11 +1,16 @@
 package com.dnrohr.eulerianmagnification
 
 import android.Manifest
+import android.content.ContentValues
 import android.os.Build
 import android.os.PowerManager
+import android.provider.MediaStore
 import androidx.test.core.app.ActivityScenario
 import androidx.test.platform.app.InstrumentationRegistry
+import com.dnrohr.eulerianmagnification.analysis.AnalysisSample
+import com.dnrohr.eulerianmagnification.analysis.NormalizedRect
 import com.dnrohr.eulerianmagnification.analysis.RoiSource
+import com.dnrohr.eulerianmagnification.recording.ProcessedRecordingSession
 import com.dnrohr.eulerianmagnification.recording.RecordingOutputMode
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -19,9 +24,11 @@ class ParityPresetBenchmarkInstrumentedTest {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val context = instrumentation.targetContext
         instrumentation.uiAutomation.grantRuntimePermission(context.packageName, Manifest.permission.CAMERA)
-        val outputRoot = InstrumentationRegistry.getArguments().getString("outputDirPath")?.let(::File)
-            ?: File(context.getExternalFilesDir(null), "preset-benchmark")
-        outputRoot.mkdirs()
+        val requestedOutputRoot = InstrumentationRegistry.getArguments().getString("outputDirPath")?.let(::File)
+        val outputRoot = writableOutputRoot(
+            requested = requestedOutputRoot,
+            fallback = File(context.getExternalFilesDir(null), "preset-benchmark"),
+        )
 
         val rows = ParityPreset.entries.map { preset ->
             savePreset(preset)
@@ -30,6 +37,7 @@ class ParityPresetBenchmarkInstrumentedTest {
                 Thread.sleep(BENCHMARK_WINDOW_MILLIS)
             }
             val gfxInfo = shell("dumpsys gfxinfo ${context.packageName}")
+            val recordingProbe = runRecordingProbe(preset, outputRoot)
             ParityPresetBenchmarkRow(
                 preset = preset,
                 measuredFrames = gfxInfo.intAfter("Total frames rendered:") ?: 0,
@@ -39,7 +47,9 @@ class ParityPresetBenchmarkInstrumentedTest {
                 p95FrameMillis = gfxInfo.percentile("95th"),
                 p99FrameMillis = gfxInfo.percentile("99th"),
                 thermalStatus = currentThermalStatus(),
-                recordingStability = "preview benchmark only; recording not exercised",
+                recordingSampleCount = recordingProbe.sampleCount,
+                recordingDroppedFrameEstimate = recordingProbe.droppedFrameEstimate,
+                recordingStability = recordingProbe.status,
             )
         }
 
@@ -50,13 +60,22 @@ class ParityPresetBenchmarkInstrumentedTest {
         )
         val csvFile = File(outputRoot, "preset_benchmark.csv")
         val jsonFile = File(outputRoot, "preset_benchmark.json")
-        csvFile.writeText(report.toCsv())
-        jsonFile.writeText(report.toJson())
+        val csvText = report.toCsv()
+        val jsonText = report.toJson()
+        csvFile.writeText(csvText)
+        jsonFile.writeText(jsonText)
+        writeDownloadArtifact("preset_benchmark.csv", csvText)
+        writeDownloadArtifact("preset_benchmark.json", jsonText)
+        assertTrue(
+            "public CSV mirror should include recording fields",
+            shell("cat $PUBLIC_OUTPUT_DIR/preset_benchmark.csv").contains("recordingSampleCount"),
+        )
 
         assertEquals(ParityPreset.entries.size, rows.size)
         assertTrue("CSV artifact should exist", csvFile.isFile)
         assertTrue("JSON artifact should exist", jsonFile.isFile)
         assertTrue("each preset should produce a row", rows.all { it.preset in ParityPreset.entries })
+        assertTrue("recording metadata probe should be stable", rows.all { it.recordingDroppedFrameEstimate == 0 })
     }
 
     private fun savePreset(preset: ParityPreset) {
@@ -72,11 +91,88 @@ class ParityPresetBenchmarkInstrumentedTest {
         AppSettingsStore(context).save(settings)
     }
 
+    private fun writableOutputRoot(
+        requested: File?,
+        fallback: File,
+    ): File {
+        val candidates = listOfNotNull(requested, fallback)
+        for (candidate in candidates) {
+            runCatching {
+                candidate.mkdirs()
+                val probe = File(candidate, ".write-probe")
+                probe.writeText("ok")
+                probe.delete()
+                return candidate
+            }
+        }
+        error("No writable benchmark output directory")
+    }
+
     private fun shell(command: String): String {
         val automation = InstrumentationRegistry.getInstrumentation().uiAutomation
         return automation.executeShellCommand(command).use { descriptor ->
             FileInputStream(descriptor.fileDescriptor).bufferedReader().use { it.readText() }
         }
+    }
+
+    private fun writeDownloadArtifact(
+        fileName: String,
+        contents: String,
+    ) {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val resolver = context.contentResolver
+        val values = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
+            put(MediaStore.MediaColumns.MIME_TYPE, if (fileName.endsWith(".json")) "application/json" else "text/csv")
+            put(MediaStore.MediaColumns.RELATIVE_PATH, "Download/eulerian-preset-benchmark")
+            put(MediaStore.MediaColumns.IS_PENDING, 1)
+        }
+        val uri = requireNotNull(resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)) {
+            "Could not create $fileName in Downloads"
+        }
+        resolver.openOutputStream(uri).use { output ->
+            requireNotNull(output) { "Could not open $fileName in Downloads" }
+            output.write(contents.toByteArray(Charsets.UTF_8))
+        }
+        values.clear()
+        values.put(MediaStore.MediaColumns.IS_PENDING, 0)
+        resolver.update(uri, values, null, null)
+    }
+
+    private fun runRecordingProbe(
+        preset: ParityPreset,
+        outputRoot: File,
+    ): RecordingProbe {
+        val session = ProcessedRecordingSession(
+            rootDirectory = File(outputRoot, "recording-probes/${preset.name.lowercase()}"),
+            requestedOutputMode = RecordingOutputMode.Clean,
+        )
+        repeat(RECORDING_PROBE_SAMPLES) { index ->
+            session.record(
+                AnalysisSample(
+                    analysisFps = 30.0,
+                    latencyMillis = 16.0,
+                    roi = NormalizedRect(0.25f, 0.25f, 0.75f, 0.75f),
+                    averageGreen = 128.0,
+                    bandpassedGreen = 0.01 * (index % 5),
+                    frameTimestampNanos = index * FRAME_INTERVAL_NANOS,
+                ),
+                preset.settings,
+            )
+        }
+        val metadata = session.stop(
+            settings = preset.settings,
+            thermalStatus = currentThermalStatus(),
+        )
+        return RecordingProbe(
+            sampleCount = RECORDING_PROBE_SAMPLES,
+            droppedFrameEstimate = session.droppedFrameEstimate,
+            status = if (metadata.isFile && session.droppedFrameEstimate == 0) {
+                "metadata ok"
+            } else {
+                "metadata issue"
+            },
+        )
     }
 
     private fun currentThermalStatus(): String {
@@ -108,7 +204,16 @@ class ParityPresetBenchmarkInstrumentedTest {
         return regex.find(this)?.groupValues?.getOrNull(1)?.toDoubleOrNull()
     }
 
+    private data class RecordingProbe(
+        val sampleCount: Int,
+        val droppedFrameEstimate: Int,
+        val status: String,
+    )
+
     private companion object {
         private const val BENCHMARK_WINDOW_MILLIS = 4_000L
+        private const val RECORDING_PROBE_SAMPLES = 30
+        private const val FRAME_INTERVAL_NANOS = 33_333_333L
+        private const val PUBLIC_OUTPUT_DIR = "/sdcard/Download/eulerian-preset-benchmark"
     }
 }

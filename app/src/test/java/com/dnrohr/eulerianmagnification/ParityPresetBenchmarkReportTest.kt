@@ -19,7 +19,9 @@ class ParityPresetBenchmarkReportTest {
                     p95FrameMillis = 24.0,
                     p99FrameMillis = 32.0,
                     thermalStatus = "none",
-                    recordingStability = "not exercised",
+                    recordingSampleCount = 30,
+                    recordingDroppedFrameEstimate = 0,
+                    recordingStability = "metadata ok",
                 )
             ),
         )
@@ -31,6 +33,8 @@ class ParityPresetBenchmarkReportTest {
         assertTrue(csv.contains("jankyPercent"))
         assertTrue(json.contains("\"deviceModel\": \"Pixel 8a\""))
         assertTrue(json.contains("\"frames\": 120"))
-        assertTrue(json.contains("\"recordingStability\": \"not exercised\""))
+        assertTrue(json.contains("\"recordingSampleCount\": 30"))
+        assertTrue(json.contains("\"recordingDroppedFrameEstimate\": 0"))
+        assertTrue(json.contains("\"recordingStability\": \"metadata ok\""))
     }
 }

@@ -29,6 +29,9 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - Added `ParityPresetBenchmarkInstrumentedTest`, which launches each locked
   preset on device and records `dumpsys gfxinfo` frame/jank percentiles plus
   thermal status.
+- Extended the benchmark with a per-preset processed-recording metadata probe:
+  30 monotonic samples, zero dropped-frame estimate, and `metadata ok` for all
+  four presets on the 2026-07-12 Pixel run.
 - Ran the benchmark on Pixel 8a and wrote artifacts under
   `/sdcard/Download/eulerian-preset-benchmark`.
 - Documented the 2026-07-12 short-run results in
@@ -37,8 +40,8 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 ## Remaining
 
 - Extend Pixel 8a benchmark evidence for each preset with dropped/unstable
-  camera frames, live analysis latency, processed recording stability, and a
-  known-good visual artifact.
+  camera frames, live analysis latency, encoded processed-recording stability,
+  and a known-good visual artifact.
 - Mark the README/parity docs as validated only after those benchmark notes and artifacts exist.
 
 ## Done When

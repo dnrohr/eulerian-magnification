@@ -11,6 +11,8 @@ data class ParityPresetBenchmarkRow(
     val p95FrameMillis: Double?,
     val p99FrameMillis: Double?,
     val thermalStatus: String,
+    val recordingSampleCount: Int,
+    val recordingDroppedFrameEstimate: Int,
     val recordingStability: String,
 ) {
     val jankyPercent: Double
@@ -27,7 +29,7 @@ data class ParityPresetBenchmarkReport(
 ) {
     fun toCsv(): String {
         return buildString {
-            appendLine("preset,mode,band,view,amplification,frames,jankyFrames,jankyPercent,medianMs,p90Ms,p95Ms,p99Ms,thermalStatus,recordingStability")
+            appendLine("preset,mode,band,view,amplification,frames,jankyFrames,jankyPercent,medianMs,p90Ms,p95Ms,p99Ms,thermalStatus,recordingSampleCount,recordingDroppedFrameEstimate,recordingStability")
             rows.forEach { row ->
                 appendLine(
                     listOf(
@@ -44,6 +46,8 @@ data class ParityPresetBenchmarkReport(
                         row.p95FrameMillis.formatNullableNumber(),
                         row.p99FrameMillis.formatNullableNumber(),
                         row.thermalStatus,
+                        row.recordingSampleCount.toString(),
+                        row.recordingDroppedFrameEstimate.toString(),
                         row.recordingStability,
                     ).joinToString(",") { it.csvEscape() },
                 )
@@ -72,6 +76,8 @@ data class ParityPresetBenchmarkReport(
                 appendLine("      \"p95Ms\": ${row.p95FrameMillis.formatNullableNumber()},")
                 appendLine("      \"p99Ms\": ${row.p99FrameMillis.formatNullableNumber()},")
                 appendLine("      \"thermalStatus\": ${row.thermalStatus.quoteJson()},")
+                appendLine("      \"recordingSampleCount\": ${row.recordingSampleCount},")
+                appendLine("      \"recordingDroppedFrameEstimate\": ${row.recordingDroppedFrameEstimate},")
                 appendLine("      \"recordingStability\": ${row.recordingStability.quoteJson()}")
                 append("    }")
                 if (index != rows.lastIndex) append(',')
