@@ -14,7 +14,8 @@ param(
     [Nullable[bool]]$Controls = $null,
     [Nullable[bool]]$Clean = $null,
     [Nullable[bool]]$LockAeAwb = $null,
-    [switch]$PersistLaunchSettings
+    [switch]$PersistLaunchSettings,
+    [switch]$Summarize
 )
 
 $ErrorActionPreference = "Stop"
@@ -86,6 +87,11 @@ $outputDir = Join-Path $OutputRoot "$timestamp-$safeLabel"
 New-Item -ItemType Directory -Force -Path $outputDir | Out-Null
 
 $artifacts = [ordered]@{}
+$warnings = @()
+
+if ($Controls -eq $true -and $Panel -eq "Debug") {
+    $warnings += "Debug controls are useful for renderer diagnostics but can add UI jank; use hidden controls or Clean mode for visual-quality captures."
+}
 
 $devicesPath = Join-Path $outputDir "adb_devices.txt"
 Run-AdbText -Adb $adb -Arguments @("devices") -OutputPath $devicesPath
@@ -215,12 +221,22 @@ $manifest = [ordered]@{
     screenRecordSeconds = $ScreenRecordSeconds
     launchedApp = (-not $SkipLaunch)
     artifacts = $artifacts
+    warnings = $warnings
     notes = @(
         "This bundle captures runtime evidence only.",
         "It does not prove visual parity unless a known target is visible and inspected."
     )
 }
 $manifest | ConvertTo-Json -Depth 5 | Out-File -LiteralPath $manifestPath -Encoding utf8
+
+if ($Summarize) {
+    $summaryScript = Join-Path $PSScriptRoot "summarize_live_validation_evidence.ps1"
+    if (-not (Test-Path -LiteralPath $summaryScript)) {
+        Write-Warning "Summary requested, but summarize_live_validation_evidence.ps1 was not found."
+    } else {
+        & $summaryScript -BundlePath $outputDir
+    }
+}
 
 Write-Output "Live validation evidence captured:"
 Write-Output (Resolve-Path -LiteralPath $outputDir).Path

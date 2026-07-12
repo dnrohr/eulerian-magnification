@@ -78,6 +78,13 @@ foreach ($entry in $runtimePatterns.GetEnumerator()) {
 }
 
 $warnings = @()
+if ($manifest -and $manifest.PSObject.Properties.Name -contains "warnings") {
+    foreach ($warning in @($manifest.warnings)) {
+        if (-not [string]::IsNullOrWhiteSpace($warning)) {
+            $warnings += $warning
+        }
+    }
+}
 if ($missing.Count -gt 0) {
     $warnings += "missing required artifacts"
 }

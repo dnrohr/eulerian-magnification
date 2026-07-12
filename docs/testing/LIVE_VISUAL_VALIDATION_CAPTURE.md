@@ -16,7 +16,7 @@ with:
 - `window_focus.txt`
 - `device_props.txt`
 - `manifest.json`
-- optional `evidence_summary.json` if summarized after capture
+- optional `evidence_summary.json` when `-Summarize` is passed
 
 ## Command
 
@@ -30,11 +30,18 @@ extras are applied deterministically. Use `-ScreenRecordSeconds 0` for a
 screenshot/log-only smoke capture. Use `-SkipLaunch` only when the operator has
 already navigated to a specific controls state that should not be disturbed.
 
-After capture, summarize the runtime evidence:
+Pass `-Summarize` to write `evidence_summary.json` as part of the capture:
 
 ```powershell
-.\tools\summarize_live_validation_evidence.ps1 `
-  -BundlePath "sample-videos\exports\live-validation\<bundle>"
+.\tools\capture_live_validation_evidence.ps1 `
+  -Label "live-linear-pulse" `
+  -Mode Pulse `
+  -View Split `
+  -RoiSource FullFrame `
+  -GlPreview $true `
+  -Controls $false `
+  -ScreenRecordSeconds 10 `
+  -Summarize
 ```
 
 The summary writes `evidence_summary.json` with launch state, required artifact
@@ -42,6 +49,12 @@ presence, screenshot dimensions, gfx frame pacing, runtime crash/ANR/GL-error
 signals, and optional ROI overlay measurement status. A passing runtime smoke
 summary still does not prove visual validation unless the target is visible and
 inspected.
+
+For visual-quality captures, prefer hidden controls or Clean mode. Use
+`-Controls $true -Panel Debug` only when the goal is to capture renderer
+diagnostics, because the debug overlay can add enough UI jank to make the
+preview look worse than the camera/render path actually is. The capture manifest
+and summary include a warning when the debug panel is used.
 
 ## Scripted App State
 
@@ -76,6 +89,7 @@ Available launch parameters:
 - `-Panel`: when expanded controls are open, selects `Controls`, `Setup`,
   `Recording`, or `Debug`.
 - `-LockAeAwb`: requests locked exposure/white balance.
+- `-Summarize`: writes `evidence_summary.json` immediately after capture.
 - `-PersistLaunchSettings`: saves the launch settings. Omit this for normal
   validation captures so saved user settings are left unchanged.
 

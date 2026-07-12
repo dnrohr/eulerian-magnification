@@ -253,6 +253,19 @@ showing true pyramid reconstruction or a fallback bridge.
 - This fixes a live-control consistency issue and documents the UI-jank side of
   the full-frame report. Known motion/color target validation remains open.
 
+## Supporting Slice: Integrated Capture Summaries
+
+- Added `-Summarize` to `tools/capture_live_validation_evidence.ps1` so Pixel
+  evidence bundles can write `evidence_summary.json` immediately after capture.
+- Capture manifests now preserve warnings, including when the Debug panel is
+  used for diagnostics during a visual capture. The summary tool carries those
+  warnings into the generated evidence summary.
+- Updated the live validation guide to recommend hidden controls or Clean mode
+  for visual-quality captures and reserve `-Controls $true -Panel Debug` for
+  renderer diagnostics.
+- This improves AP evidence hygiene after full-frame debug-overlay jank was
+  observed. Known motion/color target validation remains open.
+
 ## Done When
 
 - Live amplified preview shows visible reconstructed output for at least one color sample and one slow-motion sample.
