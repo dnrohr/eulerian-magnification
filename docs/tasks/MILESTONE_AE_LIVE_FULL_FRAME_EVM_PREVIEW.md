@@ -29,6 +29,16 @@ Goal: integrate the full-frame EVM renderer into the live preview path.
   slices wired temporal pyramid state into GL reconstruction; the remaining AE
   work is Pixel portrait validation with a known target.
 
+## Completed Slice: GL Camera Cadence Guard
+
+- Split GL render-cost timing from camera frame-arrival cadence. `GlFrameTimer`
+  now records `SurfaceTexture` frame callbacks for camera FPS while preserving
+  render milliseconds for GPU cost.
+- Updated full-frame live preview policy coverage so fast rendering does not
+  mask a slow or stalled camera stream.
+- Updated debug and benchmark labels to say `GL camera` FPS and render
+  milliseconds explicitly.
+
 ## Completed Slice: Reconstruction Shader Plan
 
 - Added `LivePyramidReconstructionPlan` to describe the half-resolution pyramid,

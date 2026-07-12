@@ -18,15 +18,36 @@ class GlFrameTimerTest {
     fun averagesRecentFrameDurations() {
         val timer = GlFrameTimer(windowSize = 2)
 
+        timer.markFrameAvailable(0L)
         timer.beginFrame(0L)
         timer.endFrame(16_000_000L)
+        timer.markFrameAvailable(33_000_000L)
         timer.beginFrame(20_000_000L)
         timer.endFrame(52_000_000L)
+        timer.markFrameAvailable(66_000_000L)
         val stats = timer.stats()
 
         assertEquals(2, stats.sampleCount)
+        assertEquals(2, stats.renderSampleCount)
         assertEquals(24.0, stats.averageFrameMillis, 0.001)
-        assertEquals(41.666, stats.averageFps, 0.01)
+        assertEquals(30.303, stats.averageFps, 0.01)
+    }
+
+    @Test
+    fun reportsCameraCadenceSeparatelyFromRenderCost() {
+        val timer = GlFrameTimer(windowSize = 2)
+
+        timer.markFrameAvailable(0L)
+        timer.beginFrame(0L)
+        timer.endFrame(8_000_000L)
+        timer.markFrameAvailable(200_000_000L)
+        timer.beginFrame(200_000_000L)
+        timer.endFrame(208_000_000L)
+
+        val stats = timer.stats()
+
+        assertEquals(8.0, stats.averageFrameMillis, 0.001)
+        assertEquals(5.0, stats.averageFps, 0.001)
     }
 
     @Test
@@ -79,6 +100,7 @@ class GlFrameTimerTest {
         val stats = timer.endFrame(10L)
 
         assertEquals(0, stats.sampleCount)
+        assertEquals(0, stats.renderSampleCount)
     }
 
     @Test

@@ -6,7 +6,11 @@ Milestone D now has the first GLES infrastructure pieces:
 
 - `OesShaderSource` defines GLES 3.0 shaders for sampling a camera `samplerExternalOES` texture with a transform matrix.
 - `GlProgram` compiles shaders, links programs, and throws `GlException` on shader, link, or GL errors.
-- `GlFrameTimer` tracks render-frame duration, average frame time, and average FPS.
+- `GlFrameTimer` tracks render-frame duration separately from camera frame
+  arrival cadence. The debug overlay reports GL camera FPS from
+  `SurfaceTexture` frame callbacks and render milliseconds from draw duration,
+  so full-frame fallback decisions can catch a slow or stalled camera stream
+  even when each rendered frame is cheap.
 
 This is infrastructure only. The app still uses CameraX `PreviewView` for the live camera image. The next Milestone D slice should attach a `GLSurfaceView` or equivalent EGL surface, create an OES texture, connect it to `SurfaceTexture`, and bind CameraX/Camera2 output to that surface.
 

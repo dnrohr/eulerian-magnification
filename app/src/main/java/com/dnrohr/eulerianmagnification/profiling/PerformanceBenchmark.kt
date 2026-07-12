@@ -20,7 +20,7 @@ data class PerformanceBenchmark(
         if (!hasGlSamples) return "Benchmark: collecting GL samples"
         val status = if (glMeetsThirtyFps) "OK" else "below target"
         val deltaPrefix = if (fpsDelta >= 0.0) "+" else ""
-        return "Benchmark: GL ${glFps.oneDecimal()} fps ($status), CPU analysis ${analysisFps.oneDecimal()} fps, delta $deltaPrefix${fpsDelta.oneDecimal()} fps"
+        return "Benchmark: GL camera ${glFps.oneDecimal()} fps ($status), CPU analysis ${analysisFps.oneDecimal()} fps, delta $deltaPrefix${fpsDelta.oneDecimal()} fps"
     }
 
     companion object {

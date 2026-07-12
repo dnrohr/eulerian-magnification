@@ -55,7 +55,7 @@ class PerformanceBenchmarkTest {
 
         assertFalse(benchmark.glMeetsThirtyFps)
         assertEquals(
-            "Benchmark: GL 24.4 fps (below target), CPU analysis 28.0 fps, delta -3.6 fps",
+            "Benchmark: GL camera 24.4 fps (below target), CPU analysis 28.0 fps, delta -3.6 fps",
             benchmark.summary(),
         )
     }

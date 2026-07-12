@@ -229,6 +229,7 @@ class CameraOesRenderer(
         oesTextureId = createOesTexture()
         surfaceTexture = SurfaceTexture(oesTextureId).apply {
             setOnFrameAvailableListener {
+                timer.markFrameAvailable(System.nanoTime())
                 hasNewFrame = true
                 requestRender()
             }

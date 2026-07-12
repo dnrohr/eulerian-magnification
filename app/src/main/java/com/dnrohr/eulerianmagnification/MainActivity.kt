@@ -1413,7 +1413,7 @@ private fun DebugPanel(
     if (showGlDebug) {
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "GL: ${"%.1f".format(glFrameStats.averageFps)} fps / ${"%.2f".format(glFrameStats.averageFrameMillis)} ms",
+            text = "GL camera: ${"%.1f".format(glFrameStats.averageFps)} fps / render ${"%.2f".format(glFrameStats.averageFrameMillis)} ms",
             color = Color.White,
         )
         Text(
