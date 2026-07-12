@@ -13,6 +13,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 class PulseRoiAnalyzer(
     settings: AnalysisSettings,
+    private val roiSource: RoiSource = RoiSource.Auto,
     private val manualRoi: NormalizedRect? = null,
     private val onSample: (AnalysisSample) -> Unit,
 ) : ImageAnalysis.Analyzer {
@@ -45,18 +46,24 @@ class PulseRoiAnalyzer(
         fpsMeter.recordFrame(timestamp)
         latestFaceBounds = roiTracker.holdLastDetection() ?: latestFaceBounds
         val activeAutoRoi = latestFaceBounds
+        val activeManualRoi = manualRoi.takeIf { roiSource == RoiSource.Manual }
         val roiState = when {
-            manualRoi != null -> RoiState.Manual
+            roiSource == RoiSource.FullFrame -> RoiState.FullFrame
+            activeManualRoi != null -> RoiState.Manual
             activeAutoRoi != null && missedDetections > 0 -> RoiState.Frozen
             activeAutoRoi != null -> RoiState.Tracking
             else -> RoiState.Center
         }
-        val roi = manualRoi
+        val roi = when (roiSource) {
+            RoiSource.FullFrame -> RoiSourcePolicy.FULL_FRAME_ROI.toRect(imageProxy.width, imageProxy.height)
+            RoiSource.Manual -> activeManualRoi
             ?.toRect(imageProxy.width, imageProxy.height)
-            ?: activeAutoRoi
-            ?.toRect(imageProxy.width, imageProxy.height)
-            ?.let { skinSubregion(it, imageProxy.width, imageProxy.height) }
-            ?: centeredRoi(imageProxy.width, imageProxy.height)
+                ?: centeredRoi(imageProxy.width, imageProxy.height)
+            RoiSource.Auto -> activeAutoRoi
+                ?.toRect(imageProxy.width, imageProxy.height)
+                ?.let { skinSubregion(it, imageProxy.width, imageProxy.height) }
+                ?: centeredRoi(imageProxy.width, imageProxy.height)
+        }
         val averageGreen = averageGreen(imageProxy, roi)
         val bandpassed = bandpassFilter.update(averageGreen, timestamp)
         val normalizedRoi = roi.toNormalized(imageProxy.width, imageProxy.height)
@@ -79,7 +86,7 @@ class PulseRoiAnalyzer(
             ),
         )
 
-        if (manualRoi != null) {
+        if (roiSource != RoiSource.Auto) {
             imageProxy.close()
             return
         }

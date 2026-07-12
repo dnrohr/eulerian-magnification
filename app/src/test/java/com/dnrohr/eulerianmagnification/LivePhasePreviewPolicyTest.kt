@@ -3,6 +3,7 @@ package com.dnrohr.eulerianmagnification
 import com.dnrohr.eulerianmagnification.analysis.AnalysisSettings
 import com.dnrohr.eulerianmagnification.analysis.MagnificationMode
 import com.dnrohr.eulerianmagnification.analysis.NormalizedRect
+import com.dnrohr.eulerianmagnification.analysis.RoiSource
 import com.dnrohr.eulerianmagnification.gl.GlFrameStats
 import com.dnrohr.eulerianmagnification.gl.GlTextureSize
 import com.dnrohr.eulerianmagnification.gl.LivePhaseFallbackReason
@@ -21,7 +22,8 @@ class LivePhasePreviewPolicyTest {
             usingGlPreview = true,
             glFrameStats = healthyStats(),
             surfaceSize = GlTextureSize(1080, 2400),
-            manualRoi = roi(),
+            phaseRoi = roi(),
+            roiSource = RoiSource.Manual,
         )
 
         assertTrue(decision.useLivePhase)
@@ -37,7 +39,7 @@ class LivePhasePreviewPolicyTest {
             usingGlPreview = true,
             glFrameStats = healthyStats(),
             surfaceSize = GlTextureSize(1080, 2400),
-            manualRoi = roi(),
+            phaseRoi = roi(),
         )
 
         assertFalse(decision.useLivePhase)
@@ -52,7 +54,7 @@ class LivePhasePreviewPolicyTest {
             usingGlPreview = false,
             glFrameStats = healthyStats(),
             surfaceSize = GlTextureSize(1080, 2400),
-            manualRoi = roi(),
+            phaseRoi = roi(),
         )
 
         assertFalse(decision.useLivePhase)
@@ -60,17 +62,48 @@ class LivePhasePreviewPolicyTest {
     }
 
     @Test
-    fun requiresManualRoi() {
+    fun manualSourceRequiresManualRoi() {
         val decision = LivePhasePreviewPolicy.decide(
             settings = AnalysisSettings(mode = MagnificationMode.ObjectVibration),
             usingGlPreview = true,
             glFrameStats = healthyStats(),
             surfaceSize = GlTextureSize(1080, 2400),
-            manualRoi = null,
+            phaseRoi = null,
+            roiSource = RoiSource.Manual,
         )
 
         assertFalse(decision.useLivePhase)
         assertEquals(LivePhaseFallbackReason.MissingManualRoi, decision.diagnostics.fallbackReason)
+    }
+
+    @Test
+    fun autoSourceWaitsForAutomaticRoiInsteadOfManualRoi() {
+        val decision = LivePhasePreviewPolicy.decide(
+            settings = AnalysisSettings(mode = MagnificationMode.ObjectVibration),
+            usingGlPreview = true,
+            glFrameStats = healthyStats(),
+            surfaceSize = GlTextureSize(1080, 2400),
+            phaseRoi = null,
+            roiSource = RoiSource.Auto,
+        )
+
+        assertFalse(decision.useLivePhase)
+        assertEquals(LivePhaseFallbackReason.MissingAutoRoi, decision.diagnostics.fallbackReason)
+    }
+
+    @Test
+    fun fullFrameSourceCanBuildPhasePlanWithoutManualRoi() {
+        val decision = LivePhasePreviewPolicy.decide(
+            settings = AnalysisSettings(mode = MagnificationMode.ObjectVibration),
+            usingGlPreview = true,
+            glFrameStats = healthyStats(),
+            surfaceSize = GlTextureSize(1080, 2400),
+            phaseRoi = NormalizedRect(0.0f, 0.0f, 1.0f, 1.0f),
+            roiSource = RoiSource.FullFrame,
+        )
+
+        assertTrue(decision.useLivePhase)
+        assertEquals(GlTextureSize(144, 320), decision.roiPlan!!.processingSize)
     }
 
     @Test
@@ -84,7 +117,7 @@ class LivePhasePreviewPolicyTest {
                 sampleCount = 60,
             ),
             surfaceSize = GlTextureSize(1080, 2400),
-            manualRoi = roi(),
+            phaseRoi = roi(),
         )
 
         assertFalse(decision.useLivePhase)
@@ -102,7 +135,7 @@ class LivePhasePreviewPolicyTest {
                 sampleCount = 2,
             ),
             surfaceSize = GlTextureSize(1080, 2400),
-            manualRoi = roi(),
+            phaseRoi = roi(),
         )
 
         assertTrue(decision.useLivePhase)
@@ -116,7 +149,7 @@ class LivePhasePreviewPolicyTest {
             usingGlPreview = true,
             glFrameStats = healthyStats(),
             surfaceSize = GlTextureSize(1080, 2400),
-            manualRoi = roi(),
+            phaseRoi = roi(),
             phaseResourcesAvailable = false,
         )
 

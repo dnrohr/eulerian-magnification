@@ -2,6 +2,7 @@ package com.dnrohr.eulerianmagnification
 
 import com.dnrohr.eulerianmagnification.analysis.AnalysisSettings
 import com.dnrohr.eulerianmagnification.analysis.MagnificationMode
+import com.dnrohr.eulerianmagnification.analysis.RoiSource
 import com.dnrohr.eulerianmagnification.analysis.ViewMode
 import com.dnrohr.eulerianmagnification.recording.RecordingOutputMode
 import org.junit.Assert.assertEquals
@@ -21,6 +22,7 @@ class PersistedAppSettingsTest {
         assertFalse(settings.cameraControlsLocked)
         assertFalse(settings.qualityCuesEnabled)
         assertEquals(RecordingOutputMode.Clean, settings.recordingOutputMode)
+        assertEquals(RoiSource.FullFrame, settings.roiSource)
         assertFalse(settings.toMap().containsKey("manualRoi"))
     }
 
@@ -30,6 +32,14 @@ class PersistedAppSettingsTest {
 
         assertEquals(MagnificationMode.Breathing, settings.analysisSettings.mode)
         assertFalse(settings.requestedGlPreview)
+        assertEquals(RoiSource.FullFrame, settings.roiSource)
+    }
+
+    @Test
+    fun pulseOnlyDefaultsToAutoRoi() {
+        val settings = PersistedAppSettings.defaultFor(listOf(MagnificationMode.Pulse))
+
+        assertEquals(RoiSource.Auto, settings.roiSource)
     }
 
     @Test
@@ -44,6 +54,7 @@ class PersistedAppSettingsTest {
             cameraControlsLocked = true,
             qualityCuesEnabled = true,
             recordingOutputMode = RecordingOutputMode.Annotated,
+            roiSource = RoiSource.Manual,
         )
 
         val restored = PersistedAppSettings.fromMap(original.toMap())
@@ -62,6 +73,7 @@ class PersistedAppSettingsTest {
                 PersistedAppSettings.KEY_CAMERA_CONTROLS_LOCKED to "not-bool",
                 PersistedAppSettings.KEY_QUALITY_CUES_ENABLED to "not-bool",
                 PersistedAppSettings.KEY_RECORDING_OUTPUT_MODE to "nope",
+                PersistedAppSettings.KEY_ROI_SOURCE to "nope",
             ),
             availableModes = listOf(MagnificationMode.Pulse),
         )
@@ -97,6 +109,7 @@ class PersistedAppSettingsTest {
         assertEquals(12.0f, defaults.analysisSettings.amplification)
         assertTrue(defaults.requestedGlPreview)
         assertEquals(RecordingOutputMode.Clean, defaults.recordingOutputMode)
+        assertEquals(RoiSource.FullFrame, defaults.roiSource)
     }
 
     @Test
@@ -106,6 +119,15 @@ class PersistedAppSettingsTest {
         )
 
         assertEquals(RecordingOutputMode.Annotated, restored.recordingOutputMode)
+    }
+
+    @Test
+    fun roiSourceRestoresPreference() {
+        val restored = PersistedAppSettings.fromMap(
+            values = mapOf(PersistedAppSettings.KEY_ROI_SOURCE to RoiSource.Manual.name),
+        )
+
+        assertEquals(RoiSource.Manual, restored.roiSource)
     }
 
     @Test

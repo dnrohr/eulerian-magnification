@@ -17,6 +17,7 @@ data class AnalysisSample(
 
 enum class RoiState(val label: String) {
     Manual("Manual ROI"),
+    FullFrame("Full frame"),
     Tracking("Tracking"),
     Frozen("Frozen ROI"),
     Center("Center ROI"),

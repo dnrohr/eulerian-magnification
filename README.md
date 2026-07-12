@@ -74,9 +74,9 @@ The first target definition is tracked in
    Switch to `Pulse` when you specifically want color/skin-pulse behavior.
 4. Let exposure settle for a few seconds, then tap `Controls` and use
    `Lock AE/AWB`.
-5. Drag a manual ROI over the area you want to measure. For pulse, use forehead
-   or cheek skin. For breathing, use the torso/shoulder area. For fast-motion
-   tests, use a high-contrast moving edge.
+5. Leave `ROI Source` on `Full frame` for the default motion path, or use
+   `Auto ROI` for pulse/face tracking. Choose `Manual ROI` only when you need a
+   deliberately placed box for a difficult target, debugging, or comparison.
 6. Tap `Hide` so the image is mostly unobstructed.
 7. Use `Raw`, `Amplified`, `Difference`, or `Split` from the compact preview to compare whether the
    processed view is adding useful signal or only noise.
@@ -160,8 +160,14 @@ The default screen is intentionally compact so the preview remains visible.
   ROI is intentionally not persisted.
 - `Quality Cues`: opt-in haptic feedback for major quality changes. It is off
   by default, rate-limited, and skipped when system haptic feedback is disabled.
-- `Edit ROI`: enables manual ROI placement by dragging on the preview. Normal
-  viewing ignores preview drags so accidental touches do not move the ROI.
+- `ROI Source`: chooses how the app selects the measured region. `Auto ROI`
+  uses face tracking when available and falls back to the center. `Full frame`
+  uses the whole image and is the first-launch/default motion source. `Manual
+  ROI` uses one explicit box for difficult targets, debugging, and repeatable
+  experiments.
+- `Edit ROI`: switches to `Manual ROI` and enables manual ROI placement by
+  dragging on the preview. Normal viewing ignores preview drags so accidental
+  touches do not move the ROI.
 - `Done ROI`: exits ROI edit mode and hides corner handles.
 - `Clear ROI`: removes the manual ROI and returns to automatic/center ROI.
 - `Use GL Preview`: switches to the OpenGL preview path when available. GL is
@@ -208,9 +214,10 @@ The default screen is intentionally compact so the preview remains visible.
 - `Output`: expanded-controls label that spells out the active pipeline:
   `Color amplification`, `Breathing signal`, or
   `Experimental fast-motion analysis`.
-- `Manual ROI`, `Tracking`, `Frozen ROI`, `Center ROI`: compact status label
-  showing whether the app is using your selected region, an actively detected
-  face region, the last good detected region, or the center fallback.
+- `Manual ROI`, `Full frame`, `Tracking`, `Frozen ROI`, `Center ROI`: compact
+  status label showing whether the app is using your selected region, the whole
+  frame, an actively detected face region, the last good detected region, or the
+  center fallback.
 
 Only one ROI outline should be visible when a manual ROI is set. If automatic
 tracking briefly loses the face, the app holds the last good region and labels it
@@ -248,8 +255,8 @@ without bundling the videos into the app.
 
 The app stores the last durable test setup in SharedPreferences: mode, view
 mode, amplification, requested preview path, AE/AWB lock preference, recording
-output mode, and the opt-in quality-cue preference. First launch and
-`Reset Settings` prefer the motion/GL path when available. It does not store
+output mode, ROI source, and the opt-in quality-cue preference. First launch and
+`Reset Settings` prefer the motion/GL/full-frame path when available. It does not store
 transient ROI placement, signal history, validation summaries, or recording
 state.
 

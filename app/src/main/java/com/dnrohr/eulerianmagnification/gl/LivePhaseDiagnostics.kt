@@ -5,6 +5,7 @@ enum class LivePhaseFallbackReason(
 ) {
     NotRequested("not requested"),
     MissingManualRoi("manual ROI required"),
+    MissingAutoRoi("waiting for ROI"),
     UnsupportedGl("GL phase resources unavailable"),
     MemoryBudgetExceeded("phase ROI exceeds memory budget"),
     TimingUnhealthy("preview timing unhealthy"),

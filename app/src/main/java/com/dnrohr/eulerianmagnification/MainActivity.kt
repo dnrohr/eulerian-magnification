@@ -94,6 +94,8 @@ import com.dnrohr.eulerianmagnification.analysis.RecordedVideoFrameDecoder
 import com.dnrohr.eulerianmagnification.analysis.RecordedVideoProcessor
 import com.dnrohr.eulerianmagnification.analysis.RecordedVideoValidationResult
 import com.dnrohr.eulerianmagnification.analysis.RoiState
+import com.dnrohr.eulerianmagnification.analysis.RoiSource
+import com.dnrohr.eulerianmagnification.analysis.RoiSourcePolicy
 import com.dnrohr.eulerianmagnification.analysis.VisualizationModel
 import com.dnrohr.eulerianmagnification.analysis.ViewMode
 import com.dnrohr.eulerianmagnification.capabilities.CapabilityReportStore
@@ -184,6 +186,7 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
     var cameraControlsLocked by remember { mutableStateOf(persistedAppSettings.cameraControlsLocked) }
     var qualityCuesEnabled by remember { mutableStateOf(persistedAppSettings.qualityCuesEnabled) }
     var recordingOutputMode by remember { mutableStateOf(persistedAppSettings.recordingOutputMode) }
+    var roiSource by remember { mutableStateOf(persistedAppSettings.roiSource) }
     var showGlDebug by remember { mutableStateOf(persistedAppSettings.requestedGlPreview) }
     var controlsExpanded by remember { mutableStateOf(false) }
     var cleanPreview by remember { mutableStateOf(false) }
@@ -206,12 +209,18 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
         usingGlPreview = usingGlPreview,
         glFrameStats = glFrameStats,
     )
+    val activeRoi = RoiSourcePolicy.activeRoi(
+        source = roiSource,
+        autoRoi = analysisSample.roi,
+        manualRoi = manualRoi,
+    )
     val livePhasePreviewDecision = LivePhasePreviewPolicy.decide(
         settings = analysisSettings,
         usingGlPreview = usingGlPreview,
         glFrameStats = glFrameStats,
         surfaceSize = glFrameStats.surfaceSize,
-        manualRoi = manualRoi,
+        phaseRoi = activeRoi,
+        roiSource = roiSource,
     )
     var lightingDiagnostic by remember {
         mutableStateOf<LightingDiagnostic?>(null)
@@ -284,7 +293,7 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
         }
     }
 
-    LaunchedEffect(analysisSettings, showGlDebug, cameraControlsLocked, qualityCuesEnabled, recordingOutputMode) {
+    LaunchedEffect(analysisSettings, showGlDebug, cameraControlsLocked, qualityCuesEnabled, recordingOutputMode, roiSource) {
         appSettingsStore.save(
             PersistedAppSettings(
                 analysisSettings = analysisSettings,
@@ -292,6 +301,7 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
                 cameraControlsLocked = cameraControlsLocked,
                 qualityCuesEnabled = qualityCuesEnabled,
                 recordingOutputMode = recordingOutputMode,
+                roiSource = roiSource,
             )
         )
     }
@@ -347,9 +357,10 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
     Box(modifier = Modifier.fillMaxSize()) {
         if (hasCameraPermission && featureAvailability.liveCameraAvailable) {
             if (usingGlPreview) {
-                key(analysisSettings, manualRoi, cameraControlsLocked) {
+                key(analysisSettings, roiSource, manualRoi, cameraControlsLocked) {
                     CameraGlPreview(
                         settings = analysisSettings,
+                        roiSource = roiSource,
                         manualRoi = manualRoi,
                         cameraControlsLocked = cameraControlsLocked,
                         liveEvmPreviewDecision = liveEvmPreviewDecision,
@@ -360,9 +371,10 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
                         onProcessedFrame = { frame -> recordingSession?.record(frame) },
                     )
                 }
-            } else key(analysisSettings, manualRoi, cameraControlsLocked) {
+            } else key(analysisSettings, roiSource, manualRoi, cameraControlsLocked) {
                 CameraPreview(
                     settings = analysisSettings,
+                    roiSource = roiSource,
                     manualRoi = manualRoi,
                     cameraControlsLocked = cameraControlsLocked,
                     modifier = Modifier.fillMaxSize(),
@@ -380,7 +392,7 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
                     modifier = Modifier.fillMaxSize(),
                 )
             }
-            if (manualRoi == null) {
+            if (roiSource != RoiSource.Manual) {
                 RoiOverlay(
                     sample = analysisSample,
                     mappingPolicy = PreviewRoiMappingPolicy.frontCamera(
@@ -390,12 +402,12 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
                 )
             }
             ManualRoiOverlay(
-                roi = manualRoi,
+                roi = manualRoi.takeIf { roiSource == RoiSource.Manual },
                 sample = analysisSample,
                 mappingPolicy = PreviewRoiMappingPolicy.frontCamera(
                     if (usingGlPreview) PreviewRenderPath.Gl else PreviewRenderPath.CameraX
                 ),
-                editing = manualRoiEditing,
+                editing = manualRoiEditing && roiSource == RoiSource.Manual,
                 onRoiChanged = {
                     manualRoi = it
                     manualRoiEditing = ManualRoiEditState.afterManualRoiChanged(manualRoiEditing)
@@ -423,9 +435,17 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
             onCameraControlsLockedChanged = { cameraControlsLocked = it },
             qualityCuesEnabled = qualityCuesEnabled,
             onQualityCuesEnabledChanged = { qualityCuesEnabled = it },
+            roiSource = roiSource,
+            onRoiSourceChanged = {
+                roiSource = it
+                manualRoiEditing = false
+            },
             manualRoi = manualRoi,
             manualRoiEditing = manualRoiEditing,
-            onManualRoiEditingChanged = { manualRoiEditing = it },
+            onManualRoiEditingChanged = {
+                roiSource = RoiSource.Manual
+                manualRoiEditing = it
+            },
             onClearManualRoi = {
                 manualRoi = null
                 manualRoiEditing = ManualRoiEditState.afterClearRoi()
@@ -438,6 +458,7 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
                 cameraControlsLocked = defaults.cameraControlsLocked
                 qualityCuesEnabled = defaults.qualityCuesEnabled
                 recordingOutputMode = defaults.recordingOutputMode
+                roiSource = defaults.roiSource
                 manualRoi = null
                 manualRoiEditing = ManualRoiEditState.afterClearRoi()
             },
@@ -547,6 +568,7 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
 @Composable
 private fun CameraGlPreview(
     settings: AnalysisSettings,
+    roiSource: RoiSource,
     manualRoi: NormalizedRect?,
     cameraControlsLocked: Boolean,
     liveEvmPreviewDecision: LiveEvmPreviewDecision,
@@ -616,7 +638,7 @@ private fun CameraGlPreview(
                         val analysis = analysisBuilder.build().also {
                             it.setAnalyzer(
                                 analysisExecutor,
-                                PulseRoiAnalyzer(settings, manualRoi = manualRoi) { sample ->
+                                PulseRoiAnalyzer(settings, roiSource = roiSource, manualRoi = manualRoi) { sample ->
                                     mainExecutor.execute {
                                         val presentationTimestampNanos = onSample(sample)
                                         renderer.setColorMagnificationUniforms(
@@ -881,6 +903,7 @@ private fun ManualRoiOverlay(
 @Composable
 private fun CameraPreview(
     settings: AnalysisSettings,
+    roiSource: RoiSource,
     manualRoi: NormalizedRect?,
     cameraControlsLocked: Boolean,
     modifier: Modifier = Modifier,
@@ -931,7 +954,7 @@ private fun CameraPreview(
                             .also {
                                 it.setAnalyzer(
                                 analysisExecutor,
-                                PulseRoiAnalyzer(settings, manualRoi = manualRoi) { sample ->
+                                PulseRoiAnalyzer(settings, roiSource = roiSource, manualRoi = manualRoi) { sample ->
                                     mainExecutor.execute { onSample(sample) }
                                 },
                                 )
@@ -1035,6 +1058,8 @@ private fun StatusOverlay(
     onCameraControlsLockedChanged: (Boolean) -> Unit,
     qualityCuesEnabled: Boolean,
     onQualityCuesEnabledChanged: (Boolean) -> Unit,
+    roiSource: RoiSource,
+    onRoiSourceChanged: (RoiSource) -> Unit,
     manualRoi: NormalizedRect?,
     manualRoiEditing: Boolean,
     onManualRoiEditingChanged: (Boolean) -> Unit,
@@ -1090,6 +1115,7 @@ private fun StatusOverlay(
             qualityStatuses = qualityStatuses,
             isRecording = isRecording,
             recordingElapsedMillis = recordingElapsedMillis,
+            roiSource = roiSource,
             manualRoi = manualRoi,
             onShowControls = onShowControls,
             onEnterCleanPreview = onEnterCleanPreview,
@@ -1212,6 +1238,8 @@ private fun StatusOverlay(
             onCameraControlsLockedChanged = onCameraControlsLockedChanged,
             qualityCuesEnabled = qualityCuesEnabled,
             onQualityCuesEnabledChanged = onQualityCuesEnabledChanged,
+            roiSource = roiSource,
+            onRoiSourceChanged = onRoiSourceChanged,
             manualRoi = manualRoi,
             manualRoiEditing = manualRoiEditing,
             onManualRoiEditingChanged = onManualRoiEditingChanged,
@@ -1275,6 +1303,7 @@ private fun CompactStatusOverlay(
     qualityStatuses: List<QualityStatus>,
     isRecording: Boolean,
     recordingElapsedMillis: Long,
+    roiSource: RoiSource,
     manualRoi: NormalizedRect?,
     onShowControls: () -> Unit,
     onEnterCleanPreview: () -> Unit,
@@ -1305,7 +1334,7 @@ private fun CompactStatusOverlay(
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
-                text = sample.roiState.label,
+                text = RoiSourcePolicy.labelFor(roiSource, sample.roiState),
                 color = roiStateColor(sample.roiState),
                 maxLines = 1,
             )
@@ -1411,6 +1440,7 @@ private fun qualityColor(statuses: List<QualityStatus>): Color {
 private fun roiStateColor(state: RoiState): Color {
     return when (state) {
         RoiState.Manual -> Color(0xFFFFC857)
+        RoiState.FullFrame -> Color(0xFFC8D3DC)
         RoiState.Tracking -> Color(0xFF00BFA5)
         RoiState.Frozen -> Color(0xFFFFC857)
         RoiState.Center -> Color(0xFFC8D3DC)
@@ -1810,6 +1840,8 @@ private fun ModeControls(
     onCameraControlsLockedChanged: (Boolean) -> Unit,
     qualityCuesEnabled: Boolean,
     onQualityCuesEnabledChanged: (Boolean) -> Unit,
+    roiSource: RoiSource,
+    onRoiSourceChanged: (RoiSource) -> Unit,
     manualRoi: NormalizedRect?,
     manualRoiEditing: Boolean,
     onManualRoiEditingChanged: (Boolean) -> Unit,
@@ -1875,10 +1907,36 @@ private fun ModeControls(
         style = MaterialTheme.typography.bodySmall,
     )
     Spacer(modifier = Modifier.height(8.dp))
+    Text(
+        text = "ROI Source",
+        color = Color.White,
+    )
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        RoiSource.entries.forEach { source ->
+            CompactControlButton(
+                label = source.compactLabel,
+                onClick = { onRoiSourceChanged(source) },
+                enabled = roiSource != source,
+                modifier = Modifier.weight(1.0f),
+            )
+        }
+    }
+    Text(
+        text = when (roiSource) {
+            RoiSource.Auto -> "Uses face tracking when available, then a center fallback."
+            RoiSource.FullFrame -> "Uses the whole frame for the default motion path."
+            RoiSource.Manual -> "Uses one selected box for difficult targets and experiments."
+        },
+        color = Color(0xFFC8D3DC),
+        style = MaterialTheme.typography.bodySmall,
+    )
+    Spacer(modifier = Modifier.height(8.dp))
     Button(onClick = {
-        onManualRoiEditingChanged(
-            if (manualRoiEditing) ManualRoiEditState.afterDoneEditing() else true
-        )
+        onRoiSourceChanged(RoiSource.Manual)
+        onManualRoiEditingChanged(if (manualRoiEditing) ManualRoiEditState.afterDoneEditing() else true)
     }) {
         Text(if (manualRoiEditing) "Done ROI" else "Edit ROI")
     }

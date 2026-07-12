@@ -3,6 +3,7 @@ package com.dnrohr.eulerianmagnification
 import com.dnrohr.eulerianmagnification.analysis.AnalysisSettings
 import com.dnrohr.eulerianmagnification.analysis.MagnificationMode
 import com.dnrohr.eulerianmagnification.analysis.NormalizedRect
+import com.dnrohr.eulerianmagnification.analysis.RoiSource
 import com.dnrohr.eulerianmagnification.gl.GlFrameStats
 import com.dnrohr.eulerianmagnification.gl.GlTextureSize
 import com.dnrohr.eulerianmagnification.gl.LivePhaseDiagnostics
@@ -16,7 +17,8 @@ object LivePhasePreviewPolicy {
         usingGlPreview: Boolean,
         glFrameStats: GlFrameStats,
         surfaceSize: GlTextureSize?,
-        manualRoi: NormalizedRect?,
+        phaseRoi: NormalizedRect?,
+        roiSource: RoiSource = RoiSource.Manual,
         phaseResourcesAvailable: Boolean = true,
     ): LivePhasePreviewDecision {
         if (!settings.mode.supportsLivePhase()) {
@@ -37,13 +39,17 @@ object LivePhasePreviewPolicy {
                 fallbackReason = LivePhaseFallbackReason.UnsupportedGl,
             )
         }
-        if (manualRoi == null) {
+        if (phaseRoi == null) {
             return decision(
                 requested = true,
-                fallbackReason = LivePhaseFallbackReason.MissingManualRoi,
+                fallbackReason = if (roiSource == RoiSource.Manual) {
+                    LivePhaseFallbackReason.MissingManualRoi
+                } else {
+                    LivePhaseFallbackReason.MissingAutoRoi
+                },
             )
         }
-        val roiPlan = LivePhaseRoiPlan(surfaceSize = surfaceSize, roi = manualRoi)
+        val roiPlan = LivePhaseRoiPlan(surfaceSize = surfaceSize, roi = phaseRoi)
         if (!roiPlan.fitsMemoryBudget) {
             return decision(
                 requested = true,

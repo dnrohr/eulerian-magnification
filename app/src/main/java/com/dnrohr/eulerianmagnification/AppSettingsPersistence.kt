@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.SharedPreferences
 import com.dnrohr.eulerianmagnification.analysis.AnalysisSettings
 import com.dnrohr.eulerianmagnification.analysis.MagnificationMode
+import com.dnrohr.eulerianmagnification.analysis.RoiSource
+import com.dnrohr.eulerianmagnification.analysis.RoiSourcePolicy
 import com.dnrohr.eulerianmagnification.analysis.ViewMode
 import com.dnrohr.eulerianmagnification.recording.RecordingOutputMode
 
@@ -13,6 +15,7 @@ data class PersistedAppSettings(
     val cameraControlsLocked: Boolean = false,
     val qualityCuesEnabled: Boolean = false,
     val recordingOutputMode: RecordingOutputMode = RecordingOutputMode.Clean,
+    val roiSource: RoiSource = RoiSourcePolicy.defaultFor(analysisSettings.mode),
 ) {
     fun toMap(): Map<String, String> {
         return mapOf(
@@ -23,6 +26,7 @@ data class PersistedAppSettings(
             KEY_CAMERA_CONTROLS_LOCKED to cameraControlsLocked.toString(),
             KEY_QUALITY_CUES_ENABLED to qualityCuesEnabled.toString(),
             KEY_RECORDING_OUTPUT_MODE to recordingOutputMode.name,
+            KEY_ROI_SOURCE to roiSource.name,
         )
     }
 
@@ -56,6 +60,9 @@ data class PersistedAppSettings(
             val recordingOutputMode = values[KEY_RECORDING_OUTPUT_MODE]
                 ?.let { stored -> RecordingOutputMode.entries.firstOrNull { it.name == stored } }
                 ?: defaults.recordingOutputMode
+            val roiSource = values[KEY_ROI_SOURCE]
+                ?.let { stored -> RoiSource.entries.firstOrNull { it.name == stored } }
+                ?: RoiSourcePolicy.defaultFor(mode)
             return PersistedAppSettings(
                 analysisSettings = AnalysisSettings(
                     mode = mode,
@@ -67,6 +74,7 @@ data class PersistedAppSettings(
                 cameraControlsLocked = values[KEY_CAMERA_CONTROLS_LOCKED]?.toBooleanStrictOrNull() ?: false,
                 qualityCuesEnabled = values[KEY_QUALITY_CUES_ENABLED]?.toBooleanStrictOrNull() ?: false,
                 recordingOutputMode = recordingOutputMode,
+                roiSource = roiSource,
             )
         }
 
@@ -93,6 +101,7 @@ data class PersistedAppSettings(
         const val KEY_CAMERA_CONTROLS_LOCKED = "cameraControlsLocked"
         const val KEY_QUALITY_CUES_ENABLED = "qualityCuesEnabled"
         const val KEY_RECORDING_OUTPUT_MODE = "recordingOutputMode"
+        const val KEY_ROI_SOURCE = "roiSource"
         private const val MIN_AMPLIFICATION = 1.0f
         private const val MAX_AMPLIFICATION = 30.0f
     }
@@ -115,6 +124,7 @@ class AppSettingsStore(
                 KEY_CAMERA_CONTROLS_LOCKED to preferences.getString(KEY_CAMERA_CONTROLS_LOCKED, null),
                 KEY_QUALITY_CUES_ENABLED to preferences.getString(KEY_QUALITY_CUES_ENABLED, null),
                 KEY_RECORDING_OUTPUT_MODE to preferences.getString(KEY_RECORDING_OUTPUT_MODE, null),
+                KEY_ROI_SOURCE to preferences.getString(KEY_ROI_SOURCE, null),
             )
         }.mapNotNull { (key, value) -> value?.let { key to it } }.toMap()
         return PersistedAppSettings.fromMap(values, availableModes)
