@@ -37,6 +37,8 @@ class CameraOesRenderer(
     private var phaseRieszProgram = 0
     private var phaseProjectProgram = 0
     private var phaseTemporalProgram = 0
+    private var phaseAmplifyProgram = 0
+    private var phaseReconstructProgram = 0
     private var oesTexTransformLocation = -1
     private var rgbInputTextureLocation = -1
     private var colorInputTextureLocation = -1
@@ -72,6 +74,12 @@ class CameraOesRenderer(
     private var phaseTemporalLowAlphaLocation = -1
     private var phaseTemporalHighAlphaLocation = -1
     private var phaseTemporalInitializedLocation = -1
+    private var phaseAmplifyCurrentTextureLocation = -1
+    private var phaseAmplifyLowTextureLocation = -1
+    private var phaseAmplifyHighTextureLocation = -1
+    private var phaseAmplifyAmplificationLocation = -1
+    private var phaseAmplifyAmplitudeThresholdLocation = -1
+    private var phaseReconstructAmplifiedTextureLocation = -1
     private var rgbRenderTarget: GlRenderTarget? = null
     private var processedRenderTarget: GlRenderTarget? = null
     private var downsamplePyramid: GlPyramid? = null
@@ -148,6 +156,14 @@ class CameraOesRenderer(
             RieszPhaseShaderSource.VERTEX,
             RieszPhaseShaderSource.LIVE_PHASE_TEMPORAL_FRAGMENT,
         )
+        phaseAmplifyProgram = GlProgram.compileProgram(
+            RieszPhaseShaderSource.VERTEX,
+            RieszPhaseShaderSource.LIVE_PHASE_AMPLIFY_FRAGMENT,
+        )
+        phaseReconstructProgram = GlProgram.compileProgram(
+            RieszPhaseShaderSource.VERTEX,
+            RieszPhaseShaderSource.PHASE_RECONSTRUCT_FRAGMENT,
+        )
         oesTexTransformLocation = GLES30.glGetUniformLocation(oesProgram, "uTexTransform")
         rgbInputTextureLocation = GLES30.glGetUniformLocation(rgbProgram, "uInputTexture")
         colorInputTextureLocation = GLES30.glGetUniformLocation(colorProgram, "uInputTexture")
@@ -191,6 +207,12 @@ class CameraOesRenderer(
         phaseTemporalLowAlphaLocation = GLES30.glGetUniformLocation(phaseTemporalProgram, "uLowAlpha")
         phaseTemporalHighAlphaLocation = GLES30.glGetUniformLocation(phaseTemporalProgram, "uHighAlpha")
         phaseTemporalInitializedLocation = GLES30.glGetUniformLocation(phaseTemporalProgram, "uInitialized")
+        phaseAmplifyCurrentTextureLocation = GLES30.glGetUniformLocation(phaseAmplifyProgram, "uCurrentPhaseTexture")
+        phaseAmplifyLowTextureLocation = GLES30.glGetUniformLocation(phaseAmplifyProgram, "uLowTexture")
+        phaseAmplifyHighTextureLocation = GLES30.glGetUniformLocation(phaseAmplifyProgram, "uHighTexture")
+        phaseAmplifyAmplificationLocation = GLES30.glGetUniformLocation(phaseAmplifyProgram, "uAmplification")
+        phaseAmplifyAmplitudeThresholdLocation = GLES30.glGetUniformLocation(phaseAmplifyProgram, "uAmplitudeThreshold")
+        phaseReconstructAmplifiedTextureLocation = GLES30.glGetUniformLocation(phaseReconstructProgram, "uAmplifiedPhaseTexture")
         oesTextureId = createOesTexture()
         surfaceTexture = SurfaceTexture(oesTextureId).apply {
             setOnFrameAvailableListener {
@@ -499,6 +521,8 @@ class CameraOesRenderer(
             val temporalInitialized = lastPhaseTimestampNanos != null
             state.swap()
             renderLivePhaseTemporalState(state, uniforms, temporalInitialized)
+            renderLivePhaseAmplifiedPhase(state, uniforms)
+            renderLivePhaseRoiReconstruction(state)
             diagnostics.copy(
                 processingSize = plan.processingSize,
                 warmupStatus = if (temporalInitialized) {
@@ -600,6 +624,39 @@ class CameraOesRenderer(
         drawFramebufferQuad()
         GLES30.glBindFramebuffer(GLES30.GL_FRAMEBUFFER, 0)
         GlProgram.checkNoGlError("renderLivePhaseTemporalState")
+    }
+
+    private fun renderLivePhaseAmplifiedPhase(
+        state: LivePhaseRoiState,
+        uniforms: ColorMagnificationUniforms,
+    ) {
+        state.amplifiedPhase.bind()
+        GLES30.glUseProgram(phaseAmplifyProgram)
+        GLES30.glUniform1i(phaseAmplifyCurrentTextureLocation, 0)
+        GLES30.glUniform1i(phaseAmplifyLowTextureLocation, 1)
+        GLES30.glUniform1i(phaseAmplifyHighTextureLocation, 2)
+        GLES30.glUniform1f(phaseAmplifyAmplificationLocation, uniforms.reconstructionAmplification)
+        GLES30.glUniform1f(phaseAmplifyAmplitudeThresholdLocation, DEFAULT_PHASE_AMPLITUDE_THRESHOLD)
+        GLES30.glActiveTexture(GLES30.GL_TEXTURE0)
+        GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, state.projectedPhase.textureId)
+        GLES30.glActiveTexture(GLES30.GL_TEXTURE1)
+        GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, state.currentLowpass.textureId)
+        GLES30.glActiveTexture(GLES30.GL_TEXTURE2)
+        GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, state.currentHighpass.textureId)
+        drawFramebufferQuad()
+        GLES30.glBindFramebuffer(GLES30.GL_FRAMEBUFFER, 0)
+        GlProgram.checkNoGlError("renderLivePhaseAmplifiedPhase")
+    }
+
+    private fun renderLivePhaseRoiReconstruction(state: LivePhaseRoiState) {
+        state.reconstructedRoi.bind()
+        GLES30.glUseProgram(phaseReconstructProgram)
+        GLES30.glUniform1i(phaseReconstructAmplifiedTextureLocation, 0)
+        GLES30.glActiveTexture(GLES30.GL_TEXTURE0)
+        GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, state.amplifiedPhase.textureId)
+        drawFramebufferQuad()
+        GLES30.glBindFramebuffer(GLES30.GL_FRAMEBUFFER, 0)
+        GlProgram.checkNoGlError("renderLivePhaseRoiReconstruction")
     }
 
     private fun renderDownsamplePyramid(
@@ -780,6 +837,7 @@ class CameraOesRenderer(
         private const val DOWNSAMPLE_LEVELS = 3
         private const val DEFAULT_FRAME_NANOS = 33_333_333L
         private const val NANOS_PER_SECOND = 1_000_000_000.0
+        private const val DEFAULT_PHASE_AMPLITUDE_THRESHOLD = 0.03f
     }
 }
 

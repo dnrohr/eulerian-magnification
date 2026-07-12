@@ -238,3 +238,17 @@ Goal: bring the recorded Riesz/phase motion renderer into a live-preview path fo
   invocation remain open.
 - Installed the debug build on the Pixel 8a after focused shader/graph coverage
   and full JVM/build verification.
+
+## Completed Slice: Live Phase Amplify And Reconstruct Passes
+
+- `CameraOesRenderer` now compiles and invokes the live phase amplification
+  shader after temporal state update.
+- The amplification pass applies the recorded phase renderer's high-minus-low
+  temporal phase band and amplitude threshold before writing
+  `LivePhaseRoiState.amplifiedPhase`.
+- The renderer now reconstructs amplified phase into
+  `LivePhaseRoiState.reconstructedRoi`, ready for the upcoming full-frame
+  compose pass.
+- Visible phase compose invocation remains open.
+- Installed the debug build on the Pixel 8a after focused shader/graph coverage
+  and full JVM/build verification.
