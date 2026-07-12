@@ -74,6 +74,25 @@ for proving that the app reported labels such as `Thermal high`, `Full frame
 slow`, `Renderer: Live linear EVM reconstruction`, or the active ROI source
 during unattended captures.
 
+Pass `-RequireUiText` with one or more strings when a capture must prove
+specific labels are visible in the Android view hierarchy:
+
+```powershell
+.\tools\capture_live_validation_evidence.ps1 `
+  -Label "thermal-label" `
+  -Mode Pulse `
+  -View Split `
+  -GlPreview $true `
+  -Controls $true `
+  -RequireUiText "Thermal high","Renderer: Live linear EVM reconstruction" `
+  -Summarize
+```
+
+The summary writes `uiTextAssertions` with each required text and whether it was
+found. Missing required text adds a warning and makes the summary command exit
+with code `3`. Runtime smoke remains separate, so crashes, ANRs, and GL errors
+still use the existing runtime-smoke result.
+
 For ROI overlay validation, pass `-MeasureRoiExpected` with the expected
 normalized screenshot-space rectangle. The capture script then writes
 `roi_overlay_measurement.json` and the summary embeds the result:
@@ -140,6 +159,7 @@ Available launch parameters:
   analyzer thresholds forwarded to the ROI overlay measurement script.
 - `-MeasureRoiAllowMultipleComponents`: allows more than one connected overlay
   component when a test intentionally expects duplicate marks.
+- `-RequireUiText`: comma-separated expected Android view-hierarchy text values.
 - `-PreserveLogcat`: keeps existing device logcat instead of clearing it before
   the capture starts.
 - `-Summarize`: writes `evidence_summary.json` immediately after capture.

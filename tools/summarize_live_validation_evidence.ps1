@@ -7,7 +7,8 @@ param(
     [int]$WarnMedianFrameMillis = 33,
     [int]$WarnThermalStatus = 2,
     [double]$WarnCameraFps = 23.5,
-    [double]$WarnBatteryTemperatureC = 40.0
+    [double]$WarnBatteryTemperatureC = 40.0,
+    [string[]]$RequireUiText = @()
 )
 
 $ErrorActionPreference = "Stop"
@@ -209,6 +210,32 @@ function Parse-UiDumpSummary {
     }
 }
 
+function Test-RequiredUiText {
+    param(
+        [string[]]$Texts,
+        [string[]]$RequiredText
+    )
+
+    $checks = @()
+    foreach ($required in @($RequiredText)) {
+        if ([string]::IsNullOrWhiteSpace($required)) {
+            continue
+        }
+        $found = $false
+        foreach ($text in @($Texts)) {
+            if ($text.IndexOf($required, [System.StringComparison]::OrdinalIgnoreCase) -ge 0) {
+                $found = $true
+                break
+            }
+        }
+        $checks += [ordered]@{
+            text = $required
+            found = $found
+        }
+    }
+    return $checks
+}
+
 $bundle = (Resolve-Path -LiteralPath $BundlePath).Path
 $manifestPath = Get-RequiredPath $bundle "manifest.json"
 $gfxPath = Get-RequiredPath $bundle "gfxinfo.txt"
@@ -231,6 +258,20 @@ if (Test-Path -LiteralPath $manifestPath) {
     $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
 }
 
+$requiredUiText = @()
+foreach ($required in @($RequireUiText)) {
+    if (-not [string]::IsNullOrWhiteSpace($required)) {
+        $requiredUiText += $required
+    }
+}
+if ($requiredUiText.Count -eq 0 -and $manifest -and $manifest.launch -and $manifest.launch.PSObject.Properties.Name -contains "requireUiText") {
+    foreach ($required in @($manifest.launch.requireUiText)) {
+        if (-not [string]::IsNullOrWhiteSpace($required)) {
+            $requiredUiText += $required
+        }
+    }
+}
+
 $gfx = Read-TextIfExists $gfxPath
 $logcat = Read-TextIfExists $logcatPath
 $thermalText = Read-TextIfExists $thermalPath
@@ -239,6 +280,7 @@ $cameraFpsSummary = Parse-CameraFpsSummary $logcat
 $batteryText = Read-TextIfExists $batteryPath
 $batterySummary = Parse-BatterySummary $batteryText
 $uiDumpSummary = Parse-UiDumpSummary $uiDumpPath
+$uiTextAssertions = Test-RequiredUiText -Texts @($uiDumpSummary.text) -RequiredText $requiredUiText
 
 $jankyPercent = Match-FirstNumber $gfx 'Janky frames:\s+\d+\s+\(([0-9.]+)%\)'
 $totalFrames = Match-FirstNumber $gfx 'Total frames rendered:\s+(\d+)'
@@ -295,6 +337,11 @@ foreach ($entry in $runtimeFindings.GetEnumerator()) {
         $warnings += "runtime finding: $($entry.Key)"
     }
 }
+foreach ($assertion in @($uiTextAssertions)) {
+    if ($assertion.found -ne $true) {
+        $warnings += "required UI text missing: $($assertion.text)"
+    }
+}
 
 $roiMeasurement = $null
 if (Test-Path -LiteralPath $roiMeasurementPath) {
@@ -346,6 +393,11 @@ $result = [ordered]@{
     thermal = $thermalSummary
     battery = $batterySummary
     uiDump = $uiDumpSummary
+    uiTextAssertions = [ordered]@{
+        required = $requiredUiText
+        checks = $uiTextAssertions
+        passed = (@($uiTextAssertions | Where-Object { $_.found -ne $true }).Count -eq 0)
+    }
     roiMeasurement = $roiMeasurement
     warnings = $warnings
     passedRuntimeSmoke = ($missing.Count -eq 0) -and
@@ -372,4 +424,7 @@ Write-Output "passedRuntimeSmoke=$($result.passedRuntimeSmoke) warnings=$($warni
 
 if (-not $result.passedRuntimeSmoke) {
     exit 2
+}
+if ($result.uiTextAssertions.required.Count -gt 0 -and -not $result.uiTextAssertions.passed) {
+    exit 3
 }

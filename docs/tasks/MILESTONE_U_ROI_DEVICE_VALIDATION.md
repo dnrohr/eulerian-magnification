@@ -164,6 +164,9 @@ Goal: prove that automatic and manual ROI coordinates align with the live previe
 - This makes unattended captures easier to audit for states such as `Thermal
   high`, `Full frame slow`, active ROI source, and live renderer diagnostics,
   without relying on OCR or manual screenshot reading.
+- Captures and summaries now accept `-RequireUiText`, which records required UI
+  strings in the manifest, writes per-string `uiTextAssertions`, and exits the
+  summary with code `3` if an explicitly required label is missing.
 - This improves evidence review for remaining ROI/live-preview validation, but
   does not close watched target alignment without a visible target.
 

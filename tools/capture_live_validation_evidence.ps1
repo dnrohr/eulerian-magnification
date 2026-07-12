@@ -22,6 +22,7 @@ param(
     [double]$MeasureRoiMaxEdgeError = 0.04,
     [int]$MeasureRoiMinimumMatchedPixels = 24,
     [switch]$MeasureRoiAllowMultipleComponents,
+    [string[]]$RequireUiText = @(),
     [switch]$PreserveLogcat,
     [switch]$PersistLaunchSettings,
     [switch]$Summarize
@@ -358,6 +359,7 @@ $manifest = [ordered]@{
         lockAeAwb = if ($PSBoundParameters.ContainsKey("LockAeAwb")) { $LockAeAwb } else { $null }
         measureRoiExpected = $MeasureRoiExpected
         measureRoiKind = $MeasureRoiKind
+        requireUiText = @($RequireUiText)
         persistSettings = [bool]$PersistLaunchSettings
     }
     adb = $adb
@@ -379,7 +381,13 @@ if ($Summarize) {
     if (-not (Test-Path -LiteralPath $summaryScript)) {
         Write-Warning "Summary requested, but summarize_live_validation_evidence.ps1 was not found."
     } else {
-        & $summaryScript -BundlePath $outputDir
+        $summaryArgs = @("-BundlePath", $outputDir)
+        $requiredUiTextArgs = @($RequireUiText | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+        if ($requiredUiTextArgs.Count -gt 0) {
+            $summaryArgs += "-RequireUiText"
+            $summaryArgs += $requiredUiTextArgs
+        }
+        & $summaryScript @summaryArgs
     }
 }
 
