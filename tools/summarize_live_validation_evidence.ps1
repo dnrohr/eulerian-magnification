@@ -375,6 +375,7 @@ $roiMeasurementPath = Get-RequiredPath $bundle "roi_overlay_measurement.json"
 $thermalPath = Get-RequiredPath $bundle "thermalservice.txt"
 $batteryPath = Get-RequiredPath $bundle "battery.txt"
 $uiDumpPath = Get-RequiredPath $bundle "ui_dump.xml"
+$thermalReadyWaitPath = Get-RequiredPath $bundle "thermal_ready_wait.json"
 
 $manifest = $null
 if (Test-Path -LiteralPath $manifestPath) {
@@ -442,6 +443,11 @@ $thermalPreflightSummary = if ($manifest -and $manifest.PSObject.Properties.Name
 } else {
     $preflightPath = Get-RequiredPath $bundle "thermalservice_preflight.txt"
     Parse-ThermalSummary (Read-TextIfExists $preflightPath)
+}
+$thermalReadyWait = if (Test-Path -LiteralPath $thermalReadyWaitPath) {
+    Get-Content -LiteralPath $thermalReadyWaitPath -Raw | ConvertFrom-Json
+} else {
+    $null
 }
 $cameraFpsSummary = Parse-CameraFpsSummary $logcat
 $batteryText = Read-TextIfExists $batteryPath
@@ -590,6 +596,7 @@ $result = [ordered]@{
         roiMeasurementPresent = $null -ne $roiMeasurement
         packageInfoPresent = Test-Path -LiteralPath (Join-Path $bundle "app_package.txt")
         uiDumpPresent = Test-Path -LiteralPath $uiDumpPath
+        thermalReadyWaitPresent = $null -ne $thermalReadyWait
     }
     gfx = [ordered]@{
         totalFrames = $totalFrames
@@ -600,6 +607,7 @@ $result = [ordered]@{
     }
     runtimeFindings = $runtimeFindings
     cameraHal = $cameraFpsSummary
+    thermalReadyWait = $thermalReadyWait
     thermalPreflight = $thermalPreflightSummary
     thermal = $thermalSummary
     battery = $batterySummary

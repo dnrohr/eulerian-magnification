@@ -61,8 +61,8 @@ summary carries the same source identity plus launch state, required artifact
 presence, screenshot dimensions, gfx frame pacing, runtime crash/ANR/GL-error
 signals, camera HAL FPS samples from logcat, Android thermal status, battery
 temperature/charging context, sampled screenshot content metrics,
-machine-readable UI text from `ui_dump.xml`, and optional ROI overlay
-measurement status.
+machine-readable UI text from `ui_dump.xml`, optional thermal readiness wait
+results, and optional ROI overlay measurement status.
 The script also records `thermalservice_preflight.txt` before clearing logcat or
 launching the app. The manifest and summary expose this as `thermalPreflight`,
 so a capture can show that the device was already throttled before the app was
@@ -96,7 +96,8 @@ below the threshold for the requested number of consecutive samples. It exits
 `2` on timeout and can write the polling history to JSON.
 
 For a single capture command, pass `-WaitForThermalReady`. The capture writes
-`thermal_ready_wait.json` and aborts before launch if the wait times out:
+`thermal_ready_wait.json`, embeds it in `evidence_summary.json` as
+`thermalReadyWait`, and aborts before launch if the wait times out:
 
 ```powershell
 .\tools\capture_live_validation_evidence.ps1 `

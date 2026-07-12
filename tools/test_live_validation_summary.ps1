@@ -58,14 +58,39 @@ try {
     "List of devices attached`nFAKEDEVICE`tdevice" | Out-File -LiteralPath (Join-Path $abortedBundle "adb_devices.txt") -Encoding utf8
     "Thermal Status: 4`nTemperature{mValue=69.0, mType=3, mName=MID, mStatus=5}" |
         Out-File -LiteralPath (Join-Path $abortedBundle "thermalservice_preflight.txt") -Encoding utf8
+    Write-JsonFile -Path (Join-Path $abortedBundle "thermal_ready_wait.json") -Value ([ordered]@{
+        createdAt = "2026-07-12T00:00:00.0000000-04:00"
+        ready = $false
+        readyBelowThermalStatus = 4
+        requiredReadySamples = 2
+        timeoutSeconds = 0
+        pollSeconds = 1
+        consecutiveReadySamples = 0
+        lastThermal = [ordered]@{
+            status = 4
+            statusLabel = "critical"
+            maxSensorStatus = 5
+            maxSensorStatusLabel = "emergency"
+            maxTemperatureC = 69.0
+            hottestSensorName = "MID"
+        }
+        records = @()
+    })
     Write-JsonFile -Path (Join-Path $abortedBundle "manifest.json") -Value ([ordered]@{
         createdAt = "2026-07-12T00:00:00.0000000-04:00"
         label = "aborted"
         aborted = $true
-        abortReason = "thermal preflight status 5 at or above abort threshold 4"
+        abortReason = "thermal readiness wait exited 2 before app launch"
         launch = [ordered]@{
             skipped = $true
             requireUiText = @()
+            thermalWait = [ordered]@{
+                requested = $true
+                readyBelowStatus = 4
+                requiredReadySamples = 2
+                timeoutSeconds = 0
+                pollSeconds = 1
+            }
         }
         visualReview = [ordered]@{
             targetDescription = "synthetic abort"
@@ -86,6 +111,7 @@ try {
         artifacts = [ordered]@{
             devices = Join-Path $abortedBundle "adb_devices.txt"
             thermalPreflight = Join-Path $abortedBundle "thermalservice_preflight.txt"
+            thermalReadyWait = Join-Path $abortedBundle "thermal_ready_wait.json"
         }
     })
 
@@ -96,6 +122,9 @@ try {
     Assert-Equal -Actual $abortedSummary.evidenceVerdict.status -Expected "thermal_preflight_aborted" -Message "Aborted verdict mismatch."
     Assert-Equal -Actual $abortedSummary.passedRuntimeSmoke -Expected $false -Message "Aborted runtime-smoke result mismatch."
     Assert-Equal -Actual @($abortedSummary.artifacts.missingRequired).Count -Expected 0 -Message "Aborted bundle should not require runtime artifacts."
+    Assert-Equal -Actual $abortedSummary.artifacts.thermalReadyWaitPresent -Expected $true -Message "Thermal wait presence mismatch."
+    Assert-Equal -Actual $abortedSummary.thermalReadyWait.ready -Expected $false -Message "Thermal wait ready flag mismatch."
+    Assert-Equal -Actual $abortedSummary.thermalReadyWait.requiredReadySamples -Expected 2 -Message "Thermal wait sample count mismatch."
 
     $incompleteBundle = Join-Path $root "incomplete"
     New-Item -ItemType Directory -Force -Path $incompleteBundle | Out-Null
