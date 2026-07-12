@@ -640,6 +640,10 @@ private fun CameraGlPreview(
     val analysisExecutor = remember { Executors.newSingleThreadExecutor() }
     val mainExecutor = remember(context) { ContextCompat.getMainExecutor(context) }
     val colorParameters = remember { ColorMagnificationParameters() }
+    val currentSettings = rememberUpdatedState(settings)
+    val currentRoiSource = rememberUpdatedState(roiSource)
+    val currentManualRoi = rememberUpdatedState(manualRoi)
+    val currentOnSample = rememberUpdatedState(onSample)
     val currentLiveEvmPreviewDecision = rememberUpdatedState(liveEvmPreviewDecision)
     val currentLivePhasePreviewDecision = rememberUpdatedState(livePhasePreviewDecision)
 
@@ -697,13 +701,18 @@ private fun CameraGlPreview(
                         val analysis = analysisBuilder.build().also {
                             it.setAnalyzer(
                                 analysisExecutor,
-                                PulseRoiAnalyzer(settings, roiSource = roiSource, manualRoi = manualRoi) { sample ->
+                                PulseRoiAnalyzer(
+                                    settingsProvider = { currentSettings.value },
+                                    roiSourceProvider = { currentRoiSource.value },
+                                    manualRoiProvider = { currentManualRoi.value },
+                                ) { sample ->
                                     mainExecutor.execute {
-                                        val presentationTimestampNanos = onSample(sample)
+                                        val activeSettings = currentSettings.value
+                                        val presentationTimestampNanos = currentOnSample.value(sample)
                                         renderer.setColorMagnificationUniforms(
                                             colorParameters.from(
                                                 sample = sample,
-                                                settings = settings,
+                                                settings = activeSettings,
                                                 fullFrameMode = currentLiveEvmPreviewDecision.value.fullFrameColorPreview,
                                                 presentationTimestampNanos = presentationTimestampNanos,
                                                 livePhasePreviewDecision = currentLivePhasePreviewDecision.value,
@@ -972,6 +981,10 @@ private fun CameraPreview(
     val lifecycleOwner = LocalLifecycleOwner.current
     val analysisExecutor = remember { Executors.newSingleThreadExecutor() }
     val mainExecutor = remember(context) { ContextCompat.getMainExecutor(context) }
+    val currentSettings = rememberUpdatedState(settings)
+    val currentRoiSource = rememberUpdatedState(roiSource)
+    val currentManualRoi = rememberUpdatedState(manualRoi)
+    val currentOnSample = rememberUpdatedState(onSample)
 
     DisposableEffect(Unit) {
         onDispose {
@@ -1015,8 +1028,12 @@ private fun CameraPreview(
                             .also {
                                 it.setAnalyzer(
                                 analysisExecutor,
-                                PulseRoiAnalyzer(settings, roiSource = roiSource, manualRoi = manualRoi) { sample ->
-                                    mainExecutor.execute { onSample(sample) }
+                                PulseRoiAnalyzer(
+                                    settingsProvider = { currentSettings.value },
+                                    roiSourceProvider = { currentRoiSource.value },
+                                    manualRoiProvider = { currentManualRoi.value },
+                                ) { sample ->
+                                    mainExecutor.execute { currentOnSample.value(sample) }
                                 },
                                 )
                             }

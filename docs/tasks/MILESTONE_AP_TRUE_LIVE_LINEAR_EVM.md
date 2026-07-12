@@ -227,6 +227,32 @@ showing true pyramid reconstruction or a fallback bridge.
 - This supports AP evidence review but does not prove visible magnification
   without a controlled motion/color target.
 
+## Supporting Slice: Live Camera State Propagation
+
+- Investigated a report that full-frame preview looked frozen or very low FPS.
+- Pixel 8a evidence showed the front camera HAL still delivered about 30 FPS in
+  full-frame GL Split mode. Hidden controls rendered with 8.22% janky frames and
+  an 11 ms median frame time; visible debug controls increased UI jank to
+  30.67%, with the same camera HAL still near 30 FPS.
+- Fixed a stale-state bug where CameraX/GL `AndroidView` setup captured the
+  initial `AnalysisSettings`, ROI source, manual ROI, and sample callback when
+  the camera analyzer was first bound. The analyzer and GL uniform callback now
+  read current Compose state each frame, so changing mode, view, amplification,
+  or ROI source does not require restarting the activity to affect live output.
+- Post-fix Pixel smoke passed runtime checks, reported `GL renderer: Live
+  reconstruction`, and showed the camera/analysis path still active. The debug
+  overlay remained expensive with 53.19% janky frames, so visual validation
+  should use hidden controls unless the run is specifically measuring debug
+  diagnostics.
+- Evidence bundles:
+  `sample-videos/exports/live-validation/20260712-162520-full-frame-low-fps-check-hidden`
+  and
+  `sample-videos/exports/live-validation/20260712-162556-full-frame-low-fps-check-controls`.
+- Post-fix evidence bundle:
+  `sample-videos/exports/live-validation/20260712-162905-state-propagation-full-frame-smoke`.
+- This fixes a live-control consistency issue and documents the UI-jank side of
+  the full-frame report. Known motion/color target validation remains open.
+
 ## Done When
 
 - Live amplified preview shows visible reconstructed output for at least one color sample and one slow-motion sample.

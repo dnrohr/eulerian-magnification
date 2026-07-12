@@ -12,16 +12,27 @@ import java.nio.ByteBuffer
 import java.util.concurrent.atomic.AtomicBoolean
 
 class PulseRoiAnalyzer(
-    settings: AnalysisSettings,
-    private val roiSource: RoiSource = RoiSource.Auto,
-    private val manualRoi: NormalizedRect? = null,
+    private val settingsProvider: () -> AnalysisSettings,
+    private val roiSourceProvider: () -> RoiSource,
+    private val manualRoiProvider: () -> NormalizedRect?,
     private val onSample: (AnalysisSample) -> Unit,
 ) : ImageAnalysis.Analyzer {
-    private val fpsMeter = FpsMeter()
-    private val bandpassFilter = BandpassFilter(
-        lowCutHz = settings.lowCutHz,
-        highCutHz = settings.highCutHz,
+    constructor(
+        settings: AnalysisSettings,
+        roiSource: RoiSource = RoiSource.Auto,
+        manualRoi: NormalizedRect? = null,
+        onSample: (AnalysisSample) -> Unit,
+    ) : this(
+        settingsProvider = { settings },
+        roiSourceProvider = { roiSource },
+        manualRoiProvider = { manualRoi },
+        onSample = onSample,
     )
+
+    private val fpsMeter = FpsMeter()
+    private var bandpassFilter = newBandpassFilter(settingsProvider())
+    private var activeLowCutHz = settingsProvider().lowCutHz
+    private var activeHighCutHz = settingsProvider().highCutHz
     private val roiSmoother = RoiSmoother()
     private val roiTracker = RoiTracker()
     private val timestampTracker = TimestampTracker()
@@ -41,6 +52,10 @@ class PulseRoiAnalyzer(
 
     @androidx.annotation.OptIn(ExperimentalGetImage::class)
     override fun analyze(imageProxy: ImageProxy) {
+        val settings = settingsProvider()
+        val roiSource = roiSourceProvider()
+        val manualRoi = manualRoiProvider()
+        val bandpassFilter = bandpassFilterFor(settings)
         val timestamp = imageProxy.imageInfo.timestamp
         val timestampStatus = timestampTracker.record(timestamp)
         fpsMeter.recordFrame(timestamp)
@@ -225,6 +240,22 @@ class PulseRoiAnalyzer(
             (right * width).toInt(),
             (bottom * height).toInt(),
         ).clamped(width, height)
+    }
+
+    private fun bandpassFilterFor(settings: AnalysisSettings): BandpassFilter {
+        if (settings.lowCutHz != activeLowCutHz || settings.highCutHz != activeHighCutHz) {
+            activeLowCutHz = settings.lowCutHz
+            activeHighCutHz = settings.highCutHz
+            bandpassFilter = newBandpassFilter(settings)
+        }
+        return bandpassFilter
+    }
+
+    private fun newBandpassFilter(settings: AnalysisSettings): BandpassFilter {
+        return BandpassFilter(
+            lowCutHz = settings.lowCutHz,
+            highCutHz = settings.highCutHz,
+        )
     }
 
     companion object {
