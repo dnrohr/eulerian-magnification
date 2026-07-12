@@ -55,13 +55,20 @@ worktree flag, short status lines, and installed package dump artifact. The
 summary carries the same source identity plus launch state, required artifact
 presence, screenshot dimensions, gfx frame pacing, runtime crash/ANR/GL-error
 signals, camera HAL FPS samples from logcat, Android thermal status, battery
-temperature/charging context, machine-readable UI text from `ui_dump.xml`, and
-optional ROI overlay measurement status.
+temperature/charging context, sampled screenshot content metrics,
+machine-readable UI text from `ui_dump.xml`, and optional ROI overlay
+measurement status.
 Thermal, external-power, high-battery-temperature, and low camera-cadence
 warnings are advisory by default: they flag conditions that may affect a visual
 or benchmark run, but they do not make runtime smoke fail unless a crash, ANR,
 or GL error is also present. A passing runtime smoke summary still does not
 prove visual validation unless the target is visible and inspected.
+
+Screenshot content metrics include sampled luminance mean, luminance standard
+deviation, dark/light pixel fractions, a `nonBlank` flag, and a portrait
+orientation flag. These checks catch blank, near-uniform, or wrongly oriented
+captures before spending time on visual review; they do not prove magnification
+quality by themselves.
 
 For visual-quality captures, prefer hidden controls or Clean mode. Use
 `-Controls $true -Panel Debug` only when the goal is to capture renderer

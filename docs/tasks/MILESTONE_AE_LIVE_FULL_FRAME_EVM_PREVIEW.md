@@ -162,6 +162,17 @@ Goal: integrate the full-frame EVM renderer into the live preview path.
 - This improves evidence review consistency for AE validation, but known-target
   visual validation remains open.
 
+## Supporting Slice: Screenshot Content Summary
+
+- `evidence_summary.json` now includes sampled screenshot content metrics:
+  mean luminance, luminance standard deviation, dark/light pixel fractions,
+  `nonBlank`, and portrait orientation.
+- Summaries warn when the screenshot appears blank/near-uniform or is not
+  portrait-oriented.
+- This strengthens unattended AE/AP smoke evidence by proving basic screenshot
+  content health before human target review. It still does not prove visual
+  magnification without a known target.
+
 ## Evidence
 
 - `docs/experiments/live_full_frame_preview_bridge.md`

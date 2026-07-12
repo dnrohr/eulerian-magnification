@@ -236,6 +236,59 @@ function Test-RequiredUiText {
     return $checks
 }
 
+function Measure-ScreenshotContent {
+    param([System.Drawing.Bitmap]$Bitmap)
+
+    $stepX = [Math]::Max(1, [Math]::Floor($Bitmap.Width / 80))
+    $stepY = [Math]::Max(1, [Math]::Floor($Bitmap.Height / 80))
+    $count = 0
+    $sum = 0.0
+    $sumSquares = 0.0
+    $darkCount = 0
+    $lightCount = 0
+
+    for ($y = 0; $y -lt $Bitmap.Height; $y += $stepY) {
+        for ($x = 0; $x -lt $Bitmap.Width; $x += $stepX) {
+            $pixel = $Bitmap.GetPixel($x, $y)
+            $luma = (0.2126 * $pixel.R) + (0.7152 * $pixel.G) + (0.0722 * $pixel.B)
+            $count += 1
+            $sum += $luma
+            $sumSquares += $luma * $luma
+            if ($luma -lt 8.0) {
+                $darkCount += 1
+            }
+            if ($luma -gt 247.0) {
+                $lightCount += 1
+            }
+        }
+    }
+
+    if ($count -eq 0) {
+        return [ordered]@{
+            sampleCount = 0
+            meanLuma = $null
+            lumaStdDev = $null
+            darkFraction = $null
+            lightFraction = $null
+            nonBlank = $false
+            portrait = $Bitmap.Height -gt $Bitmap.Width
+        }
+    }
+
+    $mean = $sum / $count
+    $variance = [Math]::Max(0.0, ($sumSquares / $count) - ($mean * $mean))
+    $stdDev = [Math]::Sqrt($variance)
+    return [ordered]@{
+        sampleCount = $count
+        meanLuma = [Math]::Round($mean, 2)
+        lumaStdDev = [Math]::Round($stdDev, 2)
+        darkFraction = [Math]::Round($darkCount / $count, 4)
+        lightFraction = [Math]::Round($lightCount / $count, 4)
+        nonBlank = $stdDev -ge 3.0
+        portrait = $Bitmap.Height -gt $Bitmap.Width
+    }
+}
+
 $bundle = (Resolve-Path -LiteralPath $BundlePath).Path
 $manifestPath = Get-RequiredPath $bundle "manifest.json"
 $gfxPath = Get-RequiredPath $bundle "gfxinfo.txt"
@@ -356,15 +409,24 @@ if (Test-Path -LiteralPath $screenshotPath) {
     Add-Type -AssemblyName System.Drawing
     $bitmap = [System.Drawing.Bitmap]::new($screenshotPath)
     try {
+        $content = Measure-ScreenshotContent $bitmap
         $screenshotInfo = [ordered]@{
             path = $screenshotPath
             width = $bitmap.Width
             height = $bitmap.Height
             bytes = (Get-Item -LiteralPath $screenshotPath).Length
+            content = $content
         }
     } finally {
         $bitmap.Dispose()
     }
+}
+
+if ($screenshotInfo -and $screenshotInfo.content.nonBlank -ne $true) {
+    $warnings += "screenshot appears blank or near-uniform"
+}
+if ($screenshotInfo -and $screenshotInfo.content.portrait -ne $true) {
+    $warnings += "screenshot is not portrait-oriented"
 }
 
 $result = [ordered]@{
