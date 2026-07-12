@@ -11,8 +11,8 @@ validation.
 - Kotlin Android app with Jetpack Compose, CameraX, ML Kit face detection, and
   optional OpenGL ES preview.
 - Live ROI analysis for pulse-color and early breathing/motion experiments.
-- Modes: Pulse (`0.7-3.0 Hz`), Breathing (`0.1-0.6 Hz`), and Fast Motion
-  (`4.0-12.0 Hz`).
+- Modes: Object/Motion (`3.0-12.0 Hz`), Pulse (`0.7-3.0 Hz`), and Breathing
+  (`0.1-0.6 Hz`).
 - Views: Raw, Amplified, Difference, and Split.
 - Manual ROI selection, face ROI smoothing/tracking, basic translation estimate,
   quality warnings, and amplification/noise guardrails.
@@ -70,7 +70,8 @@ The first target definition is tracked in
 
 1. Mount the phone or hold it as still as possible.
 2. Launch the app and grant camera permission.
-3. Start with `Pulse`, `Amplified`, and the compact preview.
+3. Start with the default motion mode, `Amplified`, and the compact preview.
+   Switch to `Pulse` when you specifically want color/skin-pulse behavior.
 4. Let exposure settle for a few seconds, then tap `Controls` and use
    `Lock AE/AWB`.
 5. Drag a manual ROI over the area you want to measure. For pulse, use forehead
@@ -136,8 +137,9 @@ The default screen is intentionally compact so the preview remains visible.
   output for the active mode.
 - `Color amp`, `Breath sig`, `Motion exp`: compact output labels
   that state what kind of processing is active.
-- `Pulse`, `Breath`, `Motion`: select the temporal band and analysis
-  preset.
+- `Object`, `Motion`, `Pulse`, `Breath`: select the temporal band and analysis
+  preset. The app defaults to the motion path so the first-run experience is
+  aimed at visible movement rather than color-only pulse tinting.
 - `Raw`: shows the camera preview without the app's amplified tint.
 - `Amp`: shows the current amplified/tinted visualization.
 - `Diff`: shows the magnitude of the added signal, which is useful for spotting
@@ -162,8 +164,12 @@ The default screen is intentionally compact so the preview remains visible.
   viewing ignores preview drags so accidental touches do not move the ROI.
 - `Done ROI`: exits ROI edit mode and hides corner handles.
 - `Clear ROI`: removes the manual ROI and returns to automatic/center ROI.
-- `Use GL Preview`: switches to the OpenGL preview path when available.
-- `Use CameraX Preview`: returns to the standard CameraX preview.
+- `Use GL Preview`: switches to the OpenGL preview path when available. GL is
+  the GPU preview/processing path used for live Split and phase-motion work; it
+  is the path expected to become primary for motion magnification.
+- `Use CameraX Preview`: returns to the standard CameraX preview and CPU
+  analysis path. CameraX remains useful as a stable camera baseline and fallback,
+  even as motion rendering moves toward GL.
 - `Start Recording` / `Stop Recording`: records a processed debug MP4 plus
   metadata JSON in app storage.
 - `Process Video`: selects a recorded/sample video and runs the offline
@@ -238,7 +244,8 @@ without bundling the videos into the app.
 
 The app stores the last durable test setup in SharedPreferences: mode, view
 mode, amplification, requested preview path, AE/AWB lock preference, and the
-opt-in quality-cue preference. It does not store transient ROI placement, signal
+opt-in quality-cue preference. First launch and `Reset Settings` prefer the
+motion/GL path when available. It does not store transient ROI placement, signal
 history, validation summaries, or recording state.
 
 ## Build
@@ -272,9 +279,9 @@ The intended order is:
 
 1. Install and launch the debug app on the Pixel.
 2. Grant camera permission.
-3. Start in Pulse mode with Amplified view and wait for the preview timing to
-   settle near 30 FPS.
-4. Or open `Controls` and choose `Pulse demo`, `Breathing demo`, or
+3. Start in the default motion mode with Amplified view and wait for the preview
+   timing to settle near 30 FPS.
+4. Open `Controls` and choose `Pulse demo`, `Breathing demo`, or
    `Motion demo` to apply a repeatable preset.
 5. Switch between Raw, Amplified, Difference, and Split to inspect the ROI
    visualization.

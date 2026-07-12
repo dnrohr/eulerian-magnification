@@ -38,6 +38,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -1064,6 +1065,7 @@ private fun StatusOverlay(
         modifier = modifier
             .background(Color(0x99000000))
             .verticalScroll(rememberScrollState())
+            .statusBarsPadding()
             .padding(horizontal = 16.dp, vertical = 12.dp),
     ) {
         Row(
@@ -1242,6 +1244,7 @@ private fun CompactStatusOverlay(
     Column(
         modifier = modifier
             .background(Color(0x73000000))
+            .statusBarsPadding()
             .padding(horizontal = 12.dp, vertical = 8.dp),
     ) {
         Row(
@@ -1318,7 +1321,9 @@ private fun CleanPreviewOverlay(
     modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier = modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+        modifier = modifier
+            .statusBarsPadding()
+            .padding(horizontal = 12.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -1337,18 +1342,26 @@ private fun CleanPreviewOverlay(
 
 @Composable
 private fun QualityStatusRow(statuses: List<QualityStatus>) {
+    val hasWarning = statuses != listOf(QualityStatus.Good)
     Column {
         Text(
             text = "Quality: ${statuses.joinToString { it.label }}",
             color = qualityColor(statuses),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
-        if (statuses != listOf(QualityStatus.Good)) {
-            Text(
-                text = statuses.joinToString("  ") { "${it.label}: ${it.action}" },
-                color = Color(0xFFC8D3DC),
-                style = MaterialTheme.typography.bodySmall,
-            )
-        }
+        Text(
+            text = if (hasWarning) {
+                statuses.joinToString("  ") { "${it.label}: ${it.action}" }
+            } else {
+                ""
+            },
+            modifier = Modifier.height(20.dp),
+            color = Color(0xFFC8D3DC),
+            style = MaterialTheme.typography.bodySmall,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 
@@ -1835,6 +1848,11 @@ private fun ModeControls(
                 style = MaterialTheme.typography.bodySmall,
             )
         }
+        Text(
+            text = "CameraX is the standard camera preview and CPU analysis path. GL is the GPU preview/processing path for live Split and phase motion; it should become the main motion path, with CameraX kept as a stable fallback.",
+            color = Color(0xFFC8D3DC),
+            style = MaterialTheme.typography.bodySmall,
+        )
     }
     Spacer(modifier = Modifier.height(8.dp))
     Button(onClick = onResetSettings) {

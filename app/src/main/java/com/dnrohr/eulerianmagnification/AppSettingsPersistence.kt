@@ -27,9 +27,10 @@ data class PersistedAppSettings(
         fun defaultFor(
             availableModes: List<MagnificationMode> = MagnificationMode.entries,
         ): PersistedAppSettings {
-            val defaultMode = availableModes.firstOrNull() ?: MagnificationMode.Pulse
+            val defaultMode = defaultModeFor(availableModes)
             return PersistedAppSettings(
                 analysisSettings = AnalysisSettings(mode = defaultMode),
+                requestedGlPreview = defaultMode.prefersGlPreviewByDefault(),
             )
         }
 
@@ -55,10 +56,27 @@ data class PersistedAppSettings(
                     viewMode = viewMode,
                     amplification = amplification,
                 ),
-                requestedGlPreview = values[KEY_REQUESTED_GL_PREVIEW]?.toBooleanStrictOrNull() ?: false,
+                requestedGlPreview = values[KEY_REQUESTED_GL_PREVIEW]?.toBooleanStrictOrNull()
+                    ?: defaults.requestedGlPreview,
                 cameraControlsLocked = values[KEY_CAMERA_CONTROLS_LOCKED]?.toBooleanStrictOrNull() ?: false,
                 qualityCuesEnabled = values[KEY_QUALITY_CUES_ENABLED]?.toBooleanStrictOrNull() ?: false,
             )
+        }
+
+        private fun defaultModeFor(availableModes: List<MagnificationMode>): MagnificationMode {
+            val preferredOrder = listOf(
+                MagnificationMode.ObjectVibration,
+                MagnificationMode.Tremor,
+                MagnificationMode.Pulse,
+                MagnificationMode.Breathing,
+            )
+            return preferredOrder.firstOrNull { it in availableModes }
+                ?: availableModes.firstOrNull()
+                ?: MagnificationMode.ObjectVibration
+        }
+
+        private fun MagnificationMode.prefersGlPreviewByDefault(): Boolean {
+            return this == MagnificationMode.ObjectVibration || this == MagnificationMode.Tremor
         }
 
         const val KEY_MODE = "mode"

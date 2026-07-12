@@ -10,16 +10,24 @@ import org.junit.Test
 
 class PersistedAppSettingsTest {
     @Test
-    fun defaultsUseFirstAvailableModeAndDoNotPersistTransientState() {
-        val settings = PersistedAppSettings.defaultFor(listOf(MagnificationMode.Breathing))
+    fun defaultsPreferMotionModeAndGlWhenAvailable() {
+        val settings = PersistedAppSettings.defaultFor(MagnificationMode.entries)
 
-        assertEquals(MagnificationMode.Breathing, settings.analysisSettings.mode)
+        assertEquals(MagnificationMode.ObjectVibration, settings.analysisSettings.mode)
         assertEquals(ViewMode.Amplified, settings.analysisSettings.viewMode)
         assertEquals(12.0f, settings.analysisSettings.amplification)
-        assertFalse(settings.requestedGlPreview)
+        assertTrue(settings.requestedGlPreview)
         assertFalse(settings.cameraControlsLocked)
         assertFalse(settings.qualityCuesEnabled)
         assertFalse(settings.toMap().containsKey("manualRoi"))
+    }
+
+    @Test
+    fun defaultsFallBackToAvailableNonMotionMode() {
+        val settings = PersistedAppSettings.defaultFor(listOf(MagnificationMode.Breathing))
+
+        assertEquals(MagnificationMode.Breathing, settings.analysisSettings.mode)
+        assertFalse(settings.requestedGlPreview)
     }
 
     @Test
@@ -80,9 +88,10 @@ class PersistedAppSettingsTest {
     fun resetDefaultsAreStable() {
         val defaults = PersistedAppSettings.defaultFor()
 
-        assertEquals(MagnificationMode.Pulse, defaults.analysisSettings.mode)
+        assertEquals(MagnificationMode.ObjectVibration, defaults.analysisSettings.mode)
         assertEquals(ViewMode.Amplified, defaults.analysisSettings.viewMode)
         assertEquals(12.0f, defaults.analysisSettings.amplification)
+        assertTrue(defaults.requestedGlPreview)
     }
 
     @Test
