@@ -116,6 +116,9 @@ import com.dnrohr.eulerianmagnification.quality.QualityStatus
 import com.dnrohr.eulerianmagnification.recording.DebugProcessedMp4Recorder
 import com.dnrohr.eulerianmagnification.recording.GlProcessedMp4Recorder
 import com.dnrohr.eulerianmagnification.recording.ProcessedRecordingSession
+import com.dnrohr.eulerianmagnification.recording.RecordingOutputKind
+import com.dnrohr.eulerianmagnification.recording.RecordingOutputMode
+import com.dnrohr.eulerianmagnification.recording.RecordingOutputPolicy
 import com.dnrohr.eulerianmagnification.recording.RecordingRendererDiagnostics
 import com.dnrohr.eulerianmagnification.recording.RecordedVideoMp4Exporter
 import com.dnrohr.eulerianmagnification.recording.RecordingGallery
@@ -180,6 +183,7 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
     var validationRunning by remember { mutableStateOf(false) }
     var cameraControlsLocked by remember { mutableStateOf(persistedAppSettings.cameraControlsLocked) }
     var qualityCuesEnabled by remember { mutableStateOf(persistedAppSettings.qualityCuesEnabled) }
+    var recordingOutputMode by remember { mutableStateOf(persistedAppSettings.recordingOutputMode) }
     var showGlDebug by remember { mutableStateOf(persistedAppSettings.requestedGlPreview) }
     var controlsExpanded by remember { mutableStateOf(false) }
     var cleanPreview by remember { mutableStateOf(false) }
@@ -280,13 +284,14 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
         }
     }
 
-    LaunchedEffect(analysisSettings, showGlDebug, cameraControlsLocked, qualityCuesEnabled) {
+    LaunchedEffect(analysisSettings, showGlDebug, cameraControlsLocked, qualityCuesEnabled, recordingOutputMode) {
         appSettingsStore.save(
             PersistedAppSettings(
                 analysisSettings = analysisSettings,
                 requestedGlPreview = showGlDebug,
                 cameraControlsLocked = cameraControlsLocked,
                 qualityCuesEnabled = qualityCuesEnabled,
+                recordingOutputMode = recordingOutputMode,
             )
         )
     }
@@ -432,6 +437,7 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
                 showGlDebug = defaults.requestedGlPreview
                 cameraControlsLocked = defaults.cameraControlsLocked
                 qualityCuesEnabled = defaults.qualityCuesEnabled
+                recordingOutputMode = defaults.recordingOutputMode
                 manualRoi = null
                 manualRoiEditing = ManualRoiEditState.afterClearRoi()
             },
@@ -449,6 +455,8 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
             validationRunning = validationRunning,
             lightingDiagnostic = lightingDiagnostic,
             qualityStatuses = qualityStatuses,
+            recordingOutputMode = recordingOutputMode,
+            onRecordingOutputModeChanged = { recordingOutputMode = it },
             controlsExpanded = controlsExpanded,
             cleanPreview = cleanPreview,
             onShowControls = {
@@ -469,8 +477,16 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
                     if (activeSession == null) {
                         recordingSession = ProcessedRecordingSession(
                             rootDirectory = recordingRootDirectory,
+                            requestedOutputMode = recordingOutputMode,
+                            actualOutputKind = RecordingOutputPolicy.outputKind(
+                                requestedMode = recordingOutputMode,
+                                usingGlPreview = usingGlPreview,
+                            ),
                             videoRecorderFactory = { outputFile ->
-                                if (usingGlPreview) {
+                                if (
+                                    RecordingOutputPolicy.outputKind(recordingOutputMode, usingGlPreview) ==
+                                    RecordingOutputKind.CleanPreview
+                                ) {
                                     GlProcessedMp4Recorder(outputFile)
                                 } else {
                                     DebugProcessedMp4Recorder(outputFile)
@@ -1038,6 +1054,8 @@ private fun StatusOverlay(
     validationRunning: Boolean,
     lightingDiagnostic: LightingDiagnostic?,
     qualityStatuses: List<QualityStatus>,
+    recordingOutputMode: RecordingOutputMode,
+    onRecordingOutputModeChanged: (RecordingOutputMode) -> Unit,
     controlsExpanded: Boolean,
     cleanPreview: Boolean,
     onShowControls: () -> Unit,
@@ -1210,6 +1228,8 @@ private fun StatusOverlay(
             elapsedMillis = recordingElapsedMillis,
             lastRecordingPath = lastRecordingPath,
             recentRecordings = recentRecordings,
+            recordingOutputMode = recordingOutputMode,
+            onRecordingOutputModeChanged = onRecordingOutputModeChanged,
             onToggleRecording = onToggleRecording,
             onShareRecording = onShareRecording,
             onShareRecordingPath = onShareRecordingPath,
@@ -1458,6 +1478,8 @@ private fun RecordingControls(
     elapsedMillis: Long,
     lastRecordingPath: String?,
     recentRecordings: List<RecordingGalleryItem>,
+    recordingOutputMode: RecordingOutputMode,
+    onRecordingOutputModeChanged: (RecordingOutputMode) -> Unit,
     onToggleRecording: () -> Unit,
     onShareRecording: () -> Unit,
     onShareRecordingPath: (String) -> Unit,
@@ -1486,6 +1508,27 @@ private fun RecordingControls(
                     "Recorder idle"
                 },
                 color = if (isRecording) Color(0xFFFF6B6B) else Color.White,
+            )
+        }
+        if (!isRecording) {
+            Spacer(modifier = Modifier.height(4.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                RecordingOutputMode.entries.forEach { mode ->
+                    CompactControlButton(
+                        label = mode.label,
+                        onClick = { onRecordingOutputModeChanged(mode) },
+                        enabled = recordingOutputMode != mode,
+                        modifier = Modifier.weight(1.0f),
+                    )
+                }
+            }
+            Text(
+                text = recordingOutputMode.description,
+                color = Color(0xFFC8D3DC),
+                style = MaterialTheme.typography.bodySmall,
             )
         }
     }

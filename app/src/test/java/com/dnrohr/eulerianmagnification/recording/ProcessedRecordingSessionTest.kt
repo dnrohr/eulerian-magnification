@@ -51,6 +51,8 @@ class ProcessedRecordingSessionTest {
         assertTrue(json.contains("\"renderer\": \"live_roi_signal_tint\""))
         assertTrue(json.contains("\"visualizationStyle\": \"roi_signal_overlay\""))
         assertTrue(json.contains("\"thermalStatus\": \"none\""))
+        assertTrue(json.contains("\"recordingOutputMode\": \"Clean\""))
+        assertTrue(json.contains("\"recordingOutputKind\": \"clean_preview\""))
         assertTrue(json.contains("\"sampleCount\": 1"))
         assertTrue(json.contains("\"bandpassedGreen\": 0.250000"))
         assertTrue(json.contains("\"presentationTimestampNanos\": 0"))
@@ -201,6 +203,26 @@ class ProcessedRecordingSessionTest {
         assertEquals(0L, recordingSample.presentationTimestampNanos)
         assertEquals(1, fakeRecorder.recordedSamples)
         assertTrue(fakeRecorder.stopped)
+    }
+
+    @Test
+    fun writesAnnotatedRecordingOutputMetadata() {
+        val directory = Files.createTempDirectory("recording-session").toFile()
+        val session = ProcessedRecordingSession(
+            rootDirectory = directory,
+            requestedOutputMode = RecordingOutputMode.Annotated,
+            actualOutputKind = RecordingOutputKind.AnnotatedEvidence,
+        )
+
+        val output = session.stop(
+            settings = AnalysisSettings(),
+            thermalStatus = "none",
+        )
+        val json = output.readText()
+
+        assertTrue(json.contains("\"recordingOutputMode\": \"Annotated\""))
+        assertTrue(json.contains("\"recordingOutputModeLabel\": \"Annotated\""))
+        assertTrue(json.contains("\"recordingOutputKind\": \"annotated_evidence\""))
     }
 
     @Test

@@ -13,6 +13,8 @@ import java.util.Locale
 class ProcessedRecordingSession(
     private val rootDirectory: File,
     private val startedAtMillis: Long = System.currentTimeMillis(),
+    private val requestedOutputMode: RecordingOutputMode = RecordingOutputMode.Clean,
+    private val actualOutputKind: RecordingOutputKind = RecordingOutputKind.CleanPreview,
     videoRecorderFactory: ((File) -> ProcessedVideoRecorder)? = null,
 ) {
     private val sessionDirectory = File(rootDirectory, sessionName()).apply { mkdirs() }
@@ -93,6 +95,9 @@ class ProcessedRecordingSession(
             appendLine("  \"lightingAction\": ${lightingDiagnostic?.action?.quoteJson() ?: "null"},")
             appendLine("  \"lightingAverageGreen\": ${lightingDiagnostic?.averageGreen?.format() ?: "null"},")
             appendLine("  \"lightingVariation\": ${lightingDiagnostic?.coefficientOfVariation?.format() ?: "null"},")
+            appendLine("  \"recordingOutputMode\": ${requestedOutputMode.name.quoteJson()},")
+            appendLine("  \"recordingOutputModeLabel\": ${requestedOutputMode.label.quoteJson()},")
+            appendLine("  \"recordingOutputKind\": ${actualOutputKind.metadataValue.quoteJson()},")
             appendLine("  \"mode\": \"${settings.mode.label}\",")
             appendLine("  \"viewMode\": \"${settings.viewMode.label}\",")
             appendLine("  \"signalSource\": \"${visualizationModel.signalSource.id}\",")

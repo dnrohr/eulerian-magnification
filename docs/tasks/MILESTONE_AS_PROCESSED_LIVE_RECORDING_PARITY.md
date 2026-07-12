@@ -9,8 +9,8 @@ Goal: ensure live preview output and recorded output share the same reconstructe
 ## Tasks
 
 - [ ] Route live reconstructed frames to the encoder surface for supported renderer paths.
-- [ ] Add a clean-output recording option that excludes debug UI, boxes, and guides.
-- [ ] Add an annotated-output option for evidence capture when validation overlays are useful.
+- [x] Add a clean-output recording option that excludes debug UI, boxes, and guides.
+- [x] Add an annotated-output option for evidence capture when validation overlays are useful.
 - [x] Record metadata for renderer path, fallback state, pyramid settings, temporal warmup, dropped frames, and quality diagnostics.
 - [ ] Verify that recorded frames match preview mode for Amplified, Difference, and Split views.
 - [ ] Add a device smoke test that records a short processed clip and validates that the file is playable and nonblank.
@@ -24,6 +24,21 @@ Goal: ensure live preview output and recorded output share the same reconstructe
   `GlProcessedMp4Recorder`; this slice makes the exported sidecar explain which
   renderer/fallback state produced those frames.
 - Added JVM coverage for renderer diagnostics in `metadata.json`.
+
+## Completed Slice: Clean vs Annotated Recording Mode
+
+- Added a persisted recording output mode with `Clean` and `Annotated` choices in
+  expanded controls.
+- `Clean` records the processed GL preview texture without app controls when GL
+  preview is active. If GL preview is not active, the recording output policy
+  falls back to annotated evidence frames because CameraX clean processed export
+  is not supported yet.
+- `Annotated` records evidence frames with labels, ROI, signal, mode, FPS, and
+  latency.
+- Recording metadata now stores the requested output mode and actual output kind
+  so exports can distinguish clean preview captures from annotated evidence.
+- Added JVM coverage for output-mode persistence, output policy, and recording
+  metadata.
 
 ## Done When
 

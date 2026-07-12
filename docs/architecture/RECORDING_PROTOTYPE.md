@@ -28,6 +28,13 @@ GL texture instead of the canvas debug visualization. It uses the same
 `GlEncoderSurfaceRenderer` so the processed preview texture is rendered directly
 to the encoder input surface.
 
+Expanded controls expose `Clean` and `Annotated` recording modes. `Clean`
+records the processed GL preview texture without app controls when GL preview is
+active. If GL preview is not active, `Clean` falls back to annotated evidence
+frames because CameraX clean processed export is not supported yet. `Annotated`
+always records the debug/evidence frame with labels, ROI, signal, mode, FPS, and
+latency.
+
 Recording metadata stores both the original frame timestamp and a monotonic presentation timestamp for each processed sample. The presentation timeline starts at zero and advances by at least a 30 FPS frame interval when camera timestamps repeat or move backward. This gives recorded captures a deterministic processed-frame timeline for validation and for the future GL encoder-surface path.
 
 `ProcessedRecordingSession.record(...)` returns the stored `RecordingSample`, so
@@ -59,6 +66,9 @@ GL timing, live reconstruction summary/fallback, and live phase summary/fallback
 when the run stops. This lets an exported MP4 be interpreted as live linear EVM,
 phase EVM, fallback color bridge, or CameraX/debug output without relying on a
 separate screenshot of the UI.
+It also records both the requested recording output mode and the actual output
+kind, so a requested clean recording that fell back to annotated evidence remains
+auditable.
 
 This is not the final camera-preview MP4 yet. It proves the app-owned MP4 encoder/muxer path and records processed state, while final preview-matching recording still needs the Camera/GPU texture path.
 

@@ -3,6 +3,7 @@ package com.dnrohr.eulerianmagnification
 import com.dnrohr.eulerianmagnification.analysis.AnalysisSettings
 import com.dnrohr.eulerianmagnification.analysis.MagnificationMode
 import com.dnrohr.eulerianmagnification.analysis.ViewMode
+import com.dnrohr.eulerianmagnification.recording.RecordingOutputMode
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -19,6 +20,7 @@ class PersistedAppSettingsTest {
         assertTrue(settings.requestedGlPreview)
         assertFalse(settings.cameraControlsLocked)
         assertFalse(settings.qualityCuesEnabled)
+        assertEquals(RecordingOutputMode.Clean, settings.recordingOutputMode)
         assertFalse(settings.toMap().containsKey("manualRoi"))
     }
 
@@ -41,6 +43,7 @@ class PersistedAppSettingsTest {
             requestedGlPreview = true,
             cameraControlsLocked = true,
             qualityCuesEnabled = true,
+            recordingOutputMode = RecordingOutputMode.Annotated,
         )
 
         val restored = PersistedAppSettings.fromMap(original.toMap())
@@ -58,6 +61,7 @@ class PersistedAppSettingsTest {
                 PersistedAppSettings.KEY_REQUESTED_GL_PREVIEW to "not-bool",
                 PersistedAppSettings.KEY_CAMERA_CONTROLS_LOCKED to "not-bool",
                 PersistedAppSettings.KEY_QUALITY_CUES_ENABLED to "not-bool",
+                PersistedAppSettings.KEY_RECORDING_OUTPUT_MODE to "nope",
             ),
             availableModes = listOf(MagnificationMode.Pulse),
         )
@@ -92,6 +96,16 @@ class PersistedAppSettingsTest {
         assertEquals(ViewMode.Amplified, defaults.analysisSettings.viewMode)
         assertEquals(12.0f, defaults.analysisSettings.amplification)
         assertTrue(defaults.requestedGlPreview)
+        assertEquals(RecordingOutputMode.Clean, defaults.recordingOutputMode)
+    }
+
+    @Test
+    fun recordingOutputModeRestoresPreference() {
+        val restored = PersistedAppSettings.fromMap(
+            values = mapOf(PersistedAppSettings.KEY_RECORDING_OUTPUT_MODE to RecordingOutputMode.Annotated.name),
+        )
+
+        assertEquals(RecordingOutputMode.Annotated, restored.recordingOutputMode)
     }
 
     @Test

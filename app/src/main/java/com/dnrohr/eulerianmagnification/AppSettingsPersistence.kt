@@ -5,12 +5,14 @@ import android.content.SharedPreferences
 import com.dnrohr.eulerianmagnification.analysis.AnalysisSettings
 import com.dnrohr.eulerianmagnification.analysis.MagnificationMode
 import com.dnrohr.eulerianmagnification.analysis.ViewMode
+import com.dnrohr.eulerianmagnification.recording.RecordingOutputMode
 
 data class PersistedAppSettings(
     val analysisSettings: AnalysisSettings,
     val requestedGlPreview: Boolean = false,
     val cameraControlsLocked: Boolean = false,
     val qualityCuesEnabled: Boolean = false,
+    val recordingOutputMode: RecordingOutputMode = RecordingOutputMode.Clean,
 ) {
     fun toMap(): Map<String, String> {
         return mapOf(
@@ -20,6 +22,7 @@ data class PersistedAppSettings(
             KEY_REQUESTED_GL_PREVIEW to requestedGlPreview.toString(),
             KEY_CAMERA_CONTROLS_LOCKED to cameraControlsLocked.toString(),
             KEY_QUALITY_CUES_ENABLED to qualityCuesEnabled.toString(),
+            KEY_RECORDING_OUTPUT_MODE to recordingOutputMode.name,
         )
     }
 
@@ -50,6 +53,9 @@ data class PersistedAppSettings(
                 ?.toFloatOrNull()
                 ?.coerceIn(MIN_AMPLIFICATION, MAX_AMPLIFICATION)
                 ?: defaults.analysisSettings.amplification
+            val recordingOutputMode = values[KEY_RECORDING_OUTPUT_MODE]
+                ?.let { stored -> RecordingOutputMode.entries.firstOrNull { it.name == stored } }
+                ?: defaults.recordingOutputMode
             return PersistedAppSettings(
                 analysisSettings = AnalysisSettings(
                     mode = mode,
@@ -60,6 +66,7 @@ data class PersistedAppSettings(
                     ?: defaults.requestedGlPreview,
                 cameraControlsLocked = values[KEY_CAMERA_CONTROLS_LOCKED]?.toBooleanStrictOrNull() ?: false,
                 qualityCuesEnabled = values[KEY_QUALITY_CUES_ENABLED]?.toBooleanStrictOrNull() ?: false,
+                recordingOutputMode = recordingOutputMode,
             )
         }
 
@@ -85,6 +92,7 @@ data class PersistedAppSettings(
         const val KEY_REQUESTED_GL_PREVIEW = "requestedGlPreview"
         const val KEY_CAMERA_CONTROLS_LOCKED = "cameraControlsLocked"
         const val KEY_QUALITY_CUES_ENABLED = "qualityCuesEnabled"
+        const val KEY_RECORDING_OUTPUT_MODE = "recordingOutputMode"
         private const val MIN_AMPLIFICATION = 1.0f
         private const val MAX_AMPLIFICATION = 30.0f
     }
@@ -106,6 +114,7 @@ class AppSettingsStore(
                 KEY_REQUESTED_GL_PREVIEW to preferences.getString(KEY_REQUESTED_GL_PREVIEW, null),
                 KEY_CAMERA_CONTROLS_LOCKED to preferences.getString(KEY_CAMERA_CONTROLS_LOCKED, null),
                 KEY_QUALITY_CUES_ENABLED to preferences.getString(KEY_QUALITY_CUES_ENABLED, null),
+                KEY_RECORDING_OUTPUT_MODE to preferences.getString(KEY_RECORDING_OUTPUT_MODE, null),
             )
         }.mapNotNull { (key, value) -> value?.let { key to it } }.toMap()
         return PersistedAppSettings.fromMap(values, availableModes)

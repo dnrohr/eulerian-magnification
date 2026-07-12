@@ -170,8 +170,12 @@ The default screen is intentionally compact so the preview remains visible.
 - `Use CameraX Preview`: returns to the standard CameraX preview and CPU
   analysis path. CameraX remains useful as a stable camera baseline and fallback,
   even as motion rendering moves toward GL.
-- `Start Recording` / `Stop Recording`: records a processed debug MP4 plus
-  metadata JSON in app storage.
+- `Clean` / `Annotated`: chooses the live recording style. Clean records the
+  processed GL preview texture without app controls when GL preview is active;
+  without GL preview, it falls back to annotated evidence frames. Annotated
+  always records labels, ROI, signal, mode, FPS, and latency for validation.
+- `Start Recording` / `Stop Recording`: records a processed MP4 plus metadata
+  JSON in app storage.
 - `Process Video`: selects a recorded/sample video and runs the offline
   processing/export path. Use this for `sample-videos/euler.mp4` after copying
   it to the phone or another picker-visible location. In `Amplified` and
@@ -243,10 +247,11 @@ sample IDs, local paths, hashes, recommended modes, and redistribution notes
 without bundling the videos into the app.
 
 The app stores the last durable test setup in SharedPreferences: mode, view
-mode, amplification, requested preview path, AE/AWB lock preference, and the
-opt-in quality-cue preference. First launch and `Reset Settings` prefer the
-motion/GL path when available. It does not store transient ROI placement, signal
-history, validation summaries, or recording state.
+mode, amplification, requested preview path, AE/AWB lock preference, recording
+output mode, and the opt-in quality-cue preference. First launch and
+`Reset Settings` prefer the motion/GL path when available. It does not store
+transient ROI placement, signal history, validation summaries, or recording
+state.
 
 ## Build
 
