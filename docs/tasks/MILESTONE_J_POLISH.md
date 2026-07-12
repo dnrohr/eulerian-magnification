@@ -148,6 +148,27 @@ Goal: turn the prototype into a coherent demo app with clean UX and release-read
 - `.\gradlew.bat testDebugUnitTest`
 - `.\gradlew.bat assembleDebug`
 
+## Completed Slice: Overlay Telemetry Throttling
+
+- Kept camera analysis, ROI overlays, recording timestamps, and quality haptics
+  on the live sample path.
+- Throttled text-heavy overlay telemetry, GL stats, signal histories, lighting
+  text, and quality text to a 250 ms UI cadence.
+- Pixel 8a full-frame expanded-controls evidence improved from the prior
+  91.67% janky frames / 48 ms median frame time to 75.00% janky frames /
+  42 ms median frame time.
+- The busy controls view is still not a validation-quality preview; use Clean
+  preview or hidden controls for visual assessment until the overlay is split
+  into lighter tabs.
+- Evidence bundle:
+  `sample-videos/exports/live-validation/20260712-160248-full-frame-expanded-quality-throttle`.
+
+## Verification
+
+- `.\gradlew.bat assembleDebug`
+- Pixel 8a install and scripted evidence capture:
+  `tools/capture_live_validation_evidence.ps1 -Label full-frame-expanded-quality-throttle -Mode Tremor -View Split -RoiSource FullFrame -GlPreview $true -Controls $true -Amplification 18 -ScreenRecordSeconds 0`
+
 ## Success Criteria
 
 - Minimum viable demo flow is smooth on Pixel 8a.

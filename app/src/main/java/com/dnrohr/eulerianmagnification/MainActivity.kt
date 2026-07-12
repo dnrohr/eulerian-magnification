@@ -8,6 +8,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
+import android.os.SystemClock
 import android.opengl.GLSurfaceView
 import android.provider.OpenableColumns
 import android.util.Range
@@ -210,6 +211,13 @@ private fun MainScreen(
     var manualRoi by remember { mutableStateOf<NormalizedRect?>(launchOverrides.manualRoi) }
     var manualRoiEditing by remember { mutableStateOf(false) }
     var glFrameStats by remember { mutableStateOf(GlFrameStats()) }
+    var overlaySample by remember { mutableStateOf(AnalysisSample()) }
+    var overlayBreathingMotionSample by remember { mutableStateOf(BreathingMotionSample()) }
+    var overlayGlFrameStats by remember { mutableStateOf(GlFrameStats()) }
+    var overlayLightingDiagnostic by remember { mutableStateOf<LightingDiagnostic?>(null) }
+    var overlayQualityStatuses by remember { mutableStateOf(listOf(QualityStatus.Good)) }
+    var lastOverlayTelemetryMillis by remember { mutableStateOf(0L) }
+    var lastOverlayGlStatsMillis by remember { mutableStateOf(0L) }
     val qualityEvaluator = remember { QualityEvaluator() }
     val lightingStabilityAnalyzer = remember { LightingStabilityAnalyzer() }
     val artifactSuppressor = remember { ArtifactSuppressor() }
@@ -243,8 +251,8 @@ private fun MainScreen(
         mutableStateOf<LightingDiagnostic?>(null)
     }
     var breathingMotionSample by remember { mutableStateOf(BreathingMotionSample()) }
-    val signalHistory = remember { mutableStateListOf<Double>() }
-    val breathingMotionHistory = remember { mutableStateListOf<Double>() }
+    val overlaySignalHistory = remember { mutableStateListOf<Double>() }
+    val overlayBreathingMotionHistory = remember { mutableStateListOf<Double>() }
     var previousQualityStatuses by remember { mutableStateOf(listOf(QualityStatus.Good)) }
     var qualityCueState by remember { mutableStateOf(QualityCueState()) }
     val videoPickerLauncher = rememberLauncherForActivityResult(
@@ -295,8 +303,10 @@ private fun MainScreen(
     }
 
     LaunchedEffect(analysisSettings.mode) {
+        overlaySignalHistory.clear()
+        overlayBreathingMotionHistory.clear()
+        overlayBreathingMotionSample = BreathingMotionSample()
         if (analysisSettings.mode != MagnificationMode.Breathing) {
-            breathingMotionHistory.clear()
             breathingMotionSample = BreathingMotionSample()
         }
     }
@@ -327,25 +337,39 @@ private fun MainScreen(
 
     fun handleSample(sample: AnalysisSample): Long {
         analysisSample = sample
-        lightingDiagnostic = lightingStabilityAnalyzer.update(sample)
+        val currentLightingDiagnostic = lightingStabilityAnalyzer.update(sample)
+        lightingDiagnostic = currentLightingDiagnostic
         val presentationTimestampNanos = recordingSession
             ?.record(sample, analysisSettings)
             ?.presentationTimestampNanos
             ?: sample.frameTimestampNanos.coerceAtLeast(0L)
-        signalHistory.add(sample.bandpassedGreen)
-        if (signalHistory.size > SIGNAL_HISTORY_SIZE) {
-            signalHistory.removeAt(0)
-        }
+        val nowMillis = SystemClock.elapsedRealtime()
+        val shouldUpdateOverlayTelemetry = nowMillis - lastOverlayTelemetryMillis >= UI_TELEMETRY_INTERVAL_MILLIS
         if (analysisSettings.mode == MagnificationMode.Breathing) {
             val motion = breathingMotionFilter.update(
                 translation = sample.translation,
                 timestampNanos = sample.frameTimestampNanos,
             )
             breathingMotionSample = motion
-            breathingMotionHistory.add(motion.amplifiedDy)
-            if (breathingMotionHistory.size > SIGNAL_HISTORY_SIZE) {
-                breathingMotionHistory.removeAt(0)
+            if (shouldUpdateOverlayTelemetry) {
+                overlayBreathingMotionSample = motion
+                overlayBreathingMotionHistory.add(motion.amplifiedDy)
+                if (overlayBreathingMotionHistory.size > SIGNAL_HISTORY_SIZE) {
+                    overlayBreathingMotionHistory.removeAt(0)
+                }
             }
+        }
+        if (shouldUpdateOverlayTelemetry) {
+            overlaySample = sample
+            overlayLightingDiagnostic = currentLightingDiagnostic
+            overlaySignalHistory.add(sample.bandpassedGreen)
+            if (overlaySignalHistory.size > SIGNAL_HISTORY_SIZE) {
+                overlaySignalHistory.removeAt(0)
+            }
+            if (analysisSettings.mode != MagnificationMode.Breathing) {
+                overlayBreathingMotionSample = BreathingMotionSample()
+            }
+            lastOverlayTelemetryMillis = nowMillis
         }
         return presentationTimestampNanos
     }
@@ -356,6 +380,10 @@ private fun MainScreen(
         lightingFlickerLikely = lightingDiagnostic?.flickerLikely == true,
         lightingUnstable = lightingDiagnostic?.status == LightingDiagnosticStatus.ExposurePumping,
     )
+
+    LaunchedEffect(lastOverlayTelemetryMillis) {
+        overlayQualityStatuses = qualityStatuses
+    }
 
     LaunchedEffect(qualityStatuses, qualityCuesEnabled) {
         val decision = QualityCuePolicy.decide(
@@ -384,7 +412,14 @@ private fun MainScreen(
                         cameraControlsLocked = cameraControlsLocked,
                         liveEvmPreviewDecision = liveEvmPreviewDecision,
                         livePhasePreviewDecision = livePhasePreviewDecision,
-                        onStats = { glFrameStats = it },
+                        onStats = { stats ->
+                            val nowMillis = SystemClock.elapsedRealtime()
+                            if (nowMillis - lastOverlayGlStatsMillis >= UI_TELEMETRY_INTERVAL_MILLIS) {
+                                glFrameStats = stats
+                                overlayGlFrameStats = stats
+                                lastOverlayGlStatsMillis = nowMillis
+                            }
+                        },
                         modifier = Modifier.fillMaxSize(),
                         onSample = ::handleSample,
                         onProcessedFrame = { frame -> recordingSession?.record(frame) },
@@ -444,10 +479,10 @@ private fun MainScreen(
         }
 
         StatusOverlay(
-            sample = analysisSample,
-            signalHistory = signalHistory,
-            breathingMotionSample = breathingMotionSample,
-            breathingMotionHistory = breathingMotionHistory,
+            sample = overlaySample,
+            signalHistory = overlaySignalHistory,
+            breathingMotionSample = overlayBreathingMotionSample,
+            breathingMotionHistory = overlayBreathingMotionHistory,
             settings = analysisSettings,
             onSettingsChanged = { analysisSettings = it },
             cameraControlsLocked = cameraControlsLocked,
@@ -485,7 +520,7 @@ private fun MainScreen(
             onShowGlDebugChanged = { showGlDebug = it },
             usingGlPreview = usingGlPreview,
             featureAvailability = featureAvailability,
-            glFrameStats = glFrameStats,
+            glFrameStats = overlayGlFrameStats,
             liveEvmPreviewDecision = liveEvmPreviewDecision,
             livePhasePreviewDecision = livePhasePreviewDecision,
             isRecording = recordingSession != null,
@@ -494,8 +529,8 @@ private fun MainScreen(
             recentRecordings = recentRecordings,
             validationSummary = validationSummary,
             validationRunning = validationRunning,
-            lightingDiagnostic = lightingDiagnostic,
-            qualityStatuses = qualityStatuses,
+            lightingDiagnostic = overlayLightingDiagnostic,
+            qualityStatuses = overlayQualityStatuses,
             recordingOutputMode = recordingOutputMode,
             onRecordingOutputModeChanged = { recordingOutputMode = it },
             controlsExpanded = controlsExpanded,
@@ -2118,3 +2153,4 @@ private fun SignalWaveform(
 }
 
 private const val SIGNAL_HISTORY_SIZE = 120
+private const val UI_TELEMETRY_INTERVAL_MILLIS = 250L
