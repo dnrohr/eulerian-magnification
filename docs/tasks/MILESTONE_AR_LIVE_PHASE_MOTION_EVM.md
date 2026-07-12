@@ -93,3 +93,18 @@ Goal: bring the recorded Riesz/phase motion renderer into a live-preview path fo
 - Runtime renderer wiring remains open.
 - Installed the debug build on the Pixel 8a after focused policy coverage and
   full JVM/build verification.
+
+## Completed Slice: Live Phase ROI Output Shader Contract
+
+- Added `LIVE_PHASE_COMPOSE_FRAGMENT` to `RieszPhaseShaderSource`.
+- The shader contract composites a phase-reconstructed ROI into raw full-frame
+  context and keeps pixels outside the manual ROI raw.
+- The contract supports live phase Amplified, Difference, and Split output modes:
+  Amplified inserts reconstructed grayscale phase output inside the ROI,
+  Difference emits a signed heatmap inside the ROI, and Split compares raw
+  versus reconstructed phase output.
+- Added shader-source coverage for ROI containment, ROI texture mapping, raw
+  context preservation, signed Difference colors, and Split behavior.
+- Runtime renderer wiring remains open.
+- Installed the debug build on the Pixel 8a after focused shader coverage and
+  full JVM/build verification.

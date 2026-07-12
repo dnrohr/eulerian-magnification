@@ -176,4 +176,58 @@ object RieszPhaseShaderSource {
             outColor = vec4(vec3(reconstructed), 1.0);
         }
     """
+
+    const val LIVE_PHASE_COMPOSE_FRAGMENT = """#version 300 es
+        precision mediump float;
+        uniform sampler2D uRawTexture;
+        uniform sampler2D uPhaseReconstructedTexture;
+        uniform vec4 uRoi;
+        uniform int uViewMode;
+        in vec2 vTexCoord;
+        out vec4 outColor;
+
+        const int VIEW_AMPLIFIED = 0;
+        const int VIEW_DIFFERENCE = 1;
+        const int VIEW_SPLIT = 2;
+
+        bool insideRoi(vec2 uv) {
+            return uv.x >= uRoi.x && uv.x <= uRoi.z && uv.y >= uRoi.y && uv.y <= uRoi.w;
+        }
+
+        vec2 roiUv(vec2 uv) {
+            return (uv - uRoi.xy) / max(uRoi.zw - uRoi.xy, vec2(0.0001));
+        }
+
+        vec3 differenceColor(vec3 raw, vec3 reconstructed) {
+            float delta = reconstructed.r - dot(raw, vec3(0.299, 0.587, 0.114));
+            float strength = clamp(abs(delta) * 8.0, 0.0, 1.0);
+            vec3 positive = vec3(1.0, 0.48, 0.08);
+            vec3 negative = vec3(0.08, 0.42, 1.0);
+            return mix(vec3(0.06), delta >= 0.0 ? positive : negative, strength);
+        }
+
+        void main() {
+            vec4 raw = texture(uRawTexture, vTexCoord);
+            if (!insideRoi(vTexCoord)) {
+                outColor = raw;
+                return;
+            }
+
+            vec4 reconstructed = texture(uPhaseReconstructedTexture, roiUv(vTexCoord));
+            vec3 phaseRgb = vec3(reconstructed.r);
+            if (uViewMode == VIEW_DIFFERENCE) {
+                outColor = vec4(differenceColor(raw.rgb, phaseRgb), raw.a);
+                return;
+            }
+            if (uViewMode == VIEW_SPLIT) {
+                if (vTexCoord.x < 0.5) {
+                    outColor = raw;
+                } else {
+                    outColor = vec4(phaseRgb, raw.a);
+                }
+                return;
+            }
+            outColor = vec4(phaseRgb, raw.a);
+        }
+    """
 }

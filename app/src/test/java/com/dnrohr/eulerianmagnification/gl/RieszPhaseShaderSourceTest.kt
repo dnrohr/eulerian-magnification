@@ -12,6 +12,7 @@ class RieszPhaseShaderSourceTest {
         assertTrue(RieszPhaseShaderSource.PHASE_AMPLIFY_FRAGMENT.startsWith("#version 300 es"))
         assertTrue(RieszPhaseShaderSource.LIVE_PHASE_TEMPORAL_FRAGMENT.startsWith("#version 300 es"))
         assertTrue(RieszPhaseShaderSource.PHASE_RECONSTRUCT_FRAGMENT.startsWith("#version 300 es"))
+        assertTrue(RieszPhaseShaderSource.LIVE_PHASE_COMPOSE_FRAGMENT.startsWith("#version 300 es"))
     }
 
     @Test
@@ -76,5 +77,31 @@ class RieszPhaseShaderSourceTest {
 
         assertTrue(shader.contains("amplitude * cos(phase)"))
         assertTrue(shader.contains("uAmplifiedPhaseTexture"))
+    }
+
+    @Test
+    fun livePhaseComposeShaderKeepsRawContextOutsideRoi() {
+        val shader = RieszPhaseShaderSource.LIVE_PHASE_COMPOSE_FRAGMENT
+
+        assertTrue(shader.contains("uRawTexture"))
+        assertTrue(shader.contains("uPhaseReconstructedTexture"))
+        assertTrue(shader.contains("uniform vec4 uRoi"))
+        assertTrue(shader.contains("bool insideRoi(vec2 uv)"))
+        assertTrue(shader.contains("if (!insideRoi(vTexCoord))"))
+        assertTrue(shader.contains("outColor = raw"))
+        assertTrue(shader.contains("vec2 roiUv(vec2 uv)"))
+    }
+
+    @Test
+    fun livePhaseComposeShaderSupportsAmplifiedDifferenceAndSplitViews() {
+        val shader = RieszPhaseShaderSource.LIVE_PHASE_COMPOSE_FRAGMENT
+
+        assertTrue(shader.contains("VIEW_AMPLIFIED"))
+        assertTrue(shader.contains("VIEW_DIFFERENCE"))
+        assertTrue(shader.contains("VIEW_SPLIT"))
+        assertTrue(shader.contains("differenceColor(raw.rgb, phaseRgb)"))
+        assertTrue(shader.contains("delta >= 0.0 ? positive : negative"))
+        assertTrue(shader.contains("if (vTexCoord.x < 0.5)"))
+        assertTrue(shader.contains("outColor = vec4(phaseRgb, raw.a)"))
     }
 }
