@@ -23,9 +23,22 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - Added runtime warnings for low measured FPS relative to the selected band and for overlapping high-frequency motion bands.
 - Updated README and MIT parity docs with locked preset definitions and the overlap explanation; validation-specific claims remain pending.
 
+## Completed Slice: Pixel Preview Benchmark Artifact
+
+- Added `ParityPresetBenchmarkReport` CSV/JSON artifact generation.
+- Added `ParityPresetBenchmarkInstrumentedTest`, which launches each locked
+  preset on device and records `dumpsys gfxinfo` frame/jank percentiles plus
+  thermal status.
+- Ran the benchmark on Pixel 8a and wrote artifacts under
+  `/sdcard/Download/eulerian-preset-benchmark`.
+- Documented the 2026-07-12 short-run results in
+  `docs/experiments/pixel8a_parity_preset_benchmark.md`.
+
 ## Remaining
 
-- Capture Pixel 8a benchmark evidence for each preset: preview FPS, dropped/unstable frames, latency, thermal state, recording stability, and a known-good artifact.
+- Extend Pixel 8a benchmark evidence for each preset with dropped/unstable
+  camera frames, live analysis latency, processed recording stability, and a
+  known-good visual artifact.
 - Mark the README/parity docs as validated only after those benchmark notes and artifacts exist.
 
 ## Done When

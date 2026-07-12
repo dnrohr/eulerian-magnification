@@ -165,6 +165,11 @@ stable target region and stricter camera-motion rejection. Pixel 8a benchmark
 rows still need live captured evidence before these presets can be called
 validated.
 
+Short-run Pixel 8a preview benchmark artifacts are documented in
+`docs/experiments/pixel8a_parity_preset_benchmark.md`. These cover rendered
+frame/jank percentiles and thermal status, but do not yet cover visual parity,
+camera dropped frames, live analysis latency, or recording stability.
+
 For local file integrity:
 
 ```powershell
