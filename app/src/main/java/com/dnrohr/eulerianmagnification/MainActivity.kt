@@ -1957,11 +1957,7 @@ private fun ModeControls(
         }
     }
     Text(
-        text = when (roiSource) {
-            RoiSource.Auto -> "Uses face tracking when available, then a center fallback."
-            RoiSource.FullFrame -> "Uses the whole frame for the default motion path."
-            RoiSource.Manual -> "Uses one selected box for difficult targets and experiments."
-        },
+        text = RoiSourcePolicy.descriptionFor(roiSource),
         color = Color(0xFFC8D3DC),
         style = MaterialTheme.typography.bodySmall,
     )

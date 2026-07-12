@@ -1,6 +1,6 @@
 # Milestone AU - ROI Source Selector
 
-Status: In Progress
+Status: Complete
 
 Importance: High. Manual ROI should become an explicit expert/tooling choice, not the default way to make motion magnification work.
 
@@ -37,6 +37,14 @@ Goal: add a clear ROI source selector and make the normal motion experience star
 - Pixel observation: full-frame ROI source appeared frozen or extremely low-FPS in live preview.
 - Changed first launch and Reset Settings to use `Auto ROI` for all modes.
 - Kept `Full frame` selectable for controlled validation instead of making it the default.
+
+## Completed Slice: Source Copy Cleanup
+
+- Moved ROI source descriptions into tested `RoiSourcePolicy` copy.
+- Updated `Full frame` description so it no longer claims to be the default
+  motion path after the Pixel low-FPS observation.
+- Remaining visible-target ROI validation stays tracked under Milestones M/U,
+  and controlled motion visual validation stays tracked under AR.
 
 ## Done When
 

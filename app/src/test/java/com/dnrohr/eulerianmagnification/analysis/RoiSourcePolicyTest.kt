@@ -30,4 +30,20 @@ class RoiSourcePolicyTest {
         assertEquals("Full frame", RoiSourcePolicy.labelFor(RoiSource.FullFrame, RoiState.Tracking))
         assertEquals("Manual ROI", RoiSourcePolicy.labelFor(RoiSource.Manual, RoiState.Tracking))
     }
+
+    @Test
+    fun descriptionsDoNotClaimFullFrameIsDefault() {
+        assertEquals(
+            "Uses face tracking when available, then a center fallback.",
+            RoiSourcePolicy.descriptionFor(RoiSource.Auto),
+        )
+        assertEquals(
+            "Uses the whole frame for controlled tests when FPS stays healthy.",
+            RoiSourcePolicy.descriptionFor(RoiSource.FullFrame),
+        )
+        assertEquals(
+            "Uses one selected box for difficult targets and experiments.",
+            RoiSourcePolicy.descriptionFor(RoiSource.Manual),
+        )
+    }
 }

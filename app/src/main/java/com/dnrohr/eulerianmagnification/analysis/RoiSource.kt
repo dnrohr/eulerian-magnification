@@ -40,4 +40,12 @@ object RoiSourcePolicy {
             RoiSource.Manual -> RoiSource.Manual.compactLabel
         }
     }
+
+    fun descriptionFor(source: RoiSource): String {
+        return when (source) {
+            RoiSource.Auto -> "Uses face tracking when available, then a center fallback."
+            RoiSource.FullFrame -> "Uses the whole frame for controlled tests when FPS stays healthy."
+            RoiSource.Manual -> "Uses one selected box for difficult targets and experiments."
+        }
+    }
 }
