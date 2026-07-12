@@ -158,3 +158,16 @@ Goal: bring the recorded Riesz/phase motion renderer into a live-preview path fo
 - Runtime phase rendering remains open.
 - Installed the debug build on the Pixel 8a after focused shader coverage and
   full JVM/build verification.
+
+## Completed Slice: Live Phase Render Graph Plan
+
+- Added `LivePhaseRenderGraphPlan` to lock down the runtime pass order before
+  renderer wiring: ROI extract, Riesz components, phase projection, temporal
+  state update, amplified phase, ROI reconstruction, and full-frame compose.
+- Corrected the ROI memory budget to include eight ping-pong temporal state
+  targets plus five working targets.
+- Added coverage that the temporal state pass is the only four-output pass and
+  stays within the GLES 3.0 guaranteed color attachment count.
+- Runtime phase rendering remains open.
+- Installed the debug build on the Pixel 8a after focused graph/ROI/shader
+  coverage and full JVM/build verification.

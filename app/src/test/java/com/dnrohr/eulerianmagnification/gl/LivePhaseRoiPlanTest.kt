@@ -37,10 +37,10 @@ class LivePhaseRoiPlanTest {
             maxTextureDimension = 320,
         )
 
-        assertEquals(5, plan.phaseStatePlan.renderTargetCount)
-        assertEquals(8, plan.renderTargetCount)
+        assertEquals(8, plan.phaseStatePlan.renderTargetCount)
+        assertEquals(13, plan.renderTargetCount)
         assertEquals(
-            plan.processingSize.width * plan.processingSize.height * 8 * 8,
+            plan.processingSize.width * plan.processingSize.height * 13 * 8,
             plan.estimatedBytes,
         )
         assertTrue(plan.fitsMemoryBudget)

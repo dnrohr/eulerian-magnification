@@ -33,7 +33,7 @@ data class LivePhaseRoiPlan(
     companion object {
         const val DEFAULT_MAX_TEXTURE_DIMENSION = 320
         const val DEFAULT_MEMORY_BUDGET_BYTES = 16 * 1024 * 1024
-        const val WORKING_TARGET_COUNT = 3
+        const val WORKING_TARGET_COUNT = 5
         const val BYTES_PER_RGBA16F_PIXEL = 8
     }
 }
@@ -44,7 +44,7 @@ data class LivePhaseRoiStatePlan(
     val renderTargetCount: Int get() = TARGETS_PER_PHASE_STATE
 
     companion object {
-        const val TARGETS_PER_PHASE_STATE = 5
+        const val TARGETS_PER_PHASE_STATE = 8
     }
 }
 
