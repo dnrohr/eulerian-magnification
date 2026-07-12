@@ -57,6 +57,15 @@ Goal: add a clear ROI source selector and make the normal motion experience star
 - Full-frame ROI remains selectable, not default, until controlled visual
   validation proves it is a reliable default.
 
+## Follow-up Slice: Camera Cadence Quality Warning
+
+- Added a separate `Camera FPS low` quality status for GL camera frame cadence.
+  This is distinct from `Low FPS`, which still reports CPU analysis throughput.
+- The warning waits for settled `SurfaceTexture` frame-cadence samples before
+  triggering, so startup does not look like a camera freeze.
+- Expanded guidance tells the user to hide controls or switch back to Auto ROI
+  when the GL camera stream is too slow for full-frame validation.
+
 ## Done When
 
 - First launch and Reset Settings do not require the user to draw a manual ROI for the default motion path.

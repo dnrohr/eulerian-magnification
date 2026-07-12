@@ -11,11 +11,20 @@ class QualityEvaluator {
         settings: AnalysisSettings = AnalysisSettings(),
         lightingFlickerLikely: Boolean = false,
         lightingUnstable: Boolean = false,
+        cameraFrameFps: Double? = null,
+        cameraFrameSampleCount: Int = 0,
     ): List<QualityStatus> {
         return buildList {
             if (sample.roi == null) add(QualityStatus.FaceMissing)
             if (sample.averageGreen in 0.01..LOW_LIGHT_GREEN_THRESHOLD) add(QualityStatus.TooDark)
             if (sample.analysisFps in 0.01..<LOW_FPS_THRESHOLD) add(QualityStatus.LowFps)
+            if (
+                cameraFrameSampleCount >= MIN_CAMERA_FRAME_SAMPLES &&
+                cameraFrameFps != null &&
+                cameraFrameFps in 0.01..<LOW_FPS_THRESHOLD
+            ) {
+                add(QualityStatus.CameraFpsLow)
+            }
             if (!sample.timestampMonotonic) add(QualityStatus.TimingUnstable)
             if (lightingFlickerLikely) add(QualityStatus.LightingFlicker)
             if (lightingUnstable) add(QualityStatus.LightingUnstable)
@@ -35,6 +44,7 @@ class QualityEvaluator {
     companion object {
         private const val LOW_LIGHT_GREEN_THRESHOLD = 45.0
         private const val LOW_FPS_THRESHOLD = 23.5
+        private const val MIN_CAMERA_FRAME_SAMPLES = 10
         private const val WEAK_SIGNAL_THRESHOLD = 0.015
         private const val CAMERA_MOTION_THRESHOLD = 0.018f
         private const val HIGH_FREQUENCY_MOTION_THRESHOLD = 0.008f
@@ -53,6 +63,7 @@ enum class QualityStatus(
     FaceMissing("Face missing", "Frame the face or select a manual ROI."),
     TooDark("Too dark", "Use brighter, steady light."),
     LowFps("Low FPS", "Close apps or reduce device load."),
+    CameraFpsLow("Camera FPS low", "Hide controls or use Auto ROI."),
     TimingUnstable("Timing unstable", "Restart the preview if timing keeps jumping."),
     LightingFlicker("Lighting flicker", "Try daylight or a non-flickering lamp."),
     LightingUnstable("Exposure unstable", "Wait for exposure to settle, then lock AE/AWB."),

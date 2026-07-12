@@ -74,6 +74,41 @@ class QualityEvaluatorTest {
     }
 
     @Test
+    fun warnsWhenSettledGlCameraCadenceFallsBelowTwentyFourFps() {
+        val statuses = QualityEvaluator().evaluate(
+            sample = AnalysisSample(
+                roi = NormalizedRect(0.1f, 0.1f, 0.3f, 0.3f),
+                averageGreen = 120.0,
+                bandpassedGreen = 0.2,
+                analysisFps = 30.0,
+                timestampMonotonic = true,
+            ),
+            cameraFrameFps = 12.0,
+            cameraFrameSampleCount = 10,
+        )
+
+        assertTrue(QualityStatus.CameraFpsLow in statuses)
+        assertTrue(QualityStatus.LowFps !in statuses)
+    }
+
+    @Test
+    fun suppressesGlCameraCadenceWarningWhileStatsSettle() {
+        val statuses = QualityEvaluator().evaluate(
+            sample = AnalysisSample(
+                roi = NormalizedRect(0.1f, 0.1f, 0.3f, 0.3f),
+                averageGreen = 120.0,
+                bandpassedGreen = 0.2,
+                analysisFps = 30.0,
+                timestampMonotonic = true,
+            ),
+            cameraFrameFps = 12.0,
+            cameraFrameSampleCount = 9,
+        )
+
+        assertTrue(QualityStatus.CameraFpsLow !in statuses)
+    }
+
+    @Test
     fun detectsWeakSignalWhenRoiAndFramesAreAvailable() {
         val statuses = QualityEvaluator().evaluate(
             AnalysisSample(
@@ -190,6 +225,7 @@ class QualityEvaluatorTest {
         assertEquals("Frame the face or select a manual ROI.", QualityStatus.FaceMissing.action)
         assertEquals("Use brighter, steady light.", QualityStatus.TooDark.action)
         assertEquals("Close apps or reduce device load.", QualityStatus.LowFps.action)
+        assertEquals("Hide controls or use Auto ROI.", QualityStatus.CameraFpsLow.action)
         assertEquals("Restart the preview if timing keeps jumping.", QualityStatus.TimingUnstable.action)
         assertEquals("Try daylight or a non-flickering lamp.", QualityStatus.LightingFlicker.action)
         assertEquals("Wait for exposure to settle, then lock AE/AWB.", QualityStatus.LightingUnstable.action)

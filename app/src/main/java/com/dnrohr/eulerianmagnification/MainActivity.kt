@@ -382,6 +382,8 @@ private fun MainScreen(
         settings = analysisSettings,
         lightingFlickerLikely = lightingDiagnostic?.flickerLikely == true,
         lightingUnstable = lightingDiagnostic?.status == LightingDiagnosticStatus.ExposurePumping,
+        cameraFrameFps = glFrameStats.averageFps.takeIf { usingGlPreview },
+        cameraFrameSampleCount = if (usingGlPreview) glFrameStats.sampleCount else 0,
     )
 
     LaunchedEffect(lastOverlayTelemetryMillis) {
