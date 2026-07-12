@@ -63,7 +63,14 @@ amplification before the full-frame linear renderer reconstructs the frame.
 The processed-frame timeline CSV includes the gate reason, gain, and saturated
 pixel fraction so exports can explain when the app intentionally dampened color
 output instead of letting unstable input flash the whole frame. This is the
-recorded-side contract; the live GL path still needs an equivalent uniform.
+recorded-side contract.
+
+Live GL Pulse preview now applies the same lighting-based color gate to both
+the ROI color bridge signal and the live linear reconstruction amplification.
+Lighting settling, flicker, exposure pumping, motion-contaminated lighting, and
+darkness reduce or disable live Pulse color amplification before uniforms reach
+the renderer. Live saturation gating is not wired yet because the analyzer does
+not currently expose a per-frame saturated-pixel fraction.
 
 ## Color Output Clamp
 

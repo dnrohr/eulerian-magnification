@@ -6,6 +6,8 @@ import com.dnrohr.eulerianmagnification.analysis.AnalysisSettings
 import com.dnrohr.eulerianmagnification.analysis.MagnificationMode
 import com.dnrohr.eulerianmagnification.analysis.NormalizedRect
 import com.dnrohr.eulerianmagnification.analysis.ViewMode
+import com.dnrohr.eulerianmagnification.quality.LightingDiagnostic
+import com.dnrohr.eulerianmagnification.quality.LightingDiagnosticStatus
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -109,6 +111,41 @@ class ColorMagnificationPassTest {
     }
 
     @Test
+    fun pulseLightingGateAttenuatesLiveColorAndReconstructionAmplification() {
+        val uniforms = ColorMagnificationParameters().from(
+            sample = AnalysisSample(
+                roi = NormalizedRect(0.1f, 0.2f, 0.3f, 0.4f),
+                bandpassedGreen = 0.5,
+            ),
+            settings = AnalysisSettings(
+                mode = MagnificationMode.Pulse,
+                amplification = 8.0f,
+            ),
+            lightingDiagnostic = diagnostic(LightingDiagnosticStatus.FlickerLikely),
+        )
+
+        assertEquals(0.25f, uniforms.colorGate.gain, 0.0f)
+        assertEquals(0.015625f, uniforms.amplifiedSignal, 0.0001f)
+        assertEquals(2.0f, uniforms.reconstructionAmplification, 0.0001f)
+    }
+
+    @Test
+    fun nonPulseModesIgnorePulseColorGate() {
+        val uniforms = ColorMagnificationParameters().from(
+            sample = AnalysisSample(bandpassedGreen = 0.5),
+            settings = AnalysisSettings(
+                mode = MagnificationMode.Breathing,
+                amplification = 8.0f,
+            ),
+            lightingDiagnostic = diagnostic(LightingDiagnosticStatus.FlickerLikely),
+        )
+
+        assertEquals(1.0f, uniforms.colorGate.gain, 0.0f)
+        assertEquals(0.0625f, uniforms.amplifiedSignal, 0.0001f)
+        assertEquals(8.0f, uniforms.reconstructionAmplification, 0.0f)
+    }
+
+    @Test
     fun rawModeSuppressesAmplifiedSignal() {
         val uniforms = ColorMagnificationParameters().from(
             sample = AnalysisSample(
@@ -173,5 +210,15 @@ class ColorMagnificationPassTest {
         assertEquals(roiPlan, uniforms.livePhaseRoiPlan)
         assertTrue(uniforms.livePhaseDiagnostics.requested)
         assertEquals("phase: 160x120 / phase warmup: filling temporal state / amplitude unknown", uniforms.livePhaseDiagnostics.summary)
+    }
+
+    private fun diagnostic(status: LightingDiagnosticStatus): LightingDiagnostic {
+        return LightingDiagnostic(
+            status = status,
+            averageGreen = 128.0,
+            coefficientOfVariation = 0.1,
+            flickerLikely = status == LightingDiagnosticStatus.FlickerLikely,
+            motionMagnitude = 0.0f,
+        )
     }
 }

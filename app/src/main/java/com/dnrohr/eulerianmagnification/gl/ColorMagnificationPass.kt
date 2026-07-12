@@ -3,9 +3,12 @@ package com.dnrohr.eulerianmagnification.gl
 import com.dnrohr.eulerianmagnification.LivePhasePreviewDecision
 import com.dnrohr.eulerianmagnification.analysis.AnalysisSample
 import com.dnrohr.eulerianmagnification.analysis.AnalysisSettings
+import com.dnrohr.eulerianmagnification.analysis.ColorAmplificationGate
+import com.dnrohr.eulerianmagnification.analysis.ColorAmplificationGateResult
 import com.dnrohr.eulerianmagnification.analysis.NormalizedRect
 import com.dnrohr.eulerianmagnification.analysis.ViewMode
 import com.dnrohr.eulerianmagnification.quality.ArtifactSuppressor
+import com.dnrohr.eulerianmagnification.quality.LightingDiagnostic
 
 object ColorMagnificationShaderSource {
     const val VERTEX = """#version 300 es
@@ -57,6 +60,7 @@ object ColorMagnificationShaderSource {
 
 class ColorMagnificationParameters(
     private val artifactSuppressor: ArtifactSuppressor = ArtifactSuppressor(),
+    private val colorAmplificationGate: ColorAmplificationGate = ColorAmplificationGate(),
 ) {
     fun from(
         sample: AnalysisSample,
@@ -64,12 +68,26 @@ class ColorMagnificationParameters(
         fullFrameMode: Boolean = false,
         presentationTimestampNanos: Long = sample.frameTimestampNanos.coerceAtLeast(0L),
         livePhasePreviewDecision: LivePhasePreviewDecision? = null,
+        lightingDiagnostic: LightingDiagnostic? = null,
     ): ColorMagnificationUniforms {
         val signal = artifactSuppressor.amplify(sample.bandpassedGreen, settings.amplification)
+        val colorGate = lightingDiagnostic?.let {
+            colorAmplificationGate.evaluate(
+                mode = settings.mode,
+                lighting = it,
+                saturatedPixelFraction = 0.0,
+            )
+        } ?: ColorAmplificationGateResult.Stable
         val amplifiedSignal = if (settings.viewMode == ViewMode.Raw) {
             0.0
         } else {
-            signal.value / ArtifactSuppressor.DEFAULT_MAX_AMPLIFIED_MAGNITUDE
+            (signal.value / ArtifactSuppressor.DEFAULT_MAX_AMPLIFIED_MAGNITUDE) *
+                colorGate.effectiveAmplificationScale
+        }
+        val reconstructionAmplification = if (settings.viewMode == ViewMode.Raw) {
+            0.0f
+        } else {
+            settings.amplification * colorGate.effectiveAmplificationScale
         }
         return ColorMagnificationUniforms(
             roi = sample.roi ?: NormalizedRect(0.0f, 0.0f, 0.0f, 0.0f),
@@ -81,10 +99,11 @@ class ColorMagnificationParameters(
             fullFrameMode = fullFrameMode,
             presentationTimestampNanos = presentationTimestampNanos.coerceAtLeast(0L),
             amplification = settings.amplification,
-            reconstructionAmplification = if (settings.viewMode == ViewMode.Raw) 0.0f else settings.amplification,
+            reconstructionAmplification = reconstructionAmplification,
             lowCutHz = settings.lowCutHz,
             highCutHz = settings.highCutHz,
             reconstructionProfile = LivePyramidReconstructionProfile.forMode(settings.mode),
+            colorGate = colorGate,
             livePhaseRoiPlan = livePhasePreviewDecision?.roiPlan,
             livePhaseDiagnostics = livePhasePreviewDecision?.diagnostics ?: LivePhaseDiagnostics(requested = false),
         )
@@ -103,6 +122,7 @@ data class ColorMagnificationUniforms(
     val lowCutHz: Double = 0.7,
     val highCutHz: Double = 3.0,
     val reconstructionProfile: LivePyramidReconstructionProfile = LivePyramidReconstructionProfile.PulseColor,
+    val colorGate: ColorAmplificationGateResult = ColorAmplificationGateResult.Stable,
     val livePhaseRoiPlan: LivePhaseRoiPlan? = null,
     val livePhaseDiagnostics: LivePhaseDiagnostics = LivePhaseDiagnostics(requested = false),
 )

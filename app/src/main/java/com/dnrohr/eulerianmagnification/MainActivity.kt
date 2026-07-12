@@ -335,7 +335,7 @@ private fun MainScreen(
         }
     }
 
-    fun handleSample(sample: AnalysisSample): Long {
+    fun handleSample(sample: AnalysisSample): CameraSampleResult {
         analysisSample = sample
         val currentLightingDiagnostic = lightingStabilityAnalyzer.update(sample)
         lightingDiagnostic = currentLightingDiagnostic
@@ -371,7 +371,10 @@ private fun MainScreen(
             }
             lastOverlayTelemetryMillis = nowMillis
         }
-        return presentationTimestampNanos
+        return CameraSampleResult(
+            presentationTimestampNanos = presentationTimestampNanos,
+            lightingDiagnostic = currentLightingDiagnostic,
+        )
     }
 
     val qualityStatuses = qualityEvaluator.evaluate(
@@ -632,7 +635,7 @@ private fun CameraGlPreview(
     livePhasePreviewDecision: LivePhasePreviewDecision,
     onStats: (GlFrameStats) -> Unit,
     modifier: Modifier = Modifier,
-    onSample: (AnalysisSample) -> Long,
+    onSample: (AnalysisSample) -> CameraSampleResult,
     onProcessedFrame: (ProcessedGlFrame) -> Unit,
 ) {
     val context = LocalContext.current
@@ -708,14 +711,15 @@ private fun CameraGlPreview(
                                 ) { sample ->
                                     mainExecutor.execute {
                                         val activeSettings = currentSettings.value
-                                        val presentationTimestampNanos = currentOnSample.value(sample)
+                                        val sampleResult = currentOnSample.value(sample)
                                         renderer.setColorMagnificationUniforms(
                                             colorParameters.from(
                                                 sample = sample,
                                                 settings = activeSettings,
                                                 fullFrameMode = currentLiveEvmPreviewDecision.value.fullFrameColorPreview,
-                                                presentationTimestampNanos = presentationTimestampNanos,
+                                                presentationTimestampNanos = sampleResult.presentationTimestampNanos,
                                                 livePhasePreviewDecision = currentLivePhasePreviewDecision.value,
+                                                lightingDiagnostic = sampleResult.lightingDiagnostic,
                                             )
                                         )
                                     }
@@ -761,6 +765,11 @@ private fun thermalStatus(context: Context): String {
         "unavailable"
     }
 }
+
+private data class CameraSampleResult(
+    val presentationTimestampNanos: Long,
+    val lightingDiagnostic: LightingDiagnostic,
+)
 
 private fun shareRecordingMetadata(context: Context, metadataFile: File) {
     shareFile(context, metadataFile, mimeType = "application/json", title = "Share recording metadata")

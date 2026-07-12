@@ -284,6 +284,24 @@ showing true pyramid reconstruction or a fallback bridge.
 - This reduces obvious live clipping/posterization risk, but does not replace
   watched-target AP visual validation.
 
+## Completed Slice: Live Pulse Color Gate Uniforms
+
+- Reused the recorded `ColorAmplificationGate` in the live GL uniform path.
+- The GL preview now passes the current frame's lighting diagnostic into
+  `ColorMagnificationParameters`, which attenuates Pulse live color output when
+  lighting is settling, too dark, flickering, exposure-pumping, or mixed with
+  ROI motion.
+- The gate scales both the ROI color bridge signal and live linear
+  reconstruction amplification. Breathing and other non-Pulse modes continue to
+  bypass the Pulse color gate.
+- Added JVM coverage for gated Pulse uniforms and non-Pulse bypass behavior.
+- Saturated-pixel gating remains recorded-only until the live analyzer exposes a
+  saturated-pixel fraction.
+- Pixel 8a clean GL smoke bundle
+  `sample-videos/exports/live-validation/20260712-165046-live-color-gate-gl-smoke`
+  passed runtime smoke with no crash, ANR, or GL-error findings. Clean-mode
+  frame pacing was 3.51% janky frames, 10 ms median, and 13 ms p90.
+
 ## Done When
 
 - Live amplified preview shows visible reconstructed output for at least one color sample and one slow-motion sample.
