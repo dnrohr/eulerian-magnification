@@ -180,6 +180,8 @@ Goal: prove that automatic and manual ROI coordinates align with the live previe
   `VisualValidated` are true.
 - Summaries warn when a visual claim is provided without target visibility or
   when a target is visible but the visual claim has not been accepted.
+- Summaries also include `evidenceVerdict`, a compact status such as
+  `runtime_smoke_only`, `target_visible_unvalidated`, or `visual_validated`.
 - This makes the remaining watched manual/automatic ROI target runs auditable
   without treating unattended runtime smoke as visual validation.
 

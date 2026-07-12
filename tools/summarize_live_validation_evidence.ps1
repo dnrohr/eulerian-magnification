@@ -289,6 +289,74 @@ function Measure-ScreenshotContent {
     }
 }
 
+function Get-EvidenceVerdict {
+    param(
+        [bool]$PassedRuntimeSmoke,
+        [bool]$UiTextAssertionsPassed,
+        [bool]$HasRequiredUiText,
+        [string]$VisualClaim,
+        [Nullable[bool]]$TargetVisible,
+        [Nullable[bool]]$VisualValidated,
+        [bool]$ScreenshotNonBlank,
+        [bool]$ScreenshotPortrait
+    )
+
+    if (-not $PassedRuntimeSmoke) {
+        return [ordered]@{
+            status = "runtime_failed"
+            countsAsVisualValidation = $false
+            reason = "Runtime smoke failed."
+        }
+    }
+    if ($HasRequiredUiText -and -not $UiTextAssertionsPassed) {
+        return [ordered]@{
+            status = "ui_assertion_failed"
+            countsAsVisualValidation = $false
+            reason = "Required UI text was not found."
+        }
+    }
+    if (-not $ScreenshotNonBlank) {
+        return [ordered]@{
+            status = "screenshot_blank"
+            countsAsVisualValidation = $false
+            reason = "Screenshot is blank or near-uniform."
+        }
+    }
+    if (-not $ScreenshotPortrait) {
+        return [ordered]@{
+            status = "wrong_orientation"
+            countsAsVisualValidation = $false
+            reason = "Screenshot is not portrait-oriented."
+        }
+    }
+    if ($TargetVisible -eq $true -and $VisualValidated -eq $true) {
+        return [ordered]@{
+            status = "visual_validated"
+            countsAsVisualValidation = $true
+            reason = "Target was visible and the operator accepted the visual claim."
+        }
+    }
+    if ($TargetVisible -eq $true) {
+        return [ordered]@{
+            status = "target_visible_unvalidated"
+            countsAsVisualValidation = $false
+            reason = "Target was visible, but the visual claim was not accepted."
+        }
+    }
+    if (-not [string]::IsNullOrWhiteSpace($VisualClaim)) {
+        return [ordered]@{
+            status = "visual_claim_without_target"
+            countsAsVisualValidation = $false
+            reason = "A visual claim was provided without a visible target."
+        }
+    }
+    return [ordered]@{
+        status = "runtime_smoke_only"
+        countsAsVisualValidation = $false
+        reason = "Runtime smoke passed, but no watched visual target was validated."
+    }
+}
+
 $bundle = (Resolve-Path -LiteralPath $BundlePath).Path
 $manifestPath = Get-RequiredPath $bundle "manifest.json"
 $gfxPath = Get-RequiredPath $bundle "gfxinfo.txt"
@@ -453,6 +521,22 @@ if ($screenshotInfo -and $screenshotInfo.content.portrait -ne $true) {
     $warnings += "screenshot is not portrait-oriented"
 }
 
+$passedRuntimeSmoke = ($missing.Count -eq 0) -and
+    (-not $runtimeFindings.fatalException) -and
+    (-not $runtimeFindings.androidRuntime) -and
+    (-not $runtimeFindings.anr) -and
+    (-not $runtimeFindings.glError)
+$uiTextAssertionsPassed = (@($uiTextAssertions | Where-Object { $_.found -ne $true }).Count -eq 0)
+$evidenceVerdict = Get-EvidenceVerdict `
+    -PassedRuntimeSmoke $passedRuntimeSmoke `
+    -UiTextAssertionsPassed $uiTextAssertionsPassed `
+    -HasRequiredUiText ($requiredUiText.Count -gt 0) `
+    -VisualClaim $visualReview.visualClaim `
+    -TargetVisible $visualReview.targetVisible `
+    -VisualValidated $visualReview.visualValidated `
+    -ScreenshotNonBlank ($screenshotInfo -and $screenshotInfo.content.nonBlank -eq $true) `
+    -ScreenshotPortrait ($screenshotInfo -and $screenshotInfo.content.portrait -eq $true)
+
 $result = [ordered]@{
     bundle = $bundle
     createdAt = if ($manifest) { $manifest.createdAt } else { $null }
@@ -482,16 +566,13 @@ $result = [ordered]@{
     uiTextAssertions = [ordered]@{
         required = $requiredUiText
         checks = $uiTextAssertions
-        passed = (@($uiTextAssertions | Where-Object { $_.found -ne $true }).Count -eq 0)
+        passed = $uiTextAssertionsPassed
     }
     visualReview = $visualReview
+    evidenceVerdict = $evidenceVerdict
     roiMeasurement = $roiMeasurement
     warnings = $warnings
-    passedRuntimeSmoke = ($missing.Count -eq 0) -and
-        (-not $runtimeFindings.fatalException) -and
-        (-not $runtimeFindings.androidRuntime) -and
-        (-not $runtimeFindings.anr) -and
-        (-not $runtimeFindings.glError)
+    passedRuntimeSmoke = $passedRuntimeSmoke
     notes = @(
         "This summarizes runtime evidence only.",
         "It does not prove visual validation unless the screenshot or recording contains the intended target and was inspected against the relevant pass criteria."

@@ -112,6 +112,12 @@ evidence. `VisualValidated` records whether the operator accepted the visual
 claim after inspection. The summary only marks `countsAsVisualValidation` true
 when both `TargetVisible` and `VisualValidated` are true.
 
+The summary also writes `evidenceVerdict`, a compact classification for the
+bundle. Expected statuses include `runtime_smoke_only`, `visual_validated`,
+`target_visible_unvalidated`, `visual_claim_without_target`,
+`ui_assertion_failed`, `screenshot_blank`, `wrong_orientation`, and
+`runtime_failed`. Only `visual_validated` counts as visual validation.
+
 For ROI overlay validation, pass `-MeasureRoiExpected` with the expected
 normalized screenshot-space rectangle. The capture script then writes
 `roi_overlay_measurement.json` and the summary embeds the result:
