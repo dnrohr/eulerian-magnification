@@ -16,6 +16,7 @@ with:
 - `window_focus.txt`
 - `device_props.txt`
 - `manifest.json`
+- optional `evidence_summary.json` if summarized after capture
 
 ## Command
 
@@ -28,6 +29,19 @@ the preview to settle. Scripted launches force-stop the package first so ADB
 extras are applied deterministically. Use `-ScreenRecordSeconds 0` for a
 screenshot/log-only smoke capture. Use `-SkipLaunch` only when the operator has
 already navigated to a specific controls state that should not be disturbed.
+
+After capture, summarize the runtime evidence:
+
+```powershell
+.\tools\summarize_live_validation_evidence.ps1 `
+  -BundlePath "sample-videos\exports\live-validation\<bundle>"
+```
+
+The summary writes `evidence_summary.json` with launch state, required artifact
+presence, screenshot dimensions, gfx frame pacing, runtime crash/ANR/GL-error
+signals, and optional ROI overlay measurement status. A passing runtime smoke
+summary still does not prove visual validation unless the target is visible and
+inspected.
 
 ## Scripted App State
 

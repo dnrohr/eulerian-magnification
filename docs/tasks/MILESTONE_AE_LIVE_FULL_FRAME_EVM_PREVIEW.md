@@ -141,6 +141,17 @@ Goal: integrate the full-frame EVM renderer into the live preview path.
 - This restores unattended renderer-path evidence capture for AE/AP validation,
   but it still does not complete known-target visual validation.
 
+## Supporting Slice: Evidence Summary Tool
+
+- Added `tools/summarize_live_validation_evidence.ps1` so live reconstruction
+  captures can be summarized into `evidence_summary.json`.
+- The summary includes launch state, screenshot dimensions, gfx frame pacing,
+  and runtime crash/ANR/GL-error findings.
+- Verified the tool on the Pixel 8a `expanded-debug-panel-launch` bundle. The
+  runtime smoke passed with no crash, ANR, or GL-error findings.
+- This improves evidence review consistency for AE validation, but known-target
+  visual validation remains open.
+
 ## Evidence
 
 - `docs/experiments/live_full_frame_preview_bridge.md`

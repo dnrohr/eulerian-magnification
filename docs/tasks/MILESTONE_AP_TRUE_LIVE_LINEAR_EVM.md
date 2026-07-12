@@ -215,6 +215,18 @@ showing true pyramid reconstruction or a fallback bridge.
   overlay was split into tabs. Known motion/color target validation remains
   open.
 
+## Supporting Slice: Evidence Summary Tool
+
+- Added `tools/summarize_live_validation_evidence.ps1` for repeatable review of
+  live validation bundles.
+- The summary captures launch settings, required artifacts, screenshot
+  dimensions, gfx frame pacing, runtime crash/ANR/GL-error flags, and optional
+  ROI overlay measurement status.
+- Verified on the Pixel 8a debug-panel live reconstruction bundle, which passed
+  runtime smoke without crash, ANR, or GL-error findings.
+- This supports AP evidence review but does not prove visible magnification
+  without a controlled motion/color target.
+
 ## Done When
 
 - Live amplified preview shows visible reconstructed output for at least one color sample and one slow-motion sample.

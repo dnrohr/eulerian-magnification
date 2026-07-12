@@ -99,6 +99,18 @@ Goal: prove that automatic and manual ROI coordinates align with the live previe
 - This validates the automatic-overlay measurement path, but does not close
   automatic face ROI validation because no visible face target was present.
 
+## Supporting Slice: Evidence Summary Tool
+
+- Added `tools/summarize_live_validation_evidence.ps1` to turn a captured live
+  validation bundle into `evidence_summary.json`.
+- The summary records launch settings, required artifact presence, screenshot
+  dimensions, gfx frame pacing, runtime crash/ANR/GL-error flags, and optional
+  ROI overlay measurement status.
+- Verified the summary tool on recent Pixel 8a bundles, including the automatic
+  ROI overlay analyzer smoke bundle.
+- This reduces manual audit errors for ROI validation evidence, but does not
+  close manual or automatic target validation without a visible target.
+
 ## Done When
 
 - Manual and automatic ROI overlays align with the visible target on device.
