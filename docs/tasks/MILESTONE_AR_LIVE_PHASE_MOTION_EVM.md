@@ -199,3 +199,15 @@ Goal: bring the recorded Riesz/phase motion renderer into a live-preview path fo
   visible phase compose invocation remain open.
 - Installed the debug build on the Pixel 8a after focused shader/uniform
   coverage and full JVM/build verification.
+
+## Completed Slice: Live Phase Riesz Component Pass
+
+- `CameraOesRenderer` now compiles the Riesz component shader for the live phase
+  path.
+- After ROI extraction, the renderer invokes the Riesz pass into
+  `LivePhaseRoiState.rieszComponents`, using the reduced ROI texture size for
+  central-difference texel spacing.
+- Phase projection, temporal update, reconstruction, and visible phase compose
+  invocation remain open.
+- Installed the debug build on the Pixel 8a after focused shader coverage and
+  full JVM/build verification.
