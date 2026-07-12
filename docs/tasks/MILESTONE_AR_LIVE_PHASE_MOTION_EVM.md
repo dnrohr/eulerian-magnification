@@ -9,9 +9,9 @@ Goal: bring the recorded Riesz/phase motion renderer into a live-preview path fo
 ## Tasks
 
 - [x] Decide the first live phase scope: reduced-resolution full frame or manually selected ROI.
-- [ ] Port the recorded phase state update to a live-capable renderer path with bounded memory and latency.
-- [ ] Add amplitude gating, phase wrapping, and temporal warmup diagnostics to the live UI/debug metadata.
-- [ ] Add live Difference and Split views that compare raw video against phase-reconstructed output.
+- [x] Port the recorded phase state update to a live-capable renderer path with bounded memory and latency.
+- [x] Add amplitude gating, phase wrapping, and temporal warmup diagnostics to the live UI/debug metadata.
+- [x] Add live Difference and Split views that compare raw video against phase-reconstructed output.
 - [ ] Validate on synthetic moving-edge and `local-euler` samples before phone-camera validation.
 - [ ] Validate on Pixel 8a with a controlled object-motion setup and document expected artifacts.
 
