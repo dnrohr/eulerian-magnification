@@ -287,3 +287,15 @@ Goal: bring the recorded Riesz/phase motion renderer into a live-preview path fo
   `docs/experiments/recorded_full_frame_evm_parity_validation.md`.
 - Live Pixel camera validation with a controlled object-motion setup remains
   open.
+
+## Completed Slice: Pixel Live Phase Validation Protocol
+
+- Added `docs/experiments/pixel8a_live_phase_validation.md`.
+- The protocol defines the controlled object-motion setup, app settings,
+  expected live phase diagnostics, pass/fail visual criteria, acceptable
+  artifacts, failure artifacts, and capture commands for screen recording and
+  logcat evidence.
+- This does not complete the Pixel validation task; a physical moving target in
+  front of the camera is still required.
+- Ran a Pixel 8a launch smoke check after granting camera permission. The camera
+  stream opened and recent logcat contained no fatal exception or GL error.
