@@ -42,6 +42,7 @@ Goal: prove that automatic and manual ROI coordinates align with the live previe
 - Manual ROI still needs a non-sensitive known target deliberately placed in frame.
 - Automatic ROI still needs a visible face target in frame.
 - If either validation shows mismatch, update `PreviewRoiMapper` and its tests before marking this milestone complete.
+- This milestone gates Milestone AU, where manual ROI becomes a selectable non-default option. Automatic/default ROI behavior should not become the primary motion path until the mapped region is proven trustworthy on device.
 
 ## Done When
 

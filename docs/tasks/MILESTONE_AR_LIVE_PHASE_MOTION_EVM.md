@@ -299,3 +299,14 @@ Goal: bring the recorded Riesz/phase motion renderer into a live-preview path fo
   front of the camera is still required.
 - Ran a Pixel 8a launch smoke check after granting camera permission. The camera
   stream opened and recent logcat contained no fatal exception or GL error.
+
+## Next Gate For Manual ROI As Non-Default
+
+- Run the controlled Pixel object-motion setup from
+  `docs/experiments/pixel8a_live_phase_validation.md`.
+- If live phase visibly magnifies the controlled target with acceptable
+  diagnostics, proceed to Milestone AU and make Manual ROI a selectable option
+  rather than the default motion setup.
+- If the result only works with a carefully hand-picked box or has confusing
+  artifacts, add a reduced/full-frame phase renderer slice before changing the
+  default ROI source.
