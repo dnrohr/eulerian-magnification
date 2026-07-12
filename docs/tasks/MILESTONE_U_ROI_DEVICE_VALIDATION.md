@@ -185,6 +185,26 @@ Goal: prove that automatic and manual ROI coordinates align with the live previe
 - This makes the remaining watched manual/automatic ROI target runs auditable
   without treating unattended runtime smoke as visual validation.
 
+## Supporting Slice: UI Dump Retry For Watched Evidence
+
+- Live validation capture now retries Android `uiautomator dump` up to three
+  times before declaring UI text unavailable.
+- This targets transient `could not get idle state` failures observed while the
+  camera preview and debug overlay were active.
+- If all retry attempts fail, the capture still preserves screenshot, logcat,
+  gfxinfo, thermal, battery, and manifest artifacts, but required UI-text
+  assertions fail explicitly instead of silently passing.
+- This improves reliability for remaining watched manual/automatic ROI target
+  runs and renderer-label evidence, but does not replace visual target
+  inspection.
+- Pixel 8a runtime smoke bundle
+  `sample-videos/exports/live-validation/20260712-183323-ui-dump-retry-smoke`
+  passed with `uiDumpPresent=true`, no crash/ANR/GL error, camera HAL
+  `29.82` fps average, and extracted UI text for renderer and ROI labels.
+  The bundle was captured from an in-progress dirty worktree to validate the
+  script change itself, so it is tooling smoke evidence rather than release
+  evidence.
+
 ## Done When
 
 - Manual and automatic ROI overlays align with the visible target on device.

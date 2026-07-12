@@ -442,17 +442,50 @@ $artifacts.windowFocus = $focusPath
 
 $remoteUiDump = "/sdcard/Download/eulerian-live-validation-$timestamp-ui.xml"
 $uiDumpPath = Join-Path $outputDir "ui_dump.xml"
-Run-AdbText -Adb $adb -Arguments @(
-    "shell",
-    "uiautomator",
-    "dump",
-    "--compressed",
-    $remoteUiDump
-) -OutputPath (Join-Path $outputDir "ui_dump_stdout.txt")
-& $adb pull $remoteUiDump $uiDumpPath | Out-Null
-& $adb shell rm $remoteUiDump | Out-Null
-if (Test-Path -LiteralPath $uiDumpPath) {
-    $artifacts.uiDump = $uiDumpPath
+$uiDumpCaptured = $false
+$uiDumpAttemptCount = 3
+for ($uiDumpAttempt = 1; $uiDumpAttempt -le $uiDumpAttemptCount -and -not $uiDumpCaptured; $uiDumpAttempt++) {
+    $uiDumpStdoutPath = if ($uiDumpAttempt -eq 1) {
+        Join-Path $outputDir "ui_dump_stdout.txt"
+    } else {
+        Join-Path $outputDir "ui_dump_stdout_$uiDumpAttempt.txt"
+    }
+    $uiDumpPullPath = if ($uiDumpAttempt -eq 1) {
+        Join-Path $outputDir "ui_dump_pull.txt"
+    } else {
+        Join-Path $outputDir "ui_dump_pull_$uiDumpAttempt.txt"
+    }
+
+    Run-AdbText -Adb $adb -Arguments @(
+        "shell",
+        "uiautomator",
+        "dump",
+        "--compressed",
+        $remoteUiDump
+    ) -OutputPath $uiDumpStdoutPath
+    $previousErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    & $adb pull $remoteUiDump $uiDumpPath *> $uiDumpPullPath
+    $uiDumpPullExitCode = $LASTEXITCODE
+    & $adb shell rm $remoteUiDump *> $null
+    $ErrorActionPreference = $previousErrorActionPreference
+
+    if ($uiDumpPullExitCode -eq 0 -and
+        (Test-Path -LiteralPath $uiDumpPath) -and
+        (Get-Item -LiteralPath $uiDumpPath).Length -gt 0) {
+        $artifacts.uiDump = $uiDumpPath
+        $uiDumpCaptured = $true
+    } else {
+        if (Test-Path -LiteralPath $uiDumpPath) {
+            Remove-Item -LiteralPath $uiDumpPath -Force
+        }
+        if ($uiDumpAttempt -lt $uiDumpAttemptCount) {
+            Start-Sleep -Seconds 1
+        }
+    }
+}
+if (-not $uiDumpCaptured) {
+    $warnings += "UI dump was unavailable after $uiDumpAttemptCount attempts; required UI text assertions may fail."
 }
 
 $gfxPath = Join-Path $outputDir "gfxinfo.txt"

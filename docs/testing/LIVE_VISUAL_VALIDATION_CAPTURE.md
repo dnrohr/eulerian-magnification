@@ -133,6 +133,11 @@ The UI dump is not OCR. It records Android view hierarchy text, which is useful
 for proving that the app reported labels such as `Thermal high`, `Full frame
 slow`, `Renderer: Live linear EVM reconstruction`, or the active ROI source
 during unattended captures.
+The capture script retries UI dump collection up to three times because Android
+can transiently report `could not get idle state` while the camera preview is
+active. If all attempts fail, the bundle still includes screenshots, logs, and
+runtime artifacts, but required UI-text assertions will fail because no
+view-hierarchy text is available.
 
 Pass `-RequireUiText` with one or more strings when a capture must prove
 specific labels are visible in the Android view hierarchy:
