@@ -23,6 +23,11 @@ param(
     [int]$MeasureRoiMinimumMatchedPixels = 24,
     [switch]$MeasureRoiAllowMultipleComponents,
     [string[]]$RequireUiText = @(),
+    [string]$TargetDescription = "",
+    [string]$VisualClaim = "",
+    [Nullable[bool]]$TargetVisible = $null,
+    [Nullable[bool]]$VisualValidated = $null,
+    [string]$OperatorNotes = "",
     [switch]$PreserveLogcat,
     [switch]$PersistLaunchSettings,
     [switch]$Summarize
@@ -361,6 +366,13 @@ $manifest = [ordered]@{
         measureRoiKind = $MeasureRoiKind
         requireUiText = @($RequireUiText)
         persistSettings = [bool]$PersistLaunchSettings
+    }
+    visualReview = [ordered]@{
+        targetDescription = $TargetDescription
+        visualClaim = $VisualClaim
+        targetVisible = if ($PSBoundParameters.ContainsKey("TargetVisible")) { $TargetVisible } else { $null }
+        visualValidated = if ($PSBoundParameters.ContainsKey("VisualValidated")) { $VisualValidated } else { $null }
+        operatorNotes = $OperatorNotes
     }
     adb = $adb
     outputDir = (Resolve-Path -LiteralPath $outputDir).Path

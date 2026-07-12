@@ -170,6 +170,19 @@ Goal: prove that automatic and manual ROI coordinates align with the live previe
 - This improves evidence review for remaining ROI/live-preview validation, but
   does not close watched target alignment without a visible target.
 
+## Supporting Slice: Visual Review Metadata
+
+- Live validation captures now include a `visualReview` manifest block with
+  target description, intended visual claim, target visibility, operator
+  validation result, and operator notes.
+- `evidence_summary.json` carries that block and marks
+  `countsAsVisualValidation` true only when both `TargetVisible` and
+  `VisualValidated` are true.
+- Summaries warn when a visual claim is provided without target visibility or
+  when a target is visible but the visual claim has not been accepted.
+- This makes the remaining watched manual/automatic ROI target runs auditable
+  without treating unattended runtime smoke as visual validation.
+
 ## Done When
 
 - Manual and automatic ROI overlays align with the visible target on device.

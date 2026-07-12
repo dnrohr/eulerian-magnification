@@ -92,6 +92,16 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   evidence summaries continue to record detailed thermal sensor state after
   capture.
 
+## Supporting Slice: Visual Review Metadata
+
+- Live validation summaries now carry watched-run visual-review metadata:
+  target description, visual claim, target visibility, operator validation
+  result, operator notes, and `countsAsVisualValidation`.
+- Known-good preset artifacts should set `TargetVisible=true` and
+  `VisualValidated=true` only after the target and expected output are inspected.
+- This keeps preset benchmark/runtime smoke evidence separate from visual parity
+  claims until a watched target run explicitly validates the result.
+
 ## Remaining
 
 - Extend Pixel 8a evidence with a known-good visual artifact and watched target

@@ -92,6 +92,11 @@ specific labels are visible in the Android view hierarchy:
   -GlPreview $true `
   -Controls $true `
   -RequireUiText "Thermal high","Renderer: Live linear EVM reconstruction" `
+  -TargetDescription "non-sensitive face target" `
+  -VisualClaim "Pulse split preview shows live linear reconstruction" `
+  -TargetVisible $true `
+  -VisualValidated $false `
+  -OperatorNotes "Target visible; output not yet accepted as magnified" `
   -Summarize
 ```
 
@@ -99,6 +104,13 @@ The summary writes `uiTextAssertions` with each required text and whether it was
 found. Missing required text adds a warning and makes the summary command exit
 with code `3`. Runtime smoke remains separate, so crashes, ANRs, and GL errors
 still use the existing runtime-smoke result.
+
+Use the visual-review fields for watched target runs. `TargetDescription` and
+`VisualClaim` describe what was in frame and what the capture is intended to
+prove. `TargetVisible` records whether the target is actually visible in the
+evidence. `VisualValidated` records whether the operator accepted the visual
+claim after inspection. The summary only marks `countsAsVisualValidation` true
+when both `TargetVisible` and `VisualValidated` are true.
 
 For ROI overlay validation, pass `-MeasureRoiExpected` with the expected
 normalized screenshot-space rectangle. The capture script then writes
@@ -167,6 +179,11 @@ Available launch parameters:
 - `-MeasureRoiAllowMultipleComponents`: allows more than one connected overlay
   component when a test intentionally expects duplicate marks.
 - `-RequireUiText`: comma-separated expected Android view-hierarchy text values.
+- `-TargetDescription`: short description of the visible target/setup.
+- `-VisualClaim`: short claim this evidence is intended to prove.
+- `-TargetVisible`: whether the target is visible in the screenshot/recording.
+- `-VisualValidated`: whether the operator accepted the visual claim.
+- `-OperatorNotes`: free-form watched-run notes.
 - `-PreserveLogcat`: keeps existing device logcat instead of clearing it before
   the capture starts.
 - `-Summarize`: writes `evidence_summary.json` immediately after capture.

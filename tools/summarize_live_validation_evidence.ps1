@@ -325,6 +325,24 @@ if ($requiredUiText.Count -eq 0 -and $manifest -and $manifest.launch -and $manif
     }
 }
 
+$visualReview = [ordered]@{
+    targetDescription = $null
+    visualClaim = $null
+    targetVisible = $null
+    visualValidated = $null
+    operatorNotes = $null
+    countsAsVisualValidation = $false
+}
+if ($manifest -and $manifest.PSObject.Properties.Name -contains "visualReview") {
+    $visualReview.targetDescription = $manifest.visualReview.targetDescription
+    $visualReview.visualClaim = $manifest.visualReview.visualClaim
+    $visualReview.targetVisible = $manifest.visualReview.targetVisible
+    $visualReview.visualValidated = $manifest.visualReview.visualValidated
+    $visualReview.operatorNotes = $manifest.visualReview.operatorNotes
+    $visualReview.countsAsVisualValidation = ($manifest.visualReview.targetVisible -eq $true) -and
+        ($manifest.visualReview.visualValidated -eq $true)
+}
+
 $gfx = Read-TextIfExists $gfxPath
 $logcat = Read-TextIfExists $logcatPath
 $thermalText = Read-TextIfExists $thermalPath
@@ -395,6 +413,12 @@ foreach ($assertion in @($uiTextAssertions)) {
         $warnings += "required UI text missing: $($assertion.text)"
     }
 }
+if (-not [string]::IsNullOrWhiteSpace($visualReview.visualClaim) -and $visualReview.targetVisible -ne $true) {
+    $warnings += "visual claim provided without targetVisible=true"
+}
+if ($visualReview.targetVisible -eq $true -and $visualReview.visualValidated -ne $true) {
+    $warnings += "target visible but visualValidated is not true"
+}
 
 $roiMeasurement = $null
 if (Test-Path -LiteralPath $roiMeasurementPath) {
@@ -460,6 +484,7 @@ $result = [ordered]@{
         checks = $uiTextAssertions
         passed = (@($uiTextAssertions | Where-Object { $_.found -ne $true }).Count -eq 0)
     }
+    visualReview = $visualReview
     roiMeasurement = $roiMeasurement
     warnings = $warnings
     passedRuntimeSmoke = ($missing.Count -eq 0) -and
