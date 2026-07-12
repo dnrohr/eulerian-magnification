@@ -5,7 +5,8 @@ param(
     [string]$OutputPath = "",
     [double]$WarnJankyPercent = 50.0,
     [int]$WarnMedianFrameMillis = 33,
-    [int]$WarnThermalStatus = 2
+    [int]$WarnThermalStatus = 2,
+    [double]$WarnCameraFps = 23.5
 )
 
 $ErrorActionPreference = "Stop"
@@ -88,6 +89,29 @@ function Parse-ThermalSummary {
     }
 }
 
+function Parse-CameraFpsSummary {
+    param([string]$Text)
+
+    $values = @()
+    foreach ($match in [regex]::Matches($Text, '\bFPS:\s+([0-9]+(?:\.[0-9]+)?)')) {
+        $values += [double]::Parse($match.Groups[1].Value, [Globalization.CultureInfo]::InvariantCulture)
+    }
+    if ($values.Count -eq 0) {
+        return [ordered]@{
+            sampleCount = 0
+            averageFps = $null
+            minFps = $null
+            maxFps = $null
+        }
+    }
+    return [ordered]@{
+        sampleCount = $values.Count
+        averageFps = ($values | Measure-Object -Average).Average
+        minFps = ($values | Measure-Object -Minimum).Minimum
+        maxFps = ($values | Measure-Object -Maximum).Maximum
+    }
+}
+
 $bundle = (Resolve-Path -LiteralPath $BundlePath).Path
 $manifestPath = Get-RequiredPath $bundle "manifest.json"
 $gfxPath = Get-RequiredPath $bundle "gfxinfo.txt"
@@ -112,6 +136,7 @@ $gfx = Read-TextIfExists $gfxPath
 $logcat = Read-TextIfExists $logcatPath
 $thermalText = Read-TextIfExists $thermalPath
 $thermalSummary = Parse-ThermalSummary $thermalText
+$cameraFpsSummary = Parse-CameraFpsSummary $logcat
 
 $jankyPercent = Match-FirstNumber $gfx 'Janky frames:\s+\d+\s+\(([0-9.]+)%\)'
 $totalFrames = Match-FirstNumber $gfx 'Total frames rendered:\s+(\d+)'
@@ -153,6 +178,9 @@ if ($null -ne $thermalSummary.status -and $thermalSummary.status -ge $WarnTherma
 }
 if ($null -ne $thermalSummary.maxSensorStatus -and $thermalSummary.maxSensorStatus -ge $WarnThermalStatus) {
     $warnings += "thermal sensor status $($thermalSummary.maxSensorStatus) ($($thermalSummary.maxSensorStatusLabel)) at or above warning threshold $WarnThermalStatus"
+}
+if ($cameraFpsSummary.sampleCount -gt 0 -and $null -ne $cameraFpsSummary.minFps -and $cameraFpsSummary.minFps -lt $WarnCameraFps) {
+    $warnings += "camera HAL FPS below $WarnCameraFps fps"
 }
 foreach ($entry in $runtimeFindings.GetEnumerator()) {
     if ($entry.Value) {
@@ -205,6 +233,7 @@ $result = [ordered]@{
         missedVsync = $missedVsync
     }
     runtimeFindings = $runtimeFindings
+    cameraHal = $cameraFpsSummary
     thermal = $thermalSummary
     roiMeasurement = $roiMeasurement
     warnings = $warnings

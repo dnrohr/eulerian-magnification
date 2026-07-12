@@ -60,6 +60,17 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - This strengthens the watched preset evidence flow, but does not replace the
   remaining known-target visual artifacts.
 
+## Supporting Slice: Camera HAL FPS Summary
+
+- Live validation summaries now parse Pixel camera HAL `FPS:` lines from scoped
+  logcat and report camera cadence sample count, average FPS, min FPS, and max
+  FPS.
+- Summaries warn when the minimum observed HAL cadence drops below `23.5 FPS`,
+  matching the app's low-camera-cadence quality threshold.
+- This fills the previously missing live camera dropped-frame diagnosis field
+  for watched preset evidence, while keeping visual parity marked unvalidated
+  until known-target artifacts exist.
+
 ## Remaining
 
 - Extend Pixel 8a evidence with a known-good visual artifact and watched target

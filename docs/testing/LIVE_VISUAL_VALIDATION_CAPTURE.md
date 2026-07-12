@@ -53,11 +53,12 @@ The manifest records the current Git branch, full and short commit, dirty
 worktree flag, short status lines, and installed package dump artifact. The
 summary carries the same source identity plus launch state, required artifact
 presence, screenshot dimensions, gfx frame pacing, runtime crash/ANR/GL-error
-signals, thermal status, and optional ROI overlay measurement status. Thermal
-status warnings are advisory by default: they flag that heat may affect a visual
-or benchmark run, but they do not make runtime smoke fail unless a crash, ANR,
-or GL error is also present. A passing runtime smoke summary still does not
-prove visual validation unless the target is visible and inspected.
+signals, camera HAL FPS samples from logcat, thermal status, and optional ROI
+overlay measurement status. Thermal and low camera-cadence warnings are advisory
+by default: they flag conditions that may affect a visual or benchmark run, but
+they do not make runtime smoke fail unless a crash, ANR, or GL error is also
+present. A passing runtime smoke summary still does not prove visual validation
+unless the target is visible and inspected.
 
 For visual-quality captures, prefer hidden controls or Clean mode. Use
 `-Controls $true -Panel Debug` only when the goal is to capture renderer
