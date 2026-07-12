@@ -83,6 +83,7 @@ object QualityCuePolicy {
             QualityStatus.Good,
             QualityStatus.FaceMissing,
             QualityStatus.TooDark,
+            QualityStatus.ThermalHigh,
             QualityStatus.LowFps,
             QualityStatus.FullFrameSlow,
             QualityStatus.CameraFpsLow,
@@ -111,6 +112,7 @@ object QualityCuePolicy {
             -> 3
             QualityStatus.CameraMotion,
             QualityStatus.LightingFlicker,
+            QualityStatus.ThermalHigh,
             -> 4
             QualityStatus.FaceMissing,
             QualityStatus.TooDark,

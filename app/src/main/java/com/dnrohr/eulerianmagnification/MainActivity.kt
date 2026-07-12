@@ -219,6 +219,7 @@ private fun MainScreen(
     var lastOverlayTelemetryMillis by remember { mutableStateOf(0L) }
     var lastOverlayGlStatsMillis by remember { mutableStateOf(0L) }
     var fullFrameRoiFallbackState by remember { mutableStateOf(FullFrameRoiFallbackState()) }
+    var liveThermalStatus by remember { mutableStateOf(thermalStatus(context)) }
     val qualityEvaluator = remember { QualityEvaluator() }
     val lightingStabilityAnalyzer = remember { LightingStabilityAnalyzer() }
     val artifactSuppressor = remember { ArtifactSuppressor() }
@@ -374,6 +375,7 @@ private fun MainScreen(
         }
         if (shouldUpdateOverlayTelemetry) {
             overlaySample = sample
+            liveThermalStatus = thermalStatus(context)
             overlayLightingDiagnostic = currentLightingDiagnostic
             overlaySignalHistory.add(sample.bandpassedGreen)
             if (overlaySignalHistory.size > SIGNAL_HISTORY_SIZE) {
@@ -398,6 +400,7 @@ private fun MainScreen(
         cameraFrameFps = glFrameStats.averageFps.takeIf { usingGlPreview },
         cameraFrameSampleCount = if (usingGlPreview) glFrameStats.sampleCount else 0,
         roiSource = roiSource,
+        thermalStatus = liveThermalStatus,
     )
 
     LaunchedEffect(lastOverlayTelemetryMillis) {

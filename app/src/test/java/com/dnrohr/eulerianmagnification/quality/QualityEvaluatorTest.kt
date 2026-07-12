@@ -92,6 +92,38 @@ class QualityEvaluatorTest {
     }
 
     @Test
+    fun warnsWhenThermalStatusIsModerateOrWorse() {
+        val statuses = QualityEvaluator().evaluate(
+            sample = AnalysisSample(
+                roi = NormalizedRect(0.1f, 0.1f, 0.3f, 0.3f),
+                averageGreen = 120.0,
+                bandpassedGreen = 0.2,
+                analysisFps = 30.0,
+                timestampMonotonic = true,
+            ),
+            thermalStatus = "severe",
+        )
+
+        assertTrue(QualityStatus.ThermalHigh in statuses)
+    }
+
+    @Test
+    fun doesNotWarnForLightThermalStatus() {
+        val statuses = QualityEvaluator().evaluate(
+            sample = AnalysisSample(
+                roi = NormalizedRect(0.1f, 0.1f, 0.3f, 0.3f),
+                averageGreen = 120.0,
+                bandpassedGreen = 0.2,
+                analysisFps = 30.0,
+                timestampMonotonic = true,
+            ),
+            thermalStatus = "light",
+        )
+
+        assertTrue(QualityStatus.ThermalHigh !in statuses)
+    }
+
+    @Test
     fun warnsWhenSettledGlCameraCadenceFallsBelowTwentyFourFps() {
         val statuses = QualityEvaluator().evaluate(
             sample = AnalysisSample(
@@ -242,6 +274,7 @@ class QualityEvaluatorTest {
         assertEquals("Keep this setup.", QualityStatus.Good.action)
         assertEquals("Frame the face or select a manual ROI.", QualityStatus.FaceMissing.action)
         assertEquals("Use brighter, steady light.", QualityStatus.TooDark.action)
+        assertEquals("Let the phone cool before validation.", QualityStatus.ThermalHigh.action)
         assertEquals("Close apps or reduce device load.", QualityStatus.LowFps.action)
         assertEquals("Switch to Auto ROI for live preview.", QualityStatus.FullFrameSlow.action)
         assertEquals("Hide controls or use Auto ROI.", QualityStatus.CameraFpsLow.action)

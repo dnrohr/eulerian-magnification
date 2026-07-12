@@ -81,6 +81,17 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - These warnings are advisory and do not replace known-target visual parity
   artifacts.
 
+## Supporting Slice: Live Thermal Quality Warning
+
+- The live quality evaluator now consumes Android thermal state and shows
+  `Thermal high` when `PowerManager.currentThermalStatus` is `moderate` or
+  worse.
+- The warning uses the same threshold as validation-summary thermal warnings,
+  so users see the issue before trusting a hot-device capture.
+- Quality cues treat thermal warnings as user-visible regressions, while
+  evidence summaries continue to record detailed thermal sensor state after
+  capture.
+
 ## Remaining
 
 - Extend Pixel 8a evidence with a known-good visual artifact and watched target

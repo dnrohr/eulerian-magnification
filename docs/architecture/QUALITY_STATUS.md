@@ -9,6 +9,7 @@ Current statuses:
 - `Good`: keep this setup.
 - `Face missing`: frame the face or select a manual ROI.
 - `Too dark`: use brighter, steady light.
+- `Thermal high`: let the phone cool before validation.
 - `Low FPS`: close apps or reduce device load.
 - `Full frame slow`: switch to Auto ROI for live preview.
 - `Camera FPS low`: hide controls or use Auto ROI.
@@ -25,6 +26,11 @@ same labels plus these short actions, so the user can respond without losing the
 mostly unobstructed preview.
 
 The evaluator is intentionally conservative. It does not decide whether the visualization is medically meaningful; it only flags capture and timing conditions that commonly produce poor Eulerian magnification output.
+
+`Thermal high` is based on Android `PowerManager.currentThermalStatus` and
+appears at `moderate` or worse. This mirrors the validation-summary thermal
+warning threshold, but surfaces the issue while the user is still setting up the
+shot instead of only after evidence export.
 
 `Low FPS` is based on CPU analysis samples. If the selected source is `Full
 frame`, the same condition becomes `Full frame slow` so the user gets the
@@ -97,6 +103,5 @@ white-balance pulses rather than useful pulse-color magnification.
 ## Next Work
 
 - Verify AE/AWB lock behavior on Pixel 8a under stable lighting.
-- Add thermal throttling status from the power service.
 - Replace the simple flicker heuristic with 50/60 Hz-aware frequency analysis when timestamp history is mature enough.
 - Add more robust signal-quality metrics over a rolling window.
