@@ -22,6 +22,10 @@ with:
 - optional `roi_overlay_measurement.json` when `-MeasureRoiExpected` is passed
 - optional `evidence_summary.json` when `-Summarize` is passed
 
+If thermal preflight aborts the run before app launch, the bundle intentionally
+contains only the preflight artifacts, `manifest.json`, and optional
+`evidence_summary.json`.
+
 ## Command
 
 ```powershell
@@ -70,7 +74,11 @@ or GL error is also present. A passing runtime smoke summary still does not
 prove visual validation unless the target is visible and inspected.
 If preflight thermal status or sensor status is `critical` or worse, do not use
 the run to judge full-frame FPS, apparent camera freeze, or visual parity. Let
-the phone cool, then repeat with a short capture.
+the phone cool, then repeat with a short capture. By default, the capture script
+aborts before clearing logcat or launching the app when preflight status reaches
+`critical` or worse. The summary classifies that bundle as
+`thermal_preflight_aborted`; it is useful operational evidence, not runtime
+smoke or visual validation.
 
 Screenshot content metrics include sampled luminance mean, luminance standard
 deviation, dark/light pixel fractions, a `nonBlank` flag, and a portrait
@@ -200,6 +208,10 @@ Available launch parameters:
 - `-OperatorNotes`: free-form watched-run notes.
 - `-WarnPreflightThermalStatus`: Android thermal status threshold for prelaunch
   warnings; defaults to `2` (`moderate`).
+- `-AbortPreflightThermalStatus`: Android thermal status threshold for aborting
+  before app launch; defaults to `4` (`critical`).
+- `-AllowThermalLaunch`: overrides the preflight abort. Use only for deliberate
+  diagnostics where extra device heat is acceptable.
 - `-PreserveLogcat`: keeps existing device logcat instead of clearing it before
   the capture starts.
 - `-Summarize`: writes `evidence_summary.json` immediately after capture.

@@ -291,6 +291,8 @@ function Measure-ScreenshotContent {
 
 function Get-EvidenceVerdict {
     param(
+        [bool]$Aborted,
+        [string]$AbortReason,
         [bool]$PassedRuntimeSmoke,
         [bool]$UiTextAssertionsPassed,
         [bool]$HasRequiredUiText,
@@ -301,6 +303,13 @@ function Get-EvidenceVerdict {
         [bool]$ScreenshotPortrait
     )
 
+    if ($Aborted) {
+        return [ordered]@{
+            status = "thermal_preflight_aborted"
+            countsAsVisualValidation = $false
+            reason = $AbortReason
+        }
+    }
     if (-not $PassedRuntimeSmoke) {
         return [ordered]@{
             status = "runtime_failed"
@@ -367,16 +376,29 @@ $thermalPath = Get-RequiredPath $bundle "thermalservice.txt"
 $batteryPath = Get-RequiredPath $bundle "battery.txt"
 $uiDumpPath = Get-RequiredPath $bundle "ui_dump.xml"
 
-$missing = @()
-foreach ($required in @($manifestPath, $gfxPath, $logcatPath, $screenshotPath)) {
-    if (-not (Test-Path -LiteralPath $required)) {
-        $missing += $required
-    }
-}
-
 $manifest = $null
 if (Test-Path -LiteralPath $manifestPath) {
     $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+}
+$aborted = $manifest -and
+    ($manifest.PSObject.Properties.Name -contains "aborted") -and
+    ($manifest.aborted -eq $true)
+$abortReason = if ($aborted -and $manifest.PSObject.Properties.Name -contains "abortReason") {
+    $manifest.abortReason
+} else {
+    $null
+}
+
+$missing = @()
+$requiredArtifactPaths = if ($aborted) {
+    @($manifestPath)
+} else {
+    @($manifestPath, $gfxPath, $logcatPath, $screenshotPath)
+}
+foreach ($required in $requiredArtifactPaths) {
+    if (-not (Test-Path -LiteralPath $required)) {
+        $missing += $required
+    }
 }
 
 $requiredUiText = @()
@@ -425,7 +447,11 @@ $cameraFpsSummary = Parse-CameraFpsSummary $logcat
 $batteryText = Read-TextIfExists $batteryPath
 $batterySummary = Parse-BatterySummary $batteryText
 $uiDumpSummary = Parse-UiDumpSummary $uiDumpPath
-$uiTextAssertions = Test-RequiredUiText -Texts @($uiDumpSummary.text) -RequiredText $requiredUiText
+$uiTextAssertions = if ($aborted) {
+    @()
+} else {
+    Test-RequiredUiText -Texts @($uiDumpSummary.text) -RequiredText $requiredUiText
+}
 
 $jankyPercent = Match-FirstNumber $gfx 'Janky frames:\s+\d+\s+\(([0-9.]+)%\)'
 $totalFrames = Match-FirstNumber $gfx 'Total frames rendered:\s+(\d+)'
@@ -453,7 +479,7 @@ if ($manifest -and $manifest.PSObject.Properties.Name -contains "warnings") {
         }
     }
 }
-if ($missing.Count -gt 0) {
+if ($missing.Count -gt 0 -and -not $aborted) {
     $warnings += "missing required artifacts"
 }
 if ($null -ne $jankyPercent -and $jankyPercent -gt $WarnJankyPercent) {
@@ -527,13 +553,19 @@ if ($screenshotInfo -and $screenshotInfo.content.portrait -ne $true) {
     $warnings += "screenshot is not portrait-oriented"
 }
 
-$passedRuntimeSmoke = ($missing.Count -eq 0) -and
-    (-not $runtimeFindings.fatalException) -and
-    (-not $runtimeFindings.androidRuntime) -and
-    (-not $runtimeFindings.anr) -and
-    (-not $runtimeFindings.glError)
-$uiTextAssertionsPassed = (@($uiTextAssertions | Where-Object { $_.found -ne $true }).Count -eq 0)
+$passedRuntimeSmoke = if ($aborted) {
+    $false
+} else {
+    ($missing.Count -eq 0) -and
+        (-not $runtimeFindings.fatalException) -and
+        (-not $runtimeFindings.androidRuntime) -and
+        (-not $runtimeFindings.anr) -and
+        (-not $runtimeFindings.glError)
+}
+$uiTextAssertionsPassed = $aborted -or (@($uiTextAssertions | Where-Object { $_.found -ne $true }).Count -eq 0)
 $evidenceVerdict = Get-EvidenceVerdict `
+    -Aborted $aborted `
+    -AbortReason $abortReason `
     -PassedRuntimeSmoke $passedRuntimeSmoke `
     -UiTextAssertionsPassed $uiTextAssertionsPassed `
     -HasRequiredUiText ($requiredUiText.Count -gt 0) `
@@ -548,6 +580,8 @@ $result = [ordered]@{
     createdAt = if ($manifest) { $manifest.createdAt } else { $null }
     label = if ($manifest) { $manifest.label } else { $null }
     source = if ($manifest -and $manifest.PSObject.Properties.Name -contains "source") { $manifest.source } else { $null }
+    aborted = $aborted
+    abortReason = $abortReason
     launch = if ($manifest) { $manifest.launch } else { $null }
     artifacts = [ordered]@{
         missingRequired = $missing
@@ -597,6 +631,9 @@ $json | Out-File -LiteralPath $destination -Encoding utf8
 Write-Output "Live validation evidence summary written: $destination"
 Write-Output "passedRuntimeSmoke=$($result.passedRuntimeSmoke) warnings=$($warnings.Count)"
 
+if ($result.aborted) {
+    exit 4
+}
 if (-not $result.passedRuntimeSmoke) {
     exit 2
 }

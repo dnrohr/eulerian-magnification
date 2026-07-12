@@ -100,8 +100,12 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   frozen-preview run can be rejected when the phone was already throttled before
   the app started.
 - Preflight thermal warnings are advisory for runtime smoke, but `critical` or
-  worse preflight state should block any conclusion about full-frame FPS,
-  apparent camera freeze, or visual parity until the phone cools.
+  worse preflight state blocks app launch by default and produces a
+  `thermal_preflight_aborted` summary verdict unless `-AllowThermalLaunch` is
+  passed.
+- Aborted bundles are useful evidence that the phone was not in a valid state
+  for preset benchmarking, full-frame FPS, apparent camera freeze, or visual
+  parity.
 
 ## Supporting Slice: Visual Review Metadata
 

@@ -29,6 +29,8 @@ param(
     [Nullable[bool]]$VisualValidated = $null,
     [string]$OperatorNotes = "",
     [int]$WarnPreflightThermalStatus = 2,
+    [int]$AbortPreflightThermalStatus = 4,
+    [switch]$AllowThermalLaunch,
     [switch]$PreserveLogcat,
     [switch]$PersistLaunchSettings,
     [switch]$Summarize
@@ -225,6 +227,79 @@ if ($null -ne $thermalPreflight.maxSensorStatus -and $thermalPreflight.maxSensor
 if (($null -ne $thermalPreflight.status -and $thermalPreflight.status -ge 4) -or
     ($null -ne $thermalPreflight.maxSensorStatus -and $thermalPreflight.maxSensorStatus -ge 4)) {
     $warnings += "preflight thermal state is critical or worse; let the phone cool before judging FPS, full-frame preview, or visual parity."
+}
+
+$thermalPreflightStatus = @($thermalPreflight.status, $thermalPreflight.maxSensorStatus) |
+    Where-Object { $null -ne $_ } |
+    Measure-Object -Maximum |
+    Select-Object -ExpandProperty Maximum
+$shouldAbortForThermal = (-not $AllowThermalLaunch) -and
+    ($null -ne $thermalPreflightStatus) -and
+    ($thermalPreflightStatus -ge $AbortPreflightThermalStatus)
+
+if ($shouldAbortForThermal) {
+    $abortReason = "thermal preflight status $thermalPreflightStatus at or above abort threshold $AbortPreflightThermalStatus"
+    $warnings += "capture aborted before app launch: $abortReason"
+    $manifestPath = Join-Path $outputDir "manifest.json"
+    $manifest = [ordered]@{
+        createdAt = (Get-Date).ToString("o")
+        label = $safeLabel
+        package = $Package
+        source = $source
+        aborted = $true
+        abortReason = $abortReason
+        launch = [ordered]@{
+            skipped = $true
+            requestedLaunchSkipped = [bool]$SkipLaunch
+            mode = $Mode
+            view = $View
+            roiSource = $RoiSource
+            manualRoi = $ManualRoi
+            panel = $Panel
+            amplification = if ($PSBoundParameters.ContainsKey("Amplification")) { $Amplification } else { $null }
+            glPreview = if ($PSBoundParameters.ContainsKey("GlPreview")) { $GlPreview } else { $null }
+            controls = if ($PSBoundParameters.ContainsKey("Controls")) { $Controls } else { $null }
+            clean = if ($PSBoundParameters.ContainsKey("Clean")) { $Clean } else { $null }
+            lockAeAwb = if ($PSBoundParameters.ContainsKey("LockAeAwb")) { $LockAeAwb } else { $null }
+            measureRoiExpected = $MeasureRoiExpected
+            measureRoiKind = $MeasureRoiKind
+            requireUiText = @($RequireUiText)
+            persistSettings = [bool]$PersistLaunchSettings
+        }
+        visualReview = [ordered]@{
+            targetDescription = $TargetDescription
+            visualClaim = $VisualClaim
+            targetVisible = if ($PSBoundParameters.ContainsKey("TargetVisible")) { $TargetVisible } else { $null }
+            visualValidated = if ($PSBoundParameters.ContainsKey("VisualValidated")) { $VisualValidated } else { $null }
+            operatorNotes = $OperatorNotes
+        }
+        adb = $adb
+        outputDir = (Resolve-Path -LiteralPath $outputDir).Path
+        screenRecordSeconds = 0
+        thermalPreflight = $thermalPreflight
+        launchedApp = $false
+        logcatCleared = $false
+        artifacts = $artifacts
+        warnings = $warnings
+        notes = @(
+            "This bundle aborted before launching the app because thermal preflight was too high.",
+            "It is not runtime smoke evidence and does not prove visual parity."
+        )
+    }
+    $manifest | ConvertTo-Json -Depth 5 | Out-File -LiteralPath $manifestPath -Encoding utf8
+
+    if ($Summarize) {
+        $summaryScript = Join-Path $PSScriptRoot "summarize_live_validation_evidence.ps1"
+        if (-not (Test-Path -LiteralPath $summaryScript)) {
+            Write-Warning "Summary requested, but summarize_live_validation_evidence.ps1 was not found."
+        } else {
+            & $summaryScript -BundlePath $outputDir
+        }
+    }
+
+    Write-Output "Live validation evidence aborted:"
+    Write-Output (Resolve-Path -LiteralPath $outputDir).Path
+    exit 4
 }
 
 if (-not $PreserveLogcat) {
