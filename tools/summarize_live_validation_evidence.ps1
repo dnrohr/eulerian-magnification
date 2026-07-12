@@ -128,12 +128,14 @@ $result = [ordered]@{
     bundle = $bundle
     createdAt = if ($manifest) { $manifest.createdAt } else { $null }
     label = if ($manifest) { $manifest.label } else { $null }
+    source = if ($manifest -and $manifest.PSObject.Properties.Name -contains "source") { $manifest.source } else { $null }
     launch = if ($manifest) { $manifest.launch } else { $null }
     artifacts = [ordered]@{
         missingRequired = $missing
         screenshot = $screenshotInfo
         screenrecordPresent = Test-Path -LiteralPath (Join-Path $bundle "screenrecord.mp4")
         roiMeasurementPresent = $null -ne $roiMeasurement
+        packageInfoPresent = Test-Path -LiteralPath (Join-Path $bundle "app_package.txt")
     }
     gfx = [ordered]@{
         totalFrames = $totalFrames

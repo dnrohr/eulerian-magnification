@@ -15,6 +15,7 @@ with:
 - `battery.txt`
 - `window_focus.txt`
 - `device_props.txt`
+- `app_package.txt`
 - `manifest.json`
 - optional `roi_overlay_measurement.json` when `-MeasureRoiExpected` is passed
 - optional `evidence_summary.json` when `-Summarize` is passed
@@ -48,7 +49,9 @@ Pass `-Summarize` to write `evidence_summary.json` as part of the capture:
   -Summarize
 ```
 
-The summary writes `evidence_summary.json` with launch state, required artifact
+The manifest records the current Git branch, full and short commit, dirty
+worktree flag, short status lines, and installed package dump artifact. The
+summary carries the same source identity plus launch state, required artifact
 presence, screenshot dimensions, gfx frame pacing, runtime crash/ANR/GL-error
 signals, and optional ROI overlay measurement status. A passing runtime smoke
 summary still does not prove visual validation unless the target is visible and

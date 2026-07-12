@@ -143,6 +143,18 @@ Goal: prove that automatic and manual ROI coordinates align with the live previe
   error lines from previous app sessions, which is important when ROI mapping
   and live-preview validation depend on clean per-run evidence.
 
+## Supporting Slice: Evidence Source Identity
+
+- Capture manifests now record Git branch, full and short commit, dirty
+  worktree state, and short status lines.
+- Each live validation bundle now includes `app_package.txt` from
+  `dumpsys package`, so evidence can be tied back to the installed Android
+  package state as well as the source checkout.
+- `evidence_summary.json` carries the source identity and reports whether the
+  package dump artifact is present.
+- This improves auditability for remaining watched target/face validation, but
+  does not close those target-alignment tasks by itself.
+
 ## Done When
 
 - Manual and automatic ROI overlays align with the visible target on device.

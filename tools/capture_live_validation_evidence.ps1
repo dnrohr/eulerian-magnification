@@ -101,7 +101,40 @@ function Find-PowerShell {
     throw "No PowerShell executable was found for child validation scripts."
 }
 
+function Get-GitValue {
+    param([string[]]$Arguments)
+
+    $git = Get-Command git -ErrorAction SilentlyContinue
+    if (-not $git) {
+        return $null
+    }
+    $previousErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    $output = & $git.Source @Arguments 2>$null
+    $exitCode = $LASTEXITCODE
+    $ErrorActionPreference = $previousErrorActionPreference
+    if ($exitCode -ne 0) {
+        return $null
+    }
+    return (($output | Out-String).Trim())
+}
+
+function Get-GitMetadata {
+    $commit = Get-GitValue -Arguments @("rev-parse", "HEAD")
+    $shortCommit = Get-GitValue -Arguments @("rev-parse", "--short", "HEAD")
+    $branch = Get-GitValue -Arguments @("branch", "--show-current")
+    $status = Get-GitValue -Arguments @("status", "--short")
+    return [ordered]@{
+        commit = $commit
+        shortCommit = $shortCommit
+        branch = $branch
+        dirty = -not [string]::IsNullOrWhiteSpace($status)
+        statusShort = if ([string]::IsNullOrWhiteSpace($status)) { @() } else { $status -split "`r?`n" }
+    }
+}
+
 $adb = Find-Adb
+$source = Get-GitMetadata
 $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
 $safeLabel = if ([string]::IsNullOrWhiteSpace($Label)) { "capture" } else { $Label -replace "[^A-Za-z0-9._-]", "-" }
 $outputDir = Join-Path $OutputRoot "$timestamp-$safeLabel"
@@ -183,6 +216,15 @@ Run-AdbText -Adb $adb -Arguments @(
     "date; getprop ro.product.model; getprop ro.build.version.release; getprop ro.build.fingerprint"
 ) -OutputPath $propsPath
 $artifacts.deviceProps = $propsPath
+
+$packageInfoPath = Join-Path $outputDir "app_package.txt"
+Run-AdbText -Adb $adb -Arguments @(
+    "shell",
+    "dumpsys",
+    "package",
+    $Package
+) -OutputPath $packageInfoPath
+$artifacts.packageInfo = $packageInfoPath
 
 $focusPath = Join-Path $outputDir "window_focus.txt"
 Run-AdbText -Adb $adb -Arguments @(
@@ -282,6 +324,7 @@ $manifest = [ordered]@{
     createdAt = (Get-Date).ToString("o")
     label = $safeLabel
     package = $Package
+    source = $source
     launch = [ordered]@{
         skipped = [bool]$SkipLaunch
         mode = $Mode
