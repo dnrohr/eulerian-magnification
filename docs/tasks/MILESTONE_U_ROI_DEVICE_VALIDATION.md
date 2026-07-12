@@ -67,6 +67,22 @@ Goal: prove that automatic and manual ROI coordinates align with the live previe
 - Launch overrides are non-persistent by default so scripted validation does not
   rewrite normal saved settings unless `validation.persist` is explicitly set.
 
+## Supporting Slice: Manual ROI Overlay Analyzer
+
+- Added `tools/measure_roi_overlay_screenshot.ps1` to measure the visible yellow
+  manual ROI outline in a captured screenshot.
+- The tool compares the measured screenshot-space ROI against an expected
+  normalized screenshot rectangle and writes JSON with matched-pixel count,
+  measured bounds, edge errors, and pass/fail status.
+- Verified the tool with a synthetic screenshot pass/fail smoke test.
+- Ran a Pixel 8a clean-preview smoke capture:
+  `sample-videos/exports/live-validation/20260712-160611-manual-roi-overlay-analyzer-smoke`.
+- The analyzer passed on that screenshot with `33600` matched pixels and maximum
+  normalized edge error `0.0034`.
+- This makes manual ROI evidence less subjective, but does not close manual
+  target validation until the expected rectangle is derived from a deliberate
+  physical target in frame.
+
 ## Done When
 
 - Manual and automatic ROI overlays align with the visible target on device.

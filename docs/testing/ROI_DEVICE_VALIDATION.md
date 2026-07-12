@@ -21,6 +21,34 @@ Use this procedure to verify that analysis ROI coordinates match the visible pre
 6. Confirm the yellow ROI outline and tint region overlap the same target with no horizontal flip, vertical offset, or stretch.
 7. Repeat in `Raw`, `Amp`, `Diff`, and `Split` where supported.
 
+For repeatable evidence, capture a clean-preview screenshot and measure the
+visible yellow manual ROI outline against the expected screenshot-space target
+rectangle:
+
+```powershell
+.\tools\capture_live_validation_evidence.ps1 `
+  -Label "manual-roi-known-target" `
+  -Mode Tremor `
+  -View Raw `
+  -RoiSource Manual `
+  -ManualRoi "0.25,0.25,0.75,0.75" `
+  -GlPreview $true `
+  -Controls $false `
+  -Clean $true `
+  -ScreenRecordSeconds 0
+
+.\tools\measure_roi_overlay_screenshot.ps1 `
+  -ScreenshotPath "sample-videos\exports\live-validation\<bundle>\screenshot.png" `
+  -ExpectedRoi "0.083,0.250,0.919,0.751" `
+  -OutputPath "sample-videos\exports\live-validation\<bundle>\roi_overlay_measurement.json"
+```
+
+`ExpectedRoi` is normalized screenshot space, not analysis-camera space. Derive
+it from the visible known target or fixture in the captured screenshot. The
+measurement proves the overlay landed where expected on screen; it only proves
+manual target alignment if that expected rectangle was derived from the visible
+target.
+
 ## Automatic Face ROI Procedure
 
 1. Install the latest debug APK.
@@ -69,6 +97,22 @@ Date: 2026-07-11
   object.
 - Manual ROI validation should be repeated with a deliberately placed target and
   the operator watching the screen.
+
+## Manual ROI Overlay Analyzer Smoke
+
+Date: 2026-07-12
+
+- Connected device: Pixel 8a `47091JEKB05516`.
+- Captured a clean-preview scripted manual ROI bundle:
+  `sample-videos/exports/live-validation/20260712-160611-manual-roi-overlay-analyzer-smoke`.
+- Ran `tools/measure_roi_overlay_screenshot.ps1` against the screenshot with
+  expected visible ROI `0.083,0.250,0.919,0.751`.
+- Result: pass, `33600` matched yellow ROI pixels, measured ROI
+  `0.0796,0.2483,0.9204,0.7517`, maximum edge error `0.0034`.
+- This validates the evidence analyzer and visible overlay measurement path.
+  It does not close manual target validation because the expected rectangle was
+  taken from the overlay smoke screenshot rather than a deliberate physical
+  target boundary.
 
 ## Pass Criteria
 
