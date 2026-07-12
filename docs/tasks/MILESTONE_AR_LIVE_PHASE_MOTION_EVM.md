@@ -136,3 +136,13 @@ Goal: bring the recorded Riesz/phase motion renderer into a live-preview path fo
 - Runtime phase rendering and UI display remain open.
 - Installed the debug build on the Pixel 8a after focused policy/timer coverage
   and full JVM/build verification.
+
+## Completed Slice: Live Phase Debug Status Display
+
+- The expanded GL debug overlay now displays the live phase diagnostics summary
+  from `GlFrameStats`.
+- Motion/Object modes can now report phase not-requested, missing ROI,
+  unsupported GL resources, timing fallback, warmup, and processing size in the
+  same debug area as the live pyramid renderer.
+- Runtime phase rendering remains open.
+- Installed the debug build on the Pixel 8a after full JVM/build verification.

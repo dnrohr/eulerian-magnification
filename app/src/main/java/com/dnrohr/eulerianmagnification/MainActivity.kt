@@ -1140,6 +1140,10 @@ private fun StatusOverlay(
                 color = Color.White,
             )
             Text(
+                text = glFrameStats.phaseDiagnostics.summary,
+                color = Color.White,
+            )
+            Text(
                 text = PerformanceBenchmark.from(sample, glFrameStats).summary(),
                 color = Color.White,
             )
