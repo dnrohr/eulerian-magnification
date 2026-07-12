@@ -30,6 +30,9 @@ the preview to settle. Scripted launches force-stop the package first so ADB
 extras are applied deterministically. Use `-ScreenRecordSeconds 0` for a
 screenshot/log-only smoke capture. Use `-SkipLaunch` only when the operator has
 already navigated to a specific controls state that should not be disturbed.
+By default, the script clears logcat before launch/capture so runtime findings
+belong to the current evidence bundle. Pass `-PreserveLogcat` only when the
+older device log context is intentionally needed.
 
 Pass `-Summarize` to write `evidence_summary.json` as part of the capture:
 
@@ -123,6 +126,8 @@ Available launch parameters:
   analyzer thresholds forwarded to the ROI overlay measurement script.
 - `-MeasureRoiAllowMultipleComponents`: allows more than one connected overlay
   component when a test intentionally expects duplicate marks.
+- `-PreserveLogcat`: keeps existing device logcat instead of clearing it before
+  the capture starts.
 - `-Summarize`: writes `evidence_summary.json` immediately after capture.
 - `-PersistLaunchSettings`: saves the launch settings. Omit this for normal
   validation captures so saved user settings are left unchanged.

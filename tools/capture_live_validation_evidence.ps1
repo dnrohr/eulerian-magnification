@@ -22,6 +22,7 @@ param(
     [double]$MeasureRoiMaxEdgeError = 0.04,
     [int]$MeasureRoiMinimumMatchedPixels = 24,
     [switch]$MeasureRoiAllowMultipleComponents,
+    [switch]$PreserveLogcat,
     [switch]$PersistLaunchSettings,
     [switch]$Summarize
 )
@@ -116,6 +117,13 @@ if ($Controls -eq $true -and $Panel -eq "Debug") {
 $devicesPath = Join-Path $outputDir "adb_devices.txt"
 Run-AdbText -Adb $adb -Arguments @("devices") -OutputPath $devicesPath
 $artifacts.devices = $devicesPath
+
+if (-not $PreserveLogcat) {
+    $previousErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    & $adb logcat -c *> $null
+    $ErrorActionPreference = $previousErrorActionPreference
+}
 
 if (-not $SkipLaunch) {
     $previousErrorActionPreference = $ErrorActionPreference
@@ -294,6 +302,7 @@ $manifest = [ordered]@{
     outputDir = (Resolve-Path -LiteralPath $outputDir).Path
     screenRecordSeconds = $ScreenRecordSeconds
     launchedApp = (-not $SkipLaunch)
+    logcatCleared = (-not [bool]$PreserveLogcat)
     artifacts = $artifacts
     warnings = $warnings
     notes = @(

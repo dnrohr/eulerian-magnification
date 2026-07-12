@@ -133,6 +133,16 @@ Goal: prove that automatic and manual ROI coordinates align with the live previe
   validation, but does not close those tasks until a watched target capture is
   inspected.
 
+## Supporting Slice: Scoped Logcat Evidence
+
+- Updated `tools/capture_live_validation_evidence.ps1` to clear device logcat
+  before a capture by default, then record `logcatCleared` in the manifest.
+- Added `-PreserveLogcat` for the uncommon case where older device log context
+  is intentionally needed.
+- This keeps runtime smoke summaries from being polluted by stale crash or GL
+  error lines from previous app sessions, which is important when ROI mapping
+  and live-preview validation depend on clean per-run evidence.
+
 ## Done When
 
 - Manual and automatic ROI overlays align with the visible target on device.
