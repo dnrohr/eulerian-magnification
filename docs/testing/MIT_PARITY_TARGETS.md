@@ -171,6 +171,24 @@ frame/jank percentiles, thermal status, processed-recording metadata stability,
 and encoded MP4 validity. They do not yet cover visual parity, target quality,
 or live camera dropped-frame diagnosis for each preset.
 
+## Preset Validation Status
+
+As of 2026-07-12, the locked presets have automated Pixel 8a benchmark evidence
+but not watched-target visual parity evidence:
+
+| Preset | Pixel Preview/Jank Benchmark | Recording Metadata Probe | Encoded MP4 Probe | Visual Parity Artifact |
+| --- | --- | --- | --- | --- |
+| Pulse color | Validated | Validated | Validated | Not yet validated |
+| Breathing | Validated | Validated | Validated | Not yet validated |
+| Object vibration | Validated | Validated | Validated | Not yet validated |
+| Fast tremor | Validated | Validated | Validated | Not yet validated |
+
+This means the presets are supported for repeatable setup and automated
+performance/regression checks. They are not yet supported as final MIT-parity
+visual claims. A preset becomes visually validated only after a watched run with
+a known target stores a screenshot, processed export, or evidence note showing
+the expected visible effect.
+
 For local file integrity:
 
 ```powershell

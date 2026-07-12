@@ -244,6 +244,21 @@ object vibration should use a controlled high-contrast mechanical target, while
 Fast Motion is for tremor-like or other small high-frequency motion where camera
 motion must be lower than target motion.
 
+## Preset Validation Status
+
+As of 2026-07-12, all four locked presets have Pixel 8a short-run benchmark
+evidence for rendered frame timing, thermal status, processed-recording metadata,
+and encoded MP4 validity. None of the presets has a watched-target visual parity
+artifact yet, so they should be treated as benchmark-validated setup presets,
+not final MIT-parity visual claims.
+
+| Preset | Pixel Benchmark | Recording Metadata | Encoded MP4 | Visual Parity |
+| --- | --- | --- | --- | --- |
+| Pulse color | Validated | Validated | Validated | Not yet validated |
+| Breathing | Validated | Validated | Validated | Not yet validated |
+| Object vibration | Validated | Validated | Validated | Not yet validated |
+| Fast tremor | Validated | Validated | Validated | Not yet validated |
+
 ## Requirements
 
 - Windows with PowerShell.
