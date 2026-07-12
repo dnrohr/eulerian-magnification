@@ -6,11 +6,14 @@ param(
     [string]$ExpectedRoi,
 
     [string]$OutputPath = "",
-    [string]$TargetColor = "#FFC857",
+    [ValidateSet("Manual", "Auto")]
+    [string]$OverlayKind = "Manual",
+    [string]$TargetColor = "",
     [int]$ColorTolerance = 42,
     [double]$SearchMargin = 0.08,
     [double]$MaxEdgeError = 0.04,
-    [int]$MinimumMatchedPixels = 24
+    [int]$MinimumMatchedPixels = 24,
+    [switch]$AllowMultipleComponents
 )
 
 $ErrorActionPreference = "Stop"
@@ -50,11 +53,97 @@ function Clamp-Unit {
     return [Math]::Min(1.0, [Math]::Max(0.0, $Value))
 }
 
+function Default-OverlayColor {
+    param([string]$Kind)
+    if ($Kind -eq "Auto") {
+        return "#00BFA5"
+    }
+    return "#FFC857"
+}
+
+function Measure-Components {
+    param(
+        [System.Collections.Generic.HashSet[string]]$MatchedPixels
+    )
+
+    $unvisited = [System.Collections.Generic.HashSet[string]]::new($MatchedPixels)
+    $componentCount = 0
+    $largestSize = 0
+    $largestBounds = $null
+
+    while ($unvisited.Count -gt 0) {
+        $seed = $null
+        foreach ($item in $unvisited) {
+            $seed = $item
+            break
+        }
+        if ($null -eq $seed) {
+            break
+        }
+
+        $componentCount += 1
+        $queue = [System.Collections.Generic.Queue[string]]::new()
+        $queue.Enqueue($seed)
+        [void]$unvisited.Remove($seed)
+
+        $size = 0
+        $minX = [int]::MaxValue
+        $minY = [int]::MaxValue
+        $maxX = -1
+        $maxY = -1
+
+        while ($queue.Count -gt 0) {
+            $current = $queue.Dequeue()
+            $parts = $current.Split(",")
+            $x = [int]$parts[0]
+            $y = [int]$parts[1]
+            $size += 1
+            if ($x -lt $minX) { $minX = $x }
+            if ($x -gt $maxX) { $maxX = $x }
+            if ($y -lt $minY) { $minY = $y }
+            if ($y -gt $maxY) { $maxY = $y }
+
+            $neighbors = @(
+                "$($x - 1),$y",
+                "$($x + 1),$y",
+                "$x,$($y - 1)",
+                "$x,$($y + 1)"
+            )
+            foreach ($neighbor in $neighbors) {
+                if ($unvisited.Remove($neighbor)) {
+                    $queue.Enqueue($neighbor)
+                }
+            }
+        }
+
+        if ($size -gt $largestSize) {
+            $largestSize = $size
+            $largestBounds = [ordered]@{
+                leftPx = $minX
+                topPx = $minY
+                rightPx = $maxX + 1
+                bottomPx = $maxY + 1
+            }
+        }
+    }
+
+    return [ordered]@{
+        count = $componentCount
+        largestSize = $largestSize
+        largestBounds = $largestBounds
+    }
+}
+
 Add-Type -AssemblyName System.Drawing
 
 $resolvedScreenshot = (Resolve-Path -LiteralPath $ScreenshotPath).Path
 $expected = Parse-NormalizedRect $ExpectedRoi
-$target = Parse-HexColor $TargetColor
+$resolvedTargetColor = if ([string]::IsNullOrWhiteSpace($TargetColor)) {
+    Default-OverlayColor $OverlayKind
+} else {
+    $TargetColor
+}
+$target = Parse-HexColor $resolvedTargetColor
 $bitmap = [System.Drawing.Bitmap]::new($resolvedScreenshot)
 
 try {
@@ -77,6 +166,7 @@ try {
     $minY = $height
     $maxX = -1
     $maxY = -1
+    $matchedPixelKeys = [System.Collections.Generic.HashSet[string]]::new()
 
     for ($y = $startY; $y -le $endY; $y++) {
         for ($x = $startX; $x -le $endX; $x++) {
@@ -86,6 +176,7 @@ try {
                 [Math]::Abs($pixel.B - $target.b)
             if ($distance -le $ColorTolerance) {
                 $matched += 1
+                [void]$matchedPixelKeys.Add("$x,$y")
                 if ($x -lt $minX) { $minX = $x }
                 if ($x -gt $maxX) { $maxX = $x }
                 if ($y -lt $minY) { $minY = $y }
@@ -96,6 +187,7 @@ try {
 
     $measured = $null
     $edgeError = $null
+    $components = Measure-Components $matchedPixelKeys
     $passed = $false
     if ($matched -ge $MinimumMatchedPixels) {
         $measured = [ordered]@{
@@ -112,23 +204,29 @@ try {
         }
         $passed = @($edgeError.left, $edgeError.top, $edgeError.right, $edgeError.bottom |
             Where-Object { $_ -gt $MaxEdgeError }).Count -eq 0
+        if (-not $AllowMultipleComponents -and $components.count -ne 1) {
+            $passed = $false
+        }
     }
 
     $result = [ordered]@{
         screenshot = $resolvedScreenshot
         imageSize = [ordered]@{ width = $width; height = $height }
+        overlayKind = $OverlayKind
         expectedRoi = $expected
         searchMargin = $SearchMargin
-        targetColor = $TargetColor
+        targetColor = $resolvedTargetColor
         colorTolerance = $ColorTolerance
         minimumMatchedPixels = $MinimumMatchedPixels
         matchedPixels = $matched
+        components = $components
+        requireSingleComponent = (-not $AllowMultipleComponents)
         measuredRoi = $measured
         edgeError = $edgeError
         maxEdgeError = $MaxEdgeError
         passed = $passed
         notes = @(
-            "Use clean or hidden controls when possible; yellow UI text can match the manual ROI color.",
+            "Use clean or hidden controls when possible; UI text can match ROI overlay colors.",
             "This measures the visible screenshot overlay only. It does not prove target alignment unless the expected rectangle was derived from a visible known target."
         )
     }

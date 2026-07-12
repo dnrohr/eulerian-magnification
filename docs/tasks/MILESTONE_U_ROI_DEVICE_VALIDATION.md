@@ -83,6 +83,22 @@ Goal: prove that automatic and manual ROI coordinates align with the live previe
   target validation until the expected rectangle is derived from a deliberate
   physical target in frame.
 
+## Supporting Slice: Automatic ROI Overlay Analyzer
+
+- Extended `tools/measure_roi_overlay_screenshot.ps1` with
+  `-OverlayKind Manual|Auto`, default overlay colors for yellow manual ROI and
+  green automatic ROI, and connected-component counting.
+- The analyzer now fails by default when more than one ROI-colored component is
+  found inside the search region, making duplicate-box artifacts visible in the
+  evidence JSON.
+- Verified synthetic manual, automatic, and duplicate-box cases.
+- Ran a Pixel 8a clean-preview automatic fallback ROI smoke capture:
+  `sample-videos/exports/live-validation/20260712-160930-auto-roi-overlay-analyzer-smoke`.
+- The analyzer passed on that screenshot with `14378` matched pixels, one
+  connected component, and maximum normalized edge error `0.0056`.
+- This validates the automatic-overlay measurement path, but does not close
+  automatic face ROI validation because no visible face target was present.
+
 ## Done When
 
 - Manual and automatic ROI overlays align with the visible target on device.

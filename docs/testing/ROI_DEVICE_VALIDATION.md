@@ -40,6 +40,7 @@ rectangle:
 .\tools\measure_roi_overlay_screenshot.ps1 `
   -ScreenshotPath "sample-videos\exports\live-validation\<bundle>\screenshot.png" `
   -ExpectedRoi "0.083,0.250,0.919,0.751" `
+  -OverlayKind Manual `
   -OutputPath "sample-videos\exports\live-validation\<bundle>\roi_overlay_measurement.json"
 ```
 
@@ -47,7 +48,8 @@ rectangle:
 it from the visible known target or fixture in the captured screenshot. The
 measurement proves the overlay landed where expected on screen; it only proves
 manual target alignment if that expected rectangle was derived from the visible
-target.
+target. The analyzer also requires a single connected ROI component by default,
+which catches duplicate visible ROI boxes in the search region.
 
 ## Automatic Face ROI Procedure
 
@@ -58,6 +60,20 @@ target.
 5. Confirm the automatic ROI outline lands on the visible face/skin region rather than the room, shoulder, or center fallback.
 6. Move slightly and confirm short detection misses show `Frozen ROI` without visible wandering.
 7. If the ROI remains far from the face while `Tracking`, capture non-sensitive evidence and inspect `PreviewRoiMapper`.
+
+Use the same screenshot analyzer for the green automatic ROI outline:
+
+```powershell
+.\tools\measure_roi_overlay_screenshot.ps1 `
+  -ScreenshotPath "sample-videos\exports\live-validation\<bundle>\screenshot.png" `
+  -ExpectedRoi "<visible-face-or-fallback-target-bounds>" `
+  -OverlayKind Auto `
+  -OutputPath "sample-videos\exports\live-validation\<bundle>\roi_overlay_measurement.json"
+```
+
+For automatic face validation, `ExpectedRoi` must come from the visible face or
+skin target in the screenshot. Measuring the center fallback box is useful as an
+overlay smoke test, but it does not prove face tracking.
 
 ## Live Reconstruction Procedure
 
@@ -113,6 +129,21 @@ Date: 2026-07-12
   It does not close manual target validation because the expected rectangle was
   taken from the overlay smoke screenshot rather than a deliberate physical
   target boundary.
+
+## Automatic ROI Overlay Analyzer Smoke
+
+Date: 2026-07-12
+
+- Connected device: Pixel 8a `47091JEKB05516`.
+- Captured a clean-preview automatic ROI fallback bundle:
+  `sample-videos/exports/live-validation/20260712-160930-auto-roi-overlay-analyzer-smoke`.
+- Ran `tools/measure_roi_overlay_screenshot.ps1` with `-OverlayKind Auto`
+  against expected visible ROI `0.197,0.363,0.535,0.646`.
+- Result: pass, `14378` matched green ROI pixels, one connected component,
+  measured ROI `0.1944,0.3596,0.5343,0.6404`, maximum edge error `0.0056`.
+- This validates automatic-overlay measurement and duplicate-box detection on
+  the fallback ROI. It does not close automatic face ROI validation because no
+  visible face target was present.
 
 ## Pass Criteria
 
