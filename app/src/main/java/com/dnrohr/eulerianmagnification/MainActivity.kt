@@ -116,6 +116,7 @@ import com.dnrohr.eulerianmagnification.quality.QualityStatus
 import com.dnrohr.eulerianmagnification.recording.DebugProcessedMp4Recorder
 import com.dnrohr.eulerianmagnification.recording.GlProcessedMp4Recorder
 import com.dnrohr.eulerianmagnification.recording.ProcessedRecordingSession
+import com.dnrohr.eulerianmagnification.recording.RecordingRendererDiagnostics
 import com.dnrohr.eulerianmagnification.recording.RecordedVideoMp4Exporter
 import com.dnrohr.eulerianmagnification.recording.RecordingGallery
 import com.dnrohr.eulerianmagnification.recording.RecordingGalleryItem
@@ -482,6 +483,10 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
                             settings = analysisSettings,
                             thermalStatus = thermalStatus(context),
                             lightingDiagnostic = lightingDiagnostic,
+                            rendererDiagnostics = RecordingRendererDiagnostics.from(
+                                usingGlPreview = usingGlPreview,
+                                glFrameStats = glFrameStats,
+                            ),
                             visualizationModel = VisualizationModel.live(
                                 settings = analysisSettings,
                                 fullFrameColorPreview = liveEvmPreviewDecision.fullFrameColorPreview,

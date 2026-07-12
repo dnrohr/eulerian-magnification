@@ -54,6 +54,12 @@ previous EGL context. It is wired into GL preview recording through
 `GlProcessedMp4Recorder` and covered by a Pixel 8a instrumentation test that
 validates the resulting MP4 container.
 
+Recording metadata now also includes the active preview path, GL renderer path,
+GL timing, live reconstruction summary/fallback, and live phase summary/fallback
+when the run stops. This lets an exported MP4 be interpreted as live linear EVM,
+phase EVM, fallback color bridge, or CameraX/debug output without relying on a
+separate screenshot of the UI.
+
 This is not the final camera-preview MP4 yet. It proves the app-owned MP4 encoder/muxer path and records processed state, while final preview-matching recording still needs the Camera/GPU texture path.
 
 An `EncodedOutputValidator` now exists as the first local gate for future MP4 work. It verifies file presence, non-empty output, `.mp4` naming, and top-level `ftyp`, `moov`, and `mdat` atoms. Once `MediaCodec` output exists, this should grow into track-level validation.

@@ -8,6 +8,11 @@ import com.dnrohr.eulerianmagnification.analysis.TranslationEstimate
 import com.dnrohr.eulerianmagnification.analysis.VisualizationModel
 import com.dnrohr.eulerianmagnification.analysis.ViewMode
 import com.dnrohr.eulerianmagnification.gl.GlTextureSize
+import com.dnrohr.eulerianmagnification.gl.GlFrameStats
+import com.dnrohr.eulerianmagnification.gl.GlReconstructionDiagnostics
+import com.dnrohr.eulerianmagnification.gl.GlRenderPath
+import com.dnrohr.eulerianmagnification.gl.LivePhaseDiagnostics
+import com.dnrohr.eulerianmagnification.gl.LivePhaseFallbackReason
 import com.dnrohr.eulerianmagnification.gl.ProcessedGlFrame
 import com.dnrohr.eulerianmagnification.quality.LightingDiagnostic
 import com.dnrohr.eulerianmagnification.quality.LightingDiagnosticStatus
@@ -110,6 +115,44 @@ class ProcessedRecordingSessionTest {
         assertTrue(json.contains("\"lightingAction\": \"Wait for exposure to settle, then lock AE/AWB.\""))
         assertTrue(json.contains("\"lightingAverageGreen\": 101.250000"))
         assertTrue(json.contains("\"lightingVariation\": 0.071000"))
+    }
+
+    @Test
+    fun writesRendererDiagnosticsMetadataWhenProvided() {
+        val directory = Files.createTempDirectory("recording-session").toFile()
+        val session = ProcessedRecordingSession(directory, startedAtMillis = 1_700_000_000_000L)
+
+        val output = session.stop(
+            settings = AnalysisSettings(),
+            thermalStatus = "none",
+            rendererDiagnostics = RecordingRendererDiagnostics.from(
+                usingGlPreview = true,
+                glFrameStats = GlFrameStats(
+                    averageFrameMillis = 12.5,
+                    averageFps = 80.0,
+                    renderPath = GlRenderPath.LiveReconstruction,
+                    reconstructionDiagnostics = GlReconstructionDiagnostics(
+                        activePyramidLevels = 3,
+                        internalSize = GlTextureSize(540, 1200),
+                    ),
+                    phaseDiagnostics = LivePhaseDiagnostics(
+                        requested = true,
+                        fallbackReason = LivePhaseFallbackReason.MissingManualRoi,
+                    ),
+                ),
+            ),
+        )
+        val json = output.readText()
+
+        assertTrue(json.contains("\"previewPath\": \"gl\""))
+        assertTrue(json.contains("\"glRenderPath\": \"LiveReconstruction\""))
+        assertTrue(json.contains("\"glRenderPathLabel\": \"Live reconstruction\""))
+        assertTrue(json.contains("\"glAverageFps\": 80.000000"))
+        assertTrue(json.contains("\"glAverageFrameMillis\": 12.500000"))
+        assertTrue(json.contains("\"reconstructionSummary\": \"Pyramid: 3 levels / 540x1200 / warming / start L0\""))
+        assertTrue(json.contains("\"reconstructionFallback\": \"none\""))
+        assertTrue(json.contains("\"phaseSummary\": \"phase fallback: manual ROI required\""))
+        assertTrue(json.contains("\"phaseFallback\": \"manual ROI required\""))
     }
 
     @Test

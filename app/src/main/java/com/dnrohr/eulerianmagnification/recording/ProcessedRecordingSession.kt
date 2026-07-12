@@ -57,6 +57,7 @@ class ProcessedRecordingSession(
         settings: AnalysisSettings,
         thermalStatus: String,
         lightingDiagnostic: LightingDiagnostic? = null,
+        rendererDiagnostics: RecordingRendererDiagnostics? = null,
         visualizationModel: VisualizationModel = VisualizationModel.live(
             settings = settings,
             fullFrameColorPreview = false,
@@ -64,7 +65,7 @@ class ProcessedRecordingSession(
     ): File {
         videoRecorder?.stop()
         val output = File(sessionDirectory, "metadata.json")
-        output.writeText(toJson(settings, thermalStatus, lightingDiagnostic, visualizationModel))
+        output.writeText(toJson(settings, thermalStatus, lightingDiagnostic, rendererDiagnostics, visualizationModel))
         return output
     }
 
@@ -79,6 +80,7 @@ class ProcessedRecordingSession(
         settings: AnalysisSettings,
         thermalStatus: String,
         lightingDiagnostic: LightingDiagnostic?,
+        rendererDiagnostics: RecordingRendererDiagnostics?,
         visualizationModel: VisualizationModel,
     ): String {
         return buildString {
@@ -97,6 +99,17 @@ class ProcessedRecordingSession(
             appendLine("  \"signalSourceLabel\": \"${visualizationModel.signalSource.label}\",")
             appendLine("  \"renderer\": \"${visualizationModel.renderer.id}\",")
             appendLine("  \"rendererLabel\": \"${visualizationModel.renderer.label}\",")
+            rendererDiagnostics?.let { diagnostics ->
+                appendLine("  \"previewPath\": ${diagnostics.previewPath.quoteJson()},")
+                appendLine("  \"glRenderPath\": ${diagnostics.glRenderPath?.quoteJson() ?: "null"},")
+                appendLine("  \"glRenderPathLabel\": ${diagnostics.glRenderPathLabel?.quoteJson() ?: "null"},")
+                appendLine("  \"glAverageFps\": ${diagnostics.glAverageFps?.format() ?: "null"},")
+                appendLine("  \"glAverageFrameMillis\": ${diagnostics.glAverageFrameMillis?.format() ?: "null"},")
+                appendLine("  \"reconstructionSummary\": ${diagnostics.reconstructionSummary?.quoteJson() ?: "null"},")
+                appendLine("  \"reconstructionFallback\": ${diagnostics.reconstructionFallback?.quoteJson() ?: "null"},")
+                appendLine("  \"phaseSummary\": ${diagnostics.phaseSummary?.quoteJson() ?: "null"},")
+                appendLine("  \"phaseFallback\": ${diagnostics.phaseFallback?.quoteJson() ?: "null"},")
+            }
             appendLine("  \"visualizationStyle\": \"${visualizationModel.visualizationStyle.id}\",")
             appendLine("  \"visualizationStyleLabel\": \"${visualizationModel.visualizationStyle.label}\",")
             appendLine("  \"amplification\": ${settings.amplification},")
