@@ -17,6 +17,7 @@ object LiveEvmPreviewPolicy {
         usingGlPreview: Boolean,
         glFrameStats: GlFrameStats,
         analysisFps: Double = 0.0,
+        thermalStatus: String = THERMAL_STATUS_NONE,
     ): LiveEvmPreviewDecision {
         if (!usingGlPreview) {
             return LiveEvmPreviewDecision(
@@ -30,6 +31,13 @@ object LiveEvmPreviewPolicy {
                 fullFrameColorPreview = false,
                 label = "ROI signal preview",
                 reason = "Full-frame live linear EVM is currently limited to Pulse and Breathing",
+            )
+        }
+        if (thermalStatus.isThermalCriticalOrWorse()) {
+            return LiveEvmPreviewDecision(
+                fullFrameColorPreview = false,
+                label = "ROI signal preview",
+                reason = "Device thermal state is too high for live full-frame reconstruction",
             )
         }
         if (!hasSettledStats(glFrameStats)) {
@@ -84,4 +92,9 @@ object LiveEvmPreviewPolicy {
     private const val MIN_GL_FPS = 23.5
     private const val MIN_ANALYSIS_FPS = 23.5
     private const val MAX_GL_FRAME_MILLIS = 42.0
+    private const val THERMAL_STATUS_NONE = "none"
+}
+
+private fun String.isThermalCriticalOrWorse(): Boolean {
+    return lowercase() in setOf("critical", "emergency", "shutdown")
 }

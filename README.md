@@ -75,9 +75,9 @@ The first target definition is tracked in
 4. Let exposure settle for a few seconds, then tap `Controls` and use
    `Lock AE/AWB`.
 5. Leave `ROI Source` on `Auto ROI` for the default path. Choose `Full frame`
-   only for controlled tests where FPS stays healthy, or `Manual ROI` when you
-   need a deliberately placed box for a difficult target, debugging, or
-   comparison.
+   only for controlled tests where FPS stays healthy and the phone is not
+   thermally hot, or `Manual ROI` when you need a deliberately placed box for a
+   difficult target, debugging, or comparison.
 6. Tap `Hide` so the image is mostly unobstructed.
 7. Use `Raw`, `Amplified`, `Difference`, or `Split` from the compact preview to compare whether the
    processed view is adding useful signal or only noise.
@@ -201,9 +201,12 @@ The default screen is intentionally compact so the preview remains visible.
   actions where artifacts exist. Delete removes only that app-owned `processed-*`
   session directory.
 - `Quality`: summarizes whether the current run looks usable. Warnings can come
-  from low FPS, camera/ROI motion, lighting flicker, timestamp jumps, or risky
-  high-frequency/amplification combinations. The compact preview stays terse;
-  expanded controls show a short action for each warning.
+  from low FPS, camera/ROI motion, lighting flicker, timestamp jumps, thermal
+  state, or risky high-frequency/amplification combinations. The compact
+  preview stays terse; expanded controls show a short action for each warning.
+  If the phone reaches `critical` thermal state or worse, live full-frame
+  reconstruction falls back to ROI signal preview and `ROI Source` is switched
+  back to `Auto ROI`.
 - `Lighting`: expanded-controls diagnostic for lighting stability. It separates
   settling, stable, too dark, likely flicker, exposure pumping, and lighting
   changes mixed with ROI motion. Live recording metadata includes the lighting

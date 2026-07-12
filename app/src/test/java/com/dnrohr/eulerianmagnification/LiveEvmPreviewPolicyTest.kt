@@ -121,6 +121,39 @@ class LiveEvmPreviewPolicyTest {
     }
 
     @Test
+    fun disablesFullFrameColorWhenThermalStateIsCritical() {
+        val decision = LiveEvmPreviewPolicy.decide(
+            settings = AnalysisSettings(
+                mode = MagnificationMode.Pulse,
+                viewMode = ViewMode.Amplified,
+            ),
+            usingGlPreview = true,
+            glFrameStats = healthyStats(),
+            analysisFps = 30.0,
+            thermalStatus = "critical",
+        )
+
+        assertFalse(decision.fullFrameColorPreview)
+        assertTrue(decision.reason.contains("thermal"))
+    }
+
+    @Test
+    fun keepsFullFrameColorEnabledForModerateThermalState() {
+        val decision = LiveEvmPreviewPolicy.decide(
+            settings = AnalysisSettings(
+                mode = MagnificationMode.Pulse,
+                viewMode = ViewMode.Amplified,
+            ),
+            usingGlPreview = true,
+            glFrameStats = healthyStats(),
+            analysisFps = 30.0,
+            thermalStatus = "moderate",
+        )
+
+        assertTrue(decision.fullFrameColorPreview)
+    }
+
+    @Test
     fun keepsFullFrameColorEnabledForTwentyFourFpsCameraCadence() {
         val decision = LiveEvmPreviewPolicy.decide(
             settings = AnalysisSettings(

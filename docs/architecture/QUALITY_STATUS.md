@@ -31,6 +31,10 @@ The evaluator is intentionally conservative. It does not decide whether the visu
 appears at `moderate` or worse. This mirrors the validation-summary thermal
 warning threshold, but surfaces the issue while the user is still setting up the
 shot instead of only after evidence export.
+At `critical`, `emergency`, or `shutdown`, the live full-frame reconstruction
+policy disables full-frame preview and the ROI-source fallback policy switches
+`Full frame` back to `Auto ROI`. Runs in that state are not valid evidence for
+full-frame FPS, apparent camera freeze, or visual parity.
 
 `Low FPS` is based on CPU analysis samples. If the selected source is `Full
 frame`, the same condition becomes `Full frame slow` so the user gets the

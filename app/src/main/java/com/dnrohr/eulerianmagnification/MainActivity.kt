@@ -236,6 +236,7 @@ private fun MainScreen(
         usingGlPreview = usingGlPreview,
         glFrameStats = glFrameStats,
         analysisFps = analysisSample.analysisFps,
+        thermalStatus = liveThermalStatus,
     )
     val activeRoi = RoiSourcePolicy.activeRoi(
         source = roiSource,
@@ -344,6 +345,7 @@ private fun MainScreen(
             roiSource = roiSource,
             analysisFps = sample.analysisFps,
             state = fullFrameRoiFallbackState,
+            thermalStatus = liveThermalStatus,
         )
         fullFrameRoiFallbackState = fullFrameFallbackDecision.nextState
         if (fullFrameFallbackDecision.shouldFallbackToAuto) {

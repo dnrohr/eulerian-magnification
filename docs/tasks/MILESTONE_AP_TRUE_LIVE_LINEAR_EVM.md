@@ -315,6 +315,20 @@ showing true pyramid reconstruction or a fallback bridge.
   passed runtime smoke with no crash, ANR, or GL-error findings. Clean-mode
   frame pacing was 13.33% janky frames, 9 ms median, and 17 ms p90.
 
+## Supporting Slice: Thermal Full-Frame Fallback
+
+- Live reconstruction policy now refuses full-frame GL reconstruction when
+  Android thermal state is `critical`, `emergency`, or `shutdown`.
+- Full-frame ROI policy now switches `ROI Source` back to `Auto ROI` immediately
+  in the same thermal states, even if measured camera/analysis FPS has not yet
+  dropped.
+- This targets the observed failure mode where a thermally critical phone can
+  make Full frame appear frozen or unusably slow. The app should now recover to
+  the cheaper Auto ROI path instead of letting that state masquerade as a
+  renderer-quality result.
+- Controlled motion/color target validation remains required before AP can be
+  marked complete.
+
 ## Done When
 
 - Live amplified preview shows visible reconstructed output for at least one color sample and one slow-motion sample.
