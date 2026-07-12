@@ -3,7 +3,17 @@ param(
     [string]$Label = "",
     [string]$Package = "com.dnrohr.eulerianmagnification",
     [int]$ScreenRecordSeconds = 0,
-    [switch]$SkipLaunch
+    [switch]$SkipLaunch,
+    [string]$Mode = "",
+    [string]$View = "",
+    [string]$RoiSource = "",
+    [string]$ManualRoi = "",
+    [Nullable[double]]$Amplification = $null,
+    [Nullable[bool]]$GlPreview = $null,
+    [Nullable[bool]]$Controls = $null,
+    [Nullable[bool]]$Clean = $null,
+    [Nullable[bool]]$LockAeAwb = $null,
+    [switch]$PersistLaunchSettings
 )
 
 $ErrorActionPreference = "Stop"
@@ -83,7 +93,46 @@ $artifacts.devices = $devicesPath
 if (-not $SkipLaunch) {
     $previousErrorActionPreference = $ErrorActionPreference
     $ErrorActionPreference = "Continue"
-    & $adb shell monkey -p $Package -c android.intent.category.LAUNCHER 1 *> $null
+    & $adb shell am force-stop $Package *> $null
+    Start-Sleep -Milliseconds 500
+    $launchArgs = @(
+        "shell",
+        "am",
+        "start",
+        "-n",
+        "$Package/.MainActivity"
+    )
+    if (-not [string]::IsNullOrWhiteSpace($Mode)) {
+        $launchArgs += @("--es", "validation.mode", $Mode)
+    }
+    if (-not [string]::IsNullOrWhiteSpace($View)) {
+        $launchArgs += @("--es", "validation.view", $View)
+    }
+    if (-not [string]::IsNullOrWhiteSpace($RoiSource)) {
+        $launchArgs += @("--es", "validation.roiSource", $RoiSource)
+    }
+    if (-not [string]::IsNullOrWhiteSpace($ManualRoi)) {
+        $launchArgs += @("--es", "validation.manualRoi", $ManualRoi)
+    }
+    if ($PSBoundParameters.ContainsKey("Amplification")) {
+        $launchArgs += @("--es", "validation.amplification", $Amplification.ToString([Globalization.CultureInfo]::InvariantCulture))
+    }
+    if ($PSBoundParameters.ContainsKey("GlPreview")) {
+        $launchArgs += @("--ez", "validation.glPreview", $GlPreview.ToString().ToLowerInvariant())
+    }
+    if ($PSBoundParameters.ContainsKey("Controls")) {
+        $launchArgs += @("--ez", "validation.controls", $Controls.ToString().ToLowerInvariant())
+    }
+    if ($PSBoundParameters.ContainsKey("Clean")) {
+        $launchArgs += @("--ez", "validation.clean", $Clean.ToString().ToLowerInvariant())
+    }
+    if ($PSBoundParameters.ContainsKey("LockAeAwb")) {
+        $launchArgs += @("--ez", "validation.lockAeAwb", $LockAeAwb.ToString().ToLowerInvariant())
+    }
+    if ($PersistLaunchSettings) {
+        $launchArgs += @("--ez", "validation.persist", "true")
+    }
+    & $adb @launchArgs *> $null
     $ErrorActionPreference = $previousErrorActionPreference
     Start-Sleep -Seconds 3
 }
@@ -143,6 +192,19 @@ $manifest = [ordered]@{
     createdAt = (Get-Date).ToString("o")
     label = $safeLabel
     package = $Package
+    launch = [ordered]@{
+        skipped = [bool]$SkipLaunch
+        mode = $Mode
+        view = $View
+        roiSource = $RoiSource
+        manualRoi = $ManualRoi
+        amplification = if ($PSBoundParameters.ContainsKey("Amplification")) { $Amplification } else { $null }
+        glPreview = if ($PSBoundParameters.ContainsKey("GlPreview")) { $GlPreview } else { $null }
+        controls = if ($PSBoundParameters.ContainsKey("Controls")) { $Controls } else { $null }
+        clean = if ($PSBoundParameters.ContainsKey("Clean")) { $Clean } else { $null }
+        lockAeAwb = if ($PSBoundParameters.ContainsKey("LockAeAwb")) { $LockAeAwb } else { $null }
+        persistSettings = [bool]$PersistLaunchSettings
+    }
     adb = $adb
     outputDir = (Resolve-Path -LiteralPath $outputDir).Path
     screenRecordSeconds = $ScreenRecordSeconds

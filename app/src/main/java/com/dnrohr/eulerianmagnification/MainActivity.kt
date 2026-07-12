@@ -146,7 +146,10 @@ class MainActivity : ComponentActivity() {
         setContent {
             AppTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    MainScreen(featureAvailability)
+                    MainScreen(
+                        featureAvailability = featureAvailability,
+                        launchOverrides = ValidationLaunchOverrides.fromIntent(intent),
+                    )
                 }
             }
         }
@@ -154,7 +157,10 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-private fun MainScreen(featureAvailability: FeatureAvailability) {
+private fun MainScreen(
+    featureAvailability: FeatureAvailability,
+    launchOverrides: ValidationLaunchOverrides = ValidationLaunchOverrides(),
+) {
     val context = LocalContext.current
     val view = LocalView.current
     val hapticFeedback = LocalHapticFeedback.current
@@ -177,21 +183,31 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
     val validationExecutor = remember { Executors.newSingleThreadExecutor() }
     var analysisSample by remember { mutableStateOf(AnalysisSample()) }
     var analysisSettings by remember {
-        mutableStateOf(persistedAppSettings.analysisSettings)
+        mutableStateOf(
+            persistedAppSettings.analysisSettings.copy(
+                mode = launchOverrides.mode ?: persistedAppSettings.analysisSettings.mode,
+                viewMode = launchOverrides.viewMode ?: persistedAppSettings.analysisSettings.viewMode,
+                amplification = launchOverrides.amplification ?: persistedAppSettings.analysisSettings.amplification,
+            )
+        )
     }
     var recordingSession by remember { mutableStateOf<ProcessedRecordingSession?>(null) }
     var lastRecordingPath by remember { mutableStateOf<String?>(null) }
     var recentRecordings by remember { mutableStateOf(RecordingGallery.listRecent(recordingRootDirectory)) }
     var validationSummary by remember { mutableStateOf<String?>(null) }
     var validationRunning by remember { mutableStateOf(false) }
-    var cameraControlsLocked by remember { mutableStateOf(persistedAppSettings.cameraControlsLocked) }
+    var cameraControlsLocked by remember {
+        mutableStateOf(launchOverrides.cameraControlsLocked ?: persistedAppSettings.cameraControlsLocked)
+    }
     var qualityCuesEnabled by remember { mutableStateOf(persistedAppSettings.qualityCuesEnabled) }
     var recordingOutputMode by remember { mutableStateOf(persistedAppSettings.recordingOutputMode) }
-    var roiSource by remember { mutableStateOf(persistedAppSettings.roiSource) }
-    var showGlDebug by remember { mutableStateOf(persistedAppSettings.requestedGlPreview) }
-    var controlsExpanded by remember { mutableStateOf(false) }
-    var cleanPreview by remember { mutableStateOf(false) }
-    var manualRoi by remember { mutableStateOf<NormalizedRect?>(null) }
+    var roiSource by remember { mutableStateOf(launchOverrides.roiSource ?: persistedAppSettings.roiSource) }
+    var showGlDebug by remember {
+        mutableStateOf(launchOverrides.requestedGlPreview ?: persistedAppSettings.requestedGlPreview)
+    }
+    var controlsExpanded by remember { mutableStateOf(launchOverrides.controlsExpanded ?: false) }
+    var cleanPreview by remember { mutableStateOf(launchOverrides.cleanPreview ?: false) }
+    var manualRoi by remember { mutableStateOf<NormalizedRect?>(launchOverrides.manualRoi) }
     var manualRoiEditing by remember { mutableStateOf(false) }
     var glFrameStats by remember { mutableStateOf(GlFrameStats()) }
     val qualityEvaluator = remember { QualityEvaluator() }
@@ -295,16 +311,18 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
     }
 
     LaunchedEffect(analysisSettings, showGlDebug, cameraControlsLocked, qualityCuesEnabled, recordingOutputMode, roiSource) {
-        appSettingsStore.save(
-            PersistedAppSettings(
-                analysisSettings = analysisSettings,
-                requestedGlPreview = showGlDebug,
-                cameraControlsLocked = cameraControlsLocked,
-                qualityCuesEnabled = qualityCuesEnabled,
-                recordingOutputMode = recordingOutputMode,
-                roiSource = roiSource,
+        if (!launchOverrides.hasAnyOverride || launchOverrides.persistSettings) {
+            appSettingsStore.save(
+                PersistedAppSettings(
+                    analysisSettings = analysisSettings,
+                    requestedGlPreview = showGlDebug,
+                    cameraControlsLocked = cameraControlsLocked,
+                    qualityCuesEnabled = qualityCuesEnabled,
+                    recordingOutputMode = recordingOutputMode,
+                    roiSource = roiSource,
+                )
             )
-        )
+        }
     }
 
     fun handleSample(sample: AnalysisSample): Long {

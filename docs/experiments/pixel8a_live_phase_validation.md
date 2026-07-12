@@ -83,7 +83,15 @@ Failure artifacts:
 Preferred capture command after installing the debug build:
 
 ```powershell
-.\tools\capture_live_validation_evidence.ps1 -Label "live-phase-object" -ScreenRecordSeconds 15
+.\tools\capture_live_validation_evidence.ps1 `
+  -Label "live-phase-object" `
+  -Mode Tremor `
+  -View Split `
+  -RoiSource Manual `
+  -ManualRoi "0.25,0.25,0.75,0.75" `
+  -GlPreview $true `
+  -Controls $true `
+  -ScreenRecordSeconds 15
 ```
 
 Manual ADB fallback:

@@ -58,6 +58,15 @@ Goal: prove that automatic and manual ROI coordinates align with the live previe
 - This supports manual/automatic ROI validation, but does not count as passing
   evidence unless the captured target is visible and inspected.
 
+## Supporting Slice: Scripted Validation Launch
+
+- Added validation launch extras for mode, view, amplification, GL preview, ROI
+  source, AE/AWB lock, controls visibility, and clean preview.
+- The evidence capture script can now launch directly into the desired
+  validation state before collecting artifacts.
+- Launch overrides are non-persistent by default so scripted validation does not
+  rewrite normal saved settings unless `validation.persist` is explicitly set.
+
 ## Done When
 
 - Manual and automatic ROI overlays align with the visible target on device.

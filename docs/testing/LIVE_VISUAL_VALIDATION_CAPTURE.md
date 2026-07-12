@@ -24,9 +24,60 @@ with:
 ```
 
 The script launches the app before capture by default, then waits briefly for
-the preview to settle. Use `-ScreenRecordSeconds 0` for a screenshot/log-only
-smoke capture. Use `-SkipLaunch` only when the operator has already navigated to
-a specific controls state that should not be disturbed.
+the preview to settle. Scripted launches force-stop the package first so ADB
+extras are applied deterministically. Use `-ScreenRecordSeconds 0` for a
+screenshot/log-only smoke capture. Use `-SkipLaunch` only when the operator has
+already navigated to a specific controls state that should not be disturbed.
+
+## Scripted App State
+
+The capture script can launch the app into a specific validation state through
+ADB extras:
+
+```powershell
+.\tools\capture_live_validation_evidence.ps1 `
+  -Label "live-phase-motion" `
+  -Mode Tremor `
+  -View Split `
+  -RoiSource Manual `
+  -ManualRoi "0.25,0.25,0.75,0.75" `
+  -Amplification 18 `
+  -GlPreview $true `
+  -Controls $true `
+  -ScreenRecordSeconds 15
+```
+
+Available launch parameters:
+
+- `-Mode`: `Pulse`, `Breathing`, `Tremor`, or `ObjectVibration`.
+- `-View`: `Raw`, `Amplified`, `Difference`, or `Split`.
+- `-RoiSource`: `Auto`, `FullFrame`, or `Manual`.
+- `-ManualRoi`: optional normalized `left,top,right,bottom` rectangle, for
+  example `0.25,0.25,0.75,0.75`.
+- `-Amplification`: clamped by the app to `1x-30x`.
+- `-GlPreview`: requests GL preview.
+- `-Controls`: opens or hides expanded controls.
+- `-Clean`: opens or hides clean preview.
+- `-LockAeAwb`: requests locked exposure/white balance.
+- `-PersistLaunchSettings`: saves the launch settings. Omit this for normal
+  validation captures so saved user settings are left unchanged.
+
+Requested modes still obey the app's device capability gating. If a mode is not
+available on the current device report, the app falls back to the first available
+mode.
+
+The same extras can be sent manually:
+
+```powershell
+& "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe" shell am start `
+  -n com.dnrohr.eulerianmagnification/.MainActivity `
+  --es validation.mode Tremor `
+  --es validation.view Split `
+  --es validation.roiSource Manual `
+  --es validation.manualRoi 0.25,0.25,0.75,0.75 `
+  --ez validation.glPreview true `
+  --ez validation.controls true
+```
 
 ## When The Evidence Counts
 

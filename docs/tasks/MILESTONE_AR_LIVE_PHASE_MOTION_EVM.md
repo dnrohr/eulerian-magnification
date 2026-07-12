@@ -311,6 +311,15 @@ Goal: bring the recorded Riesz/phase motion renderer into a live-preview path fo
   run, but the AR visual validation checkbox remains open until a moving target
   is visible and inspected.
 
+## Supporting Slice: Scripted Phase Launch
+
+- Added validation launch extras and capture-script parameters for mode, view,
+  ROI source, GL preview, controls visibility, and amplification.
+- The live phase protocol now launches directly into Fast Motion/Split/Manual/GL
+  setup before recording evidence.
+- Overrides are not persisted unless explicitly requested, keeping scripted
+  validation isolated from normal app settings.
+
 ## Next Gate For Manual ROI As Non-Default
 
 - Run the controlled Pixel object-motion setup from
