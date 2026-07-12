@@ -43,6 +43,9 @@ Goal: prove that automatic and manual ROI coordinates align with the live previe
 - Automatic ROI still needs a visible face target in frame.
 - If either validation shows mismatch, update `PreviewRoiMapper` and its tests before marking this milestone complete.
 - This milestone gates Milestone AU, where manual ROI becomes a selectable non-default option. Automatic/default ROI behavior should not become the primary motion path until the mapped region is proven trustworthy on device.
+- The mapper now has regression coverage for ROIs clipped by aspect-fill preview
+  crop. Remaining validation is visual alignment on the Pixel, not uncovered
+  crop arithmetic.
 
 ## Done When
 

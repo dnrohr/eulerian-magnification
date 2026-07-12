@@ -77,6 +77,17 @@ Date: 2026-07-11
   portrait/front-camera sample. Device validation remains required before
   closing the milestone.
 
+## Completed Slice: Cropped ROI Clipping
+
+- Updated `PreviewRoiMapper.mapAnalysisToPreview` to clip mapped ROI rectangles
+  to visible preview bounds after rotation, mirroring, and aspect-fill crop.
+- Added JVM coverage for partially cropped horizontal and vertical aspect-fill
+  cases, preventing negative or greater-than-one preview coordinates from
+  reaching overlay drawing.
+- This strengthens the verified transform used by automatic ROI overlays,
+  manual ROI drawing, and tint overlays. It does not replace the remaining
+  Pixel visible-target validation.
+
 ## Coordinate Assumptions
 
 - `AnalysisSample.roi` is normalized to the `ImageProxy` analysis buffer.
@@ -84,6 +95,8 @@ Date: 2026-07-11
 - The front camera is mirrored horizontally for the user-facing preview.
 - The preview uses aspect-fill behavior, so mapped ROI coordinates can be affected by horizontal or vertical crop.
 - GL preview and CameraX preview currently share the same mapper flags; this still needs device verification.
+- Analysis ROIs that are partly outside the visible aspect-fill preview are
+  clipped to the visible preview bounds for drawing.
 
 ## Done When
 

@@ -27,7 +27,7 @@ object PreviewRoiMapper {
             top = ((oriented.top * viewport.height) + viewport.y) / previewSize.height.toFloat(),
             right = ((oriented.right * viewport.width) + viewport.x) / previewSize.width.toFloat(),
             bottom = ((oriented.bottom * viewport.height) + viewport.y) / previewSize.height.toFloat(),
-        )
+        ).clippedToUnit()
     }
 
     fun mapPreviewToAnalysis(
@@ -91,6 +91,15 @@ object PreviewRoiMapper {
         val normalizedTop = minOf(top, bottom).coerceIn(0.0f, 1.0f)
         val normalizedBottom = maxOf(top, bottom).coerceIn(0.0f, 1.0f)
         return NormalizedRect(normalizedLeft, normalizedTop, normalizedRight, normalizedBottom)
+    }
+
+    private fun NormalizedRect.clippedToUnit(): NormalizedRect {
+        return NormalizedRect(
+            left = left.coerceIn(0.0f, 1.0f),
+            top = top.coerceIn(0.0f, 1.0f),
+            right = right.coerceIn(0.0f, 1.0f),
+            bottom = bottom.coerceIn(0.0f, 1.0f),
+        ).normalized()
     }
 
     private fun orientedContentSize(size: PreviewSize, rotationDegrees: Int): PreviewSize {

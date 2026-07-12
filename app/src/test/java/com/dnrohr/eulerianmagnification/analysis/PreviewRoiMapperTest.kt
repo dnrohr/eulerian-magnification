@@ -57,6 +57,32 @@ class PreviewRoiMapperTest {
     }
 
     @Test
+    fun clipsRoiAtHorizontalAspectFillPreviewBounds() {
+        val mapped = PreviewRoiMapper.mapAnalysisToPreview(
+            roi = NormalizedRect(0.0f, 0.2f, 0.2f, 0.4f),
+            frameSize = PreviewSize(640, 480),
+            previewSize = PreviewSize(480, 480),
+            rotationDegrees = 0,
+            mirrorHorizontally = false,
+        )
+
+        assertRect(0.0f, 0.2f, 0.1f, 0.4f, mapped, tolerance = 0.0002f)
+    }
+
+    @Test
+    fun clipsRoiAtVerticalAspectFillPreviewBounds() {
+        val mapped = PreviewRoiMapper.mapAnalysisToPreview(
+            roi = NormalizedRect(0.2f, 0.0f, 0.4f, 0.4f),
+            frameSize = PreviewSize(480, 640),
+            previewSize = PreviewSize(640, 480),
+            rotationDegrees = 0,
+            mirrorHorizontally = false,
+        )
+
+        assertRect(0.2f, 0.0f, 0.4f, 0.3223f, mapped, tolerance = 0.0003f)
+    }
+
+    @Test
     fun mapsPreviewSelectionBackToAnalysisCoordinates() {
         val mapped = PreviewRoiMapper.mapPreviewToAnalysis(
             roi = NormalizedRect(0.7f, 0.2f, 0.9f, 0.4f),
