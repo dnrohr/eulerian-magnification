@@ -1,5 +1,6 @@
 package com.dnrohr.eulerianmagnification.gl
 
+import com.dnrohr.eulerianmagnification.LivePhasePreviewDecision
 import com.dnrohr.eulerianmagnification.analysis.AnalysisSample
 import com.dnrohr.eulerianmagnification.analysis.AnalysisSettings
 import com.dnrohr.eulerianmagnification.analysis.MagnificationMode
@@ -51,6 +52,7 @@ class ColorMagnificationPassTest {
         assertEquals(0.7, uniforms.lowCutHz, 0.0)
         assertEquals(3.0, uniforms.highCutHz, 0.0)
         assertEquals(LivePyramidReconstructionProfile.PulseColor, uniforms.reconstructionProfile)
+        assertFalse(uniforms.livePhaseDiagnostics.requested)
     }
 
     @Test
@@ -144,5 +146,26 @@ class ColorMagnificationPassTest {
         )
 
         assertEquals(0L, uniforms.presentationTimestampNanos)
+    }
+
+    @Test
+    fun carriesLivePhaseDiagnosticsIntoUniforms() {
+        val decision = LivePhasePreviewDecision(
+            useLivePhase = true,
+            diagnostics = LivePhaseDiagnostics(
+                requested = true,
+                warmupStatus = LivePhaseWarmupStatus.Warming,
+                processingSize = GlTextureSize(160, 120),
+            ),
+        )
+
+        val uniforms = ColorMagnificationParameters().from(
+            sample = AnalysisSample(),
+            settings = AnalysisSettings(mode = MagnificationMode.Tremor),
+            livePhasePreviewDecision = decision,
+        )
+
+        assertTrue(uniforms.livePhaseDiagnostics.requested)
+        assertEquals("phase: 160x120 / phase warmup: filling temporal state / amplitude unknown", uniforms.livePhaseDiagnostics.summary)
     }
 }

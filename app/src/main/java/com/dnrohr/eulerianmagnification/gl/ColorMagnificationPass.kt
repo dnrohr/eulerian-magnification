@@ -1,5 +1,6 @@
 package com.dnrohr.eulerianmagnification.gl
 
+import com.dnrohr.eulerianmagnification.LivePhasePreviewDecision
 import com.dnrohr.eulerianmagnification.analysis.AnalysisSample
 import com.dnrohr.eulerianmagnification.analysis.AnalysisSettings
 import com.dnrohr.eulerianmagnification.analysis.NormalizedRect
@@ -62,6 +63,7 @@ class ColorMagnificationParameters(
         settings: AnalysisSettings,
         fullFrameMode: Boolean = false,
         presentationTimestampNanos: Long = sample.frameTimestampNanos.coerceAtLeast(0L),
+        livePhasePreviewDecision: LivePhasePreviewDecision? = null,
     ): ColorMagnificationUniforms {
         val signal = artifactSuppressor.amplify(sample.bandpassedGreen, settings.amplification)
         val amplifiedSignal = if (settings.viewMode == ViewMode.Raw) {
@@ -83,6 +85,7 @@ class ColorMagnificationParameters(
             lowCutHz = settings.lowCutHz,
             highCutHz = settings.highCutHz,
             reconstructionProfile = LivePyramidReconstructionProfile.forMode(settings.mode),
+            livePhaseDiagnostics = livePhasePreviewDecision?.diagnostics ?: LivePhaseDiagnostics(requested = false),
         )
     }
 }
@@ -99,4 +102,5 @@ data class ColorMagnificationUniforms(
     val lowCutHz: Double = 0.7,
     val highCutHz: Double = 3.0,
     val reconstructionProfile: LivePyramidReconstructionProfile = LivePyramidReconstructionProfile.PulseColor,
+    val livePhaseDiagnostics: LivePhaseDiagnostics = LivePhaseDiagnostics(requested = false),
 )

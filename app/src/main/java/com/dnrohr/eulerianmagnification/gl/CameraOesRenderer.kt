@@ -199,7 +199,14 @@ class CameraOesRenderer(
         emitProcessedFrame()
         drawOutputToScreen()
         providePendingSurfaceIfReady()
-        onStats(timer.endFrame(System.nanoTime(), renderPath, reconstructionDiagnostics))
+        onStats(
+            timer.endFrame(
+                timestampNanos = System.nanoTime(),
+                renderPath = renderPath,
+                reconstructionDiagnostics = reconstructionDiagnostics,
+                phaseDiagnostics = colorUniforms.livePhaseDiagnostics,
+            )
+        )
     }
 
     fun release() {

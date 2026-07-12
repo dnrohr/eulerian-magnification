@@ -14,6 +14,7 @@ class GlFrameTimer(private val windowSize: Int = 60) {
         timestampNanos: Long,
         renderPath: GlRenderPath = GlRenderPath.Unknown,
         reconstructionDiagnostics: GlReconstructionDiagnostics = GlReconstructionDiagnostics(),
+        phaseDiagnostics: LivePhaseDiagnostics = LivePhaseDiagnostics(requested = false),
     ): GlFrameStats {
         val start = frameStartNanos
         if (start != null && timestampNanos >= start) {
@@ -23,17 +24,19 @@ class GlFrameTimer(private val windowSize: Int = 60) {
             }
         }
         frameStartNanos = null
-        return stats(renderPath, reconstructionDiagnostics)
+        return stats(renderPath, reconstructionDiagnostics, phaseDiagnostics)
     }
 
     fun stats(
         renderPath: GlRenderPath = GlRenderPath.Unknown,
         reconstructionDiagnostics: GlReconstructionDiagnostics = GlReconstructionDiagnostics(),
+        phaseDiagnostics: LivePhaseDiagnostics = LivePhaseDiagnostics(requested = false),
     ): GlFrameStats {
         if (frameDurationsNanos.isEmpty()) {
             return GlFrameStats(
                 renderPath = renderPath,
                 reconstructionDiagnostics = reconstructionDiagnostics,
+                phaseDiagnostics = phaseDiagnostics,
             )
         }
         val averageNanos = frameDurationsNanos.average()
@@ -43,6 +46,7 @@ class GlFrameTimer(private val windowSize: Int = 60) {
             sampleCount = frameDurationsNanos.size,
             renderPath = renderPath,
             reconstructionDiagnostics = reconstructionDiagnostics,
+            phaseDiagnostics = phaseDiagnostics,
         )
     }
 
@@ -58,6 +62,7 @@ data class GlFrameStats(
     val sampleCount: Int = 0,
     val renderPath: GlRenderPath = GlRenderPath.Unknown,
     val reconstructionDiagnostics: GlReconstructionDiagnostics = GlReconstructionDiagnostics(),
+    val phaseDiagnostics: LivePhaseDiagnostics = LivePhaseDiagnostics(requested = false),
 )
 
 enum class GlRenderPath(val label: String) {

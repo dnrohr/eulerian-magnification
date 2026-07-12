@@ -50,6 +50,25 @@ class GlFrameTimerTest {
     }
 
     @Test
+    fun carriesLivePhaseDiagnosticsInStats() {
+        val timer = GlFrameTimer()
+        val phaseDiagnostics = LivePhaseDiagnostics(
+            requested = true,
+            warmupStatus = LivePhaseWarmupStatus.Ready,
+            processingSize = GlTextureSize(160, 120),
+        )
+
+        timer.beginFrame(0L)
+        val stats = timer.endFrame(
+            timestampNanos = 16_000_000L,
+            phaseDiagnostics = phaseDiagnostics,
+        )
+
+        assertEquals(phaseDiagnostics, stats.phaseDiagnostics)
+        assertEquals("phase: 160x120 / phase ready / amplitude unknown", stats.phaseDiagnostics.summary)
+    }
+
+    @Test
     fun ignoresInvalidFrameEndBeforeStart() {
         val timer = GlFrameTimer()
 

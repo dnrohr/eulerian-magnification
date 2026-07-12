@@ -108,3 +108,17 @@ Goal: bring the recorded Riesz/phase motion renderer into a live-preview path fo
 - Runtime renderer wiring remains open.
 - Installed the debug build on the Pixel 8a after focused shader coverage and
   full JVM/build verification.
+
+## Completed Slice: Live Phase Diagnostics Stats Path
+
+- Extended `ColorMagnificationUniforms` to carry `LivePhaseDiagnostics`.
+- `ColorMagnificationParameters` can now accept a `LivePhasePreviewDecision`
+  and preserve its diagnostics for the GL renderer.
+- `GlFrameStats` now carries live phase diagnostics alongside live linear
+  reconstruction diagnostics.
+- `CameraOesRenderer` emits the current live phase diagnostics in frame stats,
+  giving the future UI/debug metadata a real renderer stats path.
+- Added JVM coverage for uniform mapping and frame-stat propagation.
+- Runtime phase rendering and UI display remain open.
+- Installed the debug build on the Pixel 8a after focused stats coverage and
+  full JVM/build verification.
