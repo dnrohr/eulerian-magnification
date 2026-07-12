@@ -46,6 +46,17 @@ Goal: add a clear ROI source selector and make the normal motion experience star
 - Remaining visible-target ROI validation stays tracked under Milestones M/U,
   and controlled motion visual validation stays tracked under AR.
 
+## Follow-up Slice: Camera FPS Stabilization
+
+- Pixel observation: the live preview stayed responsive, but the front camera
+  negotiated about 24 FPS, making full-frame paths look close to frozen and
+  causing brittle Low FPS/full-frame fallback behavior.
+- Preview and analysis use cases now request a 30 FPS Camera2 AE target range.
+- Quality and live GL timing policies now tolerate a normal 24 FPS camera
+  cadence while still warning below 23.5 FPS.
+- Full-frame ROI remains selectable, not default, until controlled visual
+  validation proves it is a reliable default.
+
 ## Done When
 
 - First launch and Reset Settings do not require the user to draw a manual ROI for the default motion path.

@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.os.PowerManager
 import android.opengl.GLSurfaceView
 import android.provider.OpenableColumns
+import android.util.Range
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -629,6 +630,8 @@ private fun CameraGlPreview(
 
                         applyPreviewCameraLocks(previewBuilder, cameraControlsLocked)
                         applyAnalysisCameraLocks(analysisBuilder, cameraControlsLocked)
+                        applyPreviewTargetFps(previewBuilder)
+                        applyAnalysisTargetFps(analysisBuilder)
 
                         val preview = previewBuilder.build().also {
                             it.setSurfaceProvider { request ->
@@ -946,6 +949,8 @@ private fun CameraPreview(
 
                         applyPreviewCameraLocks(previewBuilder, cameraControlsLocked)
                         applyAnalysisCameraLocks(analysisBuilder, cameraControlsLocked)
+                        applyPreviewTargetFps(previewBuilder)
+                        applyAnalysisTargetFps(analysisBuilder)
 
                         val preview = previewBuilder.build().also {
                             it.surfaceProvider = surfaceProvider
@@ -979,6 +984,18 @@ private fun CameraPreview(
 }
 
 @androidx.annotation.OptIn(ExperimentalCamera2Interop::class)
+private fun applyPreviewTargetFps(builder: Preview.Builder) {
+    Camera2Interop.Extender(builder)
+        .setCaptureRequestOption(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, TARGET_FPS_RANGE)
+}
+
+@androidx.annotation.OptIn(ExperimentalCamera2Interop::class)
+private fun applyAnalysisTargetFps(builder: ImageAnalysis.Builder) {
+    Camera2Interop.Extender(builder)
+        .setCaptureRequestOption(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, TARGET_FPS_RANGE)
+}
+
+@androidx.annotation.OptIn(ExperimentalCamera2Interop::class)
 private fun applyPreviewCameraLocks(
     builder: Preview.Builder,
     locked: Boolean,
@@ -988,6 +1005,8 @@ private fun applyPreviewCameraLocks(
         .setCaptureRequestOption(CaptureRequest.CONTROL_AE_LOCK, true)
         .setCaptureRequestOption(CaptureRequest.CONTROL_AWB_LOCK, true)
 }
+
+private val TARGET_FPS_RANGE = Range(30, 30)
 
 @androidx.annotation.OptIn(ExperimentalCamera2Interop::class)
 private fun applyAnalysisCameraLocks(

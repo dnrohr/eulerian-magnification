@@ -86,6 +86,24 @@ class LiveEvmPreviewPolicyTest {
     }
 
     @Test
+    fun keepsFullFrameColorEnabledForTwentyFourFpsCameraCadence() {
+        val decision = LiveEvmPreviewPolicy.decide(
+            settings = AnalysisSettings(
+                mode = MagnificationMode.Pulse,
+                viewMode = ViewMode.Amplified,
+            ),
+            usingGlPreview = true,
+            glFrameStats = GlFrameStats(
+                averageFrameMillis = 41.0,
+                averageFps = 24.0,
+                sampleCount = 60,
+            ),
+        )
+
+        assertTrue(decision.fullFrameColorPreview)
+    }
+
+    @Test
     fun enablesFullFrameColorForPulseDifferenceOnHealthyGlPreview() {
         val decision = LiveEvmPreviewPolicy.decide(
             settings = AnalysisSettings(

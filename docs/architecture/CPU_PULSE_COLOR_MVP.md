@@ -2,7 +2,7 @@
 
 ## Current Slice
 
-The app now binds CameraX `Preview` and `ImageAnalysis` together. Analysis targets a 640x480 stream through CameraX's `ResolutionSelector` and keeps only the latest frame to avoid backlog.
+The app now binds CameraX `Preview` and `ImageAnalysis` together. Analysis targets a 640x480 stream through CameraX's `ResolutionSelector` and keeps only the latest frame to avoid backlog. Both preview and analysis request a 30 FPS Camera2 AE target range, while quality policy tolerates a steady 24 FPS camera cadence because Pixel front-camera streams can settle there under normal conditions.
 
 Every tenth analyzed frame is sent to ML Kit Face Detection in fast mode. The largest detected face becomes the source for a forehead/upper-cheek ROI. Until a face is available, the analyzer samples a centered fallback ROI so the signal path can still be debugged.
 

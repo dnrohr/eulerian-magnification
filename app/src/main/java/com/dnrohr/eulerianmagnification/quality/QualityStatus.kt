@@ -15,7 +15,7 @@ class QualityEvaluator {
         return buildList {
             if (sample.roi == null) add(QualityStatus.FaceMissing)
             if (sample.averageGreen in 0.01..LOW_LIGHT_GREEN_THRESHOLD) add(QualityStatus.TooDark)
-            if (sample.analysisFps in 0.01..LOW_FPS_THRESHOLD) add(QualityStatus.LowFps)
+            if (sample.analysisFps in 0.01..<LOW_FPS_THRESHOLD) add(QualityStatus.LowFps)
             if (!sample.timestampMonotonic) add(QualityStatus.TimingUnstable)
             if (lightingFlickerLikely) add(QualityStatus.LightingFlicker)
             if (lightingUnstable) add(QualityStatus.LightingUnstable)
@@ -34,7 +34,7 @@ class QualityEvaluator {
 
     companion object {
         private const val LOW_LIGHT_GREEN_THRESHOLD = 45.0
-        private const val LOW_FPS_THRESHOLD = 24.0
+        private const val LOW_FPS_THRESHOLD = 23.5
         private const val WEAK_SIGNAL_THRESHOLD = 0.015
         private const val CAMERA_MOTION_THRESHOLD = 0.018f
         private const val HIGH_FREQUENCY_MOTION_THRESHOLD = 0.008f

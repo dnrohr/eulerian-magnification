@@ -108,7 +108,7 @@ object LivePhasePreviewPolicy {
     }
 
     private const val MIN_SETTLED_SAMPLES = 10
-    private const val MIN_GL_FPS = 24.0
+    private const val MIN_GL_FPS = 23.5
     private const val MAX_GL_FRAME_MILLIS = 42.0
 }
 

@@ -44,6 +44,36 @@ class QualityEvaluatorTest {
     }
 
     @Test
+    fun doesNotWarnLowFpsForNormalTwentyFourFpsCameraCadence() {
+        val statuses = QualityEvaluator().evaluate(
+            AnalysisSample(
+                roi = NormalizedRect(0.1f, 0.1f, 0.3f, 0.3f),
+                averageGreen = 120.0,
+                bandpassedGreen = 0.2,
+                analysisFps = 24.0,
+                timestampMonotonic = true,
+            ),
+        )
+
+        assertTrue(QualityStatus.LowFps !in statuses)
+    }
+
+    @Test
+    fun warnsLowFpsBelowTwentyFourFpsCameraCadence() {
+        val statuses = QualityEvaluator().evaluate(
+            AnalysisSample(
+                roi = NormalizedRect(0.1f, 0.1f, 0.3f, 0.3f),
+                averageGreen = 120.0,
+                bandpassedGreen = 0.2,
+                analysisFps = 23.0,
+                timestampMonotonic = true,
+            ),
+        )
+
+        assertTrue(QualityStatus.LowFps in statuses)
+    }
+
+    @Test
     fun detectsWeakSignalWhenRoiAndFramesAreAvailable() {
         val statuses = QualityEvaluator().evaluate(
             AnalysisSample(

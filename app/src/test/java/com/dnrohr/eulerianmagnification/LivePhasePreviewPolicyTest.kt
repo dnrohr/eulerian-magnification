@@ -125,6 +125,23 @@ class LivePhasePreviewPolicyTest {
     }
 
     @Test
+    fun acceptsSettledTwentyFourFpsCameraCadence() {
+        val decision = LivePhasePreviewPolicy.decide(
+            settings = AnalysisSettings(mode = MagnificationMode.Tremor),
+            usingGlPreview = true,
+            glFrameStats = GlFrameStats(
+                averageFrameMillis = 41.0,
+                averageFps = 24.0,
+                sampleCount = 60,
+            ),
+            surfaceSize = GlTextureSize(1080, 2400),
+            phaseRoi = roi(),
+        )
+
+        assertTrue(decision.useLivePhase)
+    }
+
+    @Test
     fun allowsTimingToSettleBeforeRejectingPhase() {
         val decision = LivePhasePreviewPolicy.decide(
             settings = AnalysisSettings(mode = MagnificationMode.Tremor),
