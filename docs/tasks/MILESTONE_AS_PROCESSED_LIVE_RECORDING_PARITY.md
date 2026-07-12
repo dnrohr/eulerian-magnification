@@ -1,6 +1,6 @@
 # Milestone AS - Processed Live Recording Parity
 
-Status: Planned
+Status: In progress
 
 Importance: High. True feature parity needs the exported MP4 to match the processed preview, not raw camera video or UI-only overlays.
 
@@ -13,7 +13,7 @@ Goal: ensure live preview output and recorded output share the same reconstructe
 - [x] Add an annotated-output option for evidence capture when validation overlays are useful.
 - [x] Record metadata for renderer path, fallback state, pyramid settings, temporal warmup, dropped frames, and quality diagnostics.
 - [ ] Verify that recorded frames match preview mode for Amplified, Difference, and Split views.
-- [ ] Add a device smoke test that records a short processed clip and validates that the file is playable and nonblank.
+- [x] Add a device smoke test that records a short processed clip and validates that the file is playable and nonblank.
 
 ## Completed Slice: Renderer Diagnostics Metadata
 
@@ -39,6 +39,18 @@ Goal: ensure live preview output and recorded output share the same reconstructe
   so exports can distinguish clean preview captures from annotated evidence.
 - Added JVM coverage for output-mode persistence, output policy, and recording
   metadata.
+
+## Completed Slice: Processed Session Device Smoke
+
+- Added a Pixel/instrumented smoke test that creates a `ProcessedRecordingSession`,
+  records five clean GL processed frames through `GlProcessedMp4Recorder`, stops
+  the session, and validates the generated `debug_processed.mp4` with
+  `EncodedOutputValidator`.
+- The test also checks the MP4 is larger than a tiny placeholder and verifies
+  `metadata.json` records `clean_preview`, the debug video path, and five
+  analysis samples.
+- Verified on connected Pixel 8a with:
+  `.\gradlew.bat connectedDebugAndroidTest "-Pandroid.testInstrumentationRunnerArguments.class=com.dnrohr.eulerianmagnification.recording.ProcessedRecordingSessionInstrumentedTest"`
 
 ## Done When
 

@@ -74,6 +74,12 @@ This is not the final camera-preview MP4 yet. It proves the app-owned MP4 encode
 
 An `EncodedOutputValidator` now exists as the first local gate for future MP4 work. It verifies file presence, non-empty output, `.mp4` naming, and top-level `ftyp`, `moov`, and `mdat` atoms. Once `MediaCodec` output exists, this should grow into track-level validation.
 
+The processed-session smoke test exercises the recording stack at the session
+level: it records several clean GL processed frames through
+`ProcessedRecordingSession`, validates the generated MP4 container, checks the
+file is not merely a tiny placeholder, and confirms the metadata sidecar points
+at the video and reports the clean-preview output kind.
+
 ## Next Work
 
 - Add deeper MP4 validation for track duration and sample timestamps.
