@@ -124,12 +124,16 @@ function Get-GitMetadata {
     $shortCommit = Get-GitValue -Arguments @("rev-parse", "--short", "HEAD")
     $branch = Get-GitValue -Arguments @("branch", "--show-current")
     $status = Get-GitValue -Arguments @("status", "--short")
+    $statusLines = @()
+    if (-not [string]::IsNullOrWhiteSpace($status)) {
+        $statusLines = @($status -split "`r?`n")
+    }
     return [ordered]@{
         commit = $commit
         shortCommit = $shortCommit
         branch = $branch
         dirty = -not [string]::IsNullOrWhiteSpace($status)
-        statusShort = if ([string]::IsNullOrWhiteSpace($status)) { @() } else { $status -split "`r?`n" }
+        statusShort = $statusLines
     }
 }
 
