@@ -1,5 +1,7 @@
 package com.dnrohr.eulerianmagnification.analysis
 
+import com.dnrohr.eulerianmagnification.LivePhasePreviewDecision
+
 data class VisualizationModel(
     val signalSource: SignalSource,
     val renderer: RendererKind,
@@ -28,20 +30,21 @@ data class VisualizationModel(
         fun live(
             settings: AnalysisSettings,
             fullFrameColorPreview: Boolean,
+            livePhasePreviewDecision: LivePhasePreviewDecision? = null,
         ): VisualizationModel {
             val renderer = when (settings.viewMode) {
                 ViewMode.Raw -> RendererKind.RawPassthrough
-                ViewMode.Difference -> if (fullFrameColorPreview) {
-                    RendererKind.LiveLinearEvmReconstruction
-                } else {
-                    RendererKind.RoiSignalDiagnostic
+                ViewMode.Difference -> when {
+                    livePhasePreviewDecision?.useLivePhase == true -> RendererKind.LivePhaseMotion
+                    fullFrameColorPreview -> RendererKind.LiveLinearEvmReconstruction
+                    else -> RendererKind.RoiSignalDiagnostic
                 }
                 ViewMode.Amplified,
                 ViewMode.Split,
-                -> if (fullFrameColorPreview) {
-                    RendererKind.LiveLinearEvmReconstruction
-                } else {
-                    RendererKind.LiveRoiSignalTint
+                -> when {
+                    livePhasePreviewDecision?.useLivePhase == true -> RendererKind.LivePhaseMotion
+                    fullFrameColorPreview -> RendererKind.LiveLinearEvmReconstruction
+                    else -> RendererKind.LiveRoiSignalTint
                 }
             }
             return VisualizationModel(
@@ -69,6 +72,7 @@ data class VisualizationModel(
                 ViewMode.Raw -> VisualizationStyle.Raw
                 ViewMode.Difference -> when (renderer) {
                     RendererKind.LiveLinearEvmReconstruction,
+                    RendererKind.LivePhaseMotion,
                     RendererKind.RecordedLinearEvm,
                     RendererKind.RecordedRieszPhaseMotion,
                     -> VisualizationStyle.FullFrameDifference
@@ -79,6 +83,7 @@ data class VisualizationModel(
                     RendererKind.RecordedLinearEvm,
                     RendererKind.RecordedRieszPhaseMotion,
                     RendererKind.LiveLinearEvmReconstruction,
+                    RendererKind.LivePhaseMotion,
                     -> VisualizationStyle.FullFrameAmplified
                     else -> VisualizationStyle.RoiSignalOverlay
                 }
@@ -105,6 +110,7 @@ enum class RendererKind(
     RoiSignalDiagnostic("roi_signal_diagnostic", "ROI signal diagnostic"),
     LiveRoiSignalTint("live_roi_signal_tint", "Live ROI signal tint"),
     LiveLinearEvmReconstruction("live_linear_evm_reconstruction", "Live linear EVM reconstruction"),
+    LivePhaseMotion("live_phase_motion", "Live phase motion reconstruction"),
     RecordedLinearEvm("recorded_linear_evm", "Recorded full-frame linear EVM"),
     RecordedRieszPhaseMotion("recorded_riesz_phase_motion", "Recorded Riesz phase motion"),
 }

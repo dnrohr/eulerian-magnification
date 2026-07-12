@@ -272,7 +272,7 @@ class CameraOesRenderer(
         }
         renderCameraTextureToRgb()
         val reconstructionRequested = liveReconstructionRequested(colorUniforms)
-        val renderPath = if (renderLivePyramidReconstruction()) {
+        val reconstructionRenderPath = if (renderLivePyramidReconstruction()) {
             GlRenderPath.LiveReconstruction
         } else {
             renderColorMagnification()
@@ -283,6 +283,11 @@ class CameraOesRenderer(
             }
         }
         val phaseDiagnostics = prepareLivePhaseRoiState(colorUniforms, rgbRenderTarget, processedRenderTarget)
+        val renderPath = if (phaseDiagnostics.requested && phaseDiagnostics.fallbackReason == null) {
+            GlRenderPath.LivePhaseMotion
+        } else {
+            reconstructionRenderPath
+        }
         emitProcessedFrame()
         drawOutputToScreen()
         providePendingSurfaceIfReady()

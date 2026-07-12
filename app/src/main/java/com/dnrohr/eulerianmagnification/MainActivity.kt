@@ -487,6 +487,7 @@ private fun MainScreen(
             featureAvailability = featureAvailability,
             glFrameStats = glFrameStats,
             liveEvmPreviewDecision = liveEvmPreviewDecision,
+            livePhasePreviewDecision = livePhasePreviewDecision,
             isRecording = recordingSession != null,
             recordingElapsedMillis = recordingSession?.elapsedMillis ?: 0L,
             lastRecordingPath = lastRecordingPath,
@@ -546,6 +547,7 @@ private fun MainScreen(
                             visualizationModel = VisualizationModel.live(
                                 settings = analysisSettings,
                                 fullFrameColorPreview = liveEvmPreviewDecision.fullFrameColorPreview,
+                                livePhasePreviewDecision = livePhasePreviewDecision,
                             ),
                         )
                         lastRecordingPath = output.absolutePath
@@ -1108,6 +1110,7 @@ private fun StatusOverlay(
     featureAvailability: FeatureAvailability,
     glFrameStats: GlFrameStats,
     liveEvmPreviewDecision: LiveEvmPreviewDecision,
+    livePhasePreviewDecision: LivePhasePreviewDecision,
     isRecording: Boolean,
     recordingElapsedMillis: Long,
     lastRecordingPath: String?,
@@ -1190,6 +1193,7 @@ private fun StatusOverlay(
         val liveVisualizationModel = VisualizationModel.live(
             settings = settings,
             fullFrameColorPreview = liveEvmPreviewDecision.fullFrameColorPreview,
+            livePhasePreviewDecision = livePhasePreviewDecision,
         )
         Text(
             text = "Signal: ${liveVisualizationModel.signalSource.label}",

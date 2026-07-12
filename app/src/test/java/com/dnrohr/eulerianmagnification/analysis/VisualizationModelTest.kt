@@ -1,5 +1,10 @@
 package com.dnrohr.eulerianmagnification.analysis
 
+import com.dnrohr.eulerianmagnification.LivePhasePreviewDecision
+import com.dnrohr.eulerianmagnification.gl.GlTextureSize
+import com.dnrohr.eulerianmagnification.gl.LivePhaseDiagnostics
+import com.dnrohr.eulerianmagnification.gl.LivePhaseRoiPlan
+import com.dnrohr.eulerianmagnification.gl.LivePhaseWarmupStatus
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -95,5 +100,52 @@ class VisualizationModelTest {
 
         assertEquals(RendererKind.LiveLinearEvmReconstruction, model.renderer)
         assertEquals(VisualizationStyle.FullFrameDifference, model.visualizationStyle)
+    }
+
+    @Test
+    fun liveMotionSplitUsesPhaseRendererWhenPhaseIsEnabled() {
+        val model = VisualizationModel.live(
+            settings = AnalysisSettings(
+                mode = MagnificationMode.Tremor,
+                viewMode = ViewMode.Split,
+            ),
+            fullFrameColorPreview = false,
+            livePhasePreviewDecision = enabledPhaseDecision(),
+        )
+
+        assertEquals(SignalSource.RoiMotionEstimate, model.signalSource)
+        assertEquals(RendererKind.LivePhaseMotion, model.renderer)
+        assertEquals(VisualizationStyle.SplitComparison, model.visualizationStyle)
+    }
+
+    @Test
+    fun liveMotionDifferenceUsesFullFrameDifferenceWhenPhaseIsEnabled() {
+        val model = VisualizationModel.live(
+            settings = AnalysisSettings(
+                mode = MagnificationMode.Tremor,
+                viewMode = ViewMode.Difference,
+            ),
+            fullFrameColorPreview = false,
+            livePhasePreviewDecision = enabledPhaseDecision(),
+        )
+
+        assertEquals(RendererKind.LivePhaseMotion, model.renderer)
+        assertEquals(VisualizationStyle.FullFrameDifference, model.visualizationStyle)
+    }
+
+    private fun enabledPhaseDecision(): LivePhasePreviewDecision {
+        val plan = LivePhaseRoiPlan(
+            surfaceSize = GlTextureSize(1080, 2400),
+            roi = NormalizedRect(0.25f, 0.25f, 0.75f, 0.75f),
+        )
+        return LivePhasePreviewDecision(
+            useLivePhase = true,
+            roiPlan = plan,
+            diagnostics = LivePhaseDiagnostics(
+                requested = true,
+                warmupStatus = LivePhaseWarmupStatus.Ready,
+                processingSize = plan.processingSize,
+            ),
+        )
     }
 }

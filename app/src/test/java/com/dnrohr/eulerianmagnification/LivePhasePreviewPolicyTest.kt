@@ -92,7 +92,7 @@ class LivePhasePreviewPolicyTest {
     }
 
     @Test
-    fun fullFrameSourceCanBuildPhasePlanWithoutManualRoi() {
+    fun fullFrameSourceDoesNotEnableLivePhaseUntilValidated() {
         val decision = LivePhasePreviewPolicy.decide(
             settings = AnalysisSettings(mode = MagnificationMode.ObjectVibration),
             usingGlPreview = true,
@@ -102,8 +102,8 @@ class LivePhasePreviewPolicyTest {
             roiSource = RoiSource.FullFrame,
         )
 
-        assertTrue(decision.useLivePhase)
-        assertEquals(GlTextureSize(144, 320), decision.roiPlan!!.processingSize)
+        assertFalse(decision.useLivePhase)
+        assertEquals(LivePhaseFallbackReason.FullFrameUnsupported, decision.diagnostics.fallbackReason)
     }
 
     @Test

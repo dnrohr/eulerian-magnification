@@ -75,6 +75,7 @@ enum class GlRenderPath(val label: String) {
     ColorBridge("GL color bridge"),
     LiveReconstruction("Live reconstruction"),
     LiveReconstructionFallback("Live reconstruction fallback"),
+    LivePhaseMotion("Live phase motion"),
 }
 
 data class GlReconstructionDiagnostics(

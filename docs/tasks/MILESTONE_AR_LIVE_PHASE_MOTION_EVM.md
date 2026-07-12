@@ -320,6 +320,24 @@ Goal: bring the recorded Riesz/phase motion renderer into a live-preview path fo
 - Overrides are not persisted unless explicitly requested, keeping scripted
   validation isolated from normal app settings.
 
+## Supporting Slice: Full-Frame Phase Guard
+
+- Full-frame ROI no longer enables live phase motion preview. It now reports
+  `phase fallback: full-frame phase not yet supported` until a validated
+  reduced/full-frame phase renderer exists.
+- GL frame diagnostics now label the active live phase render path when bounded
+  ROI phase rendering is actually running.
+- Pixel 8a evidence showed the camera HAL still delivering about 30 FPS in
+  full-frame mode, while expanded controls had poor UI frame pacing: 91.67%
+  janky frames with a 48 ms median frame time.
+- Hiding controls improved the same full-frame launch to 59.57% janky frames
+  with a 22 ms median frame time, so overlay cost remains a separate follow-up
+  from live phase eligibility.
+- Evidence bundles:
+  `sample-videos/exports/live-validation/20260712-155744-full-frame-phase-disabled`
+  and
+  `sample-videos/exports/live-validation/20260712-155819-full-frame-hidden-controls-fps`.
+
 ## Next Gate For Manual ROI As Non-Default
 
 - Run the controlled Pixel object-motion setup from

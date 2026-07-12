@@ -6,6 +6,7 @@ enum class LivePhaseFallbackReason(
     NotRequested("not requested"),
     MissingManualRoi("manual ROI required"),
     MissingAutoRoi("waiting for ROI"),
+    FullFrameUnsupported("full-frame phase not yet supported"),
     UnsupportedGl("GL phase resources unavailable"),
     MemoryBudgetExceeded("phase ROI exceeds memory budget"),
     TimingUnhealthy("preview timing unhealthy"),

@@ -39,6 +39,12 @@ object LivePhasePreviewPolicy {
                 fallbackReason = LivePhaseFallbackReason.UnsupportedGl,
             )
         }
+        if (roiSource == RoiSource.FullFrame) {
+            return decision(
+                requested = true,
+                fallbackReason = LivePhaseFallbackReason.FullFrameUnsupported,
+            )
+        }
         if (phaseRoi == null) {
             return decision(
                 requested = true,
