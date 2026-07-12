@@ -92,6 +92,17 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   evidence summaries continue to record detailed thermal sensor state after
   capture.
 
+## Supporting Slice: Thermal Preflight Evidence
+
+- Live validation captures now record `thermalservice_preflight.txt` before
+  clearing logcat or launching the app.
+- Capture manifests and summaries expose `thermalPreflight`, so a low-FPS or
+  frozen-preview run can be rejected when the phone was already throttled before
+  the app started.
+- Preflight thermal warnings are advisory for runtime smoke, but `critical` or
+  worse preflight state should block any conclusion about full-frame FPS,
+  apparent camera freeze, or visual parity until the phone cools.
+
 ## Supporting Slice: Visual Review Metadata
 
 - Live validation summaries now carry watched-run visual-review metadata:

@@ -28,6 +28,7 @@ param(
     [Nullable[bool]]$TargetVisible = $null,
     [Nullable[bool]]$VisualValidated = $null,
     [string]$OperatorNotes = "",
+    [int]$WarnPreflightThermalStatus = 2,
     [switch]$PreserveLogcat,
     [switch]$PersistLaunchSettings,
     [switch]$Summarize
@@ -143,6 +144,56 @@ function Get-GitMetadata {
     }
 }
 
+function Thermal-StatusLabel {
+    param([Nullable[int]]$Status)
+    switch ($Status) {
+        0 { "none" }
+        1 { "light" }
+        2 { "moderate" }
+        3 { "severe" }
+        4 { "critical" }
+        5 { "emergency" }
+        6 { "shutdown" }
+        default { $null }
+    }
+}
+
+function Parse-ThermalSummary {
+    param([string]$Text)
+
+    $thermalStatus = $null
+    $statusMatch = [regex]::Match($Text, 'Thermal Status:\s+(\d+)')
+    if ($statusMatch.Success) {
+        $thermalStatus = [int]::Parse($statusMatch.Groups[1].Value, [Globalization.CultureInfo]::InvariantCulture)
+    }
+
+    $maxSensorStatus = $null
+    $maxTemperatureC = $null
+    $hottestSensorName = $null
+    $temperaturePattern = 'Temperature\{mValue=([-+]?[0-9]+(?:\.[0-9]+)?),\s*mType=[^,]+,\s*mName=([^,}]+),\s*mStatus=(\d+)\}'
+    foreach ($match in [regex]::Matches($Text, $temperaturePattern)) {
+        $temperature = [double]::Parse($match.Groups[1].Value, [Globalization.CultureInfo]::InvariantCulture)
+        $name = $match.Groups[2].Value
+        $sensorStatus = [int]::Parse($match.Groups[3].Value, [Globalization.CultureInfo]::InvariantCulture)
+        if ($null -eq $maxSensorStatus -or $sensorStatus -gt $maxSensorStatus) {
+            $maxSensorStatus = $sensorStatus
+        }
+        if ($null -eq $maxTemperatureC -or $temperature -gt $maxTemperatureC) {
+            $maxTemperatureC = $temperature
+            $hottestSensorName = $name
+        }
+    }
+
+    return [ordered]@{
+        status = $thermalStatus
+        statusLabel = Thermal-StatusLabel $thermalStatus
+        maxSensorStatus = $maxSensorStatus
+        maxSensorStatusLabel = Thermal-StatusLabel $maxSensorStatus
+        maxTemperatureC = $maxTemperatureC
+        hottestSensorName = $hottestSensorName
+    }
+}
+
 $adb = Find-Adb
 $source = Get-GitMetadata
 $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
@@ -160,6 +211,21 @@ if ($Controls -eq $true -and $Panel -eq "Debug") {
 $devicesPath = Join-Path $outputDir "adb_devices.txt"
 Run-AdbText -Adb $adb -Arguments @("devices") -OutputPath $devicesPath
 $artifacts.devices = $devicesPath
+
+$thermalPreflightPath = Join-Path $outputDir "thermalservice_preflight.txt"
+Run-AdbText -Adb $adb -Arguments @("shell", "dumpsys", "thermalservice") -OutputPath $thermalPreflightPath
+$artifacts.thermalPreflight = $thermalPreflightPath
+$thermalPreflight = Parse-ThermalSummary (Get-Content -LiteralPath $thermalPreflightPath -Raw)
+if ($null -ne $thermalPreflight.status -and $thermalPreflight.status -ge $WarnPreflightThermalStatus) {
+    $warnings += "preflight thermal status $($thermalPreflight.status) ($($thermalPreflight.statusLabel)) at or above warning threshold $WarnPreflightThermalStatus"
+}
+if ($null -ne $thermalPreflight.maxSensorStatus -and $thermalPreflight.maxSensorStatus -ge $WarnPreflightThermalStatus) {
+    $warnings += "preflight thermal sensor status $($thermalPreflight.maxSensorStatus) ($($thermalPreflight.maxSensorStatusLabel)) at or above warning threshold $WarnPreflightThermalStatus"
+}
+if (($null -ne $thermalPreflight.status -and $thermalPreflight.status -ge 4) -or
+    ($null -ne $thermalPreflight.maxSensorStatus -and $thermalPreflight.maxSensorStatus -ge 4)) {
+    $warnings += "preflight thermal state is critical or worse; let the phone cool before judging FPS, full-frame preview, or visual parity."
+}
 
 if (-not $PreserveLogcat) {
     $previousErrorActionPreference = $ErrorActionPreference
@@ -377,6 +443,7 @@ $manifest = [ordered]@{
     adb = $adb
     outputDir = (Resolve-Path -LiteralPath $outputDir).Path
     screenRecordSeconds = $ScreenRecordSeconds
+    thermalPreflight = $thermalPreflight
     launchedApp = (-not $SkipLaunch)
     logcatCleared = (-not [bool]$PreserveLogcat)
     artifacts = $artifacts

@@ -415,6 +415,12 @@ $gfx = Read-TextIfExists $gfxPath
 $logcat = Read-TextIfExists $logcatPath
 $thermalText = Read-TextIfExists $thermalPath
 $thermalSummary = Parse-ThermalSummary $thermalText
+$thermalPreflightSummary = if ($manifest -and $manifest.PSObject.Properties.Name -contains "thermalPreflight") {
+    $manifest.thermalPreflight
+} else {
+    $preflightPath = Get-RequiredPath $bundle "thermalservice_preflight.txt"
+    Parse-ThermalSummary (Read-TextIfExists $preflightPath)
+}
 $cameraFpsSummary = Parse-CameraFpsSummary $logcat
 $batteryText = Read-TextIfExists $batteryPath
 $batterySummary = Parse-BatterySummary $batteryText
@@ -560,6 +566,7 @@ $result = [ordered]@{
     }
     runtimeFindings = $runtimeFindings
     cameraHal = $cameraFpsSummary
+    thermalPreflight = $thermalPreflightSummary
     thermal = $thermalSummary
     battery = $batterySummary
     uiDump = $uiDumpSummary

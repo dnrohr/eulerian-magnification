@@ -11,6 +11,7 @@ with:
 - optional `screenrecord.mp4`
 - `logcat_tail.txt`
 - `gfxinfo.txt`
+- `thermalservice_preflight.txt`
 - `thermalservice.txt`
 - `battery.txt`
 - `window_focus.txt`
@@ -58,11 +59,18 @@ signals, camera HAL FPS samples from logcat, Android thermal status, battery
 temperature/charging context, sampled screenshot content metrics,
 machine-readable UI text from `ui_dump.xml`, and optional ROI overlay
 measurement status.
+The script also records `thermalservice_preflight.txt` before clearing logcat or
+launching the app. The manifest and summary expose this as `thermalPreflight`,
+so a capture can show that the device was already throttled before the app was
+started.
 Thermal, external-power, high-battery-temperature, and low camera-cadence
 warnings are advisory by default: they flag conditions that may affect a visual
 or benchmark run, but they do not make runtime smoke fail unless a crash, ANR,
 or GL error is also present. A passing runtime smoke summary still does not
 prove visual validation unless the target is visible and inspected.
+If preflight thermal status or sensor status is `critical` or worse, do not use
+the run to judge full-frame FPS, apparent camera freeze, or visual parity. Let
+the phone cool, then repeat with a short capture.
 
 Screenshot content metrics include sampled luminance mean, luminance standard
 deviation, dark/light pixel fractions, a `nonBlank` flag, and a portrait
@@ -190,6 +198,8 @@ Available launch parameters:
 - `-TargetVisible`: whether the target is visible in the screenshot/recording.
 - `-VisualValidated`: whether the operator accepted the visual claim.
 - `-OperatorNotes`: free-form watched-run notes.
+- `-WarnPreflightThermalStatus`: Android thermal status threshold for prelaunch
+  warnings; defaults to `2` (`moderate`).
 - `-PreserveLogcat`: keeps existing device logcat instead of clearing it before
   the capture starts.
 - `-Summarize`: writes `evidence_summary.json` immediately after capture.
