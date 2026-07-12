@@ -30,6 +30,8 @@ alignment.
 
 - Verify the front-camera mirror assumption on the Pixel 8a with a face or known target in frame.
 - Decide whether GL preview and CameraX preview need separate mapping flags.
+  Current implementation uses a shared front-camera mapping policy for both
+  paths; device validation should only split them if evidence shows a mismatch.
 
 ## Completed Slice: Manual ROI Reverse Mapping
 
@@ -62,6 +64,18 @@ Date: 2026-07-11
   screenshot over the target.
 - Result: no mapping failure was proven, but the required manual/automatic
   target-alignment validation is still open.
+
+## Completed Slice: Preview Mapping Policy
+
+- Added `PreviewRoiMappingPolicy` so CameraX and GL ROI overlays/manual input use
+  an explicit front-camera mapping policy instead of scattered hardcoded mirror
+  flags.
+- The current policy intentionally keeps CameraX and GL mapping identical:
+  front-camera preview is mirrored horizontally, rotation comes from the
+  analysis sample, and aspect-fill crop is handled by `PreviewRoiMapper`.
+- Added JVM coverage proving CameraX and GL produce the same mapped ROI for a
+  portrait/front-camera sample. Device validation remains required before
+  closing the milestone.
 
 ## Coordinate Assumptions
 

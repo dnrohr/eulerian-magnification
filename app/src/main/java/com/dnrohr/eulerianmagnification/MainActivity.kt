@@ -83,6 +83,8 @@ import com.dnrohr.eulerianmagnification.analysis.MagnificationMode
 import com.dnrohr.eulerianmagnification.analysis.NormalizedRect
 import com.dnrohr.eulerianmagnification.analysis.PulseRoiAnalyzer
 import com.dnrohr.eulerianmagnification.analysis.PreviewRoiMapper
+import com.dnrohr.eulerianmagnification.analysis.PreviewRoiMappingPolicy
+import com.dnrohr.eulerianmagnification.analysis.PreviewRenderPath
 import com.dnrohr.eulerianmagnification.analysis.PreviewSize
 import com.dnrohr.eulerianmagnification.analysis.RecordedVideoAnalysisRunner
 import com.dnrohr.eulerianmagnification.analysis.RecordedVideoDecodeOptions
@@ -366,18 +368,27 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
                     sample = analysisSample,
                     settings = analysisSettings,
                     artifactSuppressor = artifactSuppressor,
+                    mappingPolicy = PreviewRoiMappingPolicy.frontCamera(
+                        if (usingGlPreview) PreviewRenderPath.Gl else PreviewRenderPath.CameraX
+                    ),
                     modifier = Modifier.fillMaxSize(),
                 )
             }
             if (manualRoi == null) {
                 RoiOverlay(
                     sample = analysisSample,
+                    mappingPolicy = PreviewRoiMappingPolicy.frontCamera(
+                        if (usingGlPreview) PreviewRenderPath.Gl else PreviewRenderPath.CameraX
+                    ),
                     modifier = Modifier.fillMaxSize(),
                 )
             }
             ManualRoiOverlay(
                 roi = manualRoi,
                 sample = analysisSample,
+                mappingPolicy = PreviewRoiMappingPolicy.frontCamera(
+                    if (usingGlPreview) PreviewRenderPath.Gl else PreviewRenderPath.CameraX
+                ),
                 editing = manualRoiEditing,
                 onRoiChanged = {
                     manualRoi = it
@@ -677,6 +688,7 @@ private fun AmplifiedTintOverlay(
     sample: AnalysisSample,
     settings: AnalysisSettings,
     artifactSuppressor: ArtifactSuppressor,
+    mappingPolicy: PreviewRoiMappingPolicy,
     modifier: Modifier = Modifier,
 ) {
     val roi = sample.roi ?: return
@@ -696,7 +708,7 @@ private fun AmplifiedTintOverlay(
             frameSize = PreviewSize(sample.frameWidth, sample.frameHeight),
             previewSize = PreviewSize(size.width.toInt(), size.height.toInt()),
             rotationDegrees = sample.rotationDegrees,
-            mirrorHorizontally = true,
+            mirrorHorizontally = mappingPolicy.mirrorHorizontally,
         )
         drawRect(
             color = tint,
@@ -724,6 +736,7 @@ private fun overlayAlpha(viewMode: ViewMode, intensity: Float): Float {
 @Composable
 private fun RoiOverlay(
     sample: AnalysisSample,
+    mappingPolicy: PreviewRoiMappingPolicy,
     modifier: Modifier = Modifier,
 ) {
     val roi = sample.roi ?: return
@@ -733,7 +746,7 @@ private fun RoiOverlay(
             frameSize = PreviewSize(sample.frameWidth, sample.frameHeight),
             previewSize = PreviewSize(size.width.toInt(), size.height.toInt()),
             rotationDegrees = sample.rotationDegrees,
-            mirrorHorizontally = true,
+            mirrorHorizontally = mappingPolicy.mirrorHorizontally,
         )
         drawRect(
             color = Color(0xFF00BFA5),
@@ -754,6 +767,7 @@ private fun RoiOverlay(
 private fun ManualRoiOverlay(
     roi: NormalizedRect?,
     sample: AnalysisSample,
+    mappingPolicy: PreviewRoiMappingPolicy,
     editing: Boolean,
     onRoiChanged: (NormalizedRect?) -> Unit,
     modifier: Modifier = Modifier,
@@ -782,7 +796,7 @@ private fun ManualRoiOverlay(
                                 frameSize = PreviewSize(sample.frameWidth, sample.frameHeight),
                                 previewSize = PreviewSize(size.width, size.height),
                                 rotationDegrees = sample.rotationDegrees,
-                                mirrorHorizontally = true,
+                                mirrorHorizontally = mappingPolicy.mirrorHorizontally,
                             )
                         )
                     }
@@ -807,7 +821,7 @@ private fun ManualRoiOverlay(
             frameSize = PreviewSize(sample.frameWidth, sample.frameHeight),
             previewSize = PreviewSize(size.width.toInt(), size.height.toInt()),
             rotationDegrees = sample.rotationDegrees,
-            mirrorHorizontally = true,
+            mirrorHorizontally = mappingPolicy.mirrorHorizontally,
         )
         drawRect(
             color = Color(0xFFFFC857),
