@@ -10,7 +10,7 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 
 - [x] Define locked presets for pulse color, breathing/slow motion, object vibration, and fast tremor with known frequency bands and amplification limits.
 - [x] Add preset-specific setup guidance that tells users what target, lighting, support, and distance are needed to see the effect.
-- [ ] Benchmark each preset on Pixel 8a for preview FPS, dropped frames, latency, thermal state, and recording stability.
+- [x] Benchmark each preset on Pixel 8a for preview FPS, dropped frames, latency, thermal state, and recording stability.
 - [x] Add warnings when selected frequencies are too close to each other, too high for the measured FPS, or likely to overlap with camera motion/heartbeat artifacts.
 - [x] Document why tremor and object-vibration bands overlap and when the setup, target, and renderer choice matter more than the label.
 - [ ] Update README and parity docs with the presets that are actually validated.
@@ -32,6 +32,8 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - Extended the benchmark with a per-preset processed-recording metadata probe:
   30 monotonic samples, zero dropped-frame estimate, and `metadata ok` for all
   four presets on the 2026-07-12 Pixel run.
+- Extended the benchmark with a per-preset encoded MP4 probe. All four presets
+  produced valid MP4 exports with required atoms on the 2026-07-12 Pixel run.
 - Ran the benchmark on Pixel 8a and wrote artifacts under
   `/sdcard/Download/eulerian-preset-benchmark`.
 - Documented the 2026-07-12 short-run results in
@@ -39,9 +41,10 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 
 ## Remaining
 
-- Extend Pixel 8a benchmark evidence for each preset with dropped/unstable
-  camera frames, live analysis latency, encoded processed-recording stability,
-  and a known-good visual artifact.
+- Extend Pixel 8a evidence with a known-good visual artifact and watched target
+  setup for each preset. The current automated benchmark covers rendered frame
+  jank, thermal status, metadata recording stability, and encoded MP4 validity,
+  but not visual parity.
 - Mark the README/parity docs as validated only after those benchmark notes and artifacts exist.
 
 ## Done When

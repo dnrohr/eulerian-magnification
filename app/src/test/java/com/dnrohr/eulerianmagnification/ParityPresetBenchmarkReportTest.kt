@@ -22,6 +22,8 @@ class ParityPresetBenchmarkReportTest {
                     recordingSampleCount = 30,
                     recordingDroppedFrameEstimate = 0,
                     recordingStability = "metadata ok",
+                    encodedMp4Valid = true,
+                    encodedMp4Bytes = 2048L,
                 )
             ),
         )
@@ -36,5 +38,7 @@ class ParityPresetBenchmarkReportTest {
         assertTrue(json.contains("\"recordingSampleCount\": 30"))
         assertTrue(json.contains("\"recordingDroppedFrameEstimate\": 0"))
         assertTrue(json.contains("\"recordingStability\": \"metadata ok\""))
+        assertTrue(json.contains("\"encodedMp4Valid\": true"))
+        assertTrue(json.contains("\"encodedMp4Bytes\": 2048"))
     }
 }

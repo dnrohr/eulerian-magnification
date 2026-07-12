@@ -167,9 +167,9 @@ validated.
 
 Short-run Pixel 8a preview benchmark artifacts are documented in
 `docs/experiments/pixel8a_parity_preset_benchmark.md`. These cover rendered
-frame/jank percentiles, thermal status, and processed-recording metadata
-stability. They do not yet cover visual parity, camera dropped frames, live
-analysis latency, or encoded MP4 stability for each preset.
+frame/jank percentiles, thermal status, processed-recording metadata stability,
+and encoded MP4 validity. They do not yet cover visual parity, target quality,
+or live camera dropped-frame diagnosis for each preset.
 
 For local file integrity:
 

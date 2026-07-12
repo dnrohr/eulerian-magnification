@@ -14,6 +14,8 @@ data class ParityPresetBenchmarkRow(
     val recordingSampleCount: Int,
     val recordingDroppedFrameEstimate: Int,
     val recordingStability: String,
+    val encodedMp4Valid: Boolean,
+    val encodedMp4Bytes: Long,
 ) {
     val jankyPercent: Double
         get() = if (measuredFrames <= 0) 0.0 else jankyFrames * 100.0 / measuredFrames.toDouble()
@@ -29,7 +31,7 @@ data class ParityPresetBenchmarkReport(
 ) {
     fun toCsv(): String {
         return buildString {
-            appendLine("preset,mode,band,view,amplification,frames,jankyFrames,jankyPercent,medianMs,p90Ms,p95Ms,p99Ms,thermalStatus,recordingSampleCount,recordingDroppedFrameEstimate,recordingStability")
+            appendLine("preset,mode,band,view,amplification,frames,jankyFrames,jankyPercent,medianMs,p90Ms,p95Ms,p99Ms,thermalStatus,recordingSampleCount,recordingDroppedFrameEstimate,recordingStability,encodedMp4Valid,encodedMp4Bytes")
             rows.forEach { row ->
                 appendLine(
                     listOf(
@@ -49,6 +51,8 @@ data class ParityPresetBenchmarkReport(
                         row.recordingSampleCount.toString(),
                         row.recordingDroppedFrameEstimate.toString(),
                         row.recordingStability,
+                        row.encodedMp4Valid.toString(),
+                        row.encodedMp4Bytes.toString(),
                     ).joinToString(",") { it.csvEscape() },
                 )
             }
@@ -78,7 +82,9 @@ data class ParityPresetBenchmarkReport(
                 appendLine("      \"thermalStatus\": ${row.thermalStatus.quoteJson()},")
                 appendLine("      \"recordingSampleCount\": ${row.recordingSampleCount},")
                 appendLine("      \"recordingDroppedFrameEstimate\": ${row.recordingDroppedFrameEstimate},")
-                appendLine("      \"recordingStability\": ${row.recordingStability.quoteJson()}")
+                appendLine("      \"recordingStability\": ${row.recordingStability.quoteJson()},")
+                appendLine("      \"encodedMp4Valid\": ${row.encodedMp4Valid},")
+                appendLine("      \"encodedMp4Bytes\": ${row.encodedMp4Bytes}")
                 append("    }")
                 if (index != rows.lastIndex) append(',')
                 appendLine()
