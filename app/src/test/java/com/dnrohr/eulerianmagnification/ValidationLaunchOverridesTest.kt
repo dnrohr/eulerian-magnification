@@ -23,6 +23,7 @@ class ValidationLaunchOverridesTest {
                 ValidationLaunchOverrides.EXTRA_CAMERA_LOCK to "on",
                 ValidationLaunchOverrides.EXTRA_CONTROLS to "true",
                 ValidationLaunchOverrides.EXTRA_CLEAN to "0",
+                ValidationLaunchOverrides.EXTRA_PANEL to "Debug",
                 ValidationLaunchOverrides.EXTRA_PERSIST to "1",
             )
         )
@@ -39,6 +40,7 @@ class ValidationLaunchOverridesTest {
         assertEquals(true, overrides.cameraControlsLocked)
         assertEquals(true, overrides.controlsExpanded)
         assertEquals(false, overrides.cleanPreview)
+        assertEquals(ExpandedPanelTab.Debug, overrides.expandedPanel)
         assertTrue(overrides.persistSettings)
         assertTrue(overrides.hasAnyOverride)
     }
@@ -56,6 +58,7 @@ class ValidationLaunchOverridesTest {
                 ValidationLaunchOverrides.EXTRA_GL_PREVIEW to "maybe",
                 ValidationLaunchOverrides.EXTRA_ROI_SOURCE to "missing",
                 ValidationLaunchOverrides.EXTRA_MANUAL_ROI to "0.8,0.2,0.1,0.5",
+                ValidationLaunchOverrides.EXTRA_PANEL to "missing",
             )
         )
 
@@ -66,6 +69,7 @@ class ValidationLaunchOverridesTest {
         assertNull(invalid.requestedGlPreview)
         assertNull(invalid.roiSource)
         assertNull(invalid.manualRoi)
+        assertNull(invalid.expandedPanel)
         assertFalse(invalid.hasAnyOverride)
     }
 

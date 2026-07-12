@@ -534,6 +534,7 @@ private fun MainScreen(
             recordingOutputMode = recordingOutputMode,
             onRecordingOutputModeChanged = { recordingOutputMode = it },
             controlsExpanded = controlsExpanded,
+            initialExpandedPanel = launchOverrides.expandedPanel ?: ExpandedPanelTab.Controls,
             cleanPreview = cleanPreview,
             onShowControls = {
                 cleanPreview = false
@@ -1157,6 +1158,7 @@ private fun StatusOverlay(
     recordingOutputMode: RecordingOutputMode,
     onRecordingOutputModeChanged: (RecordingOutputMode) -> Unit,
     controlsExpanded: Boolean,
+    initialExpandedPanel: ExpandedPanelTab,
     cleanPreview: Boolean,
     onShowControls: () -> Unit,
     onHideControls: () -> Unit,
@@ -1170,7 +1172,9 @@ private fun StatusOverlay(
     onValidateVideo: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var selectedPanel by remember { mutableStateOf(ExpandedPanelTab.Controls) }
+    var selectedPanel by remember {
+        mutableStateOf(initialExpandedPanel)
+    }
 
     if (!controlsExpanded && cleanPreview) {
         CleanPreviewOverlay(
@@ -2173,13 +2177,6 @@ private val ViewMode.compactLabel: String
         ViewMode.Difference -> "Diff"
         ViewMode.Split -> "Split"
     }
-
-private enum class ExpandedPanelTab(val label: String) {
-    Controls("Controls"),
-    Setup("Setup"),
-    Recording("Record"),
-    Debug("Debug"),
-}
 
 @Composable
 private fun SignalWaveform(

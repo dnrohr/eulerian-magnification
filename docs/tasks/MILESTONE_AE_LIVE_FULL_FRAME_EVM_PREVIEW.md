@@ -127,6 +127,20 @@ Goal: integrate the full-frame EVM renderer into the live preview path.
   visual magnification validation. A deliberate target/face run is still needed
   before marking AE complete.
 
+## Supporting Slice: Scripted Debug Panel Capture
+
+- Added a validation launch override for the expanded controls panel and exposed
+  it through `tools/capture_live_validation_evidence.ps1 -Panel`.
+- Pixel 8a smoke capture with `-Panel Debug` now launches directly into the
+  diagnostics panel after the tabbed overlay split.
+- Captured evidence bundle:
+  `sample-videos/exports/live-validation/20260712-161755-expanded-debug-panel-launch`.
+- The screenshot shows `Preview: Full-frame linear EVM preview`,
+  `Renderer: Live linear EVM reconstruction`, `GL renderer: Live
+  reconstruction`, and ready three-level pyramid diagnostics.
+- This restores unattended renderer-path evidence capture for AE/AP validation,
+  but it still does not complete known-target visual validation.
+
 ## Evidence
 
 - `docs/experiments/live_full_frame_preview_bridge.md`

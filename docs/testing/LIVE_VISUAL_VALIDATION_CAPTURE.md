@@ -44,6 +44,7 @@ ADB extras:
   -Amplification 18 `
   -GlPreview $true `
   -Controls $true `
+  -Panel Debug `
   -ScreenRecordSeconds 15
 ```
 
@@ -58,6 +59,8 @@ Available launch parameters:
 - `-GlPreview`: requests GL preview.
 - `-Controls`: opens or hides expanded controls.
 - `-Clean`: opens or hides clean preview.
+- `-Panel`: when expanded controls are open, selects `Controls`, `Setup`,
+  `Recording`, or `Debug`.
 - `-LockAeAwb`: requests locked exposure/white balance.
 - `-PersistLaunchSettings`: saves the launch settings. Omit this for normal
   validation captures so saved user settings are left unchanged.
@@ -76,7 +79,8 @@ The same extras can be sent manually:
   --es validation.roiSource Manual `
   --es validation.manualRoi 0.25,0.25,0.75,0.75 `
   --ez validation.glPreview true `
-  --ez validation.controls true
+  --ez validation.controls true `
+  --es validation.panel Debug
 ```
 
 ## When The Evidence Counts

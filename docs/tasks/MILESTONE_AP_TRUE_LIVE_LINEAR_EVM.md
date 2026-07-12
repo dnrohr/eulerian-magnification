@@ -202,6 +202,19 @@ showing true pyramid reconstruction or a fallback bridge.
 - Re-ran the standard JVM/build verification and reinstalled the current debug
   build on the Pixel 8a after capturing evidence.
 
+## Supporting Slice: Scripted Debug Panel Capture
+
+- Added `validation.panel` launch support and `-Panel` capture-script plumbing
+  so unattended evidence can select the tabbed overlay's `Debug` panel.
+- Pixel 8a smoke capture:
+  `sample-videos/exports/live-validation/20260712-161755-expanded-debug-panel-launch`.
+- The screenshot directly shows the live linear reconstruction renderer path,
+  GL reconstruction path, pyramid level count, internal size, temporal band,
+  start level, gains, clamp, and benchmark summary.
+- This improves repeatability for AP validation evidence after the expanded
+  overlay was split into tabs. Known motion/color target validation remains
+  open.
+
 ## Done When
 
 - Live amplified preview shows visible reconstructed output for at least one color sample and one slow-motion sample.

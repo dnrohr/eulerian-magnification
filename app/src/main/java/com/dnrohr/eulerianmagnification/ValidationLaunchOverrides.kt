@@ -16,6 +16,7 @@ data class ValidationLaunchOverrides(
     val cameraControlsLocked: Boolean? = null,
     val controlsExpanded: Boolean? = null,
     val cleanPreview: Boolean? = null,
+    val expandedPanel: ExpandedPanelTab? = null,
     val persistSettings: Boolean = false,
 ) {
     val hasAnyOverride: Boolean
@@ -27,7 +28,8 @@ data class ValidationLaunchOverrides(
             manualRoi != null ||
             cameraControlsLocked != null ||
             controlsExpanded != null ||
-            cleanPreview != null
+            cleanPreview != null ||
+            expandedPanel != null
 
     companion object {
         const val EXTRA_MODE = "validation.mode"
@@ -39,6 +41,7 @@ data class ValidationLaunchOverrides(
         const val EXTRA_CAMERA_LOCK = "validation.lockAeAwb"
         const val EXTRA_CONTROLS = "validation.controls"
         const val EXTRA_CLEAN = "validation.clean"
+        const val EXTRA_PANEL = "validation.panel"
         const val EXTRA_PERSIST = "validation.persist"
 
         @Suppress("DEPRECATION")
@@ -59,6 +62,7 @@ data class ValidationLaunchOverrides(
                 cameraControlsLocked = values[EXTRA_CAMERA_LOCK].booleanValue(),
                 controlsExpanded = values[EXTRA_CONTROLS].booleanValue(),
                 cleanPreview = values[EXTRA_CLEAN].booleanValue(),
+                expandedPanel = values[EXTRA_PANEL].enumValue<ExpandedPanelTab>(),
                 persistSettings = values[EXTRA_PERSIST].booleanValue() ?: false,
             )
         }

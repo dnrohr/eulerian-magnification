@@ -8,6 +8,7 @@ param(
     [string]$View = "",
     [string]$RoiSource = "",
     [string]$ManualRoi = "",
+    [string]$Panel = "",
     [Nullable[double]]$Amplification = $null,
     [Nullable[bool]]$GlPreview = $null,
     [Nullable[bool]]$Controls = $null,
@@ -114,6 +115,9 @@ if (-not $SkipLaunch) {
     if (-not [string]::IsNullOrWhiteSpace($ManualRoi)) {
         $launchArgs += @("--es", "validation.manualRoi", $ManualRoi)
     }
+    if (-not [string]::IsNullOrWhiteSpace($Panel)) {
+        $launchArgs += @("--es", "validation.panel", $Panel)
+    }
     if ($PSBoundParameters.ContainsKey("Amplification")) {
         $launchArgs += @("--es", "validation.amplification", $Amplification.ToString([Globalization.CultureInfo]::InvariantCulture))
     }
@@ -198,6 +202,7 @@ $manifest = [ordered]@{
         view = $View
         roiSource = $RoiSource
         manualRoi = $ManualRoi
+        panel = $Panel
         amplification = if ($PSBoundParameters.ContainsKey("Amplification")) { $Amplification } else { $null }
         glPreview = if ($PSBoundParameters.ContainsKey("GlPreview")) { $GlPreview } else { $null }
         controls = if ($PSBoundParameters.ContainsKey("Controls")) { $Controls } else { $null }
