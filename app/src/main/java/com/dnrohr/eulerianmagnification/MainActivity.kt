@@ -1170,6 +1170,8 @@ private fun StatusOverlay(
     onValidateVideo: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var selectedPanel by remember { mutableStateOf(ExpandedPanelTab.Controls) }
+
     if (!controlsExpanded && cleanPreview) {
         CleanPreviewOverlay(
             isRecording = isRecording,
@@ -1199,6 +1201,12 @@ private fun StatusOverlay(
         return
     }
 
+    val liveVisualizationModel = VisualizationModel.live(
+        settings = settings,
+        fullFrameColorPreview = liveEvmPreviewDecision.fullFrameColorPreview,
+        livePhasePreviewDecision = livePhasePreviewDecision,
+    )
+
     Column(
         modifier = modifier
             .background(Color(0x99000000))
@@ -1225,11 +1233,6 @@ private fun StatusOverlay(
             text = "Preview: ${liveEvmPreviewDecision.label}",
             color = Color(0xFFC8D3DC),
         )
-        val liveVisualizationModel = VisualizationModel.live(
-            settings = settings,
-            fullFrameColorPreview = liveEvmPreviewDecision.fullFrameColorPreview,
-            livePhasePreviewDecision = livePhasePreviewDecision,
-        )
         Text(
             text = "Signal: ${liveVisualizationModel.signalSource.label}",
             color = Color(0xFFC8D3DC),
@@ -1239,137 +1242,186 @@ private fun StatusOverlay(
             color = Color(0xFFC8D3DC),
         )
         Spacer(modifier = Modifier.height(4.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                "Analysis: ${"%.1f".format(sample.analysisFps)} fps / ${"%.0f".format(sample.latencyMillis)} ms",
-                color = Color.White,
+        QualityStatusRow(qualityStatuses)
+        Spacer(modifier = Modifier.height(8.dp))
+        ExpandedPanelTabs(
+            selectedPanel = selectedPanel,
+            onSelectedPanelChanged = { selectedPanel = it },
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        when (selectedPanel) {
+            ExpandedPanelTab.Controls -> {
+                ModeControls(
+                    settings = settings,
+                    onSettingsChanged = onSettingsChanged,
+                    availableModes = featureAvailability.availableModes,
+                    cameraControlsLocked = cameraControlsLocked,
+                    onCameraControlsLockedChanged = onCameraControlsLockedChanged,
+                    qualityCuesEnabled = qualityCuesEnabled,
+                    onQualityCuesEnabledChanged = onQualityCuesEnabledChanged,
+                    roiSource = roiSource,
+                    onRoiSourceChanged = onRoiSourceChanged,
+                    manualRoi = manualRoi,
+                    manualRoiEditing = manualRoiEditing,
+                    onManualRoiEditingChanged = onManualRoiEditingChanged,
+                    onClearManualRoi = onClearManualRoi,
+                    onResetSettings = onResetSettings,
+                    showGlDebug = showGlDebug,
+                    onShowGlDebugChanged = onShowGlDebugChanged,
+                    usingGlPreview = usingGlPreview,
+                    glPreviewAvailable = featureAvailability.glPreviewAvailable,
+                )
+            }
+            ExpandedPanelTab.Setup -> {
+                DemoPresetControls(
+                    settings = settings,
+                    onSettingsChanged = onSettingsChanged,
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                SetupGuidePanel(settings.mode)
+                ParityPresetPanel(
+                    mode = settings.mode,
+                    analysisFps = sample.analysisFps,
+                )
+            }
+            ExpandedPanelTab.Recording -> {
+                RecordingControls(
+                    isRecording = isRecording,
+                    elapsedMillis = recordingElapsedMillis,
+                    lastRecordingPath = lastRecordingPath,
+                    recentRecordings = recentRecordings,
+                    recordingOutputMode = recordingOutputMode,
+                    onRecordingOutputModeChanged = onRecordingOutputModeChanged,
+                    onToggleRecording = onToggleRecording,
+                    onShareRecording = onShareRecording,
+                    onShareRecordingPath = onShareRecordingPath,
+                    onShareRecordingVideo = onShareRecordingVideo,
+                    onShareRecordingReport = onShareRecordingReport,
+                    onDeleteRecording = onDeleteRecording,
+                    recordingAvailable = featureAvailability.processedRecordingAvailable,
+                    validationAvailable = featureAvailability.recordedVideoValidationAvailable,
+                    validationSummary = validationSummary,
+                    validationRunning = validationRunning,
+                    onValidateVideo = onValidateVideo,
+                )
+            }
+            ExpandedPanelTab.Debug -> {
+                DebugPanel(
+                    sample = sample,
+                    signalHistory = signalHistory,
+                    breathingMotionSample = breathingMotionSample,
+                    breathingMotionHistory = breathingMotionHistory,
+                    settings = settings,
+                    showGlDebug = showGlDebug,
+                    glFrameStats = glFrameStats,
+                    lightingDiagnostic = lightingDiagnostic,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ExpandedPanelTabs(
+    selectedPanel: ExpandedPanelTab,
+    onSelectedPanelChanged: (ExpandedPanelTab) -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        ExpandedPanelTab.entries.forEach { panel ->
+            CompactControlButton(
+                label = panel.label,
+                onClick = { onSelectedPanelChanged(panel) },
+                enabled = selectedPanel != panel,
+                modifier = Modifier.weight(1.0f),
             )
         }
-        Spacer(modifier = Modifier.height(4.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text("Green: ${"%.1f".format(sample.averageGreen)}", color = Color.White)
-            Text(
-                "Band: ${"%+.3f".format(sample.bandpassedGreen)} / ${if (sample.timestampMonotonic) "Timing OK" else "Timing jump"}",
-                color = Color.White,
-            )
-        }
-        Spacer(modifier = Modifier.height(4.dp))
+    }
+}
+
+@Composable
+private fun DebugPanel(
+    sample: AnalysisSample,
+    signalHistory: List<Double>,
+    breathingMotionSample: BreathingMotionSample,
+    breathingMotionHistory: List<Double>,
+    settings: AnalysisSettings,
+    showGlDebug: Boolean,
+    glFrameStats: GlFrameStats,
+    lightingDiagnostic: LightingDiagnostic?,
+) {
+    Text(
+        "Analysis: ${"%.1f".format(sample.analysisFps)} fps / ${"%.0f".format(sample.latencyMillis)} ms",
+        color = Color.White,
+    )
+    Spacer(modifier = Modifier.height(4.dp))
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text("Green: ${"%.1f".format(sample.averageGreen)}", color = Color.White)
         Text(
-            text = "Translation: dx ${"%+.3f".format(sample.translation.dx)} dy ${"%+.3f".format(sample.translation.dy)}",
+            "Band: ${"%+.3f".format(sample.bandpassedGreen)} / ${if (sample.timestampMonotonic) "Timing OK" else "Timing jump"}",
             color = Color.White,
         )
-        if (showGlDebug) {
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "GL: ${"%.1f".format(glFrameStats.averageFps)} fps / ${"%.2f".format(glFrameStats.averageFrameMillis)} ms",
-                color = Color.White,
-            )
-            Text(
-                text = "GL renderer: ${glFrameStats.renderPath.label}",
-                color = Color.White,
-            )
-            Text(
-                text = glFrameStats.reconstructionDiagnostics.summary(),
-                color = Color.White,
-            )
-            Text(
-                text = glFrameStats.phaseDiagnostics.summary,
-                color = Color.White,
-            )
-            Text(
-                text = PerformanceBenchmark.from(sample, glFrameStats).summary(),
-                color = Color.White,
-            )
-        }
+    }
+    Spacer(modifier = Modifier.height(4.dp))
+    Text(
+        text = "Translation: dx ${"%+.3f".format(sample.translation.dx)} dy ${"%+.3f".format(sample.translation.dy)}",
+        color = Color.White,
+    )
+    lightingDiagnostic?.let { diagnostic ->
         Spacer(modifier = Modifier.height(4.dp))
-        QualityStatusRow(qualityStatuses)
-        lightingDiagnostic?.let { diagnostic ->
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "Lighting: ${diagnostic.label} - ${diagnostic.action}",
-                color = Color.White,
-            )
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        DemoPresetControls(
-            settings = settings,
-            onSettingsChanged = onSettingsChanged,
+        Text(
+            text = "Lighting: ${diagnostic.label} - ${diagnostic.action}",
+            color = Color.White,
         )
-        Spacer(modifier = Modifier.height(8.dp))
-        SetupGuidePanel(settings.mode)
-        ParityPresetPanel(
-            mode = settings.mode,
-            analysisFps = sample.analysisFps,
+    }
+    if (showGlDebug) {
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = "GL: ${"%.1f".format(glFrameStats.averageFps)} fps / ${"%.2f".format(glFrameStats.averageFrameMillis)} ms",
+            color = Color.White,
         )
-        Spacer(modifier = Modifier.height(8.dp))
-        ModeControls(
-            settings = settings,
-            onSettingsChanged = onSettingsChanged,
-            availableModes = featureAvailability.availableModes,
-            cameraControlsLocked = cameraControlsLocked,
-            onCameraControlsLockedChanged = onCameraControlsLockedChanged,
-            qualityCuesEnabled = qualityCuesEnabled,
-            onQualityCuesEnabledChanged = onQualityCuesEnabledChanged,
-            roiSource = roiSource,
-            onRoiSourceChanged = onRoiSourceChanged,
-            manualRoi = manualRoi,
-            manualRoiEditing = manualRoiEditing,
-            onManualRoiEditingChanged = onManualRoiEditingChanged,
-            onClearManualRoi = onClearManualRoi,
-            onResetSettings = onResetSettings,
-            showGlDebug = showGlDebug,
-            onShowGlDebugChanged = onShowGlDebugChanged,
-            usingGlPreview = usingGlPreview,
-            glPreviewAvailable = featureAvailability.glPreviewAvailable,
+        Text(
+            text = "GL renderer: ${glFrameStats.renderPath.label}",
+            color = Color.White,
         )
-        Spacer(modifier = Modifier.height(8.dp))
-        RecordingControls(
-            isRecording = isRecording,
-            elapsedMillis = recordingElapsedMillis,
-            lastRecordingPath = lastRecordingPath,
-            recentRecordings = recentRecordings,
-            recordingOutputMode = recordingOutputMode,
-            onRecordingOutputModeChanged = onRecordingOutputModeChanged,
-            onToggleRecording = onToggleRecording,
-            onShareRecording = onShareRecording,
-            onShareRecordingPath = onShareRecordingPath,
-            onShareRecordingVideo = onShareRecordingVideo,
-            onShareRecordingReport = onShareRecordingReport,
-            onDeleteRecording = onDeleteRecording,
-            recordingAvailable = featureAvailability.processedRecordingAvailable,
-            validationAvailable = featureAvailability.recordedVideoValidationAvailable,
-            validationSummary = validationSummary,
-            validationRunning = validationRunning,
-            onValidateVideo = onValidateVideo,
+        Text(
+            text = glFrameStats.reconstructionDiagnostics.summary(),
+            color = Color.White,
         )
-        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = glFrameStats.phaseDiagnostics.summary,
+            color = Color.White,
+        )
+        Text(
+            text = PerformanceBenchmark.from(sample, glFrameStats).summary(),
+            color = Color.White,
+        )
+    }
+    Spacer(modifier = Modifier.height(8.dp))
+    SignalWaveform(
+        values = signalHistory,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(44.dp),
+    )
+    if (settings.mode == MagnificationMode.Breathing) {
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = "Breathing motion: ${"%+.4f".format(breathingMotionSample.amplifiedDy)}",
+            color = Color.White,
+        )
         SignalWaveform(
-            values = signalHistory,
+            values = breathingMotionHistory,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(44.dp),
+                .height(36.dp),
         )
-        if (settings.mode == MagnificationMode.Breathing) {
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "Breathing motion: ${"%+.4f".format(breathingMotionSample.amplifiedDy)}",
-                color = Color.White,
-            )
-            SignalWaveform(
-                values = breathingMotionHistory,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(36.dp),
-            )
-        }
     }
 }
 
@@ -2121,6 +2173,13 @@ private val ViewMode.compactLabel: String
         ViewMode.Difference -> "Diff"
         ViewMode.Split -> "Split"
     }
+
+private enum class ExpandedPanelTab(val label: String) {
+    Controls("Controls"),
+    Setup("Setup"),
+    Recording("Record"),
+    Debug("Debug"),
+}
 
 @Composable
 private fun SignalWaveform(

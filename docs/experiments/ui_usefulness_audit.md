@@ -27,6 +27,10 @@ Date: 2026-07-05
 - Selected-video exports now include `evidence_report.html` with an inline signal plot and shareable recent-export `Report` action.
 - Added demo presets that apply mode, view, and amplification together before showing the matching setup guide.
 - Added explicit ROI edit mode so normal preview drags do not accidentally move the manual ROI; corner handles appear only while editing.
+- Split expanded controls into `Controls`, `Setup`, `Record`, and `Debug`
+  panels so diagnostics and recording history are no longer composed while
+  adjusting the main controls. Pixel 8a expanded-controls jank improved to
+  23.33% with an 11 ms median frame time in the 2026-07-12 scripted check.
 
 ## Euler Sample Output
 

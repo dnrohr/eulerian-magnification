@@ -169,6 +169,27 @@ Goal: turn the prototype into a coherent demo app with clean UX and release-read
 - Pixel 8a install and scripted evidence capture:
   `tools/capture_live_validation_evidence.ps1 -Label full-frame-expanded-quality-throttle -Mode Tremor -View Split -RoiSource FullFrame -GlPreview $true -Controls $true -Amplification 18 -ScreenRecordSeconds 0`
 
+## Completed Slice: Tabbed Expanded Controls
+
+- Split expanded controls into lightweight `Controls`, `Setup`, `Record`, and
+  `Debug` panels so the app no longer composes diagnostics, setup guidance,
+  recording gallery, controls, and waveforms at the same time.
+- Kept the output/preview/signal/renderer summary and quality line visible above
+  the tabs.
+- Moved high-churn FPS, GL, lighting, translation, and waveform details into the
+  `Debug` panel.
+- Pixel 8a full-frame expanded-controls evidence improved from the prior
+  75.00% janky frames / 42 ms median frame time to 23.33% janky frames /
+  11 ms median frame time.
+- Evidence bundle:
+  `sample-videos/exports/live-validation/20260712-161329-expanded-tabs-controls-fps`.
+
+## Verification
+
+- `.\gradlew.bat assembleDebug`
+- Pixel 8a install and scripted evidence capture:
+  `tools/capture_live_validation_evidence.ps1 -Label expanded-tabs-controls-fps -Mode Tremor -View Split -RoiSource FullFrame -GlPreview $true -Controls $true -Amplification 18 -ScreenRecordSeconds 0`
+
 ## Success Criteria
 
 - Minimum viable demo flow is smooth on Pixel 8a.
