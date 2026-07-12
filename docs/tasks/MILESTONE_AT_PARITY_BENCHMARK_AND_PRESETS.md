@@ -111,7 +111,9 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   incomplete non-aborted runtime bundles still fail as `runtime_failed`.
 - Added `tools/wait_for_device_thermal_ready.ps1` so watched preset and
   full-frame validation runs can wait until both Android thermal status and max
-  sensor status are below the chosen threshold before launching the app.
+  sensor status are below the chosen threshold before launching the app. The
+  helper requires consecutive ready samples by default so one transient thermal
+  dip does not start a watched validation run too early.
 
 ## Supporting Slice: Visual Review Metadata
 

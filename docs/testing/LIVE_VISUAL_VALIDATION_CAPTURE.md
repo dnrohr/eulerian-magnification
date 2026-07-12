@@ -85,14 +85,15 @@ Use the thermal wait helper before watched validation runs:
 ```powershell
 .\tools\wait_for_device_thermal_ready.ps1 `
   -ReadyBelowThermalStatus 4 `
+  -RequiredReadySamples 2 `
   -TimeoutSeconds 900 `
   -PollSeconds 30 `
   -OutputPath "sample-videos\exports\live-validation\thermal-ready.json"
 ```
 
 The helper exits `0` when both Android thermal status and max sensor status are
-below the threshold. It exits `2` on timeout and can write the polling history
-to JSON.
+below the threshold for the requested number of consecutive samples. It exits
+`2` on timeout and can write the polling history to JSON.
 
 Screenshot content metrics include sampled luminance mean, luminance standard
 deviation, dark/light pixel fractions, a `nonBlank` flag, and a portrait
