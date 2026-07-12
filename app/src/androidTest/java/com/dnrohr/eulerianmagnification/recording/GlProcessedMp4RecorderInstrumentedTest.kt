@@ -42,6 +42,38 @@ class GlProcessedMp4RecorderInstrumentedTest {
         assertTrue(validation.errors.joinToString(), validation.isValid)
     }
 
+    @Test
+    fun encodesSplitProcessedGlFramesToValidMp4() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val outputFile = File(context.cacheDir, "gl-processed-split-instrumented.mp4")
+        outputFile.delete()
+
+        OffscreenGlContext(GlTextureSize(64, 64)).use {
+            val rawTextureId = createTexture(64, 64)
+            val processedTextureId = createTexture(64, 64)
+            val recorder = GlProcessedMp4Recorder(outputFile, bitrate = 600_000, frameRate = 30)
+            repeat(5) { index ->
+                updateTexture(rawTextureId, 64, 64, index)
+                updateTexture(processedTextureId, 64, 64, index + 20)
+                recorder.record(
+                    ProcessedGlFrame(
+                        textureId = processedTextureId,
+                        rawTextureId = rawTextureId,
+                        size = GlTextureSize(64, 64),
+                        presentationTimestampNanos = index * 33_333_333L,
+                        splitMode = true,
+                    )
+                )
+            }
+            recorder.stop()
+            GLES30.glDeleteTextures(2, intArrayOf(rawTextureId, processedTextureId), 0)
+        }
+
+        val validation = EncodedOutputValidator().validate(outputFile)
+        assertTrue(validation.errors.joinToString(), validation.isValid)
+        assertTrue("split encoded video should not be tiny", outputFile.length() > 512L)
+    }
+
     private fun createTexture(width: Int, height: Int): Int {
         val textures = IntArray(1)
         GLES30.glGenTextures(1, textures, 0)

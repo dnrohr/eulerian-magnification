@@ -837,6 +837,7 @@ class CameraOesRenderer(
         onProcessedFrame(
             ProcessedGlFrame(
                 textureId = processedTarget.textureId,
+                rawTextureId = rgbRenderTarget?.textureId?.takeIf { colorUniforms.splitMode },
                 size = processedTarget.size,
                 presentationTimestampNanos = colorUniforms.presentationTimestampNanos,
                 splitMode = colorUniforms.splitMode,

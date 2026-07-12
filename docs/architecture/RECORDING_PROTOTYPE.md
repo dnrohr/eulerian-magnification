@@ -48,10 +48,10 @@ returned monotonic `presentationTimestampNanos` into
 carries the same presentation timeline written to recording metadata.
 
 The GL renderer now exposes a `ProcessedGlFrame` callback with the processed
-texture id, target size, split-mode flag, and presentation timestamp. The next
-encoder slice should render that texture into `MediaCodec`'s input surface from
-an EGL context and assign the same timestamp with
-`eglPresentationTimeANDROID`.
+texture id, optional raw texture id for Split view, target size, split-mode
+flag, and presentation timestamp. The encoder renders the processed texture for
+single-view modes and raw-left/processed-right for Split, then assigns the same
+timestamp with `eglPresentationTimeANDROID`.
 
 `GlEncoderSurfaceRenderer` is the first encoder-surface rendering component. It
 creates a recordable GLES 3 EGL window surface around a `MediaCodec` input

@@ -1,6 +1,6 @@
 # Milestone AS - Processed Live Recording Parity
 
-Status: In progress
+Status: Complete
 
 Importance: High. True feature parity needs the exported MP4 to match the processed preview, not raw camera video or UI-only overlays.
 
@@ -8,11 +8,11 @@ Goal: ensure live preview output and recorded output share the same reconstructe
 
 ## Tasks
 
-- [ ] Route live reconstructed frames to the encoder surface for supported renderer paths.
+- [x] Route live reconstructed frames to the encoder surface for supported renderer paths.
 - [x] Add a clean-output recording option that excludes debug UI, boxes, and guides.
 - [x] Add an annotated-output option for evidence capture when validation overlays are useful.
 - [x] Record metadata for renderer path, fallback state, pyramid settings, temporal warmup, dropped frames, and quality diagnostics.
-- [ ] Verify that recorded frames match preview mode for Amplified, Difference, and Split views.
+- [x] Verify that recorded frames match preview mode for Amplified, Difference, and Split views.
 - [x] Add a device smoke test that records a short processed clip and validates that the file is playable and nonblank.
 
 ## Completed Slice: Renderer Diagnostics Metadata
@@ -51,6 +51,16 @@ Goal: ensure live preview output and recorded output share the same reconstructe
   analysis samples.
 - Verified on connected Pixel 8a with:
   `.\gradlew.bat connectedDebugAndroidTest "-Pandroid.testInstrumentationRunnerArguments.class=com.dnrohr.eulerianmagnification.recording.ProcessedRecordingSessionInstrumentedTest"`
+
+## Completed Slice: GL Split Recording Parity
+
+- `ProcessedGlFrame` now carries an optional raw texture when Split view is
+  active.
+- The live GL renderer emits raw and processed textures for Split recordings.
+- `GlEncoderSurfaceRenderer` now draws raw-left and processed-right into the
+  encoder surface for Split, matching the on-screen GL preview composition.
+- Added JVM coverage for the enriched processed-frame contract and Pixel
+  instrumentation coverage for split GL MP4 encoding.
 
 ## Done When
 

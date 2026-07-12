@@ -102,7 +102,15 @@ class GlEncoderSurfaceRenderer(
             ensureProgram()
             GLES30.glViewport(0, 0, frame.size.width, frame.size.height)
             GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT)
-            drawTexture(frame.textureId)
+            if (frame.splitMode && frame.rawTextureId != null) {
+                val halfWidth = (frame.size.width / 2).coerceAtLeast(1)
+                GLES30.glViewport(0, 0, halfWidth, frame.size.height)
+                drawTexture(frame.rawTextureId)
+                GLES30.glViewport(halfWidth, 0, frame.size.width - halfWidth, frame.size.height)
+                drawTexture(frame.textureId)
+            } else {
+                drawTexture(frame.textureId)
+            }
             EGLExt.eglPresentationTimeANDROID(eglDisplay, eglSurface, frame.presentationTimestampNanos)
             check(EGL14.eglSwapBuffers(eglDisplay, eglSurface)) { "Could not swap encoder EGL buffers." }
         } finally {
