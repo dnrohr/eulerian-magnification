@@ -381,13 +381,12 @@ if ($Summarize) {
     if (-not (Test-Path -LiteralPath $summaryScript)) {
         Write-Warning "Summary requested, but summarize_live_validation_evidence.ps1 was not found."
     } else {
-        $summaryArgs = @("-BundlePath", $outputDir)
         $requiredUiTextArgs = @($RequireUiText | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
         if ($requiredUiTextArgs.Count -gt 0) {
-            $summaryArgs += "-RequireUiText"
-            $summaryArgs += $requiredUiTextArgs
+            & $summaryScript -BundlePath $outputDir -RequireUiText $requiredUiTextArgs
+        } else {
+            & $summaryScript -BundlePath $outputDir
         }
-        & $summaryScript @summaryArgs
     }
 }
 

@@ -290,7 +290,7 @@ $missedVsync = Match-FirstNumber $gfx 'Number Missed Vsync:\s+(\d+)'
 
 $runtimePatterns = [ordered]@{
     fatalException = 'FATAL EXCEPTION'
-    androidRuntime = 'AndroidRuntime'
+    androidRuntime = '\s[EF]\s+AndroidRuntime\b'
     anr = '\bANR\b'
     glError = 'GL error|CameraOesRenderer.*error|RendererError'
 }
