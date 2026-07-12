@@ -185,6 +185,17 @@ Goal: integrate the full-frame EVM renderer into the live preview path.
 - This protects AE/AP smoke runs from hot-device false negatives, but known
   target visual validation remains open.
 
+## Supporting Slice: Camera Cadence Full-Frame Fallback
+
+- The full-frame ROI fallback now also observes settled GL camera cadence.
+- If full-frame mode has at least ten GL camera-frame samples and cadence falls
+  below the live threshold, the app switches back to Auto ROI even when CPU
+  analysis FPS still looks healthy.
+- This targets the observed failure mode where full-frame preview appears frozen
+  or extremely low-FPS before the analysis fallback alone can react.
+- Startup cadence is still ignored until the GL camera statistics settle, so
+  normal preview warmup should not force an unnecessary ROI change.
+
 ## Evidence
 
 - `docs/experiments/live_full_frame_preview_bridge.md`

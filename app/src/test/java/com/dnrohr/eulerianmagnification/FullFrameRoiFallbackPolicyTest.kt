@@ -72,6 +72,33 @@ class FullFrameRoiFallbackPolicyTest {
     }
 
     @Test
+    fun settledLowGlCameraFpsFallsBackImmediately() {
+        val decision = FullFrameRoiFallbackPolicy.observe(
+            roiSource = RoiSource.FullFrame,
+            analysisFps = 30.0,
+            state = FullFrameRoiFallbackState(),
+            cameraFrameFps = 12.0,
+            cameraFrameSampleCount = 10,
+        )
+
+        assertTrue(decision.shouldFallbackToAuto)
+        assertEquals("camera_fps", decision.reason)
+    }
+
+    @Test
+    fun lowGlCameraFpsDoesNotFallbackWhileStatsSettle() {
+        val decision = FullFrameRoiFallbackPolicy.observe(
+            roiSource = RoiSource.FullFrame,
+            analysisFps = 30.0,
+            state = FullFrameRoiFallbackState(),
+            cameraFrameFps = 12.0,
+            cameraFrameSampleCount = 9,
+        )
+
+        assertFalse(decision.shouldFallbackToAuto)
+    }
+
+    @Test
     fun moderateThermalDoesNotForceFallback() {
         val decision = FullFrameRoiFallbackPolicy.observe(
             roiSource = RoiSource.FullFrame,

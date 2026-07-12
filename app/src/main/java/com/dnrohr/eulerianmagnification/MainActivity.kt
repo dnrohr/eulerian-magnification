@@ -345,6 +345,8 @@ private fun MainScreen(
             roiSource = roiSource,
             analysisFps = sample.analysisFps,
             state = fullFrameRoiFallbackState,
+            cameraFrameFps = glFrameStats.averageFps.takeIf { usingGlPreview },
+            cameraFrameSampleCount = if (usingGlPreview) glFrameStats.sampleCount else 0,
             thermalStatus = liveThermalStatus,
         )
         fullFrameRoiFallbackState = fullFrameFallbackDecision.nextState

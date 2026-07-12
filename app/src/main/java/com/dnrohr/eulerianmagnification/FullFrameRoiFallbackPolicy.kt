@@ -17,6 +17,8 @@ object FullFrameRoiFallbackPolicy {
         roiSource: RoiSource,
         analysisFps: Double,
         state: FullFrameRoiFallbackState,
+        cameraFrameFps: Double? = null,
+        cameraFrameSampleCount: Int = 0,
         thermalStatus: String = THERMAL_STATUS_NONE,
     ): FullFrameRoiFallbackDecision {
         if (roiSource != RoiSource.FullFrame) {
@@ -32,6 +34,18 @@ object FullFrameRoiFallbackPolicy {
                 reason = "thermal",
             )
         }
+
+        val cameraFpsIsSettledLow = cameraFrameSampleCount >= MIN_CAMERA_FRAME_SAMPLES &&
+            cameraFrameFps != null &&
+            cameraFrameFps in 0.01..<MIN_ANALYSIS_FPS
+        if (cameraFpsIsSettledLow) {
+            return FullFrameRoiFallbackDecision(
+                shouldFallbackToAuto = true,
+                nextState = FullFrameRoiFallbackState(),
+                reason = "camera_fps",
+            )
+        }
+
         if (analysisFps <= 0.0) {
             return FullFrameRoiFallbackDecision(
                 shouldFallbackToAuto = false,
@@ -54,6 +68,7 @@ object FullFrameRoiFallbackPolicy {
 
     private const val MIN_ANALYSIS_FPS = 23.5
     private const val MIN_LOW_FPS_SAMPLES = 5
+    private const val MIN_CAMERA_FRAME_SAMPLES = 10
     private const val THERMAL_STATUS_NONE = "none"
 }
 
