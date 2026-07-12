@@ -10,6 +10,7 @@ class RieszPhaseShaderSourceTest {
         assertTrue(RieszPhaseShaderSource.RIESZ_COMPONENT_FRAGMENT.startsWith("#version 300 es"))
         assertTrue(RieszPhaseShaderSource.PHASE_PROJECT_FRAGMENT.startsWith("#version 300 es"))
         assertTrue(RieszPhaseShaderSource.PHASE_AMPLIFY_FRAGMENT.startsWith("#version 300 es"))
+        assertTrue(RieszPhaseShaderSource.LIVE_PHASE_EXTRACT_ROI_FRAGMENT.startsWith("#version 300 es"))
         assertTrue(RieszPhaseShaderSource.LIVE_PHASE_TEMPORAL_FRAGMENT.startsWith("#version 300 es"))
         assertTrue(RieszPhaseShaderSource.LIVE_PHASE_AMPLIFY_FRAGMENT.startsWith("#version 300 es"))
         assertTrue(RieszPhaseShaderSource.PHASE_RECONSTRUCT_FRAGMENT.startsWith("#version 300 es"))
@@ -43,6 +44,16 @@ class RieszPhaseShaderSourceTest {
         assertTrue(shader.contains("uAmplification"))
         assertTrue(shader.contains("atan(sin(currentPhase - referencePhase), cos(currentPhase - referencePhase))"))
         assertTrue(shader.contains("delta * uAmplification"))
+    }
+
+    @Test
+    fun liveExtractRoiShaderMapsProcessingTextureToFullFrameRoi() {
+        val shader = RieszPhaseShaderSource.LIVE_PHASE_EXTRACT_ROI_FRAGMENT
+
+        assertTrue(shader.contains("uRawTexture"))
+        assertTrue(shader.contains("uniform vec4 uRoi"))
+        assertTrue(shader.contains("mix(uRoi.xy, uRoi.zw, vTexCoord)"))
+        assertTrue(shader.contains("texture(uRawTexture"))
     }
 
     @Test

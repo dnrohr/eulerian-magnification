@@ -91,6 +91,19 @@ object RieszPhaseShaderSource {
         }
     """
 
+    const val LIVE_PHASE_EXTRACT_ROI_FRAGMENT = """#version 300 es
+        precision mediump float;
+        uniform sampler2D uRawTexture;
+        uniform vec4 uRoi;
+        in vec2 vTexCoord;
+        out vec4 outColor;
+
+        void main() {
+            vec2 sourceUv = mix(uRoi.xy, uRoi.zw, vTexCoord);
+            outColor = texture(uRawTexture, clamp(sourceUv, vec2(0.0), vec2(1.0)));
+        }
+    """
+
     const val LIVE_PHASE_TEMPORAL_FRAGMENT = """#version 300 es
         precision mediump float;
         uniform sampler2D uCurrentPhaseTexture;

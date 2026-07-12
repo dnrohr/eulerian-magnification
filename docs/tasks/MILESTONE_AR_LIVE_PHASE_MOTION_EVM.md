@@ -185,3 +185,17 @@ Goal: bring the recorded Riesz/phase motion renderer into a live-preview path fo
 - Runtime phase shader invocation and visible phase output remain open.
 - Installed the debug build on the Pixel 8a after focused uniform/ROI/graph/
   shader coverage and full JVM/build verification.
+
+## Completed Slice: Live Phase ROI Extraction Pass
+
+- Added `LIVE_PHASE_EXTRACT_ROI_FRAGMENT` to map the reduced processing texture
+  back into the selected full-frame manual ROI.
+- `CameraOesRenderer` now compiles the ROI extraction program and invokes it
+  into `LivePhaseRoiState.extractedRoi` whenever live phase is requested and
+  eligible.
+- Renderer fallback diagnostics now report an error if the source full-frame GL
+  texture is unavailable during the extraction path.
+- Riesz component, phase projection, temporal update, reconstruction, and
+  visible phase compose invocation remain open.
+- Installed the debug build on the Pixel 8a after focused shader/uniform
+  coverage and full JVM/build verification.
