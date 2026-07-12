@@ -252,3 +252,18 @@ Goal: bring the recorded Riesz/phase motion renderer into a live-preview path fo
 - Visible phase compose invocation remains open.
 - Installed the debug build on the Pixel 8a after focused shader/graph coverage
   and full JVM/build verification.
+
+## Completed Slice: Live Phase Full-Frame Compose Output
+
+- `CameraOesRenderer` now compiles and invokes the live phase compose shader
+  after ROI reconstruction.
+- The reconstructed phase ROI is composited into the existing full-frame
+  `processedRenderTarget`, so the preview and processed recording path can use
+  the live phase output without a new surface.
+- Difference view maps to the phase difference heatmap; Split view uses the
+  existing raw-left/processed-right display with the phase-composited target on
+  the processed side.
+- Synthetic, recorded-sample, and Pixel validation remain open before declaring
+  visible live phase magnification complete.
+- Installed the debug build on the Pixel 8a after focused shader/graph coverage
+  and full JVM/build verification.

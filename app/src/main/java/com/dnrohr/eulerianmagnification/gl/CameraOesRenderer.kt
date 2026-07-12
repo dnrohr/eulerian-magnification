@@ -39,6 +39,7 @@ class CameraOesRenderer(
     private var phaseTemporalProgram = 0
     private var phaseAmplifyProgram = 0
     private var phaseReconstructProgram = 0
+    private var phaseComposeProgram = 0
     private var oesTexTransformLocation = -1
     private var rgbInputTextureLocation = -1
     private var colorInputTextureLocation = -1
@@ -80,6 +81,10 @@ class CameraOesRenderer(
     private var phaseAmplifyAmplificationLocation = -1
     private var phaseAmplifyAmplitudeThresholdLocation = -1
     private var phaseReconstructAmplifiedTextureLocation = -1
+    private var phaseComposeRawTextureLocation = -1
+    private var phaseComposeReconstructedTextureLocation = -1
+    private var phaseComposeRoiLocation = -1
+    private var phaseComposeViewModeLocation = -1
     private var rgbRenderTarget: GlRenderTarget? = null
     private var processedRenderTarget: GlRenderTarget? = null
     private var downsamplePyramid: GlPyramid? = null
@@ -164,6 +169,10 @@ class CameraOesRenderer(
             RieszPhaseShaderSource.VERTEX,
             RieszPhaseShaderSource.PHASE_RECONSTRUCT_FRAGMENT,
         )
+        phaseComposeProgram = GlProgram.compileProgram(
+            RieszPhaseShaderSource.VERTEX,
+            RieszPhaseShaderSource.LIVE_PHASE_COMPOSE_FRAGMENT,
+        )
         oesTexTransformLocation = GLES30.glGetUniformLocation(oesProgram, "uTexTransform")
         rgbInputTextureLocation = GLES30.glGetUniformLocation(rgbProgram, "uInputTexture")
         colorInputTextureLocation = GLES30.glGetUniformLocation(colorProgram, "uInputTexture")
@@ -213,6 +222,10 @@ class CameraOesRenderer(
         phaseAmplifyAmplificationLocation = GLES30.glGetUniformLocation(phaseAmplifyProgram, "uAmplification")
         phaseAmplifyAmplitudeThresholdLocation = GLES30.glGetUniformLocation(phaseAmplifyProgram, "uAmplitudeThreshold")
         phaseReconstructAmplifiedTextureLocation = GLES30.glGetUniformLocation(phaseReconstructProgram, "uAmplifiedPhaseTexture")
+        phaseComposeRawTextureLocation = GLES30.glGetUniformLocation(phaseComposeProgram, "uRawTexture")
+        phaseComposeReconstructedTextureLocation = GLES30.glGetUniformLocation(phaseComposeProgram, "uPhaseReconstructedTexture")
+        phaseComposeRoiLocation = GLES30.glGetUniformLocation(phaseComposeProgram, "uRoi")
+        phaseComposeViewModeLocation = GLES30.glGetUniformLocation(phaseComposeProgram, "uViewMode")
         oesTextureId = createOesTexture()
         surfaceTexture = SurfaceTexture(oesTextureId).apply {
             setOnFrameAvailableListener {
@@ -269,7 +282,7 @@ class CameraOesRenderer(
                 GlRenderPath.ColorBridge
             }
         }
-        val phaseDiagnostics = prepareLivePhaseRoiState(colorUniforms, rgbRenderTarget)
+        val phaseDiagnostics = prepareLivePhaseRoiState(colorUniforms, rgbRenderTarget, processedRenderTarget)
         emitProcessedFrame()
         drawOutputToScreen()
         providePendingSurfaceIfReady()
@@ -477,6 +490,7 @@ class CameraOesRenderer(
     private fun prepareLivePhaseRoiState(
         uniforms: ColorMagnificationUniforms,
         source: GlRenderTarget?,
+        output: GlRenderTarget?,
     ): LivePhaseDiagnostics {
         val diagnostics = uniforms.livePhaseDiagnostics
         if (!diagnostics.requested) {
@@ -495,6 +509,10 @@ class CameraOesRenderer(
             fallbackReason = LivePhaseFallbackReason.MissingManualRoi,
         )
         source ?: return diagnostics.copy(
+            processingSize = plan.processingSize,
+            fallbackReason = LivePhaseFallbackReason.RendererError,
+        )
+        output ?: return diagnostics.copy(
             processingSize = plan.processingSize,
             fallbackReason = LivePhaseFallbackReason.RendererError,
         )
@@ -523,6 +541,7 @@ class CameraOesRenderer(
             renderLivePhaseTemporalState(state, uniforms, temporalInitialized)
             renderLivePhaseAmplifiedPhase(state, uniforms)
             renderLivePhaseRoiReconstruction(state)
+            renderLivePhaseComposeFullFrame(source, state, output, uniforms, plan)
             diagnostics.copy(
                 processingSize = plan.processingSize,
                 warmupStatus = if (temporalInitialized) {
@@ -657,6 +676,42 @@ class CameraOesRenderer(
         drawFramebufferQuad()
         GLES30.glBindFramebuffer(GLES30.GL_FRAMEBUFFER, 0)
         GlProgram.checkNoGlError("renderLivePhaseRoiReconstruction")
+    }
+
+    private fun renderLivePhaseComposeFullFrame(
+        source: GlRenderTarget,
+        state: LivePhaseRoiState,
+        output: GlRenderTarget,
+        uniforms: ColorMagnificationUniforms,
+        plan: LivePhaseRoiPlan,
+    ) {
+        output.bind()
+        GLES30.glUseProgram(phaseComposeProgram)
+        GLES30.glUniform1i(phaseComposeRawTextureLocation, 0)
+        GLES30.glUniform1i(phaseComposeReconstructedTextureLocation, 1)
+        GLES30.glUniform4f(
+            phaseComposeRoiLocation,
+            plan.roi.left,
+            plan.roi.top,
+            plan.roi.right,
+            plan.roi.bottom,
+        )
+        GLES30.glUniform1i(phaseComposeViewModeLocation, livePhaseComposeViewMode(uniforms))
+        GLES30.glActiveTexture(GLES30.GL_TEXTURE0)
+        GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, source.textureId)
+        GLES30.glActiveTexture(GLES30.GL_TEXTURE1)
+        GLES30.glBindTexture(GLES30.GL_TEXTURE_2D, state.reconstructedRoi.textureId)
+        drawFramebufferQuad()
+        GLES30.glBindFramebuffer(GLES30.GL_FRAMEBUFFER, 0)
+        GlProgram.checkNoGlError("renderLivePhaseComposeFullFrame")
+    }
+
+    private fun livePhaseComposeViewMode(uniforms: ColorMagnificationUniforms): Int {
+        return if (uniforms.differenceMode) {
+            PHASE_VIEW_DIFFERENCE
+        } else {
+            PHASE_VIEW_AMPLIFIED
+        }
     }
 
     private fun renderDownsamplePyramid(
@@ -838,6 +893,8 @@ class CameraOesRenderer(
         private const val DEFAULT_FRAME_NANOS = 33_333_333L
         private const val NANOS_PER_SECOND = 1_000_000_000.0
         private const val DEFAULT_PHASE_AMPLITUDE_THRESHOLD = 0.03f
+        private const val PHASE_VIEW_AMPLIFIED = 0
+        private const val PHASE_VIEW_DIFFERENCE = 1
     }
 }
 
