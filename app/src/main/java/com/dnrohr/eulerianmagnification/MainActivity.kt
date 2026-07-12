@@ -198,6 +198,13 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
         usingGlPreview = usingGlPreview,
         glFrameStats = glFrameStats,
     )
+    val livePhasePreviewDecision = LivePhasePreviewPolicy.decide(
+        settings = analysisSettings,
+        usingGlPreview = usingGlPreview,
+        glFrameStats = glFrameStats,
+        surfaceSize = glFrameStats.surfaceSize,
+        manualRoi = manualRoi,
+    )
     var lightingDiagnostic by remember {
         mutableStateOf<LightingDiagnostic?>(null)
     }
@@ -337,6 +344,7 @@ private fun MainScreen(featureAvailability: FeatureAvailability) {
                         manualRoi = manualRoi,
                         cameraControlsLocked = cameraControlsLocked,
                         liveEvmPreviewDecision = liveEvmPreviewDecision,
+                        livePhasePreviewDecision = livePhasePreviewDecision,
                         onStats = { glFrameStats = it },
                         modifier = Modifier.fillMaxSize(),
                         onSample = ::handleSample,
@@ -509,6 +517,7 @@ private fun CameraGlPreview(
     manualRoi: NormalizedRect?,
     cameraControlsLocked: Boolean,
     liveEvmPreviewDecision: LiveEvmPreviewDecision,
+    livePhasePreviewDecision: LivePhasePreviewDecision,
     onStats: (GlFrameStats) -> Unit,
     modifier: Modifier = Modifier,
     onSample: (AnalysisSample) -> Long,
@@ -520,6 +529,7 @@ private fun CameraGlPreview(
     val mainExecutor = remember(context) { ContextCompat.getMainExecutor(context) }
     val colorParameters = remember { ColorMagnificationParameters() }
     val currentLiveEvmPreviewDecision = rememberUpdatedState(liveEvmPreviewDecision)
+    val currentLivePhasePreviewDecision = rememberUpdatedState(livePhasePreviewDecision)
 
     DisposableEffect(Unit) {
         onDispose {
@@ -582,6 +592,7 @@ private fun CameraGlPreview(
                                                 settings = settings,
                                                 fullFrameMode = currentLiveEvmPreviewDecision.value.fullFrameColorPreview,
                                                 presentationTimestampNanos = presentationTimestampNanos,
+                                                livePhasePreviewDecision = currentLivePhasePreviewDecision.value,
                                             )
                                         )
                                     }

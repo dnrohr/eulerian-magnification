@@ -122,3 +122,17 @@ Goal: bring the recorded Riesz/phase motion renderer into a live-preview path fo
 - Runtime phase rendering and UI display remain open.
 - Installed the debug build on the Pixel 8a after focused stats coverage and
   full JVM/build verification.
+
+## Completed Slice: Live Phase Preview Runtime Decision Wiring
+
+- `GlFrameStats` now carries the current GL surface size reported by
+  `CameraOesRenderer`.
+- `MainActivity` evaluates `LivePhasePreviewPolicy` from the live settings,
+  GL preview state, renderer stats, surface size, and manual ROI.
+- `CameraGlPreview` passes the current `LivePhasePreviewDecision` into
+  `ColorMagnificationParameters`, so renderer stats receive real live phase
+  diagnostics for Motion/Object modes instead of the default not-requested
+  placeholder.
+- Runtime phase rendering and UI display remain open.
+- Installed the debug build on the Pixel 8a after focused policy/timer coverage
+  and full JVM/build verification.

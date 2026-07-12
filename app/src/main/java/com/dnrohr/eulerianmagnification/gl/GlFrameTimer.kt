@@ -13,6 +13,7 @@ class GlFrameTimer(private val windowSize: Int = 60) {
     fun endFrame(
         timestampNanos: Long,
         renderPath: GlRenderPath = GlRenderPath.Unknown,
+        surfaceSize: GlTextureSize? = null,
         reconstructionDiagnostics: GlReconstructionDiagnostics = GlReconstructionDiagnostics(),
         phaseDiagnostics: LivePhaseDiagnostics = LivePhaseDiagnostics(requested = false),
     ): GlFrameStats {
@@ -24,17 +25,19 @@ class GlFrameTimer(private val windowSize: Int = 60) {
             }
         }
         frameStartNanos = null
-        return stats(renderPath, reconstructionDiagnostics, phaseDiagnostics)
+        return stats(renderPath, surfaceSize, reconstructionDiagnostics, phaseDiagnostics)
     }
 
     fun stats(
         renderPath: GlRenderPath = GlRenderPath.Unknown,
+        surfaceSize: GlTextureSize? = null,
         reconstructionDiagnostics: GlReconstructionDiagnostics = GlReconstructionDiagnostics(),
         phaseDiagnostics: LivePhaseDiagnostics = LivePhaseDiagnostics(requested = false),
     ): GlFrameStats {
         if (frameDurationsNanos.isEmpty()) {
             return GlFrameStats(
                 renderPath = renderPath,
+                surfaceSize = surfaceSize,
                 reconstructionDiagnostics = reconstructionDiagnostics,
                 phaseDiagnostics = phaseDiagnostics,
             )
@@ -45,6 +48,7 @@ class GlFrameTimer(private val windowSize: Int = 60) {
             averageFps = if (averageNanos <= 0.0) 0.0 else NANOS_PER_SECOND / averageNanos,
             sampleCount = frameDurationsNanos.size,
             renderPath = renderPath,
+            surfaceSize = surfaceSize,
             reconstructionDiagnostics = reconstructionDiagnostics,
             phaseDiagnostics = phaseDiagnostics,
         )
@@ -61,6 +65,7 @@ data class GlFrameStats(
     val averageFps: Double = 0.0,
     val sampleCount: Int = 0,
     val renderPath: GlRenderPath = GlRenderPath.Unknown,
+    val surfaceSize: GlTextureSize? = null,
     val reconstructionDiagnostics: GlReconstructionDiagnostics = GlReconstructionDiagnostics(),
     val phaseDiagnostics: LivePhaseDiagnostics = LivePhaseDiagnostics(requested = false),
 )

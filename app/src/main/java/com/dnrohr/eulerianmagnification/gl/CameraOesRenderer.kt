@@ -203,6 +203,7 @@ class CameraOesRenderer(
             timer.endFrame(
                 timestampNanos = System.nanoTime(),
                 renderPath = renderPath,
+                surfaceSize = surfaceSize,
                 reconstructionDiagnostics = reconstructionDiagnostics,
                 phaseDiagnostics = colorUniforms.livePhaseDiagnostics,
             )

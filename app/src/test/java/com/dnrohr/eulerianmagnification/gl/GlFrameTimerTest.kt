@@ -34,6 +34,7 @@ class GlFrameTimerTest {
         val timer = GlFrameTimer()
 
         timer.beginFrame(0L)
+        val surfaceSize = GlTextureSize(1080, 2400)
         val diagnostics = GlReconstructionDiagnostics(
             activePyramidLevels = 3,
             internalSize = GlTextureSize(640, 360),
@@ -42,10 +43,12 @@ class GlFrameTimerTest {
         val stats = timer.endFrame(
             timestampNanos = 16_000_000L,
             renderPath = GlRenderPath.LiveReconstruction,
+            surfaceSize = surfaceSize,
             reconstructionDiagnostics = diagnostics,
         )
 
         assertEquals(GlRenderPath.LiveReconstruction, stats.renderPath)
+        assertEquals(surfaceSize, stats.surfaceSize)
         assertEquals(diagnostics, stats.reconstructionDiagnostics)
     }
 
