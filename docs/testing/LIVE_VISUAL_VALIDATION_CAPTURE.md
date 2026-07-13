@@ -63,6 +63,10 @@ signals, camera HAL FPS samples from logcat, Android thermal status, battery
 temperature/charging context, sampled screenshot content metrics,
 machine-readable UI text from `ui_dump.xml`, optional thermal readiness wait
 results, and optional ROI overlay measurement status.
+If the source worktree was dirty when the bundle was captured, the summary adds
+an explicit warning. Dirty captures can be useful when validating a script or
+in-progress fix, but do not treat them as release-quality visual-validation
+evidence until the same claim is repeated from a clean commit.
 The script also records `thermalservice_preflight.txt` before clearing logcat or
 launching the app. The manifest and summary expose this as `thermalPreflight`,
 so a capture can show that the device was already throttled before the app was
@@ -185,7 +189,8 @@ Run the summary self-test after editing capture or summary tooling:
 ```
 
 The test synthesizes a thermal-aborted bundle and an incomplete runtime bundle,
-then verifies the summary exit codes and verdicts.
+then verifies the summary exit codes, verdicts, UI assertion behavior, and dirty
+source warning.
 
 For ROI overlay validation, pass `-MeasureRoiExpected` with the expected
 normalized screenshot-space rectangle. The capture script then writes

@@ -485,6 +485,13 @@ if ($manifest -and $manifest.PSObject.Properties.Name -contains "warnings") {
         }
     }
 }
+if ($manifest -and
+    ($manifest.PSObject.Properties.Name -contains "source") -and
+    $manifest.source -and
+    ($manifest.source.PSObject.Properties.Name -contains "dirty") -and
+    $manifest.source.dirty -eq $true) {
+    $warnings += "source worktree was dirty during capture"
+}
 if ($missing.Count -gt 0 -and -not $aborted) {
     $warnings += "missing required artifacts"
 }

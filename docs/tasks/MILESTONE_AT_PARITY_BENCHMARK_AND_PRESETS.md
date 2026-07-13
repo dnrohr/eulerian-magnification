@@ -134,6 +134,16 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - This keeps preset benchmark/runtime smoke evidence separate from visual parity
   claims until a watched target run explicitly validates the result.
 
+## Supporting Slice: Dirty Source Evidence Warning
+
+- Live validation summaries now warn when the capture manifest reports a dirty
+  source worktree.
+- Dirty captures remain useful for validating in-progress scripts or fixes, but
+  should not be treated as release-quality preset or visual-parity evidence
+  until repeated from a clean commit.
+- The summary self-test now covers the dirty-source warning alongside thermal
+  aborts, incomplete runtime bundles, and required UI-text failures.
+
 ## Remaining
 
 - Extend Pixel 8a evidence with a known-good visual artifact and watched target
