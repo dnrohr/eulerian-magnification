@@ -338,6 +338,17 @@ Goal: bring the recorded Riesz/phase motion renderer into a live-preview path fo
   and
   `sample-videos/exports/live-validation/20260712-155819-full-frame-hidden-controls-fps`.
 
+## Supporting Slice: Phase Diagnostics Evidence Summary
+
+- Live validation summaries now extract phase-specific UI diagnostics into
+  `uiDump.phaseLabels`.
+- This makes watched live-phase captures easier to audit for required states
+  such as manual-ROI fallback, temporal warmup, ready phase processing size, or
+  phase renderer fallback, without relying only on screenshot reading.
+- Added summary self-test coverage for phase label extraction.
+- This supports the remaining controlled Pixel object-motion validation but
+  does not replace the watched target and visual pass/fail inspection.
+
 ## Next Gate For Manual ROI As Non-Default
 
 - Run the controlled Pixel object-motion setup from

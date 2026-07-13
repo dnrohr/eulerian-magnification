@@ -183,7 +183,7 @@ Janky frames: 2 (1.67%)
 Number Missed Vsync: 1
 "@ | Out-File -LiteralPath (Join-Path $uiMissingBundle "gfxinfo.txt") -Encoding utf8
     "Camera FPS: 30.0" | Out-File -LiteralPath (Join-Path $uiMissingBundle "logcat_tail.txt") -Encoding utf8
-    "<hierarchy><node text=`"Controls`" /></hierarchy>" |
+    "<hierarchy><node text=`"Controls`" /><node text=`"phase: 128x96 / phase ready / amplitude gate active`" /></hierarchy>" |
         Out-File -LiteralPath (Join-Path $uiMissingBundle "ui_dump.xml") -Encoding utf8
     Write-JsonFile -Path (Join-Path $uiMissingBundle "manifest.json") -Value ([ordered]@{
         createdAt = "2026-07-12T00:00:00.0000000-04:00"
@@ -216,6 +216,7 @@ Number Missed Vsync: 1
     Assert-Equal -Actual $uiMissingSummary.uiTextAssertions.passed -Expected $false -Message "Missing UI assertion should fail."
     Assert-Equal -Actual $uiMissingSummary.evidenceVerdict.status -Expected "ui_assertion_failed" -Message "Missing UI verdict mismatch."
     Assert-True -Condition ("source worktree was dirty during capture" -in @($uiMissingSummary.warnings)) -Message "Dirty source warning missing."
+    Assert-True -Condition ("phase: 128x96 / phase ready / amplitude gate active" -in @($uiMissingSummary.uiDump.phaseLabels)) -Message "Phase label summary missing."
 
     Write-Output "Live validation summary self-test passed: $root"
 } finally {

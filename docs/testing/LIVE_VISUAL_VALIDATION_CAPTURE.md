@@ -61,8 +61,9 @@ summary carries the same source identity plus launch state, required artifact
 presence, screenshot dimensions, gfx frame pacing, runtime crash/ANR/GL-error
 signals, camera HAL FPS samples from logcat, Android thermal status, battery
 temperature/charging context, sampled screenshot content metrics,
-machine-readable UI text from `ui_dump.xml`, optional thermal readiness wait
-results, and optional ROI overlay measurement status.
+machine-readable UI text from `ui_dump.xml`, extracted renderer/ROI/quality/
+phase labels, optional thermal readiness wait results, and optional ROI overlay
+measurement status.
 If the source worktree was dirty when the bundle was captured, the summary adds
 an explicit warning. Dirty captures can be useful when validating a script or
 in-progress fix, but do not treat them as release-quality visual-validation
@@ -311,6 +312,9 @@ matching pass criteria:
   stretched, and visibly processed on a stable target.
 - Live phase motion: motion must localize near the moving edge/object rather
   than flashing the whole ROI or full frame.
+- Live phase diagnostics: `evidence_summary.json` should include phase status
+  lines under `uiDump.phaseLabels`, such as phase fallback, warmup, ready, or
+  processing-size summaries.
 - Preset validation: the selected preset, target, lighting, support, and visible
   output must match the preset setup guidance.
 

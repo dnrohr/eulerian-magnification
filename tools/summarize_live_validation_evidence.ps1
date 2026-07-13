@@ -177,6 +177,7 @@ function Parse-UiDumpSummary {
             qualityLabels = @()
             rendererLabels = @()
             roiLabels = @()
+            phaseLabels = @()
         }
     }
 
@@ -197,16 +198,19 @@ function Parse-UiDumpSummary {
             qualityLabels = @()
             rendererLabels = @()
             roiLabels = @()
+            phaseLabels = @()
         }
     }
 
     $qualityPattern = 'Good|Face missing|Too dark|Thermal high|Low FPS|Full frame slow|Camera FPS low|Timing unstable|Lighting flicker|Exposure unstable|ROI motion|Mode motion risk|Amplification risk|Signal weak'
+    $phasePattern = 'phase:|phase fallback|phase warmup|phase ready'
     return [ordered]@{
         present = $true
         text = $texts
         qualityLabels = @($texts | Where-Object { $_ -match $qualityPattern })
         rendererLabels = @($texts | Where-Object { $_ -match 'Renderer:|Preview:|GL renderer:|Pyramid:|Benchmark:' })
         roiLabels = @($texts | Where-Object { $_ -match 'Auto ROI|Full frame|Manual ROI|Tracking|Center ROI|Frozen' })
+        phaseLabels = @($texts | Where-Object { $_ -match $phasePattern })
     }
 }
 
