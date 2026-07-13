@@ -229,7 +229,7 @@ class ColorMagnificationPassTest {
 
         assertEquals(roiPlan, uniforms.livePhaseRoiPlan)
         assertTrue(uniforms.livePhaseDiagnostics.requested)
-        assertEquals("phase: 160x120 / phase warmup: filling temporal state / amplitude unknown", uniforms.livePhaseDiagnostics.summary)
+        assertEquals("phase: 160x120 / phase warmup: filling temporal state / amplitude threshold unknown", uniforms.livePhaseDiagnostics.summary)
     }
 
     private fun diagnostic(status: LightingDiagnosticStatus): LightingDiagnostic {

@@ -40,10 +40,14 @@ data class LivePhaseAmplitudeGate(
 ) {
     val label: String
         get() = when (status) {
-            LivePhaseAmplitudeGateStatus.Unknown -> "amplitude unknown"
+            LivePhaseAmplitudeGateStatus.Unknown -> "amplitude threshold ${formatThresholdOrUnknown()}"
             LivePhaseAmplitudeGateStatus.Pass -> "amplitude ok ${formatMean()}"
             LivePhaseAmplitudeGateStatus.Low -> "amplitude low ${formatMean()}"
         }.trim()
+
+    private fun formatThresholdOrUnknown(): String {
+        return threshold?.let { String.format("%.3f", it) } ?: "unknown"
+    }
 
     private fun formatMean(): String {
         val mean = meanAmplitude ?: return ""

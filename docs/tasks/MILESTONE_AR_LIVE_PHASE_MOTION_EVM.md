@@ -365,6 +365,23 @@ Goal: bring the recorded Riesz/phase motion renderer into a live-preview path fo
   visible. The source was dirty because the protocol edit was in progress, so
   this is tooling smoke evidence, not release-quality visual validation.
 
+## Supporting Slice: Phase Amplitude Threshold Diagnostics
+
+- Live phase diagnostics now distinguish unknown amplitude measurement from the
+  known shader amplitude threshold.
+- The live renderer reports the configured phase amplitude threshold after the
+  amplification pass is active, so watched captures can show which amplitude
+  gate was applied even though the app does not read back GPU mean amplitude.
+- Contract-only diagnostics without a renderer threshold now say
+  `amplitude threshold unknown`; live renderer diagnostics should report
+  `amplitude threshold 0.030`.
+- Pixel 8a diagnostics smoke bundle
+  `sample-videos/exports/live-validation/20260712-204934-phase-threshold-diagnostics-smoke`
+  passed runtime checks and extracted
+  `phase: 144x320 / phase ready / amplitude threshold 0.030` from
+  `uiDump.phaseLabels`. The source was dirty because this validated the
+  in-progress code change, so it is not release-quality visual validation.
+
 ## Next Gate For Manual ROI As Non-Default
 
 - Run the controlled Pixel object-motion setup from

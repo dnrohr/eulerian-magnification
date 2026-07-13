@@ -555,6 +555,10 @@ class CameraOesRenderer(
                 } else {
                     LivePhaseWarmupStatus.Warming
                 },
+                amplitudeGate = LivePhaseAmplitudeGate(
+                    status = LivePhaseAmplitudeGateStatus.Unknown,
+                    threshold = DEFAULT_PHASE_AMPLITUDE_THRESHOLD,
+                ),
             )
         } catch (_: GlException) {
             livePhaseRoiState?.release()

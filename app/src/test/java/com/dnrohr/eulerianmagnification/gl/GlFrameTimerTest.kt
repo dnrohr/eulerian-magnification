@@ -89,7 +89,7 @@ class GlFrameTimerTest {
         )
 
         assertEquals(phaseDiagnostics, stats.phaseDiagnostics)
-        assertEquals("phase: 160x120 / phase ready / amplitude unknown", stats.phaseDiagnostics.summary)
+        assertEquals("phase: 160x120 / phase ready / amplitude threshold unknown", stats.phaseDiagnostics.summary)
     }
 
     @Test

@@ -55,9 +55,19 @@ class LivePhaseDiagnosticsTest {
 
         assertFalse(diagnostics.active)
         assertEquals(
-            "phase: 320x180 / phase warmup: filling temporal state / amplitude unknown",
+            "phase: 320x180 / phase warmup: filling temporal state / amplitude threshold unknown",
             diagnostics.summary,
         )
+    }
+
+    @Test
+    fun unknownAmplitudeCanReportKnownThreshold() {
+        val gate = LivePhaseAmplitudeGate(
+            status = LivePhaseAmplitudeGateStatus.Unknown,
+            threshold = 0.03f,
+        )
+
+        assertEquals("amplitude threshold 0.030", gate.label)
     }
 
     @Test
