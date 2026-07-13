@@ -85,14 +85,38 @@ Preferred capture command after installing the debug build:
 ```powershell
 .\tools\capture_live_validation_evidence.ps1 `
   -Label "live-phase-object" `
+  -WaitForThermalReady `
+  -ThermalReadyBelowStatus 4 `
+  -ThermalReadySamples 2 `
+  -ThermalReadyTimeoutSeconds 900 `
+  -ThermalReadyPollSeconds 30 `
   -Mode Tremor `
   -View Split `
   -RoiSource Manual `
   -ManualRoi "0.25,0.25,0.75,0.75" `
   -GlPreview $true `
   -Controls $true `
-  -ScreenRecordSeconds 15
+  -Panel Debug `
+  -ScreenRecordSeconds 15 `
+  -RequireUiText "Renderer: Live phase motion","GL renderer: Live phase motion","phase:" `
+  -TargetDescription "high-contrast edge or small object moving subtly inside manual ROI" `
+  -VisualClaim "Live phase Split view shows edge-localized amplified motion inside the manual ROI" `
+  -TargetVisible $true `
+  -VisualValidated $false `
+  -OperatorNotes "Set VisualValidated true only after inspecting the recording against the pass criteria." `
+  -Summarize
 ```
+
+The generated `evidence_summary.json` must be checked before the run can count:
+
+- `source.dirty` is `false`.
+- `evidenceVerdict.status` is `target_visible_unvalidated` before visual
+  inspection, then `visual_validated` only after operator acceptance.
+- `passedRuntimeSmoke` is `true`.
+- `uiDump.phaseLabels` includes a live phase fallback, warmup, or ready line.
+- `runtimeFindings` has no crash, ANR, or GL error.
+- Thermal preflight is below `critical`; hot-device captures can be useful for
+  diagnosis but must not be used as pass evidence.
 
 Manual ADB fallback:
 

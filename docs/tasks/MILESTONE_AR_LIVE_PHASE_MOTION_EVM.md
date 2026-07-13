@@ -349,6 +349,22 @@ Goal: bring the recorded Riesz/phase motion renderer into a live-preview path fo
 - This supports the remaining controlled Pixel object-motion validation but
   does not replace the watched target and visual pass/fail inspection.
 
+## Supporting Slice: Modernized Phase Validation Protocol
+
+- Updated `docs/experiments/pixel8a_live_phase_validation.md` so the preferred
+  capture command uses thermal readiness, summary generation, required phase/UI
+  text assertions, Debug-panel diagnostics, and visual-review metadata.
+- Ran a Pixel 8a unattended phase-diagnostics smoke bundle:
+  `sample-videos/exports/live-validation/20260712-204438-phase-diagnostics-summary-smoke`.
+- The smoke passed runtime checks with no crash, ANR, or GL error; camera HAL
+  averaged `29.86` fps; thermal preflight was below critical; and
+  `uiDump.phaseLabels` extracted
+  `phase: 144x320 / phase ready / amplitude unknown`.
+- The summary correctly classified the bundle as
+  `visual_claim_without_target`, because no controlled moving target was
+  visible. The source was dirty because the protocol edit was in progress, so
+  this is tooling smoke evidence, not release-quality visual validation.
+
 ## Next Gate For Manual ROI As Non-Default
 
 - Run the controlled Pixel object-motion setup from
