@@ -133,6 +133,19 @@ Goal: prove that automatic and manual ROI coordinates align with the live previe
   validation, but does not close those tasks until a watched target capture is
   inspected.
 
+## Supporting Slice: Required ROI Measurement Gate
+
+- Live validation summaries now accept `-RequireRoiMeasurement`.
+- The gate exits `8` when `roi_overlay_measurement.json` is missing or reports
+  a failed measurement.
+- `tools/capture_live_validation_evidence.ps1` forwards the gate during
+  `-Summarize`, so final manual/automatic ROI validation commands can require
+  a passing overlay measurement rather than merely summarizing one if it
+  happens to exist.
+- The summary script now exits `0` explicitly on success, preventing stale
+  PowerShell exit codes from leaking out of a previous failed summary.
+- The summary self-test covers missing and passing ROI measurement cases.
+
 ## Supporting Slice: Scoped Logcat Evidence
 
 - Updated `tools/capture_live_validation_evidence.ps1` to clear device logcat

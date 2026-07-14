@@ -41,7 +41,8 @@ param(
     [switch]$Summarize,
     [switch]$RequireCleanSource,
     [switch]$RequireVisualValidation,
-    [switch]$RequireNoWarnings
+    [switch]$RequireNoWarnings,
+    [switch]$RequireRoiMeasurement
 )
 
 $ErrorActionPreference = "Stop"
@@ -317,6 +318,9 @@ function Invoke-EvidenceSummary {
     }
     if ($RequireNoWarnings) {
         $summaryArgs.RequireNoWarnings = $true
+    }
+    if ($RequireRoiMeasurement) {
+        $summaryArgs.RequireRoiMeasurement = $true
     }
 
     & $summaryScript @summaryArgs

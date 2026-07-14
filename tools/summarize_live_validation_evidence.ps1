@@ -11,7 +11,8 @@ param(
     [string[]]$RequireUiText = @(),
     [switch]$RequireCleanSource,
     [switch]$RequireVisualValidation,
-    [switch]$RequireNoWarnings
+    [switch]$RequireNoWarnings,
+    [switch]$RequireRoiMeasurement
 )
 
 $ErrorActionPreference = "Stop"
@@ -554,6 +555,12 @@ if (Test-Path -LiteralPath $roiMeasurementPath) {
         $warnings += "ROI overlay measurement failed"
     }
 }
+if ($RequireRoiMeasurement -and $null -eq $roiMeasurement) {
+    $warnings += "ROI measurement required but roi_overlay_measurement.json is missing"
+}
+if ($RequireRoiMeasurement -and $null -ne $roiMeasurement -and $roiMeasurement.passed -ne $true) {
+    $warnings += "ROI measurement required but measurement did not pass"
+}
 
 $screenshotInfo = $null
 if (Test-Path -LiteralPath $screenshotPath) {
@@ -658,6 +665,11 @@ $result = [ordered]@{
             required = [bool]$RequireVisualValidation
             passed = (-not [bool]$RequireVisualValidation) -or ($evidenceVerdict.countsAsVisualValidation -eq $true)
         }
+        roiMeasurement = [ordered]@{
+            required = [bool]$RequireRoiMeasurement
+            present = $null -ne $roiMeasurement
+            passed = (-not [bool]$RequireRoiMeasurement) -or ($null -ne $roiMeasurement -and $roiMeasurement.passed -eq $true)
+        }
         noWarnings = [ordered]@{
             required = [bool]$RequireNoWarnings
             warningCount = $warningCountBeforeNoWarningsGate
@@ -699,6 +711,10 @@ if ($result.requiredGates.cleanSource.required -and -not $result.requiredGates.c
 if ($result.requiredGates.visualValidation.required -and -not $result.requiredGates.visualValidation.passed) {
     exit 5
 }
+if ($result.requiredGates.roiMeasurement.required -and -not $result.requiredGates.roiMeasurement.passed) {
+    exit 8
+}
 if ($result.requiredGates.noWarnings.required -and -not $result.requiredGates.noWarnings.passed) {
     exit 7
 }
+exit 0

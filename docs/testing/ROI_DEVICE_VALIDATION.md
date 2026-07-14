@@ -37,6 +37,7 @@ rectangle:
   -Clean $true `
   -MeasureRoiExpected "0.083,0.250,0.919,0.751" `
   -MeasureRoiKind Manual `
+  -RequireRoiMeasurement `
   -ScreenRecordSeconds 0 `
   -Summarize
 ```
@@ -70,6 +71,7 @@ Use the same screenshot analyzer for the green automatic ROI outline:
   -Clean $true `
   -MeasureRoiExpected "<visible-face-or-fallback-target-bounds>" `
   -MeasureRoiKind Auto `
+  -RequireRoiMeasurement `
   -Summarize
 ```
 

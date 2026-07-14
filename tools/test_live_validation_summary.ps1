@@ -32,7 +32,8 @@ function Invoke-Summary {
         [string]$BundlePath,
         [switch]$RequireCleanSource,
         [switch]$RequireVisualValidation,
-        [switch]$RequireNoWarnings
+        [switch]$RequireNoWarnings,
+        [switch]$RequireRoiMeasurement
     )
 
     $summaryScript = Join-Path $PSScriptRoot "summarize_live_validation_evidence.ps1"
@@ -43,6 +44,7 @@ function Invoke-Summary {
     if ($RequireCleanSource) { $summaryArgs.RequireCleanSource = $true }
     if ($RequireVisualValidation) { $summaryArgs.RequireVisualValidation = $true }
     if ($RequireNoWarnings) { $summaryArgs.RequireNoWarnings = $true }
+    if ($RequireRoiMeasurement) { $summaryArgs.RequireRoiMeasurement = $true }
     & $summaryScript @summaryArgs *> $stdoutPath
     return $LASTEXITCODE
 }
@@ -358,6 +360,32 @@ Number Missed Vsync: 0
     Assert-Equal -Actual $acceptedWrongOrientationSummary.evidenceVerdict.status -Expected "wrong_orientation" -Message "Accepted wrong-orientation verdict mismatch."
     Assert-Equal -Actual $acceptedWrongOrientationSummary.requiredGates.visualValidation.passed -Expected $false -Message "Final verdict should fail visual gate."
     Assert-True -Condition ("visual validation required but evidence verdict does not count as visual validation" -in @($acceptedWrongOrientationSummary.warnings)) -Message "Verdict-based visual gate warning missing."
+
+    $missingRoiMeasurementExitCode = Invoke-Summary -BundlePath $visualGateBundle -RequireCleanSource -RequireRoiMeasurement
+    $missingRoiMeasurementSummary = Get-Content -LiteralPath (Join-Path $visualGateBundle "evidence_summary.json") -Raw | ConvertFrom-Json
+    Assert-Equal -Actual $missingRoiMeasurementExitCode -Expected 8 -Message "Missing ROI measurement gate exit code mismatch."
+    Assert-Equal -Actual $missingRoiMeasurementSummary.requiredGates.roiMeasurement.required -Expected $true -Message "ROI measurement gate should be required."
+    Assert-Equal -Actual $missingRoiMeasurementSummary.requiredGates.roiMeasurement.present -Expected $false -Message "ROI measurement should be missing."
+    Assert-Equal -Actual $missingRoiMeasurementSummary.requiredGates.roiMeasurement.passed -Expected $false -Message "Missing ROI measurement should not pass."
+    Assert-True -Condition ("ROI measurement required but roi_overlay_measurement.json is missing" -in @($missingRoiMeasurementSummary.warnings)) -Message "Missing ROI measurement warning missing."
+
+    $passingRoiMeasurementBundle = Join-Path $root "passing-roi-measurement"
+    Copy-Item -LiteralPath $visualGateBundle -Destination $passingRoiMeasurementBundle -Recurse
+    Write-JsonFile -Path (Join-Path $passingRoiMeasurementBundle "roi_overlay_measurement.json") -Value ([ordered]@{
+        passed = $true
+        overlayKind = "Manual"
+        expectedRoi = [ordered]@{
+            left = 0.25
+            top = 0.25
+            right = 0.75
+            bottom = 0.75
+        }
+    })
+    $passingRoiMeasurementExitCode = Invoke-Summary -BundlePath $passingRoiMeasurementBundle -RequireCleanSource -RequireRoiMeasurement
+    $passingRoiMeasurementSummary = Get-Content -LiteralPath (Join-Path $passingRoiMeasurementBundle "evidence_summary.json") -Raw | ConvertFrom-Json
+    Assert-Equal -Actual $passingRoiMeasurementExitCode -Expected 0 -Message "Passing ROI measurement gate exit code mismatch."
+    Assert-Equal -Actual $passingRoiMeasurementSummary.requiredGates.roiMeasurement.present -Expected $true -Message "ROI measurement should be present."
+    Assert-Equal -Actual $passingRoiMeasurementSummary.requiredGates.roiMeasurement.passed -Expected $true -Message "ROI measurement gate should pass."
 
     Write-Output "Live validation summary self-test passed: $root"
 } finally {
