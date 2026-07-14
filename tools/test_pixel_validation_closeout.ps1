@@ -28,6 +28,7 @@ function Invoke-Closeout {
         [string]$EvidenceRoot,
         [switch]$FailOnMissing,
         [switch]$FailOnUnmatched,
+        [switch]$FailOnAmbiguous,
         [switch]$FailOnPresetDocsNotReady
     )
 
@@ -42,6 +43,9 @@ function Invoke-Closeout {
     }
     if ($FailOnUnmatched) {
         $args.FailOnUnmatched = $true
+    }
+    if ($FailOnAmbiguous) {
+        $args.FailOnAmbiguous = $true
     }
     if ($FailOnPresetDocsNotReady) {
         $args.FailOnPresetDocsNotReady = $true
@@ -125,6 +129,7 @@ try {
     Assert-Equal -Actual $result.acceptedFinalEvidenceCount -Expected 7 -Message "Accepted final evidence count mismatch."
     Assert-Equal -Actual @($result.unmatchedAcceptedFinalEvidence).Count -Expected 1 -Message "Unmatched accepted final evidence count mismatch."
     Assert-Equal -Actual $result.unmatchedAcceptedFinalEvidence[0].label -Expected "accepted-unknown-final" -Message "Unmatched evidence label mismatch."
+    Assert-Equal -Actual @($result.ambiguousAcceptedFinalEvidence).Count -Expected 0 -Message "Known closeout fixtures should not be ambiguous."
     Assert-Equal -Actual @($result.missing).Count -Expected 0 -Message "All slots should be satisfied."
     Assert-Equal -Actual $result.readyForPresetDocs -Expected $true -Message "Preset docs should be ready when four preset slots pass."
     Assert-Equal -Actual $result.allCloseoutEvidencePresent -Expected $true -Message "All closeout evidence should be present."
@@ -171,12 +176,21 @@ try {
     $unmatchedExitCode = Invoke-Closeout -EvidenceRoot $root -FailOnUnmatched
     Assert-Equal -Actual $unmatchedExitCode -Expected 3 -Message "FailOnUnmatched should exit 3 when accepted final evidence is not mapped to a closeout slot."
 
+    $ambiguousRoot = Join-Path $root "ambiguous"
+    New-Item -ItemType Directory -Path $ambiguousRoot -Force | Out-Null
+    Write-Summary -Root $ambiguousRoot -Name "pulse-breathing" -Label "live-linear-pulse-breathing-final" -Mode "Pulse" -RoiSource "FullFrame" -Claim "Pulse and breathing full-frame live linear visual parity" -Roi $false -Renderer $true -Phase $false
+    $ambiguous = & (Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1") -EvidenceRoot $ambiguousRoot -Json | ConvertFrom-Json
+    Assert-Equal -Actual @($ambiguous.ambiguousAcceptedFinalEvidence).Count -Expected 1 -Message "Ambiguous closeout should report evidence matching multiple slots."
+    Assert-Equal -Actual @($ambiguous.ambiguousAcceptedFinalEvidence[0].matchedSlots).Count -Expected 2 -Message "Ambiguous evidence should report both matched slots."
+    $ambiguousExitCode = Invoke-Closeout -EvidenceRoot $ambiguousRoot -FailOnAmbiguous
+    Assert-Equal -Actual $ambiguousExitCode -Expected 5 -Message "FailOnAmbiguous should exit 5 when accepted final evidence matches multiple slots."
+
     $classifiedRoot = Join-Path $root "classified"
     New-Item -ItemType Directory -Path $classifiedRoot -Force | Out-Null
     foreach ($name in @("manual", "auto", "pulse", "breathing", "object", "fast")) {
         Copy-Item -LiteralPath (Join-Path $root $name) -Destination (Join-Path $classifiedRoot $name) -Recurse
     }
-    $classifiedExitCode = Invoke-Closeout -EvidenceRoot $classifiedRoot -FailOnMissing -FailOnUnmatched
+    $classifiedExitCode = Invoke-Closeout -EvidenceRoot $classifiedRoot -FailOnMissing -FailOnUnmatched -FailOnAmbiguous
     Assert-Equal -Actual $classifiedExitCode -Expected 0 -Message "Combined closeout gates should pass when all accepted evidence maps to slots."
 } finally {
     Remove-Item -LiteralPath $root -Recurse -Force

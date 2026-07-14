@@ -220,6 +220,13 @@ passes:
 .\tools\summarize_pixel_validation_closeout.ps1 -FailOnPresetDocsNotReady
 ```
 
+Before closing roadmap items, also reject missing, unmatched, or ambiguous
+accepted evidence:
+
+```powershell
+.\tools\summarize_pixel_validation_closeout.ps1 -FailOnMissing -FailOnUnmatched -FailOnAmbiguous
+```
+
 For local file integrity:
 
 ```powershell

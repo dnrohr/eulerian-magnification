@@ -352,6 +352,8 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   artifacts from being missed during review.
 - Added a tested `-FailOnUnmatched` closeout gate so unclassified accepted
   evidence can fail automation separately from missing closeout slots.
+- Added a tested `-FailOnAmbiguous` closeout gate so a single accepted bundle
+  cannot silently satisfy multiple roadmap closeout slots.
 - Added a tested `-FailOnPresetDocsNotReady` closeout gate so README/parity doc
   updates can be blocked until all four preset visual slots are accepted.
 - Documented the closeout gates in README, the task index, and MIT parity
