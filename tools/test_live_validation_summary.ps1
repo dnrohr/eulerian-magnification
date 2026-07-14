@@ -28,11 +28,23 @@ function Assert-True {
 }
 
 function Invoke-Summary {
-    param([string]$BundlePath)
+    param(
+        [string]$BundlePath,
+        [switch]$RequireCleanSource,
+        [switch]$RequireVisualValidation
+    )
 
     $summaryScript = Join-Path $PSScriptRoot "summarize_live_validation_evidence.ps1"
     $stdoutPath = Join-Path $BundlePath "summary_stdout.txt"
-    & $summaryScript -BundlePath $BundlePath *> $stdoutPath
+    if ($RequireCleanSource -and $RequireVisualValidation) {
+        & $summaryScript -BundlePath $BundlePath -RequireCleanSource -RequireVisualValidation *> $stdoutPath
+    } elseif ($RequireCleanSource) {
+        & $summaryScript -BundlePath $BundlePath -RequireCleanSource *> $stdoutPath
+    } elseif ($RequireVisualValidation) {
+        & $summaryScript -BundlePath $BundlePath -RequireVisualValidation *> $stdoutPath
+    } else {
+        & $summaryScript -BundlePath $BundlePath *> $stdoutPath
+    }
     return $LASTEXITCODE
 }
 
@@ -217,6 +229,66 @@ Number Missed Vsync: 1
     Assert-Equal -Actual $uiMissingSummary.evidenceVerdict.status -Expected "ui_assertion_failed" -Message "Missing UI verdict mismatch."
     Assert-True -Condition ("source worktree was dirty during capture" -in @($uiMissingSummary.warnings)) -Message "Dirty source warning missing."
     Assert-True -Condition ("phase: 128x96 / phase ready / amplitude gate active" -in @($uiMissingSummary.uiDump.phaseLabels)) -Message "Phase label summary missing."
+
+    $visualGateBundle = Join-Path $root "visual-gate"
+    New-Item -ItemType Directory -Force -Path $visualGateBundle | Out-Null
+    Write-TestScreenshot -Path (Join-Path $visualGateBundle "screenshot.png")
+    @"
+Total frames rendered: 120
+Janky frames: 0 (0.00%)
+50th percentile: 9ms
+90th percentile: 12ms
+Number Missed Vsync: 0
+"@ | Out-File -LiteralPath (Join-Path $visualGateBundle "gfxinfo.txt") -Encoding utf8
+    "Camera FPS: 30.0" | Out-File -LiteralPath (Join-Path $visualGateBundle "logcat_tail.txt") -Encoding utf8
+    "<hierarchy><node text=`"Renderer: Live full-frame EVM`" /></hierarchy>" |
+        Out-File -LiteralPath (Join-Path $visualGateBundle "ui_dump.xml") -Encoding utf8
+    Write-JsonFile -Path (Join-Path $visualGateBundle "manifest.json") -Value ([ordered]@{
+        createdAt = "2026-07-12T00:00:00.0000000-04:00"
+        label = "visual-gate"
+        source = [ordered]@{
+            commit = "def456"
+            shortCommit = "def456"
+            branch = "main"
+            dirty = $false
+            statusShort = @()
+        }
+        launch = [ordered]@{
+            skipped = $false
+            requireUiText = @()
+        }
+        visualReview = [ordered]@{
+            targetDescription = "synthetic watched target"
+            visualClaim = "known target visibly magnified"
+            targetVisible = $true
+            visualValidated = $false
+            operatorNotes = "tool self-test"
+        }
+        warnings = @()
+    })
+
+    $visualGateExitCode = Invoke-Summary -BundlePath $visualGateBundle -RequireCleanSource -RequireVisualValidation
+    $visualGateSummary = Get-Content -LiteralPath (Join-Path $visualGateBundle "evidence_summary.json") -Raw | ConvertFrom-Json
+    Assert-Equal -Actual $visualGateExitCode -Expected 5 -Message "Visual gate exit code mismatch."
+    Assert-Equal -Actual $visualGateSummary.passedRuntimeSmoke -Expected $true -Message "Visual gate should pass runtime smoke."
+    Assert-Equal -Actual $visualGateSummary.requiredGates.cleanSource.passed -Expected $true -Message "Clean source gate should pass."
+    Assert-Equal -Actual $visualGateSummary.requiredGates.visualValidation.passed -Expected $false -Message "Visual validation gate should fail."
+    Assert-True -Condition ("visual validation required but evidence verdict does not count as visual validation" -in @($visualGateSummary.warnings)) -Message "Visual gate warning missing."
+
+    $dirtyGateBundle = Join-Path $root "dirty-gate"
+    Copy-Item -LiteralPath $visualGateBundle -Destination $dirtyGateBundle -Recurse
+    $dirtyManifestPath = Join-Path $dirtyGateBundle "manifest.json"
+    $dirtyManifest = Get-Content -LiteralPath $dirtyManifestPath -Raw | ConvertFrom-Json
+    $dirtyManifest.source.dirty = $true
+    $dirtyManifest.visualReview.visualValidated = $true
+    $dirtyManifest | ConvertTo-Json -Depth 8 | Out-File -LiteralPath $dirtyManifestPath -Encoding utf8
+
+    $dirtyGateExitCode = Invoke-Summary -BundlePath $dirtyGateBundle -RequireCleanSource -RequireVisualValidation
+    $dirtyGateSummary = Get-Content -LiteralPath (Join-Path $dirtyGateBundle "evidence_summary.json") -Raw | ConvertFrom-Json
+    Assert-Equal -Actual $dirtyGateExitCode -Expected 6 -Message "Clean source gate exit code mismatch."
+    Assert-Equal -Actual $dirtyGateSummary.requiredGates.cleanSource.passed -Expected $false -Message "Clean source gate should fail."
+    Assert-Equal -Actual $dirtyGateSummary.requiredGates.visualValidation.passed -Expected $true -Message "Visual gate should pass for accepted target."
+    Assert-True -Condition ("clean source required but worktree was dirty during capture" -in @($dirtyGateSummary.warnings)) -Message "Clean source gate warning missing."
 
     Write-Output "Live validation summary self-test passed: $root"
 } finally {

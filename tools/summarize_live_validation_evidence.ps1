@@ -8,7 +8,9 @@ param(
     [int]$WarnThermalStatus = 2,
     [double]$WarnCameraFps = 23.5,
     [double]$WarnBatteryTemperatureC = 40.0,
-    [string[]]$RequireUiText = @()
+    [string[]]$RequireUiText = @(),
+    [switch]$RequireCleanSource,
+    [switch]$RequireVisualValidation
 )
 
 $ErrorActionPreference = "Stop"
@@ -482,6 +484,11 @@ foreach ($entry in $runtimePatterns.GetEnumerator()) {
 }
 
 $warnings = @()
+$sourcePresent = $manifest -and ($manifest.PSObject.Properties.Name -contains "source") -and $manifest.source
+$sourceDirty = $false
+if ($sourcePresent -and ($manifest.source.PSObject.Properties.Name -contains "dirty")) {
+    $sourceDirty = $manifest.source.dirty -eq $true
+}
 if ($manifest -and $manifest.PSObject.Properties.Name -contains "warnings") {
     foreach ($warning in @($manifest.warnings)) {
         if (-not [string]::IsNullOrWhiteSpace($warning)) {
@@ -489,12 +496,14 @@ if ($manifest -and $manifest.PSObject.Properties.Name -contains "warnings") {
         }
     }
 }
-if ($manifest -and
-    ($manifest.PSObject.Properties.Name -contains "source") -and
-    $manifest.source -and
-    ($manifest.source.PSObject.Properties.Name -contains "dirty") -and
-    $manifest.source.dirty -eq $true) {
+if ($sourceDirty) {
     $warnings += "source worktree was dirty during capture"
+}
+if ($RequireCleanSource -and (-not $sourcePresent)) {
+    $warnings += "clean source required but source metadata is missing"
+}
+if ($RequireCleanSource -and $sourceDirty) {
+    $warnings += "clean source required but worktree was dirty during capture"
 }
 if ($missing.Count -gt 0 -and -not $aborted) {
     $warnings += "missing required artifacts"
@@ -535,6 +544,9 @@ if (-not [string]::IsNullOrWhiteSpace($visualReview.visualClaim) -and $visualRev
 }
 if ($visualReview.targetVisible -eq $true -and $visualReview.visualValidated -ne $true) {
     $warnings += "target visible but visualValidated is not true"
+}
+if ($RequireVisualValidation -and $visualReview.countsAsVisualValidation -ne $true) {
+    $warnings += "visual validation required but evidence verdict does not count as visual validation"
 }
 
 $roiMeasurement = $null
@@ -630,6 +642,17 @@ $result = [ordered]@{
     }
     visualReview = $visualReview
     evidenceVerdict = $evidenceVerdict
+    requiredGates = [ordered]@{
+        cleanSource = [ordered]@{
+            required = [bool]$RequireCleanSource
+            sourceMetadataPresent = [bool]$sourcePresent
+            passed = (-not [bool]$RequireCleanSource) -or ($sourcePresent -and (-not $sourceDirty))
+        }
+        visualValidation = [ordered]@{
+            required = [bool]$RequireVisualValidation
+            passed = (-not [bool]$RequireVisualValidation) -or ($evidenceVerdict.countsAsVisualValidation -eq $true)
+        }
+    }
     roiMeasurement = $roiMeasurement
     warnings = $warnings
     passedRuntimeSmoke = $passedRuntimeSmoke
@@ -658,4 +681,10 @@ if (-not $result.passedRuntimeSmoke) {
 }
 if ($result.uiTextAssertions.required.Count -gt 0 -and -not $result.uiTextAssertions.passed) {
     exit 3
+}
+if ($result.requiredGates.cleanSource.required -and -not $result.requiredGates.cleanSource.passed) {
+    exit 6
+}
+if ($result.requiredGates.visualValidation.required -and -not $result.requiredGates.visualValidation.passed) {
+    exit 5
 }

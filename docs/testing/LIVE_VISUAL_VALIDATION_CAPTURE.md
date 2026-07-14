@@ -79,9 +79,11 @@ or GL error is also present. A passing runtime smoke summary still does not
 prove visual validation unless the target is visible and inspected.
 When `-Summarize` is used, the capture script exits with the summary result:
 `0` for a passing runtime/evidence gate, `2` for runtime smoke failure, `3` for
-missing required UI text, and `4` for a thermal/preflight abort. This keeps
-automated validation commands from silently passing when an explicit evidence
-assertion failed.
+missing required UI text, `4` for a thermal/preflight abort, `5` when visual
+validation was required but the bundle does not count as visually validated,
+and `6` when a clean source tree was required but source metadata is missing or
+dirty. This keeps automated validation commands from silently passing when an
+explicit evidence assertion failed.
 If preflight thermal status or sensor status is `critical` or worse, do not use
 the run to judge full-frame FPS, apparent camera freeze, or visual parity. Let
 the phone cool, then repeat with a short capture. By default, the capture script
@@ -175,6 +177,33 @@ evidence. `VisualValidated` records whether the operator accepted the visual
 claim after inspection. The summary only marks `countsAsVisualValidation` true
 when both `TargetVisible` and `VisualValidated` are true.
 
+Pass `-RequireVisualValidation` when a command is meant to close a roadmap
+visual gate, and pass `-RequireCleanSource` when the evidence must come from a
+clean committed source tree:
+
+```powershell
+.\tools\capture_live_validation_evidence.ps1 `
+  -Label "preset-object-vibration" `
+  -WaitForThermalReady `
+  -Mode ObjectVibration `
+  -View Split `
+  -RoiSource Manual `
+  -GlPreview $true `
+  -ScreenRecordSeconds 15 `
+  -TargetDescription "watched high-contrast vibrating object inside manual ROI" `
+  -VisualClaim "Object preset visibly magnifies localized object vibration" `
+  -TargetVisible $true `
+  -VisualValidated $true `
+  -RequireCleanSource `
+  -RequireVisualValidation `
+  -Summarize
+```
+
+Use these gates only after the operator has inspected the screenshot or
+recording. For pre-inspection captures, keep `VisualValidated` false and omit
+`-RequireVisualValidation`; the summary should then report
+`target_visible_unvalidated`.
+
 The summary also writes `evidenceVerdict`, a compact classification for the
 bundle. Expected statuses include `runtime_smoke_only`, `visual_validated`,
 `target_visible_unvalidated`, `visual_claim_without_target`,
@@ -190,8 +219,8 @@ Run the summary self-test after editing capture or summary tooling:
 ```
 
 The test synthesizes a thermal-aborted bundle and an incomplete runtime bundle,
-then verifies the summary exit codes, verdicts, UI assertion behavior, and dirty
-source warning.
+then verifies the summary exit codes, verdicts, UI assertion behavior,
+clean-source/visual-validation gates, and dirty source warning.
 
 For ROI overlay validation, pass `-MeasureRoiExpected` with the expected
 normalized screenshot-space rectangle. The capture script then writes
@@ -260,6 +289,10 @@ Available launch parameters:
 - `-MeasureRoiAllowMultipleComponents`: allows more than one connected overlay
   component when a test intentionally expects duplicate marks.
 - `-RequireUiText`: comma-separated expected Android view-hierarchy text values.
+- `-RequireCleanSource`: with `-Summarize`, fail the summary when source
+  metadata is missing or the captured commit had a dirty worktree.
+- `-RequireVisualValidation`: with `-Summarize`, fail the summary unless
+  `evidenceVerdict.countsAsVisualValidation` is true.
 - `-TargetDescription`: short description of the visible target/setup.
 - `-VisualClaim`: short claim this evidence is intended to prove.
 - `-TargetVisible`: whether the target is visible in the screenshot/recording.

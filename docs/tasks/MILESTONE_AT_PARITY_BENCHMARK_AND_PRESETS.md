@@ -144,6 +144,21 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - The summary self-test now covers the dirty-source warning alongside thermal
   aborts, incomplete runtime bundles, and required UI-text failures.
 
+## Supporting Slice: Strict Visual Evidence Gates
+
+- Live validation summaries now accept `-RequireCleanSource` and
+  `-RequireVisualValidation`.
+- `-RequireCleanSource` exits `6` when source metadata is missing or the capture
+  came from a dirty worktree.
+- `-RequireVisualValidation` exits `5` when a runtime-smoke bundle has not been
+  explicitly accepted as visual validation.
+- `tools/capture_live_validation_evidence.ps1` forwards both gates when
+  `-Summarize` is used, so watched preset commands can fail loudly unless they
+  produce clean, visually accepted evidence.
+- The summary self-test covers both gates with synthetic bundles. This improves
+  the remaining preset/ROI/live-renderer validation workflow without requiring
+  the physical Pixel during this tooling slice.
+
 ## Remaining
 
 - Extend Pixel 8a evidence with a known-good visual artifact and watched target

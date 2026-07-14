@@ -107,6 +107,12 @@ Preferred capture command after installing the debug build:
   -Summarize
 ```
 
+After inspecting the recording and setting `-VisualValidated $true`, repeat or
+summarize the accepted bundle with `-RequireCleanSource` and
+`-RequireVisualValidation`. A closing AR evidence run should fail fast if it was
+captured from a dirty worktree or if the bundle is still only
+`target_visible_unvalidated`.
+
 The generated `evidence_summary.json` must be checked before the run can count:
 
 - `source.dirty` is `false`.

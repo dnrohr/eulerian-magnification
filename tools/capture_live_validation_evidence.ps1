@@ -38,7 +38,9 @@ param(
     [int]$ThermalReadyPollSeconds = 30,
     [switch]$PreserveLogcat,
     [switch]$PersistLaunchSettings,
-    [switch]$Summarize
+    [switch]$Summarize,
+    [switch]$RequireCleanSource,
+    [switch]$RequireVisualValidation
 )
 
 $ErrorActionPreference = "Stop"
@@ -632,11 +634,19 @@ if ($Summarize) {
         Write-Warning "Summary requested, but summarize_live_validation_evidence.ps1 was not found."
     } else {
         $requiredUiTextArgs = @($RequireUiText | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
-        if ($requiredUiTextArgs.Count -gt 0) {
-            & $summaryScript -BundlePath $outputDir -RequireUiText $requiredUiTextArgs
-        } else {
-            & $summaryScript -BundlePath $outputDir
+        $summaryArgs = @{
+            BundlePath = $outputDir
         }
+        if ($requiredUiTextArgs.Count -gt 0) {
+            $summaryArgs.RequireUiText = $requiredUiTextArgs
+        }
+        if ($RequireCleanSource) {
+            $summaryArgs.RequireCleanSource = $true
+        }
+        if ($RequireVisualValidation) {
+            $summaryArgs.RequireVisualValidation = $true
+        }
+        & $summaryScript @summaryArgs
         $summaryExitCode = $LASTEXITCODE
     }
 }
