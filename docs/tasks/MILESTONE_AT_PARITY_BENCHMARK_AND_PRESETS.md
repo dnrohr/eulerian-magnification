@@ -376,6 +376,8 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   with accepted operator validation.
 - Added protocol-doc self-test coverage that requires every planner capture
   command name to appear in its corresponding protocol doc.
+- Added protocol-doc parsing coverage for documented Pixel capture command
+  blocks, including validation against the live capture script parameter list.
 - Updated the live visual validation guide to use `Tremor` for the public Fast
   Motion / Motion path. `ObjectVibration` remains accepted only for internal
   compatibility and parity experiments.

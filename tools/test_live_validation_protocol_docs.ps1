@@ -11,6 +11,18 @@ function Assert-True {
     }
 }
 
+function Assert-Equal {
+    param(
+        $Actual,
+        $Expected,
+        [string]$Message
+    )
+
+    if ($Actual -ne $Expected) {
+        throw "$Message Expected '$Expected' but got '$Actual'."
+    }
+}
+
 function Assert-DocContains {
     param(
         [string]$Path,
@@ -22,6 +34,46 @@ function Assert-DocContains {
     Assert-True -Condition $content.Contains($Expected) -Message $Message
 }
 
+function Get-PowershellBlocks {
+    param([string]$Path)
+
+    $content = Get-Content -LiteralPath $Path -Raw
+    $blocks = @()
+    foreach ($match in [regex]::Matches($content, '(?ms)^```powershell\s*$\n(.*?)^```\s*$')) {
+        $blocks += $match.Groups[1].Value.Trim()
+    }
+    return $blocks
+}
+
+function Assert-CaptureCommandBlocksParse {
+    param(
+        [string]$Path,
+        [System.Collections.Generic.HashSet[string]]$CaptureParameters
+    )
+
+    $captureBlockCount = 0
+    foreach ($block in Get-PowershellBlocks -Path $Path) {
+        if (-not $block.StartsWith(".\tools\capture_live_validation_evidence.ps1")) {
+            continue
+        }
+
+        $captureBlockCount += 1
+        $parseErrors = $null
+        $tokens = [System.Management.Automation.PSParser]::Tokenize($block, [ref]$parseErrors)
+        Assert-Equal -Actual @($parseErrors).Count -Expected 0 -Message "Documented capture command should parse as PowerShell in $Path."
+
+        $executable = @($tokens | Where-Object { $_.Type -eq "Command" } | Select-Object -First 1).Content
+        Assert-Equal -Actual $executable -Expected ".\tools\capture_live_validation_evidence.ps1" -Message "Documented capture command should call the live validation capture script in $Path."
+
+        foreach ($token in @($tokens | Where-Object { $_.Type -eq "CommandParameter" })) {
+            $parameterName = $token.Content.TrimStart("-")
+            Assert-True -Condition ($CaptureParameters.Contains($parameterName)) -Message "Unknown capture command parameter '$($token.Content)' in documented command in $Path."
+        }
+    }
+
+    return $captureBlockCount
+}
+
 $repoRoot = Resolve-Path -LiteralPath (Join-Path $PSScriptRoot "..")
 
 $readme = Join-Path $repoRoot "README.md"
@@ -31,6 +83,16 @@ $liveGuide = Join-Path $repoRoot "docs\testing\LIVE_VISUAL_VALIDATION_CAPTURE.md
 $parityDoc = Join-Path $repoRoot "docs\testing\MIT_PARITY_TARGETS.md"
 $linearDoc = Join-Path $repoRoot "docs\experiments\pixel8a_live_linear_validation.md"
 $phaseDoc = Join-Path $repoRoot "docs\experiments\pixel8a_live_phase_validation.md"
+$captureScript = Join-Path $PSScriptRoot "capture_live_validation_evidence.ps1"
+$captureParameters = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+$captureScriptContent = Get-Content -LiteralPath $captureScript -Raw
+if ($captureScriptContent -notmatch '(?s)^param\((.*?)\)\s*\$ErrorActionPreference') {
+    throw "Could not parse capture script param block."
+}
+
+foreach ($match in [regex]::Matches($Matches[1], '\$(\w+)')) {
+    [void]$captureParameters.Add($match.Groups[1].Value)
+}
 
 foreach ($path in @($readme, $taskReadme, $roiDoc, $liveGuide, $parityDoc, $linearDoc, $phaseDoc)) {
     Assert-True -Condition (Test-Path -LiteralPath $path) -Message "Missing protocol doc: $path"
@@ -46,6 +108,11 @@ foreach ($group in @($plan.validationGroups)) {
         }
         Assert-DocContains -Path $protocolPath -Expected $command.name -Message "Protocol doc '$($group.protocol)' must include planner command '$($command.name)'."
     }
+}
+
+foreach ($path in @($roiDoc, $linearDoc, $phaseDoc)) {
+    $captureBlockCount = Assert-CaptureCommandBlocksParse -Path $path -CaptureParameters $captureParameters
+    Assert-True -Condition ($captureBlockCount -gt 0) -Message "Protocol doc must include parseable capture command blocks: $path"
 }
 
 foreach ($path in @($readme, $taskReadme)) {
