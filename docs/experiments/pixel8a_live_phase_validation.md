@@ -98,6 +98,12 @@ Preferred capture command after installing the debug build:
   -Controls $true `
   -Panel Debug `
   -ScreenRecordSeconds 15 `
+  -RequireScreenrecord `
+  -RequireThermalReady `
+  -RequireCameraFps `
+  -RequireFocusedApp `
+  -RequirePhaseDiagnostics `
+  -RequireEvidenceVerdict target_visible_unvalidated `
   -RequireUiText "Renderer: Live phase motion","GL renderer: Live phase motion","phase:" `
   -TargetDescription "high-contrast edge or small object moving subtly inside manual ROI" `
   -VisualClaim "Live phase Split view shows edge-localized amplified motion inside the manual ROI" `
@@ -107,17 +113,57 @@ Preferred capture command after installing the debug build:
   -Summarize
 ```
 
-After inspecting the recording and setting `-VisualValidated $true`, repeat or
-summarize the accepted bundle with `-RequireCleanSource` and
-`-RequireVisualValidation`. Add `-RequireNoWarnings` for the final closing run
-when thermal, low-FPS, debug-overlay, dirty-source, and other warnings must be
-absent. A closing AR evidence run should fail fast if it was captured from a
-dirty worktree, if the bundle is still only `target_visible_unvalidated`, or if
-known-good evidence is requested while warnings remain.
+This first command is intentionally a pre-inspection capture. It should stop at
+`target_visible_unvalidated`: the target is visible and runtime evidence is
+present, but the operator has not yet accepted the visual claim.
+
+For the closing AR run, repeat the capture after inspection with hidden controls
+or Clean preview if the Debug panel obscures the target, set
+`-VisualValidated $true`, and replace the exploratory verdict gate with the
+final profile:
+
+```powershell
+.\tools\capture_live_validation_evidence.ps1 `
+  -Label "live-phase-object-final" `
+  -WaitForThermalReady `
+  -ThermalReadyBelowStatus 4 `
+  -ThermalReadySamples 2 `
+  -ThermalReadyTimeoutSeconds 900 `
+  -ThermalReadyPollSeconds 30 `
+  -Mode Tremor `
+  -View Split `
+  -RoiSource Manual `
+  -ManualRoi "0.25,0.25,0.75,0.75" `
+  -GlPreview $true `
+  -Controls $false `
+  -ScreenRecordSeconds 15 `
+  -RequirePhaseDiagnostics `
+  -RequireUiText "Renderer: Live phase motion","GL renderer: Live phase motion","phase:" `
+  -TargetDescription "high-contrast edge or small object moving subtly inside manual ROI" `
+  -VisualClaim "Live phase Split view shows edge-localized amplified motion inside the manual ROI" `
+  -TargetVisible $true `
+  -VisualValidated $true `
+  -OperatorNotes "Accepted only if the recording shows edge-localized amplified motion, not uniform ROI flashing." `
+  -RequireFinalVisualEvidence `
+  -Summarize
+```
+
+`-RequireFinalVisualEvidence` expands to the closing evidence gates: clean
+source, accepted visual validation, warning-free summary, valid MP4
+screenrecord, thermal-readiness evidence, camera-FPS evidence, and focused-app
+evidence. A closing AR evidence run should fail fast if it was captured from a
+dirty worktree, if the bundle is still only `target_visible_unvalidated`, if the
+camera cadence is missing or low, or if known-good evidence is requested while
+warnings remain.
 
 The generated `evidence_summary.json` must be checked before the run can count:
 
 - `source.dirty` is `false`.
+- `requiredGates.phaseDiagnostics.passed` is `true`.
+- Pre-inspection captures have `requiredGates.evidenceVerdict.passed` for
+  `target_visible_unvalidated`.
+- Final captures have the final visual evidence gate components present and
+  passing.
 - `evidenceVerdict.status` is `target_visible_unvalidated` before visual
   inspection, then `visual_validated` only after operator acceptance.
 - `passedRuntimeSmoke` is `true`.

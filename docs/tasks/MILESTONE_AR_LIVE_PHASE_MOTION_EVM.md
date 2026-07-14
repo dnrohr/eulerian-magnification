@@ -386,6 +386,10 @@ Goal: bring the recorded Riesz/phase motion renderer into a live-preview path fo
 
 - Run the controlled Pixel object-motion setup from
   `docs/experiments/pixel8a_live_phase_validation.md`.
+- Use the protocol's two-step evidence flow: first require
+  `target_visible_unvalidated` with phase diagnostics and a valid screenrecord,
+  then close AR only with the final command using `-RequireFinalVisualEvidence`
+  plus `-RequirePhaseDiagnostics`.
 - If live phase visibly magnifies the controlled target with acceptable
   diagnostics, proceed to Milestone AU and make Manual ROI a selectable option
   rather than the default motion setup.
