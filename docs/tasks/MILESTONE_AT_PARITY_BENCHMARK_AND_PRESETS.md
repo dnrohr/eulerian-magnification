@@ -247,6 +247,19 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   self-test covers missing and invalid screenrecord failures plus a synthetic
   MP4-signature pass without needing the physical Pixel for this slice.
 
+## Supporting Slice: Required Thermal-Ready Gate
+
+- Live validation summaries now accept `-RequireThermalReady` so final Pixel
+  visual evidence can prove the thermal wait helper actually reported
+  `ready=true` before launch.
+- `tools/capture_live_validation_evidence.ps1` forwards the requirement when
+  `-Summarize` is used. This pairs with `-WaitForThermalReady` in final AP/AR/AT
+  capture commands.
+- Missing or not-ready `thermal_ready_wait.json` artifacts exit `12` and record
+  readiness state under `requiredGates.thermalReady`.
+- The summary self-test covers missing, failed, and passing thermal-readiness
+  artifacts without needing the physical Pixel for this slice.
+
 ## Remaining
 
 - Extend Pixel 8a evidence with a known-good visual artifact and watched target

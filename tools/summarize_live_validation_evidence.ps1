@@ -14,6 +14,7 @@ param(
     [switch]$RequireNoWarnings,
     [switch]$RequireRoiMeasurement,
     [switch]$RequireScreenrecord,
+    [switch]$RequireThermalReady,
     [switch]$RequireRendererDiagnostics,
     [switch]$RequirePhaseDiagnostics,
     [ValidateSet("", "runtime_smoke_only", "visual_validated", "target_visible_unvalidated", "visual_claim_without_target", "ui_assertion_failed", "screenshot_blank", "wrong_orientation", "runtime_failed", "thermal_preflight_aborted")]
@@ -478,6 +479,7 @@ $thermalReadyWait = if (Test-Path -LiteralPath $thermalReadyWaitPath) {
 } else {
     $null
 }
+$thermalReadyPassed = (-not [bool]$RequireThermalReady) -or ($null -ne $thermalReadyWait -and $thermalReadyWait.ready -eq $true)
 $cameraFpsSummary = Parse-CameraFpsSummary $logcat
 $batteryText = Read-TextIfExists $batteryPath
 $batterySummary = Parse-BatterySummary $batteryText
@@ -551,6 +553,12 @@ if ($batterySummary.powered) {
 }
 if ($null -ne $batterySummary.temperatureC -and $batterySummary.temperatureC -ge $WarnBatteryTemperatureC) {
     $warnings += "battery temperature $($batterySummary.temperatureC) C at or above warning threshold $WarnBatteryTemperatureC C"
+}
+if ($RequireThermalReady -and $null -eq $thermalReadyWait) {
+    $warnings += "thermal readiness required but thermal_ready_wait.json is missing"
+}
+if ($RequireThermalReady -and $null -ne $thermalReadyWait -and $thermalReadyWait.ready -ne $true) {
+    $warnings += "thermal readiness required but wait result was not ready"
 }
 foreach ($entry in $runtimeFindings.GetEnumerator()) {
     if ($entry.Value) {
@@ -734,6 +742,12 @@ $result = [ordered]@{
             mp4Signature = $screenrecordInfo.mp4Signature
             passed = $screenrecordPassed
         }
+        thermalReady = [ordered]@{
+            required = [bool]$RequireThermalReady
+            present = $null -ne $thermalReadyWait
+            ready = if ($null -ne $thermalReadyWait) { $thermalReadyWait.ready } else { $null }
+            passed = $thermalReadyPassed
+        }
         evidenceVerdict = [ordered]@{
             required = -not [string]::IsNullOrWhiteSpace($RequireEvidenceVerdict)
             expected = if ([string]::IsNullOrWhiteSpace($RequireEvidenceVerdict)) { $null } else { $RequireEvidenceVerdict }
@@ -796,6 +810,9 @@ if ($result.requiredGates.roiMeasurement.required -and -not $result.requiredGate
 }
 if ($result.requiredGates.screenrecord.required -and -not $result.requiredGates.screenrecord.passed) {
     exit 11
+}
+if ($result.requiredGates.thermalReady.required -and -not $result.requiredGates.thermalReady.passed) {
+    exit 12
 }
 if ($result.requiredGates.evidenceVerdict.required -and -not $result.requiredGates.evidenceVerdict.passed) {
     exit 9

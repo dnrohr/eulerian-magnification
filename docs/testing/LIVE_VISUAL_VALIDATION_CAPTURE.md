@@ -87,7 +87,8 @@ warnings, `8` when an ROI measurement was required but missing or failed, and
 `9` when the bundle did not match a required evidence verdict, and `10` when a
 required renderer or phase diagnostic label was not found, and `11` when a
 required `screenrecord.mp4` artifact is missing, empty, or does not look like an
-MP4 file.
+MP4 file, and `12` when required thermal-readiness evidence is missing or not
+ready.
 This keeps automated validation commands from silently passing when an explicit
 evidence assertion failed.
 If preflight thermal status or sensor status is `critical` or worse, do not use
@@ -115,6 +116,9 @@ Use the thermal wait helper before watched validation runs:
 The helper exits `0` when both Android thermal status and max sensor status are
 below the threshold for the requested number of consecutive samples. It exits
 `2` on timeout and can write the polling history to JSON.
+For final visual-validation captures, pass `-RequireThermalReady` with
+`-WaitForThermalReady` so the summary fails unless `thermal_ready_wait.json`
+exists and reports `ready=true`.
 
 For a single capture command, pass `-WaitForThermalReady`. The capture writes
 `thermal_ready_wait.json`, embeds it in `evidence_summary.json` as
@@ -223,6 +227,7 @@ debug-overlay warnings:
   -RequireCleanSource `
   -RequireVisualValidation `
   -RequireScreenrecord `
+  -RequireThermalReady `
   -RequireNoWarnings `
   -Summarize
 ```
@@ -254,8 +259,8 @@ Run the summary self-test after editing capture or summary tooling:
 
 The test synthesizes a thermal-aborted bundle and an incomplete runtime bundle,
 then verifies the summary exit codes, verdicts, UI assertion behavior,
-clean-source/visual-validation/verdict/diagnostic/screenrecord gates, and dirty
-source warning.
+clean-source/visual-validation/verdict/diagnostic/screenrecord/thermal-ready
+gates, and dirty source warning.
 
 For ROI overlay validation, pass `-MeasureRoiExpected` with the expected
 normalized screenshot-space rectangle. The capture script then writes
@@ -334,6 +339,8 @@ Available launch parameters:
   `roi_overlay_measurement.json` exists and reports `passed=true`.
 - `-RequireScreenrecord`: with `-Summarize`, fail the summary unless
   `screenrecord.mp4` exists, is non-empty, and has an MP4 signature.
+- `-RequireThermalReady`: with `-Summarize`, fail the summary unless
+  `thermal_ready_wait.json` exists and reports `ready=true`.
 - `-RequireEvidenceVerdict`: with `-Summarize`, fail the summary unless
   `evidenceVerdict.status` exactly matches the requested status.
 - `-RequireRendererDiagnostics`: with `-Summarize`, fail the summary unless

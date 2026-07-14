@@ -35,6 +35,7 @@ function Invoke-Summary {
         [switch]$RequireNoWarnings,
         [switch]$RequireRoiMeasurement,
         [switch]$RequireScreenrecord,
+        [switch]$RequireThermalReady,
         [switch]$RequireRendererDiagnostics,
         [switch]$RequirePhaseDiagnostics,
         [string]$RequireEvidenceVerdict = ""
@@ -50,6 +51,7 @@ function Invoke-Summary {
     if ($RequireNoWarnings) { $summaryArgs.RequireNoWarnings = $true }
     if ($RequireRoiMeasurement) { $summaryArgs.RequireRoiMeasurement = $true }
     if ($RequireScreenrecord) { $summaryArgs.RequireScreenrecord = $true }
+    if ($RequireThermalReady) { $summaryArgs.RequireThermalReady = $true }
     if ($RequireRendererDiagnostics) { $summaryArgs.RequireRendererDiagnostics = $true }
     if ($RequirePhaseDiagnostics) { $summaryArgs.RequirePhaseDiagnostics = $true }
     if (-not [string]::IsNullOrWhiteSpace($RequireEvidenceVerdict)) { $summaryArgs.RequireEvidenceVerdict = $RequireEvidenceVerdict }
@@ -387,6 +389,45 @@ Number Missed Vsync: 0
     Assert-True -Condition ($passingScreenrecordSummary.requiredGates.screenrecord.bytes -gt 0) -Message "Screenrecord bytes should be positive."
     Assert-Equal -Actual $passingScreenrecordSummary.requiredGates.screenrecord.mp4Signature -Expected $true -Message "Screenrecord should have an MP4 signature."
     Assert-Equal -Actual $passingScreenrecordSummary.requiredGates.screenrecord.passed -Expected $true -Message "Screenrecord gate should pass."
+
+    $missingThermalReadyExitCode = Invoke-Summary -BundlePath $visualGateBundle -RequireCleanSource -RequireThermalReady
+    $missingThermalReadySummary = Get-Content -LiteralPath (Join-Path $visualGateBundle "evidence_summary.json") -Raw | ConvertFrom-Json
+    Assert-Equal -Actual $missingThermalReadyExitCode -Expected 12 -Message "Missing thermal-ready gate exit code mismatch."
+    Assert-Equal -Actual $missingThermalReadySummary.requiredGates.thermalReady.required -Expected $true -Message "Thermal-ready gate should be required."
+    Assert-Equal -Actual $missingThermalReadySummary.requiredGates.thermalReady.present -Expected $false -Message "Thermal-ready artifact should be missing."
+    Assert-Equal -Actual $missingThermalReadySummary.requiredGates.thermalReady.passed -Expected $false -Message "Missing thermal-ready artifact should not pass."
+    Assert-True -Condition ("thermal readiness required but thermal_ready_wait.json is missing" -in @($missingThermalReadySummary.warnings)) -Message "Missing thermal-ready warning missing."
+
+    $failedThermalReadyBundle = Join-Path $root "failed-thermal-ready"
+    Copy-Item -LiteralPath $visualGateBundle -Destination $failedThermalReadyBundle -Recurse
+    Write-JsonFile -Path (Join-Path $failedThermalReadyBundle "thermal_ready_wait.json") -Value ([ordered]@{
+        ready = $false
+        readyBelowThermalStatus = 4
+        requiredReadySamples = 2
+        consecutiveReadySamples = 0
+    })
+    $failedThermalReadyExitCode = Invoke-Summary -BundlePath $failedThermalReadyBundle -RequireCleanSource -RequireThermalReady
+    $failedThermalReadySummary = Get-Content -LiteralPath (Join-Path $failedThermalReadyBundle "evidence_summary.json") -Raw | ConvertFrom-Json
+    Assert-Equal -Actual $failedThermalReadyExitCode -Expected 12 -Message "Failed thermal-ready gate exit code mismatch."
+    Assert-Equal -Actual $failedThermalReadySummary.requiredGates.thermalReady.present -Expected $true -Message "Failed thermal-ready artifact should be present."
+    Assert-Equal -Actual $failedThermalReadySummary.requiredGates.thermalReady.ready -Expected $false -Message "Failed thermal-ready artifact should report ready=false."
+    Assert-Equal -Actual $failedThermalReadySummary.requiredGates.thermalReady.passed -Expected $false -Message "Failed thermal-ready artifact should not pass."
+    Assert-True -Condition ("thermal readiness required but wait result was not ready" -in @($failedThermalReadySummary.warnings)) -Message "Failed thermal-ready warning missing."
+
+    $passingThermalReadyBundle = Join-Path $root "passing-thermal-ready"
+    Copy-Item -LiteralPath $visualGateBundle -Destination $passingThermalReadyBundle -Recurse
+    Write-JsonFile -Path (Join-Path $passingThermalReadyBundle "thermal_ready_wait.json") -Value ([ordered]@{
+        ready = $true
+        readyBelowThermalStatus = 4
+        requiredReadySamples = 2
+        consecutiveReadySamples = 2
+    })
+    $passingThermalReadyExitCode = Invoke-Summary -BundlePath $passingThermalReadyBundle -RequireCleanSource -RequireThermalReady
+    $passingThermalReadySummary = Get-Content -LiteralPath (Join-Path $passingThermalReadyBundle "evidence_summary.json") -Raw | ConvertFrom-Json
+    Assert-Equal -Actual $passingThermalReadyExitCode -Expected 0 -Message "Passing thermal-ready gate exit code mismatch."
+    Assert-Equal -Actual $passingThermalReadySummary.requiredGates.thermalReady.present -Expected $true -Message "Passing thermal-ready artifact should be present."
+    Assert-Equal -Actual $passingThermalReadySummary.requiredGates.thermalReady.ready -Expected $true -Message "Passing thermal-ready artifact should report ready=true."
+    Assert-Equal -Actual $passingThermalReadySummary.requiredGates.thermalReady.passed -Expected $true -Message "Thermal-ready gate should pass."
 
     $dirtyGateBundle = Join-Path $root "dirty-gate"
     Copy-Item -LiteralPath $visualGateBundle -Destination $dirtyGateBundle -Recurse
