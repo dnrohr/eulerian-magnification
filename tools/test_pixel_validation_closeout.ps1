@@ -30,6 +30,7 @@ function Invoke-Closeout {
         [switch]$FailOnUnmatched,
         [switch]$FailOnAmbiguous,
         [switch]$FailOnDuplicate,
+        [switch]$FailOnCloseoutNotReady,
         [switch]$FailOnPresetDocsNotReady
     )
 
@@ -50,6 +51,9 @@ function Invoke-Closeout {
     }
     if ($FailOnDuplicate) {
         $args.FailOnDuplicate = $true
+    }
+    if ($FailOnCloseoutNotReady) {
+        $args.FailOnCloseoutNotReady = $true
     }
     if ($FailOnPresetDocsNotReady) {
         $args.FailOnPresetDocsNotReady = $true
@@ -138,6 +142,7 @@ try {
     Assert-Equal -Actual @($result.missing).Count -Expected 0 -Message "All slots should be satisfied."
     Assert-Equal -Actual $result.readyForPresetDocs -Expected $true -Message "Preset docs should be ready when four preset slots pass."
     Assert-Equal -Actual $result.allCloseoutEvidencePresent -Expected $true -Message "All closeout evidence should be present."
+    Assert-Equal -Actual $result.allCloseoutEvidenceClean -Expected $false -Message "Unmatched evidence should prevent clean roadmap closeout."
     Assert-Equal -Actual $result.slots[0].protocol -Expected "docs/testing/ROI_DEVICE_VALIDATION.md" -Message "Closeout slots should expose protocol docs."
     Assert-True -Condition ($result.slots[0].nextCommand.Contains("manual-roi-known-target-setup")) -Message "Manual ROI slot should expose next command hint."
 
@@ -150,6 +155,7 @@ try {
     Assert-Equal -Actual @($partial.missing).Count -Expected 5 -Message "Partial closeout should report missing slots."
     Assert-Equal -Actual @($partial.unmatchedAcceptedFinalEvidence).Count -Expected 0 -Message "Partial closeout should not have unmatched accepted evidence."
     Assert-Equal -Actual $partial.readyForPresetDocs -Expected $false -Message "Partial closeout should not be ready for preset docs."
+    Assert-Equal -Actual $partial.allCloseoutEvidenceClean -Expected $false -Message "Partial closeout should not be clean."
     Assert-True -Condition ($partial.missing[0].nextCommand.Length -gt 0) -Message "Missing closeout slots should include next command hints."
 
     $partialExitCode = Invoke-Closeout -EvidenceRoot $partialRoot -FailOnMissing
@@ -157,6 +163,9 @@ try {
 
     $partialPresetDocsExitCode = Invoke-Closeout -EvidenceRoot $partialRoot -FailOnPresetDocsNotReady
     Assert-Equal -Actual $partialPresetDocsExitCode -Expected 4 -Message "FailOnPresetDocsNotReady should exit 4 until all preset visual slots are satisfied."
+
+    $partialCloseoutReadyExitCode = Invoke-Closeout -EvidenceRoot $partialRoot -FailOnCloseoutNotReady
+    Assert-Equal -Actual $partialCloseoutReadyExitCode -Expected 7 -Message "FailOnCloseoutNotReady should exit 7 until all closeout slots are satisfied and clean."
 
     $objectOnlyRoot = Join-Path $root "object-only"
     New-Item -ItemType Directory -Path $objectOnlyRoot -Force | Out-Null
@@ -207,6 +216,8 @@ try {
     }
     $classifiedExitCode = Invoke-Closeout -EvidenceRoot $classifiedRoot -FailOnMissing -FailOnUnmatched -FailOnAmbiguous -FailOnDuplicate
     Assert-Equal -Actual $classifiedExitCode -Expected 0 -Message "Combined closeout gates should pass when all accepted evidence maps to slots."
+    $classifiedCloseoutReadyExitCode = Invoke-Closeout -EvidenceRoot $classifiedRoot -FailOnCloseoutNotReady
+    Assert-Equal -Actual $classifiedCloseoutReadyExitCode -Expected 0 -Message "FailOnCloseoutNotReady should pass when all accepted evidence maps cleanly to slots."
 } finally {
     Remove-Item -LiteralPath $root -Recurse -Force
 }

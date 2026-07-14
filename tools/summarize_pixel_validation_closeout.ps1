@@ -5,6 +5,7 @@ param(
     [switch]$FailOnUnmatched,
     [switch]$FailOnAmbiguous,
     [switch]$FailOnDuplicate,
+    [switch]$FailOnCloseoutNotReady,
     [switch]$FailOnPresetDocsNotReady
 )
 
@@ -168,6 +169,13 @@ foreach ($summary in $acceptedSummaries) {
 
 $slotList = @($slots.Values | ForEach-Object { [pscustomobject]$_ })
 $missing = @($slotList | Where-Object { -not $_.satisfied })
+$allCloseoutEvidencePresent = ($missing.Count -eq 0)
+$allCloseoutEvidenceClean = (
+    $allCloseoutEvidencePresent -and
+    $unmatchedAcceptedFinalEvidence.Count -eq 0 -and
+    $ambiguousAcceptedFinalEvidence.Count -eq 0 -and
+    $duplicateAcceptedFinalEvidence.Count -eq 0
+)
 $result = [pscustomobject]@{
     evidenceRoot = if ($rootPath) { $rootPath.Path } else { $EvidenceRoot }
     summaryCount = $summaryFiles.Count
@@ -178,7 +186,8 @@ $result = [pscustomobject]@{
     slots = $slotList
     missing = $missing
     readyForPresetDocs = (@($slotList | Where-Object { $_.id -in @("pulseLinear", "breathingLinear", "objectPhase", "fastTremorPhase") -and $_.satisfied }).Count -eq 4)
-    allCloseoutEvidencePresent = ($missing.Count -eq 0)
+    allCloseoutEvidencePresent = $allCloseoutEvidencePresent
+    allCloseoutEvidenceClean = $allCloseoutEvidenceClean
 }
 
 if ($Json) {
@@ -207,6 +216,7 @@ if ($Json) {
     Write-Output ""
     Write-Output "Ready for preset docs update: $($result.readyForPresetDocs)"
     Write-Output "All closeout evidence present: $($result.allCloseoutEvidencePresent)"
+    Write-Output "All closeout evidence clean: $($result.allCloseoutEvidenceClean)"
     if (@($result.unmatchedAcceptedFinalEvidence).Count -gt 0) {
         Write-Output ""
         Write-Output "Unmatched accepted final evidence:"
@@ -245,6 +255,9 @@ if ($FailOnAmbiguous -and $ambiguousAcceptedFinalEvidence.Count -gt 0) {
 }
 if ($FailOnDuplicate -and $duplicateAcceptedFinalEvidence.Count -gt 0) {
     exit 6
+}
+if ($FailOnCloseoutNotReady -and -not $result.allCloseoutEvidenceClean) {
+    exit 7
 }
 if ($FailOnPresetDocsNotReady -and -not $result.readyForPresetDocs) {
     exit 4

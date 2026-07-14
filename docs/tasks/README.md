@@ -105,6 +105,7 @@ ready to close roadmap items:
 .\tools\summarize_pixel_validation_closeout.ps1
 ```
 
-Use `-FailOnMissing -FailOnUnmatched -FailOnAmbiguous -FailOnDuplicate` before
-closing roadmap items, and use `-FailOnPresetDocsNotReady` before changing
-README or MIT parity visual status.
+Use `-FailOnCloseoutNotReady` before closing roadmap items; it is equivalent to
+requiring no missing, unmatched, ambiguous, or duplicate accepted evidence
+(`-FailOnMissing -FailOnUnmatched -FailOnAmbiguous -FailOnDuplicate`). Use
+`-FailOnPresetDocsNotReady` before changing README or MIT parity visual status.

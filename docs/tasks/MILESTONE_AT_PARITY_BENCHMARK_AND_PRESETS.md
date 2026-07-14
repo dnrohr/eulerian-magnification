@@ -356,6 +356,9 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   cannot silently satisfy multiple roadmap closeout slots.
 - Added a tested `-FailOnDuplicate` closeout gate so multiple accepted bundles
   for the same roadmap closeout slot require explicit review.
+- Added a tested `-FailOnCloseoutNotReady` one-shot gate and
+  `allCloseoutEvidenceClean` summary field for automation that wants one
+  roadmap-closeout readiness check.
 - Added a tested `-FailOnPresetDocsNotReady` closeout gate so README/parity doc
   updates can be blocked until all four preset visual slots are accepted.
 - Documented the closeout gates in README, the task index, and MIT parity

@@ -225,6 +225,7 @@ duplicate accepted evidence:
 
 ```powershell
 .\tools\summarize_pixel_validation_closeout.ps1 -FailOnMissing -FailOnUnmatched -FailOnAmbiguous -FailOnDuplicate
+.\tools\summarize_pixel_validation_closeout.ps1 -FailOnCloseoutNotReady
 ```
 
 For local file integrity:
