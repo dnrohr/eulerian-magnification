@@ -23,6 +23,26 @@ function Assert-Equal {
     }
 }
 
+function Invoke-Closeout {
+    param(
+        [string]$EvidenceRoot,
+        [switch]$FailOnMissing
+    )
+
+    $script = Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1"
+    $stdout = Join-Path $EvidenceRoot "closeout_stdout.txt"
+    $args = @{
+        EvidenceRoot = $EvidenceRoot
+        Json = $true
+    }
+    if ($FailOnMissing) {
+        $args.FailOnMissing = $true
+    }
+
+    & $script @args *> $stdout
+    return $LASTEXITCODE
+}
+
 function Write-Summary {
     param(
         [string]$Root,
@@ -106,6 +126,12 @@ try {
     Assert-Equal -Actual $partial.summaryCount -Expected 1 -Message "Partial summary count mismatch."
     Assert-Equal -Actual @($partial.missing).Count -Expected 5 -Message "Partial closeout should report missing slots."
     Assert-Equal -Actual $partial.readyForPresetDocs -Expected $false -Message "Partial closeout should not be ready for preset docs."
+
+    $partialExitCode = Invoke-Closeout -EvidenceRoot $partialRoot -FailOnMissing
+    Assert-Equal -Actual $partialExitCode -Expected 2 -Message "FailOnMissing should exit 2 when closeout slots are missing."
+
+    $completeExitCode = Invoke-Closeout -EvidenceRoot $root -FailOnMissing
+    Assert-Equal -Actual $completeExitCode -Expected 0 -Message "FailOnMissing should exit 0 when all closeout slots are satisfied."
 } finally {
     Remove-Item -LiteralPath $root -Recurse -Force
 }

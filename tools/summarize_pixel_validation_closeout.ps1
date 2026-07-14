@@ -153,3 +153,5 @@ if ($Json) {
 if ($FailOnMissing -and $missing.Count -gt 0) {
     exit 2
 }
+
+exit 0
