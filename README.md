@@ -299,6 +299,9 @@ state.
 .\tools\test_offline_project_tooling.ps1
 ```
 
+The phone-free tooling suite also runs in GitHub Actions on pushes to `main`
+and pull requests.
+
 Open the repo in Android Studio, connect a Pixel 8a, and run the `app`
 configuration when device testing is needed.
 
