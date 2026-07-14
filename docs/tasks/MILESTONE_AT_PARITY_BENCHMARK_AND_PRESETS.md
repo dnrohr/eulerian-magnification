@@ -182,6 +182,16 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - The summary self-test now covers a landscape screenshot bundle to verify that
   late screenshot warnings are included in the no-warnings gate.
 
+## Supporting Slice: Verdict-Based Visual Gate Warning
+
+- `-RequireVisualValidation` now adds its warning based on the final
+  `evidenceVerdict`, not only the operator-entered visual-review fields.
+- This means an operator-accepted bundle still fails loudly when the summary
+  verdict is `wrong_orientation`, `screenshot_blank`, `runtime_failed`, or any
+  other non-visual-validation state.
+- The summary self-test covers an accepted but landscape-oriented bundle to
+  verify that the final verdict remains authoritative.
+
 ## Supporting Slice: Aborted Evidence Gate Consistency
 
 - The capture script now uses one shared summary invocation path for normal and

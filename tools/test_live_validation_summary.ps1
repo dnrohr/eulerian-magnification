@@ -349,6 +349,16 @@ Number Missed Vsync: 0
     Assert-Equal -Actual $lateWarningSummary.requiredGates.noWarnings.warningCount -Expected 1 -Message "Late no-warnings gate warning count mismatch."
     Assert-True -Condition ("screenshot is not portrait-oriented" -in @($lateWarningSummary.warnings)) -Message "Late screenshot warning missing."
 
+    $acceptedWrongOrientationBundle = Join-Path $root "accepted-wrong-orientation"
+    Copy-Item -LiteralPath $lateWarningBundle -Destination $acceptedWrongOrientationBundle -Recurse
+    $acceptedWrongOrientationExitCode = Invoke-Summary -BundlePath $acceptedWrongOrientationBundle -RequireCleanSource -RequireVisualValidation
+    $acceptedWrongOrientationSummary = Get-Content -LiteralPath (Join-Path $acceptedWrongOrientationBundle "evidence_summary.json") -Raw | ConvertFrom-Json
+    Assert-Equal -Actual $acceptedWrongOrientationExitCode -Expected 5 -Message "Accepted wrong-orientation visual gate exit code mismatch."
+    Assert-Equal -Actual $acceptedWrongOrientationSummary.visualReview.countsAsVisualValidation -Expected $true -Message "Operator visual review should be accepted."
+    Assert-Equal -Actual $acceptedWrongOrientationSummary.evidenceVerdict.status -Expected "wrong_orientation" -Message "Accepted wrong-orientation verdict mismatch."
+    Assert-Equal -Actual $acceptedWrongOrientationSummary.requiredGates.visualValidation.passed -Expected $false -Message "Final verdict should fail visual gate."
+    Assert-True -Condition ("visual validation required but evidence verdict does not count as visual validation" -in @($acceptedWrongOrientationSummary.warnings)) -Message "Verdict-based visual gate warning missing."
+
     Write-Output "Live validation summary self-test passed: $root"
 } finally {
     if ([string]::IsNullOrWhiteSpace($OutputRoot) -and (Test-Path -LiteralPath $root)) {
