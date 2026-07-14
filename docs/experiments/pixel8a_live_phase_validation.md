@@ -224,6 +224,7 @@ After inspection, close the Fast tremor slot with:
 The generated `evidence_summary.json` must be checked before the run can count:
 
 - `source.dirty` is `false`.
+- `source.commitReachableFromOriginMain` is `true` for final evidence.
 - `requiredGates.phaseDiagnostics.passed` is `true`.
 - Pre-inspection captures have `requiredGates.evidenceVerdict.passed` for
   `target_visible_unvalidated`.

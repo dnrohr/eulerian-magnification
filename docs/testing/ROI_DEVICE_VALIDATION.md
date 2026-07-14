@@ -75,6 +75,9 @@ final command should fail if the source tree is dirty, the recording is missing,
 thermal readiness is missing, the camera cadence is missing or low, the app is
 not focused, the ROI measurement fails, or the accepted visual claim still has
 warnings.
+The generated summary must show `source.dirty=false` and
+`source.commitReachableFromOriginMain=true` before the evidence can close the
+manual ROI task.
 
 ```powershell
 .\tools\capture_live_validation_evidence.ps1 `
@@ -162,6 +165,9 @@ committed source tree with `-VisualValidated $true`, keep
 `-RequireFinalVisualEvidence`. Do not mark automatic ROI as validated from a
 `Center ROI`, `Frozen ROI`, or fallback measurement unless the milestone note
 explicitly says the run was only an overlay smoke test.
+The generated summary must show `source.dirty=false` and
+`source.commitReachableFromOriginMain=true` before the evidence can close the
+automatic ROI task.
 
 ```powershell
 .\tools\capture_live_validation_evidence.ps1 `

@@ -204,6 +204,7 @@ After inspection, close the Breathing slot with:
 The generated `evidence_summary.json` must show:
 
 - `source.dirty` is `false` for final evidence.
+- `source.commitReachableFromOriginMain` is `true` for final evidence.
 - `requiredGates.rendererDiagnostics.passed` is `true`.
 - Setup captures pass `requiredGates.evidenceVerdict` for
   `target_visible_unvalidated`.

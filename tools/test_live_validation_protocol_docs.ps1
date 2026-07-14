@@ -134,6 +134,7 @@ Assert-DocContains -Path $roiDoc -Expected "-MeasureRoiKind Auto" -Message "ROI 
 Assert-DocContains -Path $roiDoc -Expected "manual-roi-known-target-final" -Message "ROI protocol must include explicit manual ROI final evidence."
 Assert-DocContains -Path $roiDoc -Expected "auto-face-roi-final" -Message "ROI protocol must include explicit automatic ROI final evidence."
 Assert-DocContains -Path $roiDoc -Expected "-RequireEvidenceVerdict target_visible_unvalidated" -Message "ROI setup evidence should stop at target-visible review."
+Assert-DocContains -Path $roiDoc -Expected "source.commitReachableFromOriginMain" -Message "ROI protocol must require final evidence from a pushed source commit."
 
 Assert-DocContains -Path $liveGuide -Expected "-RequireFinalVisualEvidence" -Message "Live guide must document the final visual evidence profile."
 Assert-DocContains -Path $liveGuide -Expected "-RequireScreenrecord" -Message "Live guide must document screenrecord gating."
@@ -157,6 +158,7 @@ Assert-DocContains -Path $linearDoc -Expected "-RequireRendererDiagnostics" -Mes
 Assert-DocContains -Path $linearDoc -Expected "-RequireFinalVisualEvidence" -Message "Live linear protocol must include final visual evidence gates."
 Assert-DocContains -Path $linearDoc -Expected "live-linear-breathing-final" -Message "Live linear protocol must include explicit Breathing final evidence."
 Assert-DocContains -Path $linearDoc -Expected "target_visible_unvalidated" -Message "Live linear setup should stop at target-visible review."
+Assert-DocContains -Path $linearDoc -Expected "source.commitReachableFromOriginMain" -Message "Live linear protocol must require final evidence from a pushed source commit."
 
 Assert-DocContains -Path $phaseDoc -Expected "-Mode Tremor" -Message "Live phase protocol must use the public Motion/Tremor path."
 Assert-DocContains -Path $phaseDoc -Expected "-RoiSource Manual" -Message "Live phase protocol must validate manual ROI phase motion."
@@ -165,5 +167,6 @@ Assert-DocContains -Path $phaseDoc -Expected "-RequirePhaseDiagnostics" -Message
 Assert-DocContains -Path $phaseDoc -Expected "-RequireFinalVisualEvidence" -Message "Live phase protocol must include final visual evidence gates."
 Assert-DocContains -Path $phaseDoc -Expected "live-phase-fast-tremor-final" -Message "Live phase protocol must include explicit Fast tremor final evidence."
 Assert-DocContains -Path $phaseDoc -Expected "target_visible_unvalidated" -Message "Live phase setup should stop at target-visible review."
+Assert-DocContains -Path $phaseDoc -Expected "source.commitReachableFromOriginMain" -Message "Live phase protocol must require final evidence from a pushed source commit."
 
 Write-Output "Live validation protocol docs self-test passed."
