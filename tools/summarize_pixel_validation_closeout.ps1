@@ -169,9 +169,9 @@ foreach ($summary in $acceptedSummaries) {
 
 $slotList = @($slots.Values | ForEach-Object { [pscustomobject]$_ })
 $missing = @($slotList | Where-Object { -not $_.satisfied })
-$readyForPresetDocs = (@($slotList | Where-Object { $_.id -in @("pulseLinear", "breathingLinear", "objectPhase", "fastTremorPhase") -and $_.satisfied }).Count -eq 4)
+$presetVisualSlotsPresent = (@($slotList | Where-Object { $_.id -in @("pulseLinear", "breathingLinear", "objectPhase", "fastTremorPhase") -and $_.satisfied }).Count -eq 4)
 $presetDocsEvidenceClean = (
-    $readyForPresetDocs -and
+    $presetVisualSlotsPresent -and
     $unmatchedAcceptedFinalEvidence.Count -eq 0 -and
     $ambiguousAcceptedFinalEvidence.Count -eq 0 -and
     $duplicateAcceptedFinalEvidence.Count -eq 0
@@ -192,8 +192,9 @@ $result = [pscustomobject]@{
     duplicateAcceptedFinalEvidence = $duplicateAcceptedFinalEvidence
     slots = $slotList
     missing = $missing
-    readyForPresetDocs = $readyForPresetDocs
+    presetVisualSlotsPresent = $presetVisualSlotsPresent
     presetDocsEvidenceClean = $presetDocsEvidenceClean
+    readyForPresetDocs = $presetDocsEvidenceClean
     allCloseoutEvidencePresent = $allCloseoutEvidencePresent
     allCloseoutEvidenceClean = $allCloseoutEvidenceClean
 }
@@ -222,8 +223,9 @@ if ($Json) {
         }
     }
     Write-Output ""
-    Write-Output "Ready for preset docs update: $($result.readyForPresetDocs)"
+    Write-Output "Preset visual slots present: $($result.presetVisualSlotsPresent)"
     Write-Output "Preset docs evidence clean: $($result.presetDocsEvidenceClean)"
+    Write-Output "Ready for preset docs update: $($result.readyForPresetDocs)"
     Write-Output "All closeout evidence present: $($result.allCloseoutEvidencePresent)"
     Write-Output "All closeout evidence clean: $($result.allCloseoutEvidenceClean)"
     if (@($result.unmatchedAcceptedFinalEvidence).Count -gt 0) {

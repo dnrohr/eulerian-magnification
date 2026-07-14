@@ -140,8 +140,9 @@ try {
     Assert-Equal -Actual @($result.ambiguousAcceptedFinalEvidence).Count -Expected 0 -Message "Known closeout fixtures should not be ambiguous."
     Assert-Equal -Actual @($result.duplicateAcceptedFinalEvidence).Count -Expected 0 -Message "Known closeout fixtures should not duplicate slots."
     Assert-Equal -Actual @($result.missing).Count -Expected 0 -Message "All slots should be satisfied."
-    Assert-Equal -Actual $result.readyForPresetDocs -Expected $true -Message "Preset docs should be ready when four preset slots pass."
+    Assert-Equal -Actual $result.presetVisualSlotsPresent -Expected $true -Message "Preset visual slots should be present when four preset slots pass."
     Assert-Equal -Actual $result.presetDocsEvidenceClean -Expected $false -Message "Unmatched evidence should prevent preset docs closeout."
+    Assert-Equal -Actual $result.readyForPresetDocs -Expected $false -Message "Preset docs should not be ready when accepted evidence is unclean."
     Assert-Equal -Actual $result.allCloseoutEvidencePresent -Expected $true -Message "All closeout evidence should be present."
     Assert-Equal -Actual $result.allCloseoutEvidenceClean -Expected $false -Message "Unmatched evidence should prevent clean roadmap closeout."
     Assert-Equal -Actual $result.slots[0].protocol -Expected "docs/testing/ROI_DEVICE_VALIDATION.md" -Message "Closeout slots should expose protocol docs."
@@ -156,6 +157,7 @@ try {
     Assert-Equal -Actual @($partial.missing).Count -Expected 5 -Message "Partial closeout should report missing slots."
     Assert-Equal -Actual @($partial.unmatchedAcceptedFinalEvidence).Count -Expected 0 -Message "Partial closeout should not have unmatched accepted evidence."
     Assert-Equal -Actual $partial.readyForPresetDocs -Expected $false -Message "Partial closeout should not be ready for preset docs."
+    Assert-Equal -Actual $partial.presetVisualSlotsPresent -Expected $false -Message "Partial closeout should not have all preset slots."
     Assert-Equal -Actual $partial.allCloseoutEvidenceClean -Expected $false -Message "Partial closeout should not be clean."
     Assert-True -Condition ($partial.missing[0].nextCommand.Length -gt 0) -Message "Missing closeout slots should include next command hints."
 
@@ -217,6 +219,10 @@ try {
     }
     $classifiedExitCode = Invoke-Closeout -EvidenceRoot $classifiedRoot -FailOnMissing -FailOnUnmatched -FailOnAmbiguous -FailOnDuplicate
     Assert-Equal -Actual $classifiedExitCode -Expected 0 -Message "Combined closeout gates should pass when all accepted evidence maps to slots."
+    $classified = & (Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1") -EvidenceRoot $classifiedRoot -Json | ConvertFrom-Json
+    Assert-Equal -Actual $classified.readyForPresetDocs -Expected $true -Message "Preset docs should be ready when preset slots are satisfied and evidence is clean."
+    Assert-Equal -Actual $classified.presetVisualSlotsPresent -Expected $true -Message "Preset visual slots should be present in classified closeout."
+    Assert-Equal -Actual $classified.presetDocsEvidenceClean -Expected $true -Message "Preset docs evidence should be clean in classified closeout."
     $classifiedPresetDocsExitCode = Invoke-Closeout -EvidenceRoot $classifiedRoot -FailOnPresetDocsNotReady
     Assert-Equal -Actual $classifiedPresetDocsExitCode -Expected 0 -Message "FailOnPresetDocsNotReady should pass when preset slots are satisfied and evidence is clean."
     $classifiedCloseoutReadyExitCode = Invoke-Closeout -EvidenceRoot $classifiedRoot -FailOnCloseoutNotReady
