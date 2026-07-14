@@ -40,6 +40,24 @@ function Write-TextFile {
     $Lines | Out-File -LiteralPath $Path -Encoding utf8
 }
 
+function Invoke-SummaryExitCode {
+    param(
+        [string]$TaskIndexPath,
+        [switch]$FailOnMismatch
+    )
+
+    $summaryScript = Join-Path $PSScriptRoot "summarize_roadmap_status.ps1"
+    $summaryArgs = @{
+        TaskIndexPath = $TaskIndexPath
+    }
+    if ($FailOnMismatch) {
+        $summaryArgs.FailOnMismatch = $true
+    }
+    $global:LASTEXITCODE = 0
+    & $summaryScript @summaryArgs *> $null
+    return $LASTEXITCODE
+}
+
 $root = if ([string]::IsNullOrWhiteSpace($OutputRoot)) {
     Join-Path ([System.IO.Path]::GetTempPath()) ("eulerian-roadmap-status-test-" + [Guid]::NewGuid().ToString("N"))
 } else {
@@ -123,5 +141,19 @@ Assert-True -Condition (($text -join "`n") -match "Roadmap milestones: 4") -Mess
 Assert-True -Condition (($text -join "`n") -match "\[ \] Capture watched Pixel evidence\.") -Message "Text output should include open tasks."
 Assert-True -Condition (($text -join "`n") -match "No unchecked task bullets") -Message "Text output should call out prose-only remaining work."
 Assert-True -Condition (($text -join "`n") -match "Status mismatches:") -Message "Text output should include mismatch section."
+
+$mismatchExitCode = Invoke-SummaryExitCode -TaskIndexPath $indexPath -FailOnMismatch
+Assert-Equal -Actual $mismatchExitCode -Expected 2 -Message "Mismatch strict exit code"
+
+Write-TextFile -Path (Join-Path $taskRoot "MILESTONE_C.md") -Lines @(
+    "# Milestone C",
+    "",
+    "Status: Complete",
+    "",
+    "This now agrees with the index."
+)
+
+$cleanExitCode = Invoke-SummaryExitCode -TaskIndexPath $indexPath -FailOnMismatch
+Assert-Equal -Actual $cleanExitCode -Expected 0 -Message "Clean strict exit code"
 
 Write-Output "Roadmap status summary self-test passed: $root"

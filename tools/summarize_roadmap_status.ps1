@@ -1,6 +1,7 @@
 param(
     [string]$TaskIndexPath = "docs\tasks\README.md",
-    [switch]$Json
+    [switch]$Json,
+    [switch]$FailOnMismatch
 )
 
 $ErrorActionPreference = "Stop"
@@ -74,6 +75,9 @@ $summary = [pscustomobject]@{
 
 if ($Json) {
     $summary | ConvertTo-Json -Depth 6
+    if ($FailOnMismatch -and $mismatches.Count -gt 0) {
+        exit 2
+    }
     exit 0
 }
 
@@ -103,4 +107,8 @@ if ($mismatches.Count -gt 0) {
     foreach ($row in $mismatches) {
         Write-Output "- $($row.milestone): index '$($row.indexStatus)' vs file '$($row.fileStatus)'"
     }
+}
+
+if ($FailOnMismatch -and $mismatches.Count -gt 0) {
+    exit 2
 }

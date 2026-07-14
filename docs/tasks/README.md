@@ -72,7 +72,8 @@ Run the roadmap status summarizer when checking what remains:
 The script reads this index, counts milestone statuses, lists in-progress
 milestones with their open checklist items, flags likely phone/visual-gated
 work, and reports any mismatch between this table and a milestone file's own
-`Status:` line.
+`Status:` line. Pass `-FailOnMismatch` when a local or CI check should exit
+nonzero on status drift.
 
 After editing the backlog index or status summarizer, run:
 
