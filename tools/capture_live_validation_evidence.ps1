@@ -42,7 +42,9 @@ param(
     [switch]$RequireCleanSource,
     [switch]$RequireVisualValidation,
     [switch]$RequireNoWarnings,
-    [switch]$RequireRoiMeasurement
+    [switch]$RequireRoiMeasurement,
+    [ValidateSet("", "runtime_smoke_only", "visual_validated", "target_visible_unvalidated", "visual_claim_without_target", "ui_assertion_failed", "screenshot_blank", "wrong_orientation", "runtime_failed", "thermal_preflight_aborted")]
+    [string]$RequireEvidenceVerdict = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -321,6 +323,9 @@ function Invoke-EvidenceSummary {
     }
     if ($RequireRoiMeasurement) {
         $summaryArgs.RequireRoiMeasurement = $true
+    }
+    if (-not [string]::IsNullOrWhiteSpace($RequireEvidenceVerdict)) {
+        $summaryArgs.RequireEvidenceVerdict = $RequireEvidenceVerdict
     }
 
     & $summaryScript @summaryArgs

@@ -204,6 +204,21 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   validation scripts cannot lose gate metadata when the phone is too hot to
   launch.
 
+## Supporting Slice: Required Evidence Verdict Gate
+
+- Live validation summaries now accept `-RequireEvidenceVerdict` for exact
+  verdict assertions such as `target_visible_unvalidated` or
+  `visual_validated`.
+- `tools/capture_live_validation_evidence.ps1` forwards the verdict requirement
+  when `-Summarize` is used, so future Pixel commands can distinguish setup
+  review from final accepted visual evidence.
+- A mismatch exits `9` and records the expected and actual verdict under
+  `requiredGates.evidenceVerdict`.
+- The summary self-test covers both a matching target-visible exploratory
+  bundle and a mismatched final-visual requirement. This strengthens the
+  remaining watched preset evidence flow without needing the physical Pixel for
+  this slice.
+
 ## Remaining
 
 - Extend Pixel 8a evidence with a known-good visual artifact and watched target

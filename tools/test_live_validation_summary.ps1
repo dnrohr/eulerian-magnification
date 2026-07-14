@@ -33,7 +33,8 @@ function Invoke-Summary {
         [switch]$RequireCleanSource,
         [switch]$RequireVisualValidation,
         [switch]$RequireNoWarnings,
-        [switch]$RequireRoiMeasurement
+        [switch]$RequireRoiMeasurement,
+        [string]$RequireEvidenceVerdict = ""
     )
 
     $summaryScript = Join-Path $PSScriptRoot "summarize_live_validation_evidence.ps1"
@@ -45,6 +46,7 @@ function Invoke-Summary {
     if ($RequireVisualValidation) { $summaryArgs.RequireVisualValidation = $true }
     if ($RequireNoWarnings) { $summaryArgs.RequireNoWarnings = $true }
     if ($RequireRoiMeasurement) { $summaryArgs.RequireRoiMeasurement = $true }
+    if (-not [string]::IsNullOrWhiteSpace($RequireEvidenceVerdict)) { $summaryArgs.RequireEvidenceVerdict = $RequireEvidenceVerdict }
     & $summaryScript @summaryArgs *> $stdoutPath
     return $LASTEXITCODE
 }
@@ -303,6 +305,20 @@ Number Missed Vsync: 0
     Assert-Equal -Actual $visualGateSummary.requiredGates.cleanSource.passed -Expected $true -Message "Clean source gate should pass."
     Assert-Equal -Actual $visualGateSummary.requiredGates.visualValidation.passed -Expected $false -Message "Visual validation gate should fail."
     Assert-True -Condition ("visual validation required but evidence verdict does not count as visual validation" -in @($visualGateSummary.warnings)) -Message "Visual gate warning missing."
+
+    $matchingVerdictExitCode = Invoke-Summary -BundlePath $visualGateBundle -RequireCleanSource -RequireEvidenceVerdict "target_visible_unvalidated"
+    $matchingVerdictSummary = Get-Content -LiteralPath (Join-Path $visualGateBundle "evidence_summary.json") -Raw | ConvertFrom-Json
+    Assert-Equal -Actual $matchingVerdictExitCode -Expected 0 -Message "Matching evidence verdict gate exit code mismatch."
+    Assert-Equal -Actual $matchingVerdictSummary.requiredGates.evidenceVerdict.required -Expected $true -Message "Evidence verdict gate should be required."
+    Assert-Equal -Actual $matchingVerdictSummary.requiredGates.evidenceVerdict.expected -Expected "target_visible_unvalidated" -Message "Evidence verdict expected value mismatch."
+    Assert-Equal -Actual $matchingVerdictSummary.requiredGates.evidenceVerdict.actual -Expected "target_visible_unvalidated" -Message "Evidence verdict actual value mismatch."
+    Assert-Equal -Actual $matchingVerdictSummary.requiredGates.evidenceVerdict.passed -Expected $true -Message "Matching evidence verdict gate should pass."
+
+    $mismatchedVerdictExitCode = Invoke-Summary -BundlePath $visualGateBundle -RequireCleanSource -RequireEvidenceVerdict "visual_validated"
+    $mismatchedVerdictSummary = Get-Content -LiteralPath (Join-Path $visualGateBundle "evidence_summary.json") -Raw | ConvertFrom-Json
+    Assert-Equal -Actual $mismatchedVerdictExitCode -Expected 9 -Message "Mismatched evidence verdict gate exit code mismatch."
+    Assert-Equal -Actual $mismatchedVerdictSummary.requiredGates.evidenceVerdict.passed -Expected $false -Message "Mismatched evidence verdict gate should fail."
+    Assert-True -Condition ("evidence verdict required visual_validated but was target_visible_unvalidated" -in @($mismatchedVerdictSummary.warnings)) -Message "Mismatched evidence verdict warning missing."
 
     $dirtyGateBundle = Join-Path $root "dirty-gate"
     Copy-Item -LiteralPath $visualGateBundle -Destination $dirtyGateBundle -Recurse

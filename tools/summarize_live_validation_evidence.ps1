@@ -12,7 +12,9 @@ param(
     [switch]$RequireCleanSource,
     [switch]$RequireVisualValidation,
     [switch]$RequireNoWarnings,
-    [switch]$RequireRoiMeasurement
+    [switch]$RequireRoiMeasurement,
+    [ValidateSet("", "runtime_smoke_only", "visual_validated", "target_visible_unvalidated", "visual_claim_without_target", "ui_assertion_failed", "screenshot_blank", "wrong_orientation", "runtime_failed", "thermal_preflight_aborted")]
+    [string]$RequireEvidenceVerdict = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -612,6 +614,10 @@ $evidenceVerdict = Get-EvidenceVerdict `
 if ($RequireVisualValidation -and $evidenceVerdict.countsAsVisualValidation -ne $true) {
     $warnings += "visual validation required but evidence verdict does not count as visual validation"
 }
+$evidenceVerdictRequirementPassed = [string]::IsNullOrWhiteSpace($RequireEvidenceVerdict) -or ($evidenceVerdict.status -eq $RequireEvidenceVerdict)
+if (-not $evidenceVerdictRequirementPassed) {
+    $warnings += "evidence verdict required $RequireEvidenceVerdict but was $($evidenceVerdict.status)"
+}
 $warningCountBeforeNoWarningsGate = $warnings.Count
 if ($RequireNoWarnings -and $warningCountBeforeNoWarningsGate -gt 0) {
     $warnings += "no warnings required but summary has $warningCountBeforeNoWarningsGate warning(s)"
@@ -670,6 +676,12 @@ $result = [ordered]@{
             present = $null -ne $roiMeasurement
             passed = (-not [bool]$RequireRoiMeasurement) -or ($null -ne $roiMeasurement -and $roiMeasurement.passed -eq $true)
         }
+        evidenceVerdict = [ordered]@{
+            required = -not [string]::IsNullOrWhiteSpace($RequireEvidenceVerdict)
+            expected = if ([string]::IsNullOrWhiteSpace($RequireEvidenceVerdict)) { $null } else { $RequireEvidenceVerdict }
+            actual = $evidenceVerdict.status
+            passed = $evidenceVerdictRequirementPassed
+        }
         noWarnings = [ordered]@{
             required = [bool]$RequireNoWarnings
             warningCount = $warningCountBeforeNoWarningsGate
@@ -713,6 +725,9 @@ if ($result.requiredGates.visualValidation.required -and -not $result.requiredGa
 }
 if ($result.requiredGates.roiMeasurement.required -and -not $result.requiredGates.roiMeasurement.passed) {
     exit 8
+}
+if ($result.requiredGates.evidenceVerdict.required -and -not $result.requiredGates.evidenceVerdict.passed) {
+    exit 9
 }
 if ($result.requiredGates.noWarnings.required -and -not $result.requiredGates.noWarnings.passed) {
     exit 7
