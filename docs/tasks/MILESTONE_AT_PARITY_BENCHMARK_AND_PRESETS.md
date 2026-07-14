@@ -159,6 +159,16 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   the remaining preset/ROI/live-renderer validation workflow without requiring
   the physical Pixel during this tooling slice.
 
+## Supporting Slice: Aborted Evidence Gate Consistency
+
+- The capture script now uses one shared summary invocation path for normal and
+  prelaunch-aborted bundles.
+- Thermal/preflight-aborted summaries record requested strict gates under
+  `requiredGates`, while preserving exit code `4` for the abort itself.
+- The summary self-test now covers gated aborted bundles so future Pixel
+  validation scripts cannot lose gate metadata when the phone is too hot to
+  launch.
+
 ## Remaining
 
 - Extend Pixel 8a evidence with a known-good visual artifact and watched target

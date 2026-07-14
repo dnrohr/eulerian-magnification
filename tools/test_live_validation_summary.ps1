@@ -158,6 +158,14 @@ try {
     Assert-Equal -Actual $abortedSummary.thermalReadyWait.ready -Expected $false -Message "Thermal wait ready flag mismatch."
     Assert-Equal -Actual $abortedSummary.thermalReadyWait.requiredReadySamples -Expected 2 -Message "Thermal wait sample count mismatch."
 
+    $gatedAbortedExitCode = Invoke-Summary -BundlePath $abortedBundle -RequireCleanSource -RequireVisualValidation
+    $gatedAbortedSummary = Get-Content -LiteralPath (Join-Path $abortedBundle "evidence_summary.json") -Raw | ConvertFrom-Json
+    Assert-Equal -Actual $gatedAbortedExitCode -Expected 4 -Message "Gated aborted summary exit code mismatch."
+    Assert-Equal -Actual $gatedAbortedSummary.requiredGates.cleanSource.required -Expected $true -Message "Gated abort should record clean-source requirement."
+    Assert-Equal -Actual $gatedAbortedSummary.requiredGates.visualValidation.required -Expected $true -Message "Gated abort should record visual-validation requirement."
+    Assert-Equal -Actual $gatedAbortedSummary.requiredGates.cleanSource.passed -Expected $false -Message "Gated abort without source metadata should not pass clean-source gate."
+    Assert-Equal -Actual $gatedAbortedSummary.requiredGates.visualValidation.passed -Expected $false -Message "Gated abort should not pass visual-validation gate."
+
     $incompleteBundle = Join-Path $root "incomplete"
     New-Item -ItemType Directory -Force -Path $incompleteBundle | Out-Null
     Write-JsonFile -Path (Join-Path $incompleteBundle "manifest.json") -Value ([ordered]@{

@@ -282,17 +282,39 @@ function Write-AbortedBundle {
     $manifest | ConvertTo-Json -Depth 5 | Out-File -LiteralPath $manifestPath -Encoding utf8
 
     if ($Summarize) {
-        $summaryScript = Join-Path $PSScriptRoot "summarize_live_validation_evidence.ps1"
-        if (-not (Test-Path -LiteralPath $summaryScript)) {
-            Write-Warning "Summary requested, but summarize_live_validation_evidence.ps1 was not found."
-        } else {
-            & $summaryScript -BundlePath $outputDir
-        }
+        Invoke-EvidenceSummary -OutputDir $outputDir | Out-Null
     }
 
     Write-Output "Live validation evidence aborted:"
     Write-Output (Resolve-Path -LiteralPath $outputDir).Path
     exit 4
+}
+
+function Invoke-EvidenceSummary {
+    param([string]$OutputDir)
+
+    $summaryScript = Join-Path $PSScriptRoot "summarize_live_validation_evidence.ps1"
+    if (-not (Test-Path -LiteralPath $summaryScript)) {
+        Write-Warning "Summary requested, but summarize_live_validation_evidence.ps1 was not found."
+        return 0
+    }
+
+    $requiredUiTextArgs = @($RequireUiText | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+    $summaryArgs = @{
+        BundlePath = $OutputDir
+    }
+    if ($requiredUiTextArgs.Count -gt 0) {
+        $summaryArgs.RequireUiText = $requiredUiTextArgs
+    }
+    if ($RequireCleanSource) {
+        $summaryArgs.RequireCleanSource = $true
+    }
+    if ($RequireVisualValidation) {
+        $summaryArgs.RequireVisualValidation = $true
+    }
+
+    & $summaryScript @summaryArgs
+    return $LASTEXITCODE
 }
 
 $devicesPath = Join-Path $outputDir "adb_devices.txt"
@@ -629,26 +651,7 @@ $manifest | ConvertTo-Json -Depth 5 | Out-File -LiteralPath $manifestPath -Encod
 
 $summaryExitCode = 0
 if ($Summarize) {
-    $summaryScript = Join-Path $PSScriptRoot "summarize_live_validation_evidence.ps1"
-    if (-not (Test-Path -LiteralPath $summaryScript)) {
-        Write-Warning "Summary requested, but summarize_live_validation_evidence.ps1 was not found."
-    } else {
-        $requiredUiTextArgs = @($RequireUiText | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
-        $summaryArgs = @{
-            BundlePath = $outputDir
-        }
-        if ($requiredUiTextArgs.Count -gt 0) {
-            $summaryArgs.RequireUiText = $requiredUiTextArgs
-        }
-        if ($RequireCleanSource) {
-            $summaryArgs.RequireCleanSource = $true
-        }
-        if ($RequireVisualValidation) {
-            $summaryArgs.RequireVisualValidation = $true
-        }
-        & $summaryScript @summaryArgs
-        $summaryExitCode = $LASTEXITCODE
-    }
+    $summaryExitCode = Invoke-EvidenceSummary -OutputDir $outputDir
 }
 
 Write-Output "Live validation evidence captured:"

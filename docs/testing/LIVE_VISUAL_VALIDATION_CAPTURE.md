@@ -90,7 +90,10 @@ the phone cool, then repeat with a short capture. By default, the capture script
 aborts before clearing logcat or launching the app when preflight status reaches
 `critical` or worse. The summary classifies that bundle as
 `thermal_preflight_aborted`; it is useful operational evidence, not runtime
-smoke or visual validation.
+smoke or visual validation. If strict gates such as `-RequireCleanSource` or
+`-RequireVisualValidation` were passed, the aborted summary still records those
+requirements under `requiredGates`, but the command exits with the thermal abort
+code `4`.
 
 Use the thermal wait helper before watched validation runs:
 
