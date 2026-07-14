@@ -366,6 +366,9 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - Added explicit Fast tremor setup/final capture commands to the Pixel
   validation planner and closeout hint instead of relying on adapting the
   Object vibration command during the phone session.
+- Added explicit manual ROI, automatic ROI, and Breathing final capture
+  commands to the planner and protocol docs so every remaining closeout slot has
+  concrete setup/final commands.
 - Updated the live visual validation guide to use `Tremor` for the public Fast
   Motion / Motion path. `ObjectVibration` remains accepted only for internal
   compatibility and parity experiments.

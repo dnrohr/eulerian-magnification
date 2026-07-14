@@ -53,6 +53,10 @@ Assert-True -Condition ($roi.finalEvidence.Contains("-RequireFinalVisualEvidence
 Assert-True -Condition ($linear.finalEvidence.Contains("-RequireRendererDiagnostics")) -Message "Linear final evidence should require renderer diagnostics."
 Assert-True -Condition ($phase.finalEvidence.Contains("-RequirePhaseDiagnostics")) -Message "Phase final evidence should require phase diagnostics."
 Assert-True -Condition ($preset.finalEvidence.Contains("Update README")) -Message "Preset parity plan should keep docs updates after accepted artifacts."
+Assert-True -Condition (@($roi.commands | Where-Object { $_.name -eq "manual-roi-known-target-final" }).Count -eq 1) -Message "ROI plan should include explicit manual ROI final command."
+Assert-True -Condition (@($roi.commands | Where-Object { $_.name -eq "auto-face-roi-final" }).Count -eq 1) -Message "ROI plan should include explicit automatic ROI final command."
+Assert-True -Condition (@($linear.commands | Where-Object { $_.name -eq "live-linear-breathing-setup" }).Count -eq 1) -Message "Linear plan should include explicit Breathing setup command."
+Assert-True -Condition (@($linear.commands | Where-Object { $_.name -eq "live-linear-breathing-final" }).Count -eq 1) -Message "Linear plan should include explicit Breathing final command."
 Assert-True -Condition (@($phase.commands | Where-Object { $_.name -eq "live-phase-fast-tremor-setup" }).Count -eq 1) -Message "Phase plan should include explicit Fast tremor setup command."
 Assert-True -Condition (@($phase.commands | Where-Object { $_.name -eq "live-phase-fast-tremor-final" }).Count -eq 1) -Message "Phase plan should include explicit Fast tremor final command."
 
@@ -79,6 +83,13 @@ $phaseCommandText = @($phase.commands | ForEach-Object { $_.command }) -join "`n
 Assert-True -Condition ($phaseCommandText.Contains("live-phase-object-final")) -Message "Phase commands should include explicit Object final label."
 Assert-True -Condition ($phaseCommandText.Contains("live-phase-fast-tremor-final")) -Message "Phase commands should include explicit Fast tremor final label."
 Assert-True -Condition ($phaseCommandText.Contains("fast tremor target")) -Message "Fast tremor command should carry a distinct target description."
+
+$roiCommandText = @($roi.commands | ForEach-Object { $_.command }) -join "`n"
+Assert-True -Condition ($roiCommandText.Contains("manual-roi-known-target-final")) -Message "ROI commands should include explicit manual final label."
+Assert-True -Condition ($roiCommandText.Contains("auto-face-roi-final")) -Message "ROI commands should include explicit automatic final label."
+$linearCommandText = @($linear.commands | ForEach-Object { $_.command }) -join "`n"
+Assert-True -Condition ($linearCommandText.Contains("live-linear-breathing-final")) -Message "Linear commands should include explicit Breathing final label."
+Assert-True -Condition ($linearCommandText.Contains("watched slow-motion edge or breathing target")) -Message "Breathing commands should carry a distinct target description."
 
 $captureScript = Join-Path $PSScriptRoot "capture_live_validation_evidence.ps1"
 $captureParameters = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)

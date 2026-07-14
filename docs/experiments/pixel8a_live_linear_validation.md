@@ -139,14 +139,65 @@ and use the final evidence profile:
   -Summarize
 ```
 
-For Breathing / slow motion, repeat the same two-command flow with:
+For Breathing / slow motion, keep the labels and target language distinct from
+Pulse. The Breathing setup command is:
 
-- `-Label "live-linear-breathing-setup"` and
-  `-Label "live-linear-breathing-final"`.
-- `-Mode Breathing`.
-- `-TargetDescription "watched slow-motion edge or breathing target"`.
-- `-VisualClaim "Live Breathing Split view shows accepted full-frame
-  reconstructed motion on the watched target"`.
+```powershell
+.\tools\capture_live_validation_evidence.ps1 `
+  -Label "live-linear-breathing-setup" `
+  -WaitForThermalReady `
+  -ThermalReadyBelowStatus 4 `
+  -ThermalReadySamples 2 `
+  -ThermalReadyTimeoutSeconds 900 `
+  -ThermalReadyPollSeconds 30 `
+  -Mode Breathing `
+  -View Split `
+  -RoiSource FullFrame `
+  -GlPreview $true `
+  -Controls $true `
+  -Panel Debug `
+  -ScreenRecordSeconds 15 `
+  -RequireScreenrecord `
+  -RequireThermalReady `
+  -RequireCameraFps `
+  -RequireFocusedApp `
+  -RequireRendererDiagnostics `
+  -RequireEvidenceVerdict target_visible_unvalidated `
+  -RequireUiText "Preview: Full-frame linear EVM preview","Renderer: Live linear EVM reconstruction","GL renderer: Live reconstruction" `
+  -TargetDescription "watched slow-motion edge or breathing target" `
+  -VisualClaim "Live Breathing Split view shows full-frame reconstructed motion on the watched target rather than ROI tint" `
+  -TargetVisible $true `
+  -VisualValidated $false `
+  -OperatorNotes "Set VisualValidated true only after inspecting the recording against the Breathing pass criteria." `
+  -Summarize
+```
+
+After inspection, close the Breathing slot with:
+
+```powershell
+.\tools\capture_live_validation_evidence.ps1 `
+  -Label "live-linear-breathing-final" `
+  -WaitForThermalReady `
+  -ThermalReadyBelowStatus 4 `
+  -ThermalReadySamples 2 `
+  -ThermalReadyTimeoutSeconds 900 `
+  -ThermalReadyPollSeconds 30 `
+  -Mode Breathing `
+  -View Split `
+  -RoiSource FullFrame `
+  -GlPreview $true `
+  -Controls $false `
+  -ScreenRecordSeconds 15 `
+  -RequireRendererDiagnostics `
+  -RequireUiText "Preview: Full-frame linear EVM preview","Renderer: Live linear EVM reconstruction","GL renderer: Live reconstruction" `
+  -TargetDescription "watched slow-motion edge or breathing target" `
+  -VisualClaim "Live Breathing Split view shows accepted full-frame reconstructed motion on the watched target rather than ROI tint" `
+  -TargetVisible $true `
+  -VisualValidated $true `
+  -OperatorNotes "Accepted only if the recording shows target-visible Breathing motion magnification without ROI-only tint, whole-frame flashing, or a frozen camera stream." `
+  -RequireFinalVisualEvidence `
+  -Summarize
+```
 
 ## Summary Checks
 

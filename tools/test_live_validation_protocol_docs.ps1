@@ -47,6 +47,8 @@ Assert-DocContains -Path $roiDoc -Expected "-RequireRoiMeasurement" -Message "RO
 Assert-DocContains -Path $roiDoc -Expected "-RequireFinalVisualEvidence" -Message "ROI protocol must include final visual evidence gates."
 Assert-DocContains -Path $roiDoc -Expected "-MeasureRoiKind Manual" -Message "ROI protocol must document manual overlay measurement."
 Assert-DocContains -Path $roiDoc -Expected "-MeasureRoiKind Auto" -Message "ROI protocol must document automatic overlay measurement."
+Assert-DocContains -Path $roiDoc -Expected "manual-roi-known-target-final" -Message "ROI protocol must include explicit manual ROI final evidence."
+Assert-DocContains -Path $roiDoc -Expected "auto-face-roi-final" -Message "ROI protocol must include explicit automatic ROI final evidence."
 Assert-DocContains -Path $roiDoc -Expected "-RequireEvidenceVerdict target_visible_unvalidated" -Message "ROI setup evidence should stop at target-visible review."
 
 Assert-DocContains -Path $liveGuide -Expected "-RequireFinalVisualEvidence" -Message "Live guide must document the final visual evidence profile."
@@ -64,6 +66,7 @@ Assert-DocContains -Path $linearDoc -Expected "-Mode Breathing" -Message "Live l
 Assert-DocContains -Path $linearDoc -Expected "-RoiSource FullFrame" -Message "Live linear protocol must validate full-frame ROI."
 Assert-DocContains -Path $linearDoc -Expected "-RequireRendererDiagnostics" -Message "Live linear protocol must require renderer diagnostics."
 Assert-DocContains -Path $linearDoc -Expected "-RequireFinalVisualEvidence" -Message "Live linear protocol must include final visual evidence gates."
+Assert-DocContains -Path $linearDoc -Expected "live-linear-breathing-final" -Message "Live linear protocol must include explicit Breathing final evidence."
 Assert-DocContains -Path $linearDoc -Expected "target_visible_unvalidated" -Message "Live linear setup should stop at target-visible review."
 
 Assert-DocContains -Path $phaseDoc -Expected "-Mode Tremor" -Message "Live phase protocol must use the public Motion/Tremor path."

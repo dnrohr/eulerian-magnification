@@ -74,6 +74,38 @@ thermal readiness is missing, the camera cadence is missing or low, the app is
 not focused, the ROI measurement fails, or the accepted visual claim still has
 warnings.
 
+```powershell
+.\tools\capture_live_validation_evidence.ps1 `
+  -Label "manual-roi-known-target-final" `
+  -WaitForThermalReady `
+  -ThermalReadyBelowStatus 4 `
+  -ThermalReadySamples 2 `
+  -ThermalReadyTimeoutSeconds 900 `
+  -ThermalReadyPollSeconds 30 `
+  -Mode Tremor `
+  -View Raw `
+  -RoiSource Manual `
+  -ManualRoi "0.25,0.25,0.75,0.75" `
+  -GlPreview $true `
+  -Controls $false `
+  -Clean $true `
+  -MeasureRoiExpected "<visible-target-bounds-in-screenshot-space>" `
+  -MeasureRoiKind Manual `
+  -RequireRoiMeasurement `
+  -ScreenRecordSeconds 10 `
+  -RequireScreenrecord `
+  -RequireThermalReady `
+  -RequireCameraFps `
+  -RequireFocusedApp `
+  -TargetDescription "known high-contrast target inside manually selected ROI" `
+  -VisualClaim "Manual ROI outline overlaps the same visible target that was selected" `
+  -TargetVisible $true `
+  -VisualValidated $true `
+  -OperatorNotes "Accepted only if the screenshot/recording and measurement JSON show one manual ROI outline aligned to the visible target." `
+  -RequireFinalVisualEvidence `
+  -Summarize
+```
+
 ## Automatic Face ROI Procedure
 
 1. Install the latest debug APK.
@@ -126,6 +158,36 @@ committed source tree with `-VisualValidated $true`, keep
 `-RequireFinalVisualEvidence`. Do not mark automatic ROI as validated from a
 `Center ROI`, `Frozen ROI`, or fallback measurement unless the milestone note
 explicitly says the run was only an overlay smoke test.
+
+```powershell
+.\tools\capture_live_validation_evidence.ps1 `
+  -Label "auto-face-roi-final" `
+  -WaitForThermalReady `
+  -ThermalReadyBelowStatus 4 `
+  -ThermalReadySamples 2 `
+  -ThermalReadyTimeoutSeconds 900 `
+  -ThermalReadyPollSeconds 30 `
+  -Mode Pulse `
+  -RoiSource Auto `
+  -GlPreview $true `
+  -Controls $false `
+  -Clean $true `
+  -MeasureRoiExpected "<visible-face-or-skin-target-bounds-in-screenshot-space>" `
+  -MeasureRoiKind Auto `
+  -RequireRoiMeasurement `
+  -ScreenRecordSeconds 10 `
+  -RequireScreenrecord `
+  -RequireThermalReady `
+  -RequireCameraFps `
+  -RequireFocusedApp `
+  -TargetDescription "visible face or skin target tracked by automatic ROI" `
+  -VisualClaim "Automatic ROI outline overlaps the visible face or skin region being tracked" `
+  -TargetVisible $true `
+  -VisualValidated $true `
+  -OperatorNotes "Accepted only if the screenshot/recording and measurement JSON show one automatic ROI outline aligned to the visible face or skin target, not center or frozen fallback." `
+  -RequireFinalVisualEvidence `
+  -Summarize
+```
 
 ## Live Reconstruction Procedure
 
