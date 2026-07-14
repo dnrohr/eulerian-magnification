@@ -27,6 +27,8 @@ $missingCloseoutRoot = Join-Path ([System.IO.Path]::GetTempPath()) "eulerian-mis
 $plan = & (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1") -EvidenceRoot $missingCloseoutRoot -Json | ConvertFrom-Json
 $planText = & (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1") -EvidenceRoot $missingCloseoutRoot
 $nextOnlyText = & (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1") -EvidenceRoot $missingCloseoutRoot -NextOnly
+$pulseOnlyPlan = & (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1") -EvidenceRoot $missingCloseoutRoot -Slot pulseLinear -Json | ConvertFrom-Json
+$pulseOnlyText = & (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1") -EvidenceRoot $missingCloseoutRoot -Slot pulseLinear -NextOnly
 $closeout = & (Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1") -EvidenceRoot $missingCloseoutRoot -Json | ConvertFrom-Json
 
 Assert-Equal -Actual $plan.roadmap.total -Expected 47 -Message "Roadmap total mismatch."
@@ -51,6 +53,12 @@ Assert-True -Condition (($planText -join "`n").Contains("Next manualRoi: manual-
 Assert-True -Condition (($planText -join "`n").Contains("Recommended captures:")) -Message "Text plan should print recommended captures."
 Assert-True -Condition (($nextOnlyText -join "`n").Contains("Recommended captures:")) -Message "NextOnly plan should print recommended captures."
 Assert-True -Condition (-not (($nextOnlyText -join "`n").Contains("1. ROI mapping and device validation"))) -Message "NextOnly plan should omit the full validation group listing."
+Assert-Equal -Actual @($pulseOnlyPlan.recommendedCaptures).Count -Expected 1 -Message "Slot-filtered plan should recommend only the requested slot."
+Assert-Equal -Actual $pulseOnlyPlan.recommendedCaptures[0].slot -Expected "pulseLinear" -Message "Slot-filtered plan should keep the requested slot."
+Assert-Equal -Actual $pulseOnlyPlan.recommendedCaptures[0].commands[0].name -Expected "live-linear-pulse-setup" -Message "Pulse slot should start with Pulse setup evidence."
+Assert-Equal -Actual $pulseOnlyPlan.recommendedCaptures[0].commands[1].name -Expected "live-linear-pulse-final" -Message "Pulse slot should end with Pulse final evidence."
+Assert-True -Condition (($pulseOnlyText -join "`n").Contains("Pulse live linear visual parity")) -Message "Slot-filtered text should include the requested capture."
+Assert-True -Condition (-not (($pulseOnlyText -join "`n").Contains("Manual ROI known-target alignment"))) -Message "Slot-filtered text should omit unrequested captures."
 
 $covered = @($plan.coveredMilestones)
 foreach ($milestone in @("M", "U", "AE", "AP", "AR", "AT")) {

@@ -120,6 +120,7 @@ foreach ($path in @($readme, $taskReadme)) {
     Assert-DocContains -Path $path -Expected "closeout blocker count" -Message "Operator docs must document planner closeout blocker output."
     Assert-DocContains -Path $path -Expected "-EvidenceRoot" -Message "Operator docs must document planner evidence-root selection."
     Assert-DocContains -Path $path -Expected "-NextOnly" -Message "Operator docs must document concise planner output."
+    Assert-DocContains -Path $path -Expected "-Slot" -Message "Operator docs must document planner slot filtering."
     Assert-DocContains -Path $path -Expected "recommended captures" -Message "Operator docs must document recommended capture output."
     Assert-DocContains -Path $path -Expected "summarize_pixel_validation_closeout.ps1" -Message "Operator docs must document closeout summary."
     Assert-DocContains -Path $path -Expected "-FailOnMissing" -Message "Operator docs must document missing-evidence closeout gate."

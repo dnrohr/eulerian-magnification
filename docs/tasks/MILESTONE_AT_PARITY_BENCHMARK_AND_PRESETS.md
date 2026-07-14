@@ -484,6 +484,8 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - Added `-NextOnly` to the Pixel validation planner so a connected-device
   operator can print only the recommended setup/final captures needed by the
   current closeout blockers.
+- Added `-Slot <slotId>` filtering to the Pixel validation planner so the
+  recommended capture queue can focus on one missing closeout slot.
 
 ## Remaining
 

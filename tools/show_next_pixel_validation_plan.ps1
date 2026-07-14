@@ -1,5 +1,6 @@
 param(
     [string]$EvidenceRoot = "sample-videos\exports\live-validation",
+    [string[]]$Slot = @(),
     [switch]$NextOnly,
     [switch]$Json
 )
@@ -158,8 +159,12 @@ foreach ($group in $validationGroups) {
 
 $recommendedCaptures = @()
 $missingSlotBlocker = @($closeout.closeoutBlockers | Where-Object { $_.kind -eq "missingSlots" } | Select-Object -First 1)
-foreach ($slot in @($missingSlotBlocker.items)) {
-    $commandNames = @($slot.nextCommand -split "\s*,\s*then\s*|\s*,\s*" | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+$requestedSlots = @($Slot | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+foreach ($missingSlot in @($missingSlotBlocker.items)) {
+    if ($requestedSlots.Count -gt 0 -and $missingSlot.id -notin $requestedSlots) {
+        continue
+    }
+    $commandNames = @($missingSlot.nextCommand -split "\s*,\s*then\s*|\s*,\s*" | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
     $commands = @($commandNames | ForEach-Object {
         if ($commandLookup.ContainsKey($_)) {
             $commandLookup[$_]
@@ -167,7 +172,7 @@ foreach ($slot in @($missingSlotBlocker.items)) {
             [pscustomobject]@{
                 groupId = $null
                 groupTitle = $null
-                protocol = $slot.protocol
+                protocol = $missingSlot.protocol
                 name = $_
                 purpose = "Missing command template."
                 command = $null
@@ -175,11 +180,11 @@ foreach ($slot in @($missingSlotBlocker.items)) {
         }
     })
     $recommendedCaptures += [pscustomobject]@{
-        slot = $slot.id
-        title = $slot.title
-        milestones = $slot.milestones
-        expectedFinalLabel = $slot.expectedFinalLabel
-        protocol = $slot.protocol
+        slot = $missingSlot.id
+        title = $missingSlot.title
+        milestones = $missingSlot.milestones
+        expectedFinalLabel = $missingSlot.expectedFinalLabel
+        protocol = $missingSlot.protocol
         commands = $commands
     }
 }
