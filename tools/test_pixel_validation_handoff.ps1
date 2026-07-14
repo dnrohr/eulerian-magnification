@@ -72,15 +72,19 @@ Assert-True -Condition (-not [string]::IsNullOrWhiteSpace($result.source.commit)
 Assert-True -Condition ($result.source.commit.Length -ge 7) -Message "Handoff source commit should look like a Git commit."
 Assert-True -Condition ($null -ne $result.source.clean) -Message "Handoff should report whether the source tree is clean."
 Assert-True -Condition ($null -ne $result.source.commitReachableFromOriginMain) -Message "Handoff should report whether the source commit is reachable from origin/main."
+Assert-True -Condition (-not [string]::IsNullOrWhiteSpace($result.manifestPath)) -Message "Handoff should report the manifest path."
+Assert-Equal -Actual @($result.artifactHashes).Count -Expected 4 -Message "Handoff result should report hashes for every handoff artifact."
 Assert-True -Condition (Test-Path -LiteralPath $result.planPath) -Message "Handoff should write plan JSON."
 Assert-True -Condition (Test-Path -LiteralPath $result.closeoutPath) -Message "Handoff should write closeout JSON."
 Assert-True -Condition (Test-Path -LiteralPath $result.commandsPath) -Message "Handoff should write command templates."
 Assert-True -Condition (Test-Path -LiteralPath $result.handoffPath) -Message "Handoff should write a readable Markdown summary."
+Assert-True -Condition (Test-Path -LiteralPath $result.manifestPath) -Message "Handoff should write a manifest JSON."
 
 $plan = Get-Content -LiteralPath $result.planPath -Raw | ConvertFrom-Json
 $closeout = Get-Content -LiteralPath $result.closeoutPath -Raw | ConvertFrom-Json
 $commands = Get-Content -LiteralPath $result.commandsPath -Raw
 $handoff = Get-Content -LiteralPath $result.handoffPath -Raw
+$manifest = Get-Content -LiteralPath $result.manifestPath -Raw | ConvertFrom-Json
 
 Assert-Equal -Actual @($plan.recommendedCaptures).Count -Expected 1 -Message "Written plan should preserve filtered recommended captures."
 Assert-Equal -Actual $plan.recommendedCaptures[0].slot -Expected "pulseLinear" -Message "Written plan should preserve filtered slot."
@@ -93,9 +97,19 @@ Assert-True -Condition ($handoff.Contains('Expected final label: `live-linear-pu
 Assert-True -Condition ($handoff.Contains("Source branch:")) -Message "Markdown handoff should include source branch."
 Assert-True -Condition ($handoff.Contains("Source commit:")) -Message "Markdown handoff should include source commit."
 Assert-True -Condition ($handoff.Contains("Source commit reachable from origin/main:")) -Message "Markdown handoff should include source reachability."
+Assert-True -Condition ($handoff.Contains("Handoff manifest:")) -Message "Markdown handoff should include the manifest path."
 Assert-True -Condition ($handoff.Contains("```powershell")) -Message "Markdown handoff should include a PowerShell command block."
 Assert-True -Condition ($handoff.Contains("live-linear-pulse-final")) -Message "Markdown handoff should include the filtered command."
 Assert-True -Condition ($handoff.Contains("missingSlots")) -Message "Markdown handoff should summarize closeout blockers."
+Assert-Equal -Actual @($manifest.artifacts).Count -Expected 4 -Message "Manifest should include every handoff artifact except itself."
+foreach ($artifactName in @("plan", "closeout", "commands", "handoff")) {
+    $artifact = @($manifest.artifacts | Where-Object { $_.name -eq $artifactName } | Select-Object -First 1)
+    Assert-Equal -Actual @($artifact).Count -Expected 1 -Message "Manifest should include artifact '$artifactName'."
+    Assert-True -Condition (Test-Path -LiteralPath $artifact[0].path) -Message "Manifest artifact '$artifactName' path should exist."
+    Assert-True -Condition ($artifact[0].sha256 -match "^[0-9a-f]{64}$") -Message "Manifest artifact '$artifactName' should include a lowercase SHA-256 hash."
+    $actualHash = (Get-FileHash -LiteralPath $artifact[0].path -Algorithm SHA256).Hash.ToLowerInvariant()
+    Assert-Equal -Actual $artifact[0].sha256 -Expected $actualHash -Message "Manifest artifact '$artifactName' hash mismatch."
+}
 
 $textOutput = & (Join-Path $PSScriptRoot "prepare_pixel_validation_handoff.ps1") `
     -EvidenceRoot $evidenceRoot `
@@ -105,6 +119,7 @@ $textOutput = & (Join-Path $PSScriptRoot "prepare_pixel_validation_handoff.ps1")
 Assert-True -Condition (($textOutput -join "`n").Contains("Pixel validation handoff prepared")) -Message "Text handoff should print a heading."
 Assert-True -Condition (($textOutput -join "`n").Contains("Source:")) -Message "Text handoff should print source metadata."
 Assert-True -Condition (($textOutput -join "`n").Contains("Handoff:")) -Message "Text handoff should print the Markdown handoff path."
+Assert-True -Condition (($textOutput -join "`n").Contains("Manifest:")) -Message "Text handoff should print the manifest path."
 Assert-True -Condition (($textOutput -join "`n").Contains("Warning: requested slot(s) not currently missing or unknown: notARealSlot")) -Message "Text handoff should warn about invalid slots."
 Assert-True -Condition (($textOutput -join "`n").Contains("Warning: no recommended captures match the current filters.")) -Message "Text handoff should warn about empty queues."
 

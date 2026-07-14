@@ -23,6 +23,7 @@ $planPath = Join-Path $OutputRoot "pixel_validation_plan.json"
 $closeoutPath = Join-Path $OutputRoot "pixel_closeout_summary.json"
 $commandsPath = Join-Path $OutputRoot "pixel_validation_commands.txt"
 $handoffPath = Join-Path $OutputRoot "pixel_validation_handoff.md"
+$manifestPath = Join-Path $OutputRoot "pixel_validation_handoff_manifest.json"
 
 $planner = Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1"
 $closeoutSummary = Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1"
@@ -38,6 +39,20 @@ function Invoke-GitValue {
         return ($output -join "`n").Trim()
     } catch {
         return $null
+    }
+}
+
+function New-ArtifactRecord {
+    param(
+        [string]$Name,
+        [string]$Path
+    )
+
+    $hash = Get-FileHash -LiteralPath $Path -Algorithm SHA256
+    return [pscustomobject]@{
+        name = $Name
+        path = $Path
+        sha256 = $hash.Hash.ToLowerInvariant()
     }
 }
 
@@ -97,6 +112,7 @@ $handoffLines = @(
     ('- Plan JSON: `{0}`' -f $planPath),
     ('- Closeout JSON: `{0}`' -f $closeoutPath),
     ('- Command list: `{0}`' -f $commandsPath),
+    ('- Handoff manifest: `{0}`' -f $manifestPath),
     "",
     "## Recommended Captures",
     ""
@@ -137,6 +153,25 @@ $handoffLines += $commands
 $handoffLines += '```'
 Set-Content -LiteralPath $handoffPath -Value $handoffLines -Encoding utf8
 
+$artifactRecords = @(
+    New-ArtifactRecord -Name "plan" -Path $planPath
+    New-ArtifactRecord -Name "closeout" -Path $closeoutPath
+    New-ArtifactRecord -Name "commands" -Path $commandsPath
+    New-ArtifactRecord -Name "handoff" -Path $handoffPath
+)
+$manifest = [pscustomobject]@{
+    evidenceRoot = $EvidenceRoot
+    outputRoot = $OutputRoot
+    source = [pscustomobject]@{
+        branch = $sourceBranch
+        commit = $sourceCommit
+        clean = $sourceClean
+        commitReachableFromOriginMain = $sourceCommitReachableFromOriginMain
+    }
+    artifacts = $artifactRecords
+}
+$manifest | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $manifestPath -Encoding utf8
+
 $result = [pscustomobject]@{
     evidenceRoot = $EvidenceRoot
     outputRoot = $OutputRoot
@@ -144,6 +179,8 @@ $result = [pscustomobject]@{
     closeoutPath = $closeoutPath
     commandsPath = $commandsPath
     handoffPath = $handoffPath
+    manifestPath = $manifestPath
+    artifactHashes = $artifactRecords
     requestedSlots = @($plan.requestedSlots)
     invalidRequestedSlots = @($plan.invalidRequestedSlots)
     captureStage = $plan.captureStage
@@ -176,6 +213,7 @@ if ($Json) {
     Write-Output "Closeout: $($result.closeoutPath)"
     Write-Output "Commands: $($result.commandsPath)"
     Write-Output "Handoff: $($result.handoffPath)"
+    Write-Output "Manifest: $($result.manifestPath)"
     if (@($result.invalidRequestedSlots).Count -gt 0) {
         Write-Output "Warning: requested slot(s) not currently missing or unknown: $($result.invalidRequestedSlots -join ', ')"
     }
