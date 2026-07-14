@@ -1,6 +1,8 @@
 param(
     [string]$EvidenceRoot = "sample-videos\exports\live-validation",
     [string[]]$Slot = @(),
+    [ValidateSet("All", "Setup", "Final")]
+    [string]$CaptureStage = "All",
     [switch]$NextOnly,
     [switch]$Json
 )
@@ -146,11 +148,13 @@ $missingMilestones = @($inProgressMilestones | Where-Object { $_ -notin $covered
 $commandLookup = @{}
 foreach ($group in $validationGroups) {
     foreach ($command in @($group.commands)) {
+        $stage = if ($command.name.EndsWith("-final")) { "Final" } else { "Setup" }
         $commandLookup[$command.name] = [pscustomobject]@{
             groupId = $group.id
             groupTitle = $group.title
             protocol = $group.protocol
             name = $command.name
+            captureStage = $stage
             purpose = $command.purpose
             command = $command.command
         }
@@ -162,6 +166,7 @@ $missingSlotBlocker = @($closeout.closeoutBlockers | Where-Object { $_.kind -eq 
 $availableSlots = @($missingSlotBlocker.items | ForEach-Object { $_.id })
 $requestedSlots = @($Slot | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
 $invalidRequestedSlots = @($requestedSlots | Where-Object { $_ -notin $availableSlots })
+$requestedStage = $CaptureStage
 foreach ($missingSlot in @($missingSlotBlocker.items)) {
     if ($requestedSlots.Count -gt 0 -and $missingSlot.id -notin $requestedSlots) {
         continue
@@ -176,11 +181,18 @@ foreach ($missingSlot in @($missingSlotBlocker.items)) {
                 groupTitle = $null
                 protocol = $missingSlot.protocol
                 name = $_
+                captureStage = $null
                 purpose = "Missing command template."
                 command = $null
             }
         }
     })
+    if ($requestedStage -ne "All") {
+        $commands = @($commands | Where-Object { $_.captureStage -eq $requestedStage })
+    }
+    if ($commands.Count -eq 0) {
+        continue
+    }
     $recommendedCaptures += [pscustomobject]@{
         slot = $missingSlot.id
         title = $missingSlot.title
@@ -211,6 +223,7 @@ $result = [pscustomobject]@{
     availableSlots = $availableSlots
     requestedSlots = $requestedSlots
     invalidRequestedSlots = $invalidRequestedSlots
+    captureStage = $requestedStage
     recommendedCaptures = $recommendedCaptures
     validationGroups = $validationGroups
 }
@@ -223,6 +236,7 @@ if ($Json) {
 Write-Output "Next Pixel validation plan"
 Write-Output "Roadmap: $($result.roadmap.complete)/$($result.roadmap.total) complete; $($result.roadmap.inProgress) in progress."
 Write-Output "Evidence root: $($result.currentCloseout.evidenceRoot)"
+Write-Output "Capture stage: $($result.captureStage)"
 Write-Output "Current closeout blockers: $($result.currentCloseout.blockerCount)"
 if (@($result.availableSlots).Count -gt 0) {
     Write-Output "Available missing slots: $($result.availableSlots -join ', ')"

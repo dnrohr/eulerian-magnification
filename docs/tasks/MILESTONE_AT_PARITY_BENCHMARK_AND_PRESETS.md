@@ -488,6 +488,9 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   recommended capture queue can focus on one missing closeout slot.
 - The planner now reports available missing slots and invalid requested slots
   so mistyped slot filters do not silently produce an empty capture queue.
+- Added `-CaptureStage Setup|Final` filtering to the Pixel validation planner
+  so connected-device sessions can run pre-inspection captures separately from
+  closing evidence captures.
 
 ## Remaining
 

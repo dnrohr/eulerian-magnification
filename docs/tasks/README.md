@@ -103,7 +103,9 @@ missing evidence slots. Pass `-EvidenceRoot <path>` to review a specific
 live-validation export folder, or `-NextOnly` to print only the recommended captures
 needed by the current closeout blockers. Add `-Slot pulseLinear` or another
 closeout slot id to focus the recommended capture queue on one validation target;
-the plan prints available missing slots when a slot filter does not match.
+the plan prints available missing slots when a slot filter does not match. Use
+`-CaptureStage Setup` or `-CaptureStage Final` to print only pre-inspection or
+closing evidence commands.
 
 After a connected Pixel session, summarize which accepted evidence bundles are
 ready to close roadmap items. The closeout summary includes the accepted

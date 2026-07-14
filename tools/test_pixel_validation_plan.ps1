@@ -29,6 +29,9 @@ $planText = & (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1") -E
 $nextOnlyText = & (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1") -EvidenceRoot $missingCloseoutRoot -NextOnly
 $pulseOnlyPlan = & (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1") -EvidenceRoot $missingCloseoutRoot -Slot pulseLinear -Json | ConvertFrom-Json
 $pulseOnlyText = & (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1") -EvidenceRoot $missingCloseoutRoot -Slot pulseLinear -NextOnly
+$setupOnlyPlan = & (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1") -EvidenceRoot $missingCloseoutRoot -CaptureStage Setup -Json | ConvertFrom-Json
+$finalOnlyPlan = & (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1") -EvidenceRoot $missingCloseoutRoot -CaptureStage Final -Json | ConvertFrom-Json
+$finalOnlyText = & (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1") -EvidenceRoot $missingCloseoutRoot -CaptureStage Final -NextOnly
 $invalidSlotPlan = & (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1") -EvidenceRoot $missingCloseoutRoot -Slot notARealSlot -Json | ConvertFrom-Json
 $invalidSlotText = & (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1") -EvidenceRoot $missingCloseoutRoot -Slot notARealSlot -NextOnly
 $closeout = & (Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1") -EvidenceRoot $missingCloseoutRoot -Json | ConvertFrom-Json
@@ -51,7 +54,9 @@ Assert-Equal -Actual @($plan.invalidRequestedSlots).Count -Expected 0 -Message "
 Assert-Equal -Actual @($plan.recommendedCaptures).Count -Expected 6 -Message "Missing evidence root should recommend one capture sequence per closeout slot."
 Assert-Equal -Actual $plan.recommendedCaptures[0].slot -Expected "manualRoi" -Message "First recommended capture should map to the manual ROI slot."
 Assert-Equal -Actual $plan.recommendedCaptures[0].commands[0].name -Expected "manual-roi-known-target-setup" -Message "Recommended manual ROI capture should start with setup evidence."
+Assert-Equal -Actual $plan.recommendedCaptures[0].commands[0].captureStage -Expected "Setup" -Message "Setup command should expose capture stage."
 Assert-Equal -Actual $plan.recommendedCaptures[0].commands[1].name -Expected "manual-roi-known-target-final" -Message "Recommended manual ROI capture should end with final evidence."
+Assert-Equal -Actual $plan.recommendedCaptures[0].commands[1].captureStage -Expected "Final" -Message "Final command should expose capture stage."
 Assert-True -Condition (-not [string]::IsNullOrWhiteSpace($plan.recommendedCaptures[0].commands[0].command)) -Message "Recommended capture commands should include command templates."
 Assert-True -Condition (($planText -join "`n").Contains("Current closeout blockers: 1")) -Message "Text plan should print current closeout blocker count."
 Assert-True -Condition (($planText -join "`n").Contains("Next manualRoi: manual-roi-known-target-setup")) -Message "Text plan should print next commands from missing closeout slots."
@@ -67,6 +72,17 @@ Assert-Equal -Actual $pulseOnlyPlan.requestedSlots[0] -Expected "pulseLinear" -M
 Assert-Equal -Actual @($pulseOnlyPlan.invalidRequestedSlots).Count -Expected 0 -Message "Known slot filters should not be reported invalid."
 Assert-True -Condition (($pulseOnlyText -join "`n").Contains("Pulse live linear visual parity")) -Message "Slot-filtered text should include the requested capture."
 Assert-True -Condition (-not (($pulseOnlyText -join "`n").Contains("Manual ROI known-target alignment"))) -Message "Slot-filtered text should omit unrequested captures."
+Assert-Equal -Actual $setupOnlyPlan.captureStage -Expected "Setup" -Message "Setup-only plan should expose the requested capture stage."
+Assert-Equal -Actual @($setupOnlyPlan.recommendedCaptures).Count -Expected 6 -Message "Setup-only plan should preserve missing slot count."
+Assert-Equal -Actual @($setupOnlyPlan.recommendedCaptures[0].commands).Count -Expected 1 -Message "Setup-only captures should include one command per slot."
+Assert-Equal -Actual $setupOnlyPlan.recommendedCaptures[0].commands[0].captureStage -Expected "Setup" -Message "Setup-only commands should be setup stage."
+Assert-Equal -Actual $finalOnlyPlan.captureStage -Expected "Final" -Message "Final-only plan should expose the requested capture stage."
+Assert-Equal -Actual @($finalOnlyPlan.recommendedCaptures).Count -Expected 6 -Message "Final-only plan should preserve missing slot count."
+Assert-Equal -Actual @($finalOnlyPlan.recommendedCaptures[0].commands).Count -Expected 1 -Message "Final-only captures should include one command per slot."
+Assert-Equal -Actual $finalOnlyPlan.recommendedCaptures[0].commands[0].captureStage -Expected "Final" -Message "Final-only commands should be final stage."
+Assert-True -Condition (($finalOnlyText -join "`n").Contains("Capture stage: Final")) -Message "Text plan should print requested capture stage."
+Assert-True -Condition (-not (($finalOnlyText -join "`n").Contains("manual-roi-known-target-setup:"))) -Message "Final-only text should omit setup commands."
+Assert-True -Condition (($finalOnlyText -join "`n").Contains("manual-roi-known-target-final:")) -Message "Final-only text should include final commands."
 Assert-Equal -Actual @($invalidSlotPlan.recommendedCaptures).Count -Expected 0 -Message "Unknown slot filter should not recommend captures."
 Assert-Equal -Actual @($invalidSlotPlan.invalidRequestedSlots).Count -Expected 1 -Message "Unknown slot filter should be reported as invalid."
 Assert-Equal -Actual $invalidSlotPlan.invalidRequestedSlots[0] -Expected "notARealSlot" -Message "Invalid slot report should preserve the requested slot id."
