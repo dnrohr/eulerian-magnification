@@ -4,10 +4,14 @@ param(
     [string]$Package = "com.dnrohr.eulerianmagnification",
     [int]$ScreenRecordSeconds = 0,
     [switch]$SkipLaunch,
+    [ValidateSet("", "Pulse", "Breathing", "Tremor", "ObjectVibration")]
     [string]$Mode = "",
+    [ValidateSet("", "Raw", "Amplified", "Difference", "Split")]
     [string]$View = "",
+    [ValidateSet("", "Auto", "FullFrame", "Manual")]
     [string]$RoiSource = "",
     [string]$ManualRoi = "",
+    [ValidateSet("", "Controls", "Setup", "Recording", "Debug")]
     [string]$Panel = "",
     [Nullable[double]]$Amplification = $null,
     [Nullable[bool]]$GlPreview = $null,

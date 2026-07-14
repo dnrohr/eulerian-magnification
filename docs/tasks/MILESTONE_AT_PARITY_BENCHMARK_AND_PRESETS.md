@@ -306,6 +306,16 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   passes the composite profile without needing the physical Pixel for this
   slice.
 
+## Supporting Slice: Scripted Launch Parameter Guards
+
+- `tools/capture_live_validation_evidence.ps1` now validates scripted launch
+  strings for mode, view, ROI source, and controls panel before ADB launch.
+- This catches mistyped Pixel validation commands before they produce misleading
+  evidence bundles.
+- Updated the live visual validation guide to use `Tremor` for the public Fast
+  Motion / Motion path. `ObjectVibration` remains accepted only for internal
+  compatibility and parity experiments.
+
 ## Remaining
 
 - Extend Pixel 8a evidence with a known-good visual artifact and watched target

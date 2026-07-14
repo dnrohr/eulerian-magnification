@@ -229,15 +229,15 @@ focused app, and no warnings:
 
 ```powershell
 .\tools\capture_live_validation_evidence.ps1 `
-  -Label "preset-object-vibration" `
+  -Label "preset-fast-motion" `
   -WaitForThermalReady `
-  -Mode ObjectVibration `
+  -Mode Tremor `
   -View Split `
   -RoiSource Manual `
   -GlPreview $true `
   -ScreenRecordSeconds 15 `
   -TargetDescription "watched high-contrast vibrating object inside manual ROI" `
-  -VisualClaim "Object preset visibly magnifies localized object vibration" `
+  -VisualClaim "Fast Motion preset visibly magnifies localized object vibration" `
   -TargetVisible $true `
   -VisualValidated $true `
   -RequireFinalVisualEvidence `
@@ -319,7 +319,9 @@ ADB extras:
 
 Available launch parameters:
 
-- `-Mode`: `Pulse`, `Breathing`, `Tremor`, or `ObjectVibration`.
+- `-Mode`: `Pulse`, `Breathing`, `Tremor`, or `ObjectVibration`. Prefer
+  `Tremor` for the public Fast Motion / Motion path; `ObjectVibration` remains
+  accepted for internal compatibility and parity experiments.
 - `-View`: `Raw`, `Amplified`, `Difference`, or `Split`.
 - `-RoiSource`: `Auto`, `FullFrame`, or `Manual`.
 - `-ManualRoi`: optional normalized `left,top,right,bottom` rectangle, for
