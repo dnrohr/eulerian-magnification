@@ -336,6 +336,8 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - Added `tools/show_next_pixel_validation_plan.ps1` and
   `tools/test_pixel_validation_plan.ps1` so the next connected Pixel session has
   an ordered checklist that covers every remaining in-progress milestone.
+- Extended the Pixel validation plan with command templates for setup and final
+  evidence captures, keeping the same strict gates as the protocol docs.
 - Updated the live visual validation guide to use `Tremor` for the public Fast
   Motion / Motion path. `ObjectVibration` remains accepted only for internal
   compatibility and parity experiments.

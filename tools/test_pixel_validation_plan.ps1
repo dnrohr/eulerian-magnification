@@ -54,4 +54,23 @@ Assert-True -Condition ($linear.finalEvidence.Contains("-RequireRendererDiagnost
 Assert-True -Condition ($phase.finalEvidence.Contains("-RequirePhaseDiagnostics")) -Message "Phase final evidence should require phase diagnostics."
 Assert-True -Condition ($preset.finalEvidence.Contains("Update README")) -Message "Preset parity plan should keep docs updates after accepted artifacts."
 
+foreach ($group in $groups) {
+    Assert-True -Condition (@($group.commands).Count -gt 0) -Message "Validation group '$($group.id)' should include command templates."
+}
+
+$allCommands = @($groups | ForEach-Object { $_.commands } | ForEach-Object { $_.command })
+foreach ($expected in @(
+    "-RequireEvidenceVerdict target_visible_unvalidated",
+    "-RequireFinalVisualEvidence",
+    "-RequireRoiMeasurement",
+    "-RequireRendererDiagnostics",
+    "-RequirePhaseDiagnostics",
+    "-RequireCameraFps",
+    "-RequireFocusedApp",
+    "-RequireThermalReady",
+    "docs/testing/MIT_PARITY_TARGETS.md"
+)) {
+    Assert-True -Condition (($allCommands -join "`n").Contains($expected)) -Message "Validation commands should include '$expected'."
+}
+
 Write-Output "Pixel validation plan self-test passed."

@@ -303,7 +303,7 @@ The phone-free tooling suite also runs in GitHub Actions on pushes to `main`
 and pull requests.
 
 Before a connected Pixel validation pass, print the current device-session
-checklist:
+checklist and command templates:
 
 ```powershell
 .\tools\show_next_pixel_validation_plan.ps1
