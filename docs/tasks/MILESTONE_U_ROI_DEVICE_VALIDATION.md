@@ -146,6 +146,22 @@ Goal: prove that automatic and manual ROI coordinates align with the live previe
   PowerShell exit codes from leaking out of a previous failed summary.
 - The summary self-test covers missing and passing ROI measurement cases.
 
+## Supporting Slice: Final ROI Evidence Flow
+
+- Updated `docs/testing/ROI_DEVICE_VALIDATION.md` so manual and automatic ROI
+  validation use the same two-step watched evidence flow as live renderer
+  validation.
+- Setup captures require a visible target, a passing ROI overlay measurement,
+  valid screenrecord, thermal-readiness evidence, camera-FPS evidence,
+  focused-app evidence, and `target_visible_unvalidated`.
+- Final accepted manual and automatic ROI runs must keep
+  `-RequireRoiMeasurement` and add `-RequireFinalVisualEvidence`, so overlay
+  alignment cannot close from a dirty source tree, missing video, low/missing
+  camera cadence, unfocused app, failed ROI measurement, or unaccepted visual
+  claim.
+- This does not complete U because the Pixel still needs a deliberate manual
+  known target and visible face/skin automatic target in frame.
+
 ## Supporting Slice: Scoped Logcat Evidence
 
 - Updated `tools/capture_live_validation_evidence.ps1` to clear device logcat

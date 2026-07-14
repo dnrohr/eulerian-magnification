@@ -21,13 +21,20 @@ Use this procedure to verify that analysis ROI coordinates match the visible pre
 6. Confirm the yellow ROI outline and tint region overlap the same target with no horizontal flip, vertical offset, or stretch.
 7. Repeat in `Raw`, `Amp`, `Diff`, and `Split` where supported.
 
-For repeatable evidence, capture a clean-preview screenshot and measure the
-visible yellow manual ROI outline against the expected screenshot-space target
-rectangle:
+For repeatable evidence, capture a clean-preview bundle and measure the visible
+yellow manual ROI outline against the expected screenshot-space target
+rectangle. The first command is a pre-inspection capture: it should prove that
+the target is visible and the ROI measurement exists, but it should stop at
+`target_visible_unvalidated` until the operator accepts the alignment.
 
 ```powershell
 .\tools\capture_live_validation_evidence.ps1 `
   -Label "manual-roi-known-target" `
+  -WaitForThermalReady `
+  -ThermalReadyBelowStatus 4 `
+  -ThermalReadySamples 2 `
+  -ThermalReadyTimeoutSeconds 900 `
+  -ThermalReadyPollSeconds 30 `
   -Mode Tremor `
   -View Raw `
   -RoiSource Manual `
@@ -35,10 +42,20 @@ rectangle:
   -GlPreview $true `
   -Controls $false `
   -Clean $true `
-  -MeasureRoiExpected "0.083,0.250,0.919,0.751" `
+  -MeasureRoiExpected "<visible-target-bounds-in-screenshot-space>" `
   -MeasureRoiKind Manual `
   -RequireRoiMeasurement `
-  -ScreenRecordSeconds 0 `
+  -ScreenRecordSeconds 10 `
+  -RequireScreenrecord `
+  -RequireThermalReady `
+  -RequireCameraFps `
+  -RequireFocusedApp `
+  -RequireEvidenceVerdict target_visible_unvalidated `
+  -TargetDescription "known high-contrast target inside manually selected ROI" `
+  -VisualClaim "Manual ROI outline overlaps the same visible target that was selected" `
+  -TargetVisible $true `
+  -VisualValidated $false `
+  -OperatorNotes "Set VisualValidated true only after inspecting the screenshot/recording and measurement JSON." `
   -Summarize
 ```
 
@@ -48,6 +65,14 @@ measurement proves the overlay landed where expected on screen; it only proves
 manual target alignment if that expected rectangle was derived from the visible
 target. The analyzer also requires a single connected ROI component by default,
 which catches duplicate visible ROI boxes in the search region.
+
+For the final accepted manual ROI run, repeat the command from a clean committed
+source tree with `-VisualValidated $true`, keep `-RequireRoiMeasurement`, and
+replace the exploratory verdict gate with `-RequireFinalVisualEvidence`. The
+final command should fail if the source tree is dirty, the recording is missing,
+thermal readiness is missing, the camera cadence is missing or low, the app is
+not focused, the ROI measurement fails, or the accepted visual claim still has
+warnings.
 
 ## Automatic Face ROI Procedure
 
@@ -64,20 +89,43 @@ Use the same screenshot analyzer for the green automatic ROI outline:
 ```powershell
 .\tools\capture_live_validation_evidence.ps1 `
   -Label "auto-face-roi" `
+  -WaitForThermalReady `
+  -ThermalReadyBelowStatus 4 `
+  -ThermalReadySamples 2 `
+  -ThermalReadyTimeoutSeconds 900 `
+  -ThermalReadyPollSeconds 30 `
   -Mode Pulse `
   -RoiSource Auto `
   -GlPreview $true `
   -Controls $false `
   -Clean $true `
-  -MeasureRoiExpected "<visible-face-or-fallback-target-bounds>" `
+  -MeasureRoiExpected "<visible-face-or-skin-target-bounds-in-screenshot-space>" `
   -MeasureRoiKind Auto `
   -RequireRoiMeasurement `
+  -ScreenRecordSeconds 10 `
+  -RequireScreenrecord `
+  -RequireThermalReady `
+  -RequireCameraFps `
+  -RequireFocusedApp `
+  -RequireEvidenceVerdict target_visible_unvalidated `
+  -TargetDescription "visible face or skin target tracked by automatic ROI" `
+  -VisualClaim "Automatic ROI outline overlaps the visible face or skin region being tracked" `
+  -TargetVisible $true `
+  -VisualValidated $false `
+  -OperatorNotes "Set VisualValidated true only after the automatic ROI is inspected against the visible face/skin target." `
   -Summarize
 ```
 
 For automatic face validation, `ExpectedRoi` must come from the visible face or
 skin target in the screenshot. Measuring the center fallback box is useful as an
 overlay smoke test, but it does not prove face tracking.
+
+For the final accepted automatic ROI run, repeat the command from a clean
+committed source tree with `-VisualValidated $true`, keep
+`-RequireRoiMeasurement`, and replace the exploratory verdict gate with
+`-RequireFinalVisualEvidence`. Do not mark automatic ROI as validated from a
+`Center ROI`, `Frozen ROI`, or fallback measurement unless the milestone note
+explicitly says the run was only an overlay smoke test.
 
 ## Live Reconstruction Procedure
 
@@ -159,3 +207,6 @@ Date: 2026-07-12
 - A captured evidence bundle alone is not sufficient unless the target is
   visible and the screenshot or recording has been inspected against these pass
   criteria.
+- Final manual or automatic ROI evidence must include both a passing
+  `roi_overlay_measurement.json` and a final visual evidence summary from a
+  clean, target-visible, visually accepted run.

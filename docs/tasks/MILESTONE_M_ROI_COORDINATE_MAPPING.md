@@ -32,6 +32,10 @@ alignment.
 - Decide whether GL preview and CameraX preview need separate mapping flags.
   Current implementation uses a shared front-camera mapping policy for both
   paths; device validation should only split them if evidence shows a mismatch.
+- Use the final ROI evidence flow in `docs/testing/ROI_DEVICE_VALIDATION.md`:
+  setup captures should stop at `target_visible_unvalidated`, and closing
+  manual/automatic alignment evidence must combine a passing ROI measurement
+  with `-RequireFinalVisualEvidence`.
 
 ## Completed Slice: Manual ROI Reverse Mapping
 
