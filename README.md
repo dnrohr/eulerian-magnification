@@ -317,7 +317,11 @@ docs can cite the exact visual artifacts:
 
 ```powershell
 .\tools\summarize_pixel_validation_closeout.ps1
+.\tools\summarize_pixel_validation_closeout.ps1 -OutputPath sample-videos\exports\live-validation\pixel_closeout_summary.json
 ```
+
+Use `pixel_closeout_summary.json` as the saved closeout artifact when updating
+README or parity documentation after the gates pass.
 
 Use the closeout gates before editing visual-validation status in README or
 parity docs. `-FailOnPresetDocsNotReady` requires the four preset slots to be

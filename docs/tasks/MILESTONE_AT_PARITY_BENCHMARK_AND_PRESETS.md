@@ -436,6 +436,9 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - Wrong-slot-label reports now include the expected final label for each
   mismatched slot, so a failed closeout identifies the exact capture label to
   rerun.
+- The closeout summary now supports `-OutputPath`, and the Pixel planner writes
+  `pixel_closeout_summary.json` so final README/parity updates can cite a saved
+  closeout artifact.
 - Tightened closeout classification so the shared `Tremor` runtime mode cannot
   make Object vibration evidence satisfy the separate Fast tremor slot.
 - Added explicit Fast tremor setup/final capture commands to the Pixel

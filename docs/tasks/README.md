@@ -107,7 +107,11 @@ that closeout slot.
 
 ```powershell
 .\tools\summarize_pixel_validation_closeout.ps1
+.\tools\summarize_pixel_validation_closeout.ps1 -OutputPath sample-videos\exports\live-validation\pixel_closeout_summary.json
 ```
+
+Use `pixel_closeout_summary.json` as the saved closeout artifact for final
+README and parity-doc updates after the gates pass.
 
 Use `-FailOnCloseoutNotReady` before closing roadmap items; it is equivalent to
 requiring no missing, unmatched, ambiguous, duplicate, non-`main`, or

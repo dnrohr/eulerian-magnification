@@ -313,6 +313,15 @@ try {
     $classifiedCloseoutReadyExitCode = Invoke-Closeout -EvidenceRoot $classifiedRoot -FailOnCloseoutNotReady
     Assert-Equal -Actual $classifiedCloseoutReadyExitCode -Expected 0 -Message "FailOnCloseoutNotReady should pass when all accepted evidence maps cleanly to slots."
 
+    $closeoutOutputPath = Join-Path $classifiedRoot "pixel_closeout_summary.json"
+    $classifiedWithOutput = & (Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1") -EvidenceRoot $classifiedRoot -OutputPath $closeoutOutputPath -Json | ConvertFrom-Json
+    Assert-True -Condition (Test-Path -LiteralPath $closeoutOutputPath) -Message "Closeout summary should write JSON to OutputPath."
+    $writtenCloseout = Get-Content -LiteralPath $closeoutOutputPath -Raw | ConvertFrom-Json
+    Assert-Equal -Actual $classifiedWithOutput.allCloseoutEvidenceClean -Expected $true -Message "OutputPath JSON stdout should still be parseable."
+    Assert-Equal -Actual $writtenCloseout.allCloseoutEvidenceClean -Expected $true -Message "Written closeout JSON should preserve clean closeout status."
+    Assert-Equal -Actual @($writtenCloseout.slots).Count -Expected 6 -Message "Written closeout JSON should include closeout slots."
+    Assert-Equal -Actual $writtenCloseout.slots[0].expectedFinalLabel -Expected "manual-roi-known-target-final" -Message "Written closeout JSON should include expected final labels."
+
     $missingHashesRoot = Join-Path $root "missing-hashes"
     New-Item -ItemType Directory -Path $missingHashesRoot -Force | Out-Null
     Write-Summary -Root $missingHashesRoot -Name "pulse" -Label "live-linear-pulse-final" -Mode "Pulse" -RoiSource "FullFrame" -Claim "Pulse full-frame live linear visual parity" -Roi $false -Renderer $true -Phase $false -IncludeArtifactHashes $false

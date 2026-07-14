@@ -1,5 +1,6 @@
 param(
     [string]$EvidenceRoot = "sample-videos\exports\live-validation",
+    [string]$OutputPath = "",
     [switch]$Json,
     [switch]$FailOnMissing,
     [switch]$FailOnUnmatched,
@@ -434,10 +435,22 @@ $result = [pscustomobject]@{
     allCloseoutEvidenceClean = $allCloseoutEvidenceClean
 }
 
+$resultJson = $result | ConvertTo-Json -Depth 8
+if (-not [string]::IsNullOrWhiteSpace($OutputPath)) {
+    $outputDirectory = Split-Path -Parent $OutputPath
+    if (-not [string]::IsNullOrWhiteSpace($outputDirectory)) {
+        New-Item -ItemType Directory -Path $outputDirectory -Force | Out-Null
+    }
+    $resultJson | Out-File -LiteralPath $OutputPath -Encoding utf8
+}
+
 if ($Json) {
-    $result | ConvertTo-Json -Depth 8
+    $resultJson
 } else {
     Write-Output "Pixel validation closeout"
+    if (-not [string]::IsNullOrWhiteSpace($OutputPath)) {
+        Write-Output "Summary output: $OutputPath"
+    }
     Write-Output "Evidence root: $($result.evidenceRoot)"
     Write-Output "Evidence summaries: $($result.summaryCount)"
     Write-Output "Accepted final evidence: $($result.acceptedFinalEvidenceCount)"

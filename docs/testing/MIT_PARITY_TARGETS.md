@@ -213,7 +213,11 @@ expected final label for each closeout slot:
 
 ```powershell
 .\tools\summarize_pixel_validation_closeout.ps1
+.\tools\summarize_pixel_validation_closeout.ps1 -OutputPath sample-videos\exports\live-validation\pixel_closeout_summary.json
 ```
+
+Use `pixel_closeout_summary.json` as the saved closeout artifact for final
+visual-validation status updates after the gates pass.
 
 Do not mark preset visual parity as validated until the preset closeout gate
 passes. The gate requires all four preset visual slots and rejects unmatched,
