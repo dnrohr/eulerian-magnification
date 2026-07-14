@@ -6,6 +6,7 @@ param(
     [switch]$FailOnAmbiguous,
     [switch]$FailOnDuplicate,
     [switch]$FailOnNonMain,
+    [switch]$FailOnUnpushedSource,
     [switch]$FailOnCloseoutNotReady,
     [switch]$FailOnPresetDocsNotReady
 )
@@ -77,6 +78,30 @@ function Test-SourceBranchReady {
     return -not [string]::IsNullOrWhiteSpace($branch) -and $branch -eq "main"
 }
 
+function Test-SourceCommitOnOriginMain {
+    param($Summary)
+
+    $commit = Get-SourceValue -Summary $Summary -Name "commit"
+    if ([string]::IsNullOrWhiteSpace($commit)) {
+        return $false
+    }
+
+    $repoRoot = Split-Path -Parent $PSScriptRoot
+    $oldErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    try {
+        & git -C $repoRoot cat-file -e "$commit^{commit}" *> $null
+        if ($LASTEXITCODE -ne 0) {
+            return $false
+        }
+
+        & git -C $repoRoot merge-base --is-ancestor $commit origin/main *> $null
+        return $LASTEXITCODE -eq 0
+    } finally {
+        $ErrorActionPreference = $oldErrorActionPreference
+    }
+}
+
 function New-Slot {
     param(
         [string]$Id,
@@ -131,6 +156,7 @@ $unmatchedAcceptedFinalEvidence = @()
 $ambiguousAcceptedFinalEvidence = @()
 $duplicateAcceptedFinalEvidence = @()
 $nonMainAcceptedFinalEvidence = @()
+$unpushedAcceptedFinalEvidence = @()
 foreach ($summary in $acceptedSummaries) {
     if (-not (Test-FinalVisualEvidence -Summary $summary)) {
         continue
@@ -148,6 +174,19 @@ foreach ($summary in $acceptedSummaries) {
             roiSource = $summary.launch.roiSource
             visualClaim = $summary.visualReview.visualClaim
             reason = "accepted final evidence was not captured from main"
+        }
+    }
+    if (-not (Test-SourceCommitOnOriginMain -Summary $summary)) {
+        $unpushedAcceptedFinalEvidence += [pscustomobject]@{
+            bundle = Split-Path -Parent $summary.summaryPath
+            label = $summary.label
+            sourceBranch = Get-SourceValue -Summary $summary -Name "branch"
+            sourceCommit = Get-SourceValue -Summary $summary -Name "commit"
+            sourceShortCommit = Get-SourceValue -Summary $summary -Name "shortCommit"
+            mode = $summary.launch.mode
+            roiSource = $summary.launch.roiSource
+            visualClaim = $summary.visualReview.visualClaim
+            reason = "accepted final evidence source commit is not reachable from origin/main"
         }
     }
 
@@ -228,7 +267,8 @@ $presetDocsEvidenceClean = (
     $unmatchedAcceptedFinalEvidence.Count -eq 0 -and
     $ambiguousAcceptedFinalEvidence.Count -eq 0 -and
     $duplicateAcceptedFinalEvidence.Count -eq 0 -and
-    $nonMainAcceptedFinalEvidence.Count -eq 0
+    $nonMainAcceptedFinalEvidence.Count -eq 0 -and
+    $unpushedAcceptedFinalEvidence.Count -eq 0
 )
 $allCloseoutEvidencePresent = ($missing.Count -eq 0)
 $allCloseoutEvidenceClean = (
@@ -236,7 +276,8 @@ $allCloseoutEvidenceClean = (
     $unmatchedAcceptedFinalEvidence.Count -eq 0 -and
     $ambiguousAcceptedFinalEvidence.Count -eq 0 -and
     $duplicateAcceptedFinalEvidence.Count -eq 0 -and
-    $nonMainAcceptedFinalEvidence.Count -eq 0
+    $nonMainAcceptedFinalEvidence.Count -eq 0 -and
+    $unpushedAcceptedFinalEvidence.Count -eq 0
 )
 $result = [pscustomobject]@{
     evidenceRoot = if ($rootPath) { $rootPath.Path } else { $EvidenceRoot }
@@ -246,6 +287,7 @@ $result = [pscustomobject]@{
     ambiguousAcceptedFinalEvidence = $ambiguousAcceptedFinalEvidence
     duplicateAcceptedFinalEvidence = $duplicateAcceptedFinalEvidence
     nonMainAcceptedFinalEvidence = $nonMainAcceptedFinalEvidence
+    unpushedAcceptedFinalEvidence = $unpushedAcceptedFinalEvidence
     slots = $slotList
     missing = $missing
     presetVisualSlotsPresent = $presetVisualSlotsPresent
@@ -266,6 +308,7 @@ if ($Json) {
     Write-Output "Ambiguous accepted final evidence: $(@($result.ambiguousAcceptedFinalEvidence).Count)"
     Write-Output "Duplicate accepted final evidence: $(@($result.duplicateAcceptedFinalEvidence).Count)"
     Write-Output "Non-main accepted final evidence: $(@($result.nonMainAcceptedFinalEvidence).Count)"
+    Write-Output "Unpushed accepted final evidence: $(@($result.unpushedAcceptedFinalEvidence).Count)"
     Write-Output ""
     foreach ($slot in $slotList) {
         $mark = if ($slot.satisfied) { "[x]" } else { "[ ]" }
@@ -336,6 +379,17 @@ if ($Json) {
             Write-Output "    $($evidence.reason)"
         }
     }
+    if (@($result.unpushedAcceptedFinalEvidence).Count -gt 0) {
+        Write-Output ""
+        Write-Output "Unpushed accepted final evidence:"
+        foreach ($evidence in @($result.unpushedAcceptedFinalEvidence)) {
+            Write-Output "- $($evidence.label): $($evidence.bundle)"
+            if (-not [string]::IsNullOrWhiteSpace($evidence.sourceShortCommit) -or -not [string]::IsNullOrWhiteSpace($evidence.sourceBranch)) {
+                Write-Output "    Source: $($evidence.sourceShortCommit) on $($evidence.sourceBranch)"
+            }
+            Write-Output "    $($evidence.reason)"
+        }
+    }
 }
 
 if ($FailOnMissing -and $missing.Count -gt 0) {
@@ -352,6 +406,9 @@ if ($FailOnDuplicate -and $duplicateAcceptedFinalEvidence.Count -gt 0) {
 }
 if ($FailOnNonMain -and $nonMainAcceptedFinalEvidence.Count -gt 0) {
     exit 8
+}
+if ($FailOnUnpushedSource -and $unpushedAcceptedFinalEvidence.Count -gt 0) {
+    exit 15
 }
 if ($FailOnCloseoutNotReady -and -not $result.allCloseoutEvidenceClean) {
     exit 7

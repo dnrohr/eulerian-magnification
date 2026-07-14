@@ -382,6 +382,9 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - Fixed the roadmap status text summary to exit `0` on success and added a
   regression check so stale PowerShell exit codes do not fail CI after passing
   phone-free tests.
+- Added unpushed-source reporting and `-FailOnUnpushedSource` to the Pixel
+  closeout summary so accepted final evidence must come from a commit reachable
+  from `origin/main`, not just a local `main` checkout.
 - Documented the closeout gates in README, the task index, and MIT parity
   targets so visual-validation docs are only updated after accepted evidence.
 - Extended the protocol-doc self-test to keep README and task-index closeout

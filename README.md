@@ -318,11 +318,11 @@ bundles are ready to close the remaining roadmap items:
 
 Use the closeout gates before editing visual-validation status in README or
 parity docs. `-FailOnPresetDocsNotReady` requires the four preset slots to be
-present and rejects unmatched, ambiguous, duplicate, or non-`main` accepted
-evidence:
+present and rejects unmatched, ambiguous, duplicate, non-`main`, or unpushed
+accepted evidence:
 
 ```powershell
-.\tools\summarize_pixel_validation_closeout.ps1 -FailOnMissing -FailOnUnmatched -FailOnAmbiguous -FailOnDuplicate -FailOnNonMain
+.\tools\summarize_pixel_validation_closeout.ps1 -FailOnMissing -FailOnUnmatched -FailOnAmbiguous -FailOnDuplicate -FailOnNonMain -FailOnUnpushedSource
 .\tools\summarize_pixel_validation_closeout.ps1 -FailOnCloseoutNotReady
 .\tools\summarize_pixel_validation_closeout.ps1 -FailOnPresetDocsNotReady
 ```

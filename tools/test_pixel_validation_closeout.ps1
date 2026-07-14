@@ -31,6 +31,7 @@ function Invoke-Closeout {
         [switch]$FailOnAmbiguous,
         [switch]$FailOnDuplicate,
         [switch]$FailOnNonMain,
+        [switch]$FailOnUnpushedSource,
         [switch]$FailOnCloseoutNotReady,
         [switch]$FailOnPresetDocsNotReady
     )
@@ -56,6 +57,9 @@ function Invoke-Closeout {
     if ($FailOnNonMain) {
         $args.FailOnNonMain = $true
     }
+    if ($FailOnUnpushedSource) {
+        $args.FailOnUnpushedSource = $true
+    }
     if ($FailOnCloseoutNotReady) {
         $args.FailOnCloseoutNotReady = $true
     }
@@ -80,11 +84,14 @@ function Write-Summary {
         [bool]$Phase,
         [bool]$Final = $true,
         [string]$SourceBranch = "main",
-        [string]$SourceCommit = "abcdef1234567890"
+        [string]$SourceCommit = ""
     )
 
     $dir = Join-Path $Root $Name
     New-Item -ItemType Directory -Path $dir -Force | Out-Null
+    if ([string]::IsNullOrWhiteSpace($SourceCommit)) {
+        $SourceCommit = $script:CurrentHead
+    }
 
     $gate = {
         param([bool]$Passed)
@@ -131,6 +138,10 @@ function Write-Summary {
     $summary | ConvertTo-Json -Depth 8 | Out-File -LiteralPath (Join-Path $dir "evidence_summary.json") -Encoding utf8
 }
 
+$repoRoot = Split-Path -Parent $PSScriptRoot
+$script:CurrentHead = (& git -C $repoRoot rev-parse origin/main).Trim()
+$currentShortHead = (& git -C $repoRoot rev-parse --short origin/main).Trim()
+
 $root = Join-Path ([System.IO.Path]::GetTempPath()) "eulerian-pixel-closeout-test-$([guid]::NewGuid().ToString('N'))"
 New-Item -ItemType Directory -Path $root -Force | Out-Null
 
@@ -152,6 +163,7 @@ try {
     Assert-Equal -Actual @($result.ambiguousAcceptedFinalEvidence).Count -Expected 0 -Message "Known closeout fixtures should not be ambiguous."
     Assert-Equal -Actual @($result.duplicateAcceptedFinalEvidence).Count -Expected 0 -Message "Known closeout fixtures should not duplicate slots."
     Assert-Equal -Actual @($result.nonMainAcceptedFinalEvidence).Count -Expected 0 -Message "Known closeout fixtures should come from main."
+    Assert-Equal -Actual @($result.unpushedAcceptedFinalEvidence).Count -Expected 0 -Message "Known closeout fixtures should be reachable from origin/main."
     Assert-Equal -Actual @($result.missing).Count -Expected 0 -Message "All slots should be satisfied."
     Assert-Equal -Actual $result.presetVisualSlotsPresent -Expected $true -Message "Preset visual slots should be present when four preset slots pass."
     Assert-Equal -Actual $result.presetDocsEvidenceClean -Expected $false -Message "Unmatched evidence should prevent preset docs closeout."
@@ -160,8 +172,8 @@ try {
     Assert-Equal -Actual $result.allCloseoutEvidenceClean -Expected $false -Message "Unmatched evidence should prevent clean roadmap closeout."
     Assert-Equal -Actual $result.slots[0].protocol -Expected "docs/testing/ROI_DEVICE_VALIDATION.md" -Message "Closeout slots should expose protocol docs."
     Assert-Equal -Actual $result.slots[0].sourceBranch -Expected "main" -Message "Satisfied closeout slots should expose source branch."
-    Assert-Equal -Actual $result.slots[0].sourceShortCommit -Expected "abcdef1" -Message "Satisfied closeout slots should expose source short commit."
-    Assert-Equal -Actual $result.unmatchedAcceptedFinalEvidence[0].sourceShortCommit -Expected "abcdef1" -Message "Unmatched closeout evidence should expose source short commit."
+    Assert-Equal -Actual $result.slots[0].sourceShortCommit -Expected $currentShortHead -Message "Satisfied closeout slots should expose source short commit."
+    Assert-Equal -Actual $result.unmatchedAcceptedFinalEvidence[0].sourceShortCommit -Expected $currentShortHead -Message "Unmatched closeout evidence should expose source short commit."
     Assert-True -Condition ($result.slots[0].nextCommand.Contains("manual-roi-known-target-setup")) -Message "Manual ROI slot should expose next command hint."
 
     $partialRoot = Join-Path $root "partial"
@@ -225,8 +237,8 @@ try {
     $duplicate = & (Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1") -EvidenceRoot $duplicateRoot -Json | ConvertFrom-Json
     Assert-Equal -Actual @($duplicate.duplicateAcceptedFinalEvidence).Count -Expected 1 -Message "Duplicate closeout should report extra accepted evidence for a satisfied slot."
     Assert-Equal -Actual $duplicate.duplicateAcceptedFinalEvidence[0].slot -Expected "pulseLinear" -Message "Duplicate evidence slot mismatch."
-    Assert-Equal -Actual $duplicate.duplicateAcceptedFinalEvidence[0].sourceShortCommit -Expected "abcdef1" -Message "Duplicate evidence should expose source short commit."
-    Assert-Equal -Actual $duplicate.duplicateAcceptedFinalEvidence[0].originalSourceShortCommit -Expected "abcdef1" -Message "Duplicate evidence should expose original source short commit."
+    Assert-Equal -Actual $duplicate.duplicateAcceptedFinalEvidence[0].sourceShortCommit -Expected $currentShortHead -Message "Duplicate evidence should expose source short commit."
+    Assert-Equal -Actual $duplicate.duplicateAcceptedFinalEvidence[0].originalSourceShortCommit -Expected $currentShortHead -Message "Duplicate evidence should expose original source short commit."
     $duplicateExitCode = Invoke-Closeout -EvidenceRoot $duplicateRoot -FailOnDuplicate
     Assert-Equal -Actual $duplicateExitCode -Expected 6 -Message "FailOnDuplicate should exit 6 when multiple accepted evidence bundles match the same slot."
 
@@ -235,8 +247,8 @@ try {
     foreach ($name in @("manual", "auto", "pulse", "breathing", "object", "fast")) {
         Copy-Item -LiteralPath (Join-Path $root $name) -Destination (Join-Path $classifiedRoot $name) -Recurse
     }
-    $classifiedExitCode = Invoke-Closeout -EvidenceRoot $classifiedRoot -FailOnMissing -FailOnUnmatched -FailOnAmbiguous -FailOnDuplicate -FailOnNonMain
-    Assert-Equal -Actual $classifiedExitCode -Expected 0 -Message "Combined closeout gates should pass when all accepted evidence maps to slots on main."
+    $classifiedExitCode = Invoke-Closeout -EvidenceRoot $classifiedRoot -FailOnMissing -FailOnUnmatched -FailOnAmbiguous -FailOnDuplicate -FailOnNonMain -FailOnUnpushedSource
+    Assert-Equal -Actual $classifiedExitCode -Expected 0 -Message "Combined closeout gates should pass when all accepted evidence maps to slots on pushed main."
     $classified = & (Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1") -EvidenceRoot $classifiedRoot -Json | ConvertFrom-Json
     Assert-Equal -Actual $classified.readyForPresetDocs -Expected $true -Message "Preset docs should be ready when preset slots are satisfied and evidence is clean."
     Assert-Equal -Actual $classified.presetVisualSlotsPresent -Expected $true -Message "Preset visual slots should be present in classified closeout."
@@ -266,6 +278,21 @@ try {
     Assert-Equal -Actual $offMainPresetDocsExitCode -Expected 4 -Message "FailOnPresetDocsNotReady should fail on off-main accepted preset evidence."
     $offMainExitCode = Invoke-Closeout -EvidenceRoot $offMainRoot -FailOnNonMain
     Assert-Equal -Actual $offMainExitCode -Expected 8 -Message "FailOnNonMain should fail on off-main accepted evidence."
+
+    $unpushedRoot = Join-Path $root "unpushed"
+    New-Item -ItemType Directory -Path $unpushedRoot -Force | Out-Null
+    Write-Summary -Root $unpushedRoot -Name "pulse" -Label "live-linear-pulse-final" -Mode "Pulse" -RoiSource "FullFrame" -Claim "Pulse full-frame live linear visual parity" -Roi $false -Renderer $true -Phase $false -SourceCommit "0000000000000000000000000000000000000000"
+    $unpushed = & (Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1") -EvidenceRoot $unpushedRoot -Json | ConvertFrom-Json
+    Assert-Equal -Actual @($unpushed.unpushedAcceptedFinalEvidence).Count -Expected 1 -Message "Unpushed or unknown accepted final evidence should be reported."
+    Assert-Equal -Actual $unpushed.unpushedAcceptedFinalEvidence[0].sourceCommit -Expected "0000000000000000000000000000000000000000" -Message "Unpushed evidence should report source commit."
+    Assert-Equal -Actual $unpushed.allCloseoutEvidenceClean -Expected $false -Message "Unpushed evidence should prevent clean roadmap closeout."
+    Assert-Equal -Actual $unpushed.readyForPresetDocs -Expected $false -Message "Unpushed evidence should prevent preset docs readiness."
+    $unpushedCloseoutReadyExitCode = Invoke-Closeout -EvidenceRoot $unpushedRoot -FailOnCloseoutNotReady
+    Assert-Equal -Actual $unpushedCloseoutReadyExitCode -Expected 7 -Message "FailOnCloseoutNotReady should fail on unpushed accepted evidence."
+    $unpushedPresetDocsExitCode = Invoke-Closeout -EvidenceRoot $unpushedRoot -FailOnPresetDocsNotReady
+    Assert-Equal -Actual $unpushedPresetDocsExitCode -Expected 4 -Message "FailOnPresetDocsNotReady should fail on unpushed accepted preset evidence."
+    $unpushedExitCode = Invoke-Closeout -EvidenceRoot $unpushedRoot -FailOnUnpushedSource
+    Assert-Equal -Actual $unpushedExitCode -Expected 15 -Message "FailOnUnpushedSource should fail on accepted evidence whose commit is not on origin/main."
 } finally {
     Remove-Item -LiteralPath $root -Recurse -Force
 }

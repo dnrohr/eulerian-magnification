@@ -107,8 +107,10 @@ ready to close roadmap items:
 
 Use `-FailOnCloseoutNotReady` before closing roadmap items; it is equivalent to
 requiring no missing, unmatched, ambiguous, duplicate, or non-`main` accepted
-evidence
-(`-FailOnMissing -FailOnUnmatched -FailOnAmbiguous -FailOnDuplicate -FailOnNonMain`). Use
+evidence, and requiring accepted source commits to be reachable from
+`origin/main`
+(`-FailOnMissing -FailOnUnmatched -FailOnAmbiguous -FailOnDuplicate -FailOnNonMain -FailOnUnpushedSource`). Use
 `-FailOnPresetDocsNotReady` before changing README or MIT parity visual status;
 it requires all four preset visual slots and rejects unmatched, ambiguous, or
-duplicate accepted evidence, plus accepted evidence captured outside `main`.
+duplicate accepted evidence, plus accepted evidence captured outside `main` or
+from a commit that is not reachable from `origin/main`.
