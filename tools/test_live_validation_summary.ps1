@@ -34,6 +34,8 @@ function Invoke-Summary {
         [switch]$RequireVisualValidation,
         [switch]$RequireNoWarnings,
         [switch]$RequireRoiMeasurement,
+        [switch]$RequireRendererDiagnostics,
+        [switch]$RequirePhaseDiagnostics,
         [string]$RequireEvidenceVerdict = ""
     )
 
@@ -46,6 +48,8 @@ function Invoke-Summary {
     if ($RequireVisualValidation) { $summaryArgs.RequireVisualValidation = $true }
     if ($RequireNoWarnings) { $summaryArgs.RequireNoWarnings = $true }
     if ($RequireRoiMeasurement) { $summaryArgs.RequireRoiMeasurement = $true }
+    if ($RequireRendererDiagnostics) { $summaryArgs.RequireRendererDiagnostics = $true }
+    if ($RequirePhaseDiagnostics) { $summaryArgs.RequirePhaseDiagnostics = $true }
     if (-not [string]::IsNullOrWhiteSpace($RequireEvidenceVerdict)) { $summaryArgs.RequireEvidenceVerdict = $RequireEvidenceVerdict }
     & $summaryScript @summaryArgs *> $stdoutPath
     return $LASTEXITCODE
@@ -261,6 +265,22 @@ Number Missed Vsync: 1
     Assert-True -Condition ("source worktree was dirty during capture" -in @($uiMissingSummary.warnings)) -Message "Dirty source warning missing."
     Assert-True -Condition ("phase: 128x96 / phase ready / amplitude gate active" -in @($uiMissingSummary.uiDump.phaseLabels)) -Message "Phase label summary missing."
 
+    $phaseDiagnosticsBundle = Join-Path $root "phase-diagnostics"
+    Copy-Item -LiteralPath $uiMissingBundle -Destination $phaseDiagnosticsBundle -Recurse
+    $phaseDiagnosticsManifestPath = Join-Path $phaseDiagnosticsBundle "manifest.json"
+    $phaseDiagnosticsManifest = Get-Content -LiteralPath $phaseDiagnosticsManifestPath -Raw | ConvertFrom-Json
+    $phaseDiagnosticsManifest.launch.requireUiText = @()
+    $phaseDiagnosticsManifest.source.dirty = $false
+    $phaseDiagnosticsManifest.source.statusShort = @()
+    $phaseDiagnosticsManifest | ConvertTo-Json -Depth 8 | Out-File -LiteralPath $phaseDiagnosticsManifestPath -Encoding utf8
+
+    $phaseDiagnosticsExitCode = Invoke-Summary -BundlePath $phaseDiagnosticsBundle -RequireCleanSource -RequirePhaseDiagnostics
+    $phaseDiagnosticsSummary = Get-Content -LiteralPath (Join-Path $phaseDiagnosticsBundle "evidence_summary.json") -Raw | ConvertFrom-Json
+    Assert-Equal -Actual $phaseDiagnosticsExitCode -Expected 0 -Message "Phase diagnostics gate exit code mismatch."
+    Assert-Equal -Actual $phaseDiagnosticsSummary.requiredGates.phaseDiagnostics.required -Expected $true -Message "Phase diagnostics gate should be required."
+    Assert-Equal -Actual $phaseDiagnosticsSummary.requiredGates.phaseDiagnostics.passed -Expected $true -Message "Phase diagnostics gate should pass."
+    Assert-Equal -Actual $phaseDiagnosticsSummary.requiredGates.phaseDiagnostics.labelCount -Expected 1 -Message "Phase diagnostics label count mismatch."
+
     $visualGateBundle = Join-Path $root "visual-gate"
     New-Item -ItemType Directory -Force -Path $visualGateBundle | Out-Null
     Write-TestScreenshot -Path (Join-Path $visualGateBundle "screenshot.png")
@@ -305,6 +325,19 @@ Number Missed Vsync: 0
     Assert-Equal -Actual $visualGateSummary.requiredGates.cleanSource.passed -Expected $true -Message "Clean source gate should pass."
     Assert-Equal -Actual $visualGateSummary.requiredGates.visualValidation.passed -Expected $false -Message "Visual validation gate should fail."
     Assert-True -Condition ("visual validation required but evidence verdict does not count as visual validation" -in @($visualGateSummary.warnings)) -Message "Visual gate warning missing."
+
+    $rendererDiagnosticsExitCode = Invoke-Summary -BundlePath $visualGateBundle -RequireCleanSource -RequireRendererDiagnostics
+    $rendererDiagnosticsSummary = Get-Content -LiteralPath (Join-Path $visualGateBundle "evidence_summary.json") -Raw | ConvertFrom-Json
+    Assert-Equal -Actual $rendererDiagnosticsExitCode -Expected 0 -Message "Renderer diagnostics gate exit code mismatch."
+    Assert-Equal -Actual $rendererDiagnosticsSummary.requiredGates.rendererDiagnostics.required -Expected $true -Message "Renderer diagnostics gate should be required."
+    Assert-Equal -Actual $rendererDiagnosticsSummary.requiredGates.rendererDiagnostics.passed -Expected $true -Message "Renderer diagnostics gate should pass."
+    Assert-Equal -Actual $rendererDiagnosticsSummary.requiredGates.rendererDiagnostics.labelCount -Expected 1 -Message "Renderer diagnostics label count mismatch."
+
+    $missingPhaseDiagnosticsExitCode = Invoke-Summary -BundlePath $visualGateBundle -RequireCleanSource -RequirePhaseDiagnostics
+    $missingPhaseDiagnosticsSummary = Get-Content -LiteralPath (Join-Path $visualGateBundle "evidence_summary.json") -Raw | ConvertFrom-Json
+    Assert-Equal -Actual $missingPhaseDiagnosticsExitCode -Expected 10 -Message "Missing phase diagnostics gate exit code mismatch."
+    Assert-Equal -Actual $missingPhaseDiagnosticsSummary.requiredGates.phaseDiagnostics.passed -Expected $false -Message "Missing phase diagnostics gate should fail."
+    Assert-True -Condition ("phase diagnostics required but no phase labels were found in the UI dump" -in @($missingPhaseDiagnosticsSummary.warnings)) -Message "Missing phase diagnostics warning missing."
 
     $matchingVerdictExitCode = Invoke-Summary -BundlePath $visualGateBundle -RequireCleanSource -RequireEvidenceVerdict "target_visible_unvalidated"
     $matchingVerdictSummary = Get-Content -LiteralPath (Join-Path $visualGateBundle "evidence_summary.json") -Raw | ConvertFrom-Json

@@ -84,7 +84,8 @@ validation was required but the bundle does not count as visually validated,
 and `6` when a clean source tree was required but source metadata is missing or
 dirty, and `7` when a warning-free bundle was required but the summary contains
 warnings, `8` when an ROI measurement was required but missing or failed, and
-`9` when the bundle did not match a required evidence verdict.
+`9` when the bundle did not match a required evidence verdict, and `10` when a
+required renderer or phase diagnostic label was not found.
 This keeps automated validation commands from silently passing when an explicit
 evidence assertion failed.
 If preflight thermal status or sensor status is `critical` or worse, do not use
@@ -176,6 +177,14 @@ found. Missing required text adds a warning and makes the summary command exit
 with code `3`. Runtime smoke remains separate, so crashes, ANRs, and GL errors
 still use the existing runtime-smoke result.
 
+For live renderer validation, pass `-RequireRendererDiagnostics` when the
+expanded UI must expose renderer labels such as `Renderer:`,
+`GL renderer:`, `Pyramid:`, or `Benchmark:`. For live phase validation, pass
+`-RequirePhaseDiagnostics` when the UI dump must contain phase labels such as
+`phase:`, `phase fallback`, `phase warmup`, or `phase ready`. Missing required
+diagnostic categories add warnings and make the summary command exit with code
+`10`.
+
 Use the visual-review fields for watched target runs. `TargetDescription` and
 `VisualClaim` describe what was in frame and what the capture is intended to
 prove. `TargetVisible` records whether the target is actually visible in the
@@ -235,7 +244,8 @@ Run the summary self-test after editing capture or summary tooling:
 
 The test synthesizes a thermal-aborted bundle and an incomplete runtime bundle,
 then verifies the summary exit codes, verdicts, UI assertion behavior,
-clean-source/visual-validation/verdict gates, and dirty source warning.
+clean-source/visual-validation/verdict/diagnostic gates, and dirty source
+warning.
 
 For ROI overlay validation, pass `-MeasureRoiExpected` with the expected
 normalized screenshot-space rectangle. The capture script then writes
@@ -314,6 +324,10 @@ Available launch parameters:
   `roi_overlay_measurement.json` exists and reports `passed=true`.
 - `-RequireEvidenceVerdict`: with `-Summarize`, fail the summary unless
   `evidenceVerdict.status` exactly matches the requested status.
+- `-RequireRendererDiagnostics`: with `-Summarize`, fail the summary unless
+  `uiDump.rendererLabels` contains at least one renderer diagnostic label.
+- `-RequirePhaseDiagnostics`: with `-Summarize`, fail the summary unless
+  `uiDump.phaseLabels` contains at least one phase diagnostic label.
 - `-TargetDescription`: short description of the visible target/setup.
 - `-VisualClaim`: short claim this evidence is intended to prove.
 - `-TargetVisible`: whether the target is visible in the screenshot/recording.

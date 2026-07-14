@@ -219,6 +219,20 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   remaining watched preset evidence flow without needing the physical Pixel for
   this slice.
 
+## Supporting Slice: Required Diagnostic Category Gates
+
+- Live validation summaries now accept `-RequireRendererDiagnostics` and
+  `-RequirePhaseDiagnostics`.
+- Renderer diagnostics require at least one parsed `uiDump.rendererLabels`
+  entry, and phase diagnostics require at least one parsed
+  `uiDump.phaseLabels` entry.
+- `tools/capture_live_validation_evidence.ps1` forwards both requirements when
+  `-Summarize` is used, so future AP/AE/AR Pixel evidence can require the
+  relevant debug category without relying only on free-form UI text matches.
+- Missing required diagnostic categories exit `10` and record label counts
+  under `requiredGates`. The summary self-test covers passing renderer/phase
+  gates and a missing phase-diagnostics failure.
+
 ## Remaining
 
 - Extend Pixel 8a evidence with a known-good visual artifact and watched target

@@ -13,6 +13,8 @@ param(
     [switch]$RequireVisualValidation,
     [switch]$RequireNoWarnings,
     [switch]$RequireRoiMeasurement,
+    [switch]$RequireRendererDiagnostics,
+    [switch]$RequirePhaseDiagnostics,
     [ValidateSet("", "runtime_smoke_only", "visual_validated", "target_visible_unvalidated", "visual_claim_without_target", "ui_assertion_failed", "screenshot_blank", "wrong_orientation", "runtime_failed", "thermal_preflight_aborted")]
     [string]$RequireEvidenceVerdict = ""
 )
@@ -618,6 +620,14 @@ $evidenceVerdictRequirementPassed = [string]::IsNullOrWhiteSpace($RequireEvidenc
 if (-not $evidenceVerdictRequirementPassed) {
     $warnings += "evidence verdict required $RequireEvidenceVerdict but was $($evidenceVerdict.status)"
 }
+$rendererDiagnosticsPassed = (-not [bool]$RequireRendererDiagnostics) -or (@($uiDumpSummary.rendererLabels).Count -gt 0)
+if (-not $rendererDiagnosticsPassed) {
+    $warnings += "renderer diagnostics required but no renderer labels were found in the UI dump"
+}
+$phaseDiagnosticsPassed = (-not [bool]$RequirePhaseDiagnostics) -or (@($uiDumpSummary.phaseLabels).Count -gt 0)
+if (-not $phaseDiagnosticsPassed) {
+    $warnings += "phase diagnostics required but no phase labels were found in the UI dump"
+}
 $warningCountBeforeNoWarningsGate = $warnings.Count
 if ($RequireNoWarnings -and $warningCountBeforeNoWarningsGate -gt 0) {
     $warnings += "no warnings required but summary has $warningCountBeforeNoWarningsGate warning(s)"
@@ -682,6 +692,16 @@ $result = [ordered]@{
             actual = $evidenceVerdict.status
             passed = $evidenceVerdictRequirementPassed
         }
+        rendererDiagnostics = [ordered]@{
+            required = [bool]$RequireRendererDiagnostics
+            labelCount = @($uiDumpSummary.rendererLabels).Count
+            passed = $rendererDiagnosticsPassed
+        }
+        phaseDiagnostics = [ordered]@{
+            required = [bool]$RequirePhaseDiagnostics
+            labelCount = @($uiDumpSummary.phaseLabels).Count
+            passed = $phaseDiagnosticsPassed
+        }
         noWarnings = [ordered]@{
             required = [bool]$RequireNoWarnings
             warningCount = $warningCountBeforeNoWarningsGate
@@ -728,6 +748,10 @@ if ($result.requiredGates.roiMeasurement.required -and -not $result.requiredGate
 }
 if ($result.requiredGates.evidenceVerdict.required -and -not $result.requiredGates.evidenceVerdict.passed) {
     exit 9
+}
+if (($result.requiredGates.rendererDiagnostics.required -and -not $result.requiredGates.rendererDiagnostics.passed) -or
+    ($result.requiredGates.phaseDiagnostics.required -and -not $result.requiredGates.phaseDiagnostics.passed)) {
+    exit 10
 }
 if ($result.requiredGates.noWarnings.required -and -not $result.requiredGates.noWarnings.passed) {
     exit 7
