@@ -323,7 +323,9 @@ docs can cite the exact visual artifacts:
 Use `pixel_closeout_summary.json` as the saved closeout artifact when updating
 README or parity documentation after the gates pass. Satisfied slots include an
 `artifactNote` with the bundle, source, screenshot hash, and screenrecord hash
-needed for release notes.
+needed for release notes. The closeout JSON also includes `closeoutBlockers`,
+a compact list of missing slots and accepted-evidence issues that still block
+roadmap closeout.
 
 Use the closeout gates before editing visual-validation status in README or
 parity docs. `-FailOnPresetDocsNotReady` requires the four preset slots to be

@@ -475,6 +475,9 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   points to the ROI device validation protocol.
 - The docs now call out the required final evidence profile plus renderer,
   phase, or ROI measurement gates for those domains.
+- The closeout summary now includes `closeoutBlockers`, a compact JSON/text
+  checklist of missing slots and accepted-evidence issues that still block
+  roadmap or README/parity closeout.
 
 ## Remaining
 

@@ -113,6 +113,22 @@ function New-EvidenceReport {
     }
 }
 
+function New-CloseoutBlocker {
+    param(
+        [string]$Kind,
+        [int]$Count,
+        [string]$Message,
+        $Items
+    )
+
+    return [pscustomobject][ordered]@{
+        kind = $Kind
+        count = $Count
+        message = $Message
+        items = @($Items)
+    }
+}
+
 function Test-SourceBranchReady {
     param($Summary)
 
@@ -435,6 +451,52 @@ $allCloseoutEvidenceClean = (
     $missingOperatorNotesAcceptedFinalEvidence.Count -eq 0 -and
     $missingVisualReviewTextAcceptedFinalEvidence.Count -eq 0
 )
+$closeoutBlockers = @()
+if ($missing.Count -gt 0) {
+    $missingItems = @($missing | ForEach-Object {
+        [pscustomobject][ordered]@{
+            id = $_.id
+            title = $_.title
+            milestones = $_.milestones
+            requiredEvidence = $_.requiredEvidence
+            protocol = $_.protocol
+            expectedFinalLabel = $_.expectedFinalLabel
+            nextCommand = $_.nextCommand
+            reason = $_.reason
+        }
+    })
+    $closeoutBlockers += New-CloseoutBlocker -Kind "missingSlots" -Count $missing.Count -Message "$($missing.Count) closeout slot(s) are missing accepted final evidence." -Items $missingItems
+}
+if ($unmatchedAcceptedFinalEvidence.Count -gt 0) {
+    $closeoutBlockers += New-CloseoutBlocker -Kind "unmatchedAcceptedFinalEvidence" -Count $unmatchedAcceptedFinalEvidence.Count -Message "$($unmatchedAcceptedFinalEvidence.Count) accepted final evidence bundle(s) do not match any closeout slot." -Items $unmatchedAcceptedFinalEvidence
+}
+if ($ambiguousAcceptedFinalEvidence.Count -gt 0) {
+    $closeoutBlockers += New-CloseoutBlocker -Kind "ambiguousAcceptedFinalEvidence" -Count $ambiguousAcceptedFinalEvidence.Count -Message "$($ambiguousAcceptedFinalEvidence.Count) accepted final evidence bundle(s) match multiple closeout slots." -Items $ambiguousAcceptedFinalEvidence
+}
+if ($duplicateAcceptedFinalEvidence.Count -gt 0) {
+    $closeoutBlockers += New-CloseoutBlocker -Kind "duplicateAcceptedFinalEvidence" -Count $duplicateAcceptedFinalEvidence.Count -Message "$($duplicateAcceptedFinalEvidence.Count) accepted final evidence bundle(s) duplicate an already satisfied closeout slot." -Items $duplicateAcceptedFinalEvidence
+}
+if ($nonMainAcceptedFinalEvidence.Count -gt 0) {
+    $closeoutBlockers += New-CloseoutBlocker -Kind "nonMainAcceptedFinalEvidence" -Count $nonMainAcceptedFinalEvidence.Count -Message "$($nonMainAcceptedFinalEvidence.Count) accepted final evidence bundle(s) were not captured from main." -Items $nonMainAcceptedFinalEvidence
+}
+if ($unpushedAcceptedFinalEvidence.Count -gt 0) {
+    $closeoutBlockers += New-CloseoutBlocker -Kind "unpushedAcceptedFinalEvidence" -Count $unpushedAcceptedFinalEvidence.Count -Message "$($unpushedAcceptedFinalEvidence.Count) accepted final evidence bundle(s) use a source commit that is not reachable from origin/main." -Items $unpushedAcceptedFinalEvidence
+}
+if ($missingArtifactHashAcceptedFinalEvidence.Count -gt 0) {
+    $closeoutBlockers += New-CloseoutBlocker -Kind "missingArtifactHashAcceptedFinalEvidence" -Count $missingArtifactHashAcceptedFinalEvidence.Count -Message "$($missingArtifactHashAcceptedFinalEvidence.Count) accepted final evidence bundle(s) lack screenshot or screenrecord SHA-256 values." -Items $missingArtifactHashAcceptedFinalEvidence
+}
+if ($nonFinalLabelAcceptedFinalEvidence.Count -gt 0) {
+    $closeoutBlockers += New-CloseoutBlocker -Kind "nonFinalLabelAcceptedFinalEvidence" -Count $nonFinalLabelAcceptedFinalEvidence.Count -Message "$($nonFinalLabelAcceptedFinalEvidence.Count) accepted final evidence bundle(s) do not use a final capture label." -Items $nonFinalLabelAcceptedFinalEvidence
+}
+if ($wrongSlotLabelAcceptedFinalEvidence.Count -gt 0) {
+    $closeoutBlockers += New-CloseoutBlocker -Kind "wrongSlotLabelAcceptedFinalEvidence" -Count $wrongSlotLabelAcceptedFinalEvidence.Count -Message "$($wrongSlotLabelAcceptedFinalEvidence.Count) accepted final evidence bundle(s) use a final label for a different closeout slot." -Items $wrongSlotLabelAcceptedFinalEvidence
+}
+if ($missingOperatorNotesAcceptedFinalEvidence.Count -gt 0) {
+    $closeoutBlockers += New-CloseoutBlocker -Kind "missingOperatorNotesAcceptedFinalEvidence" -Count $missingOperatorNotesAcceptedFinalEvidence.Count -Message "$($missingOperatorNotesAcceptedFinalEvidence.Count) accepted final evidence bundle(s) lack operator notes." -Items $missingOperatorNotesAcceptedFinalEvidence
+}
+if ($missingVisualReviewTextAcceptedFinalEvidence.Count -gt 0) {
+    $closeoutBlockers += New-CloseoutBlocker -Kind "missingVisualReviewTextAcceptedFinalEvidence" -Count $missingVisualReviewTextAcceptedFinalEvidence.Count -Message "$($missingVisualReviewTextAcceptedFinalEvidence.Count) accepted final evidence bundle(s) lack target description or visual claim text." -Items $missingVisualReviewTextAcceptedFinalEvidence
+}
 $result = [pscustomobject]@{
     evidenceRoot = if ($rootPath) { $rootPath.Path } else { $EvidenceRoot }
     summaryCount = $summaryFiles.Count
@@ -456,6 +518,7 @@ $result = [pscustomobject]@{
     readyForPresetDocs = $presetDocsEvidenceClean
     allCloseoutEvidencePresent = $allCloseoutEvidencePresent
     allCloseoutEvidenceClean = $allCloseoutEvidenceClean
+    closeoutBlockers = $closeoutBlockers
 }
 
 $resultJson = $result | ConvertTo-Json -Depth 8
@@ -519,6 +582,10 @@ if ($Json) {
     Write-Output "Ready for preset docs update: $($result.readyForPresetDocs)"
     Write-Output "All closeout evidence present: $($result.allCloseoutEvidencePresent)"
     Write-Output "All closeout evidence clean: $($result.allCloseoutEvidenceClean)"
+    Write-Output "Closeout blockers: $(@($result.closeoutBlockers).Count)"
+    foreach ($blocker in @($result.closeoutBlockers)) {
+        Write-Output "- $($blocker.kind): $($blocker.message)"
+    }
     if (@($result.unmatchedAcceptedFinalEvidence).Count -gt 0) {
         Write-Output ""
         Write-Output "Unmatched accepted final evidence:"

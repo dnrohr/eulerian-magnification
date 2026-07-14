@@ -219,7 +219,9 @@ expected final label for each closeout slot:
 Use `pixel_closeout_summary.json` as the saved closeout artifact for final
 visual-validation status updates after the gates pass. Satisfied slots include
 an `artifactNote` with the bundle, source, screenshot hash, and screenrecord
-hash needed for release notes.
+hash needed for release notes. The saved JSON also includes
+`closeoutBlockers`, a compact checklist of missing slots and accepted-evidence
+issues that still block README/parity closeout.
 
 Do not mark preset visual parity as validated until the preset closeout gate
 passes. The gate requires all four preset visual slots and rejects unmatched,

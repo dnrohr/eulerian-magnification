@@ -211,6 +211,10 @@ try {
     Assert-Equal -Actual $result.readyForPresetDocs -Expected $false -Message "Preset docs should not be ready when accepted evidence is unclean."
     Assert-Equal -Actual $result.allCloseoutEvidencePresent -Expected $true -Message "All closeout evidence should be present."
     Assert-Equal -Actual $result.allCloseoutEvidenceClean -Expected $false -Message "Unmatched evidence should prevent clean roadmap closeout."
+    Assert-Equal -Actual @($result.closeoutBlockers).Count -Expected 1 -Message "Unmatched evidence should produce one closeout blocker."
+    Assert-Equal -Actual $result.closeoutBlockers[0].kind -Expected "unmatchedAcceptedFinalEvidence" -Message "Unmatched evidence should produce an unmatched blocker."
+    Assert-Equal -Actual $result.closeoutBlockers[0].count -Expected 1 -Message "Unmatched blocker count mismatch."
+    Assert-Equal -Actual $result.closeoutBlockers[0].items[0].label -Expected "accepted-unknown-final" -Message "Unmatched blocker should include evidence reports."
     Assert-Equal -Actual $result.slots[0].protocol -Expected "docs/testing/ROI_DEVICE_VALIDATION.md" -Message "Closeout slots should expose protocol docs."
     Assert-Equal -Actual $result.slots[0].expectedFinalLabel -Expected "manual-roi-known-target-final" -Message "Closeout slots should expose expected final labels."
     Assert-Equal -Actual $result.slots[0].sourceBranch -Expected "main" -Message "Satisfied closeout slots should expose source branch."
@@ -236,6 +240,10 @@ try {
     Assert-Equal -Actual $partial.readyForPresetDocs -Expected $false -Message "Partial closeout should not be ready for preset docs."
     Assert-Equal -Actual $partial.presetVisualSlotsPresent -Expected $false -Message "Partial closeout should not have all preset slots."
     Assert-Equal -Actual $partial.allCloseoutEvidenceClean -Expected $false -Message "Partial closeout should not be clean."
+    Assert-Equal -Actual @($partial.closeoutBlockers).Count -Expected 1 -Message "Partial closeout should expose one missing-slots blocker."
+    Assert-Equal -Actual $partial.closeoutBlockers[0].kind -Expected "missingSlots" -Message "Partial closeout should expose a missing-slots blocker."
+    Assert-Equal -Actual $partial.closeoutBlockers[0].count -Expected 5 -Message "Missing-slots blocker count mismatch."
+    Assert-Equal -Actual $partial.closeoutBlockers[0].items[0].expectedFinalLabel -Expected "manual-roi-known-target-final" -Message "Missing-slots blocker should include expected final labels."
     Assert-True -Condition ($partial.missing[0].nextCommand.Length -gt 0) -Message "Missing closeout slots should include next command hints."
     Assert-True -Condition ($partial.missing[0].expectedFinalLabel.Length -gt 0) -Message "Missing closeout slots should include expected final labels."
     Assert-Equal -Actual $partial.missing[0].artifactNote -Expected $null -Message "Missing closeout slots should not expose artifact notes."
@@ -312,6 +320,7 @@ try {
     Assert-Equal -Actual $classified.readyForPresetDocs -Expected $true -Message "Preset docs should be ready when preset slots are satisfied and evidence is clean."
     Assert-Equal -Actual $classified.presetVisualSlotsPresent -Expected $true -Message "Preset visual slots should be present in classified closeout."
     Assert-Equal -Actual $classified.presetDocsEvidenceClean -Expected $true -Message "Preset docs evidence should be clean in classified closeout."
+    Assert-Equal -Actual @($classified.closeoutBlockers).Count -Expected 0 -Message "Clean classified closeout should have no blockers."
     $classifiedPresetDocsExitCode = Invoke-Closeout -EvidenceRoot $classifiedRoot -FailOnPresetDocsNotReady
     Assert-Equal -Actual $classifiedPresetDocsExitCode -Expected 0 -Message "FailOnPresetDocsNotReady should pass when preset slots are satisfied and evidence is clean."
     $classifiedCloseoutReadyExitCode = Invoke-Closeout -EvidenceRoot $classifiedRoot -FailOnCloseoutNotReady
@@ -324,6 +333,7 @@ try {
     Assert-Equal -Actual $classifiedWithOutput.allCloseoutEvidenceClean -Expected $true -Message "OutputPath JSON stdout should still be parseable."
     Assert-Equal -Actual $writtenCloseout.allCloseoutEvidenceClean -Expected $true -Message "Written closeout JSON should preserve clean closeout status."
     Assert-Equal -Actual @($writtenCloseout.slots).Count -Expected 6 -Message "Written closeout JSON should include closeout slots."
+    Assert-Equal -Actual @($writtenCloseout.closeoutBlockers).Count -Expected 0 -Message "Written clean closeout JSON should preserve the blocker list."
     Assert-Equal -Actual $writtenCloseout.slots[0].expectedFinalLabel -Expected "manual-roi-known-target-final" -Message "Written closeout JSON should include expected final labels."
     Assert-True -Condition ($writtenCloseout.slots[0].artifactNote.Contains("bundle")) -Message "Written closeout JSON should include docs-ready artifact notes."
 
@@ -355,6 +365,9 @@ try {
     $wrongSlotLabel = & (Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1") -EvidenceRoot $wrongSlotLabelRoot -Json | ConvertFrom-Json
     Assert-Equal -Actual @($wrongSlotLabel.wrongSlotLabelAcceptedFinalEvidence).Count -Expected 1 -Message "Evidence whose final label targets a different slot should be reported."
     Assert-Equal -Actual $wrongSlotLabel.wrongSlotLabelAcceptedFinalEvidence[0].expectedFinalLabels[0].expectedFinalLabel -Expected "live-linear-breathing-final" -Message "Wrong-slot evidence should include the expected final label."
+    Assert-Equal -Actual $wrongSlotLabel.closeoutBlockers[0].kind -Expected "missingSlots" -Message "Wrong-slot fixture should still report missing slots first."
+    Assert-Equal -Actual $wrongSlotLabel.closeoutBlockers[1].kind -Expected "wrongSlotLabelAcceptedFinalEvidence" -Message "Wrong-slot evidence should produce a closeout blocker."
+    Assert-Equal -Actual $wrongSlotLabel.closeoutBlockers[1].items[0].expectedFinalLabels[0].expectedFinalLabel -Expected "live-linear-breathing-final" -Message "Wrong-slot blocker should include expected final labels."
     Assert-Equal -Actual @($wrongSlotLabel.slots | Where-Object { $_.satisfied }).Count -Expected 0 -Message "Wrong-slot final labels must not satisfy closeout slots."
     Assert-Equal -Actual $wrongSlotLabel.readyForPresetDocs -Expected $false -Message "Wrong-slot final labels should prevent preset docs readiness."
     $wrongSlotLabelGateExitCode = Invoke-Closeout -EvidenceRoot $wrongSlotLabelRoot -FailOnWrongSlotLabel
