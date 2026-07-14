@@ -71,6 +71,40 @@ function Get-SourceValue {
     return $null
 }
 
+function Get-ArtifactSha256 {
+    param(
+        $Summary,
+        [string]$Name
+    )
+
+    if ($Summary.artifacts -and
+        ($Summary.artifacts.PSObject.Properties.Name -contains $Name) -and
+        $Summary.artifacts.$Name -and
+        ($Summary.artifacts.$Name.PSObject.Properties.Name -contains "sha256")) {
+        return $Summary.artifacts.$Name.sha256
+    }
+    return $null
+}
+
+function New-EvidenceReport {
+    param(
+        $Summary
+    )
+
+    return [ordered]@{
+        bundle = Split-Path -Parent $Summary.summaryPath
+        label = $Summary.label
+        sourceBranch = Get-SourceValue -Summary $Summary -Name "branch"
+        sourceCommit = Get-SourceValue -Summary $Summary -Name "commit"
+        sourceShortCommit = Get-SourceValue -Summary $Summary -Name "shortCommit"
+        screenshotSha256 = Get-ArtifactSha256 -Summary $Summary -Name "screenshot"
+        screenrecordSha256 = Get-ArtifactSha256 -Summary $Summary -Name "screenrecord"
+        mode = $Summary.launch.mode
+        roiSource = $Summary.launch.roiSource
+        visualClaim = $Summary.visualReview.visualClaim
+    }
+}
+
 function Test-SourceBranchReady {
     param($Summary)
 
@@ -125,6 +159,8 @@ function New-Slot {
         sourceBranch = $null
         sourceCommit = $null
         sourceShortCommit = $null
+        screenshotSha256 = $null
+        screenrecordSha256 = $null
         reason = "missing accepted evidence"
     }
 }
@@ -164,30 +200,14 @@ foreach ($summary in $acceptedSummaries) {
 
     $acceptedFinalSummaries += $summary
     if (-not (Test-SourceBranchReady -Summary $summary)) {
-        $nonMainAcceptedFinalEvidence += [pscustomobject]@{
-            bundle = Split-Path -Parent $summary.summaryPath
-            label = $summary.label
-            sourceBranch = Get-SourceValue -Summary $summary -Name "branch"
-            sourceCommit = Get-SourceValue -Summary $summary -Name "commit"
-            sourceShortCommit = Get-SourceValue -Summary $summary -Name "shortCommit"
-            mode = $summary.launch.mode
-            roiSource = $summary.launch.roiSource
-            visualClaim = $summary.visualReview.visualClaim
-            reason = "accepted final evidence was not captured from main"
-        }
+        $report = New-EvidenceReport -Summary $summary
+        $report.reason = "accepted final evidence was not captured from main"
+        $nonMainAcceptedFinalEvidence += [pscustomobject]$report
     }
     if (-not (Test-SourceCommitOnOriginMain -Summary $summary)) {
-        $unpushedAcceptedFinalEvidence += [pscustomobject]@{
-            bundle = Split-Path -Parent $summary.summaryPath
-            label = $summary.label
-            sourceBranch = Get-SourceValue -Summary $summary -Name "branch"
-            sourceCommit = Get-SourceValue -Summary $summary -Name "commit"
-            sourceShortCommit = Get-SourceValue -Summary $summary -Name "shortCommit"
-            mode = $summary.launch.mode
-            roiSource = $summary.launch.roiSource
-            visualClaim = $summary.visualReview.visualClaim
-            reason = "accepted final evidence source commit is not reachable from origin/main"
-        }
+        $report = New-EvidenceReport -Summary $summary
+        $report.reason = "accepted final evidence source commit is not reachable from origin/main"
+        $unpushedAcceptedFinalEvidence += [pscustomobject]$report
     }
 
     $text = Get-SummaryText -Summary $summary
@@ -204,31 +224,15 @@ foreach ($summary in $acceptedSummaries) {
     if ($phasePassed -and $text -match 'fast|tremor') { $matchedSlots += "fastTremorPhase" }
 
     if ($matchedSlots.Count -eq 0) {
-        $unmatchedAcceptedFinalEvidence += [pscustomobject]@{
-            bundle = Split-Path -Parent $summary.summaryPath
-            label = $summary.label
-            sourceBranch = Get-SourceValue -Summary $summary -Name "branch"
-            sourceCommit = Get-SourceValue -Summary $summary -Name "commit"
-            sourceShortCommit = Get-SourceValue -Summary $summary -Name "shortCommit"
-            mode = $summary.launch.mode
-            roiSource = $summary.launch.roiSource
-            visualClaim = $summary.visualReview.visualClaim
-            reason = "accepted final evidence did not match any closeout slot"
-        }
+        $report = New-EvidenceReport -Summary $summary
+        $report.reason = "accepted final evidence did not match any closeout slot"
+        $unmatchedAcceptedFinalEvidence += [pscustomobject]$report
     }
     if ($matchedSlots.Count -gt 1) {
-        $ambiguousAcceptedFinalEvidence += [pscustomobject]@{
-            bundle = Split-Path -Parent $summary.summaryPath
-            label = $summary.label
-            sourceBranch = Get-SourceValue -Summary $summary -Name "branch"
-            sourceCommit = Get-SourceValue -Summary $summary -Name "commit"
-            sourceShortCommit = Get-SourceValue -Summary $summary -Name "shortCommit"
-            mode = $summary.launch.mode
-            roiSource = $summary.launch.roiSource
-            visualClaim = $summary.visualReview.visualClaim
-            matchedSlots = $matchedSlots
-            reason = "accepted final evidence matched multiple closeout slots"
-        }
+        $report = New-EvidenceReport -Summary $summary
+        $report.matchedSlots = $matchedSlots
+        $report.reason = "accepted final evidence matched multiple closeout slots"
+        $ambiguousAcceptedFinalEvidence += [pscustomobject]$report
     }
 
     foreach ($slotId in $matchedSlots) {
@@ -239,22 +243,21 @@ foreach ($summary in $acceptedSummaries) {
             $slots[$slotId].sourceBranch = Get-SourceValue -Summary $summary -Name "branch"
             $slots[$slotId].sourceCommit = Get-SourceValue -Summary $summary -Name "commit"
             $slots[$slotId].sourceShortCommit = Get-SourceValue -Summary $summary -Name "shortCommit"
+            $slots[$slotId].screenshotSha256 = Get-ArtifactSha256 -Summary $summary -Name "screenshot"
+            $slots[$slotId].screenrecordSha256 = Get-ArtifactSha256 -Summary $summary -Name "screenrecord"
             $slots[$slotId].reason = "accepted final evidence"
         } else {
-            $duplicateAcceptedFinalEvidence += [pscustomobject]@{
-                slot = $slotId
-                bundle = Split-Path -Parent $summary.summaryPath
-                label = $summary.label
-                sourceBranch = Get-SourceValue -Summary $summary -Name "branch"
-                sourceCommit = Get-SourceValue -Summary $summary -Name "commit"
-                sourceShortCommit = Get-SourceValue -Summary $summary -Name "shortCommit"
-                originalBundle = $slots[$slotId].bundle
-                originalLabel = $slots[$slotId].label
-                originalSourceBranch = $slots[$slotId].sourceBranch
-                originalSourceCommit = $slots[$slotId].sourceCommit
-                originalSourceShortCommit = $slots[$slotId].sourceShortCommit
-                reason = "accepted final evidence matched an already satisfied closeout slot"
-            }
+            $report = New-EvidenceReport -Summary $summary
+            $report.slot = $slotId
+            $report.originalBundle = $slots[$slotId].bundle
+            $report.originalLabel = $slots[$slotId].label
+            $report.originalSourceBranch = $slots[$slotId].sourceBranch
+            $report.originalSourceCommit = $slots[$slotId].sourceCommit
+            $report.originalSourceShortCommit = $slots[$slotId].sourceShortCommit
+            $report.originalScreenshotSha256 = $slots[$slotId].screenshotSha256
+            $report.originalScreenrecordSha256 = $slots[$slotId].screenrecordSha256
+            $report.reason = "accepted final evidence matched an already satisfied closeout slot"
+            $duplicateAcceptedFinalEvidence += [pscustomobject]$report
         }
     }
 }
@@ -320,6 +323,12 @@ if ($Json) {
             if (-not [string]::IsNullOrWhiteSpace($slot.sourceShortCommit) -or -not [string]::IsNullOrWhiteSpace($slot.sourceBranch)) {
                 Write-Output "    Source: $($slot.sourceShortCommit) on $($slot.sourceBranch)"
             }
+            if (-not [string]::IsNullOrWhiteSpace($slot.screenshotSha256)) {
+                Write-Output "    Screenshot SHA-256: $($slot.screenshotSha256)"
+            }
+            if (-not [string]::IsNullOrWhiteSpace($slot.screenrecordSha256)) {
+                Write-Output "    Screenrecord SHA-256: $($slot.screenrecordSha256)"
+            }
         } else {
             Write-Output "    Status: $($slot.reason)"
             Write-Output "    Next: $($slot.nextCommand)"
@@ -339,6 +348,12 @@ if ($Json) {
             if (-not [string]::IsNullOrWhiteSpace($evidence.sourceShortCommit) -or -not [string]::IsNullOrWhiteSpace($evidence.sourceBranch)) {
                 Write-Output "    Source: $($evidence.sourceShortCommit) on $($evidence.sourceBranch)"
             }
+            if (-not [string]::IsNullOrWhiteSpace($evidence.screenshotSha256)) {
+                Write-Output "    Screenshot SHA-256: $($evidence.screenshotSha256)"
+            }
+            if (-not [string]::IsNullOrWhiteSpace($evidence.screenrecordSha256)) {
+                Write-Output "    Screenrecord SHA-256: $($evidence.screenrecordSha256)"
+            }
             Write-Output "    $($evidence.reason)"
         }
     }
@@ -349,6 +364,12 @@ if ($Json) {
             Write-Output "- $($evidence.label): $($evidence.bundle)"
             if (-not [string]::IsNullOrWhiteSpace($evidence.sourceShortCommit) -or -not [string]::IsNullOrWhiteSpace($evidence.sourceBranch)) {
                 Write-Output "    Source: $($evidence.sourceShortCommit) on $($evidence.sourceBranch)"
+            }
+            if (-not [string]::IsNullOrWhiteSpace($evidence.screenshotSha256)) {
+                Write-Output "    Screenshot SHA-256: $($evidence.screenshotSha256)"
+            }
+            if (-not [string]::IsNullOrWhiteSpace($evidence.screenrecordSha256)) {
+                Write-Output "    Screenrecord SHA-256: $($evidence.screenrecordSha256)"
             }
             Write-Output "    $($evidence.reason): $($evidence.matchedSlots -join ', ')"
         }
@@ -361,10 +382,22 @@ if ($Json) {
             if (-not [string]::IsNullOrWhiteSpace($evidence.sourceShortCommit) -or -not [string]::IsNullOrWhiteSpace($evidence.sourceBranch)) {
                 Write-Output "    Source: $($evidence.sourceShortCommit) on $($evidence.sourceBranch)"
             }
+            if (-not [string]::IsNullOrWhiteSpace($evidence.screenshotSha256)) {
+                Write-Output "    Screenshot SHA-256: $($evidence.screenshotSha256)"
+            }
+            if (-not [string]::IsNullOrWhiteSpace($evidence.screenrecordSha256)) {
+                Write-Output "    Screenrecord SHA-256: $($evidence.screenrecordSha256)"
+            }
             Write-Output "    $($evidence.reason): $($evidence.slot)"
             Write-Output "    Original: $($evidence.originalLabel): $($evidence.originalBundle)"
             if (-not [string]::IsNullOrWhiteSpace($evidence.originalSourceShortCommit) -or -not [string]::IsNullOrWhiteSpace($evidence.originalSourceBranch)) {
                 Write-Output "    Original source: $($evidence.originalSourceShortCommit) on $($evidence.originalSourceBranch)"
+            }
+            if (-not [string]::IsNullOrWhiteSpace($evidence.originalScreenshotSha256)) {
+                Write-Output "    Original screenshot SHA-256: $($evidence.originalScreenshotSha256)"
+            }
+            if (-not [string]::IsNullOrWhiteSpace($evidence.originalScreenrecordSha256)) {
+                Write-Output "    Original screenrecord SHA-256: $($evidence.originalScreenrecordSha256)"
             }
         }
     }
@@ -376,6 +409,12 @@ if ($Json) {
             if (-not [string]::IsNullOrWhiteSpace($evidence.sourceShortCommit) -or -not [string]::IsNullOrWhiteSpace($evidence.sourceBranch)) {
                 Write-Output "    Source: $($evidence.sourceShortCommit) on $($evidence.sourceBranch)"
             }
+            if (-not [string]::IsNullOrWhiteSpace($evidence.screenshotSha256)) {
+                Write-Output "    Screenshot SHA-256: $($evidence.screenshotSha256)"
+            }
+            if (-not [string]::IsNullOrWhiteSpace($evidence.screenrecordSha256)) {
+                Write-Output "    Screenrecord SHA-256: $($evidence.screenrecordSha256)"
+            }
             Write-Output "    $($evidence.reason)"
         }
     }
@@ -386,6 +425,12 @@ if ($Json) {
             Write-Output "- $($evidence.label): $($evidence.bundle)"
             if (-not [string]::IsNullOrWhiteSpace($evidence.sourceShortCommit) -or -not [string]::IsNullOrWhiteSpace($evidence.sourceBranch)) {
                 Write-Output "    Source: $($evidence.sourceShortCommit) on $($evidence.sourceBranch)"
+            }
+            if (-not [string]::IsNullOrWhiteSpace($evidence.screenshotSha256)) {
+                Write-Output "    Screenshot SHA-256: $($evidence.screenshotSha256)"
+            }
+            if (-not [string]::IsNullOrWhiteSpace($evidence.screenrecordSha256)) {
+                Write-Output "    Screenrecord SHA-256: $($evidence.screenrecordSha256)"
             }
             Write-Output "    $($evidence.reason)"
         }

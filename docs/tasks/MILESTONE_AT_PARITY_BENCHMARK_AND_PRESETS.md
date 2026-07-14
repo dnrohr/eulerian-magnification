@@ -403,6 +403,10 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - Live validation summaries now include SHA-256 hashes for present screenshots
   and screen recordings, giving final accepted evidence durable artifact
   identifiers for README/parity-doc closeout notes.
+- Pixel validation closeout now carries those screenshot and screenrecord
+  SHA-256 values into satisfied slots and flagged accepted-evidence reports, so
+  the final roadmap/README parity update can cite artifacts directly from one
+  closeout summary.
 - Documented the closeout gates in README, the task index, and MIT parity
   targets so visual-validation docs are only updated after accepted evidence.
 - Extended the protocol-doc self-test to keep README and task-index closeout

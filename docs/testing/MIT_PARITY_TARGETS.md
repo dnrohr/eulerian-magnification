@@ -207,7 +207,8 @@ the Fast Motion / `Tremor` path unless a task explicitly asks for the internal
 compatibility mode.
 
 After watched Pixel captures, summarize accepted evidence before changing this
-table:
+table. The closeout summary carries source branch/commit and
+screenshot/screenrecord SHA-256 values for the accepted artifacts:
 
 ```powershell
 .\tools\summarize_pixel_validation_closeout.ps1

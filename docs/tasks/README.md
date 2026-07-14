@@ -99,7 +99,9 @@ command templates:
 ```
 
 After a connected Pixel session, summarize which accepted evidence bundles are
-ready to close roadmap items:
+ready to close roadmap items. The closeout summary includes the accepted
+source branch/commit and screenshot/screenrecord SHA-256 values needed for
+final README and parity-doc citations:
 
 ```powershell
 .\tools\summarize_pixel_validation_closeout.ps1

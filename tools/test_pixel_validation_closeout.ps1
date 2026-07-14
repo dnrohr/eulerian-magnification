@@ -133,6 +133,14 @@ function Write-Summary {
             rendererDiagnostics = (& $gate $Renderer)
             phaseDiagnostics = (& $gate $Phase)
         }
+        artifacts = [ordered]@{
+            screenshot = [ordered]@{
+                sha256 = "screenshot-$Name-sha256"
+            }
+            screenrecord = [ordered]@{
+                sha256 = "screenrecord-$Name-sha256"
+            }
+        }
     }
 
     $summary | ConvertTo-Json -Depth 8 | Out-File -LiteralPath (Join-Path $dir "evidence_summary.json") -Encoding utf8
@@ -173,7 +181,11 @@ try {
     Assert-Equal -Actual $result.slots[0].protocol -Expected "docs/testing/ROI_DEVICE_VALIDATION.md" -Message "Closeout slots should expose protocol docs."
     Assert-Equal -Actual $result.slots[0].sourceBranch -Expected "main" -Message "Satisfied closeout slots should expose source branch."
     Assert-Equal -Actual $result.slots[0].sourceShortCommit -Expected $currentShortHead -Message "Satisfied closeout slots should expose source short commit."
+    Assert-Equal -Actual $result.slots[0].screenshotSha256 -Expected "screenshot-manual-sha256" -Message "Satisfied closeout slots should expose screenshot hashes."
+    Assert-Equal -Actual $result.slots[0].screenrecordSha256 -Expected "screenrecord-manual-sha256" -Message "Satisfied closeout slots should expose screenrecord hashes."
     Assert-Equal -Actual $result.unmatchedAcceptedFinalEvidence[0].sourceShortCommit -Expected $currentShortHead -Message "Unmatched closeout evidence should expose source short commit."
+    Assert-Equal -Actual $result.unmatchedAcceptedFinalEvidence[0].screenshotSha256 -Expected "screenshot-accepted-unknown-sha256" -Message "Unmatched closeout evidence should expose screenshot hashes."
+    Assert-Equal -Actual $result.unmatchedAcceptedFinalEvidence[0].screenrecordSha256 -Expected "screenrecord-accepted-unknown-sha256" -Message "Unmatched closeout evidence should expose screenrecord hashes."
     Assert-True -Condition ($result.slots[0].nextCommand.Contains("manual-roi-known-target-setup")) -Message "Manual ROI slot should expose next command hint."
 
     $partialRoot = Join-Path $root "partial"
@@ -239,6 +251,8 @@ try {
     Assert-Equal -Actual $duplicate.duplicateAcceptedFinalEvidence[0].slot -Expected "pulseLinear" -Message "Duplicate evidence slot mismatch."
     Assert-Equal -Actual $duplicate.duplicateAcceptedFinalEvidence[0].sourceShortCommit -Expected $currentShortHead -Message "Duplicate evidence should expose source short commit."
     Assert-Equal -Actual $duplicate.duplicateAcceptedFinalEvidence[0].originalSourceShortCommit -Expected $currentShortHead -Message "Duplicate evidence should expose original source short commit."
+    Assert-Equal -Actual $duplicate.duplicateAcceptedFinalEvidence[0].screenshotSha256 -Expected "screenshot-pulse-b-sha256" -Message "Duplicate evidence should expose screenshot hash."
+    Assert-Equal -Actual $duplicate.duplicateAcceptedFinalEvidence[0].originalScreenshotSha256 -Expected "screenshot-pulse-a-sha256" -Message "Duplicate evidence should expose original screenshot hash."
     $duplicateExitCode = Invoke-Closeout -EvidenceRoot $duplicateRoot -FailOnDuplicate
     Assert-Equal -Actual $duplicateExitCode -Expected 6 -Message "FailOnDuplicate should exit 6 when multiple accepted evidence bundles match the same slot."
 
