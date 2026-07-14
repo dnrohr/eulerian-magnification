@@ -309,6 +309,13 @@ checklist and command templates:
 .\tools\show_next_pixel_validation_plan.ps1
 ```
 
+After a connected Pixel validation pass, summarize which accepted evidence
+bundles are ready to close the remaining roadmap items:
+
+```powershell
+.\tools\summarize_pixel_validation_closeout.ps1
+```
+
 Open the repo in Android Studio, connect a Pixel 8a, and run the `app`
 configuration when device testing is needed.
 

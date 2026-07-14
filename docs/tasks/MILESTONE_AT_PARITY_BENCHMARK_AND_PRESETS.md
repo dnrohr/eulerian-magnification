@@ -341,6 +341,10 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - Strengthened the Pixel validation plan self-test so every generated capture
   command parses as PowerShell and only uses parameters exposed by
   `tools/capture_live_validation_evidence.ps1`.
+- Added `tools/summarize_pixel_validation_closeout.ps1` and
+  `tools/test_pixel_validation_closeout.ps1` so accepted `evidence_summary.json`
+  bundles can be mapped back to the remaining ROI, live-linear, live-phase, and
+  preset visual-validation slots before editing roadmap or parity docs.
 - Updated the live visual validation guide to use `Tremor` for the public Fast
   Motion / Motion path. `ObjectVibration` remains accepted only for internal
   compatibility and parity experiments.
