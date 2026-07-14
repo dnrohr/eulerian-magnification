@@ -30,6 +30,7 @@ function Invoke-Closeout {
         [switch]$FailOnUnmatched,
         [switch]$FailOnAmbiguous,
         [switch]$FailOnDuplicate,
+        [switch]$FailOnNonMain,
         [switch]$FailOnCloseoutNotReady,
         [switch]$FailOnPresetDocsNotReady
     )
@@ -51,6 +52,9 @@ function Invoke-Closeout {
     }
     if ($FailOnDuplicate) {
         $args.FailOnDuplicate = $true
+    }
+    if ($FailOnNonMain) {
+        $args.FailOnNonMain = $true
     }
     if ($FailOnCloseoutNotReady) {
         $args.FailOnCloseoutNotReady = $true
@@ -260,6 +264,8 @@ try {
     Assert-Equal -Actual $offMainCloseoutReadyExitCode -Expected 7 -Message "FailOnCloseoutNotReady should fail on off-main accepted evidence."
     $offMainPresetDocsExitCode = Invoke-Closeout -EvidenceRoot $offMainRoot -FailOnPresetDocsNotReady
     Assert-Equal -Actual $offMainPresetDocsExitCode -Expected 4 -Message "FailOnPresetDocsNotReady should fail on off-main accepted preset evidence."
+    $offMainExitCode = Invoke-Closeout -EvidenceRoot $offMainRoot -FailOnNonMain
+    Assert-Equal -Actual $offMainExitCode -Expected 8 -Message "FailOnNonMain should fail on off-main accepted evidence."
 } finally {
     Remove-Item -LiteralPath $root -Recurse -Force
 }

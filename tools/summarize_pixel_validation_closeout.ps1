@@ -5,6 +5,7 @@ param(
     [switch]$FailOnUnmatched,
     [switch]$FailOnAmbiguous,
     [switch]$FailOnDuplicate,
+    [switch]$FailOnNonMain,
     [switch]$FailOnCloseoutNotReady,
     [switch]$FailOnPresetDocsNotReady
 )
@@ -348,6 +349,9 @@ if ($FailOnAmbiguous -and $ambiguousAcceptedFinalEvidence.Count -gt 0) {
 }
 if ($FailOnDuplicate -and $duplicateAcceptedFinalEvidence.Count -gt 0) {
     exit 6
+}
+if ($FailOnNonMain -and $nonMainAcceptedFinalEvidence.Count -gt 0) {
+    exit 8
 }
 if ($FailOnCloseoutNotReady -and -not $result.allCloseoutEvidenceClean) {
     exit 7

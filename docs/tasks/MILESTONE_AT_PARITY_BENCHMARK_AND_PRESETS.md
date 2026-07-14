@@ -373,6 +373,8 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - Added non-`main` accepted-evidence reporting to the closeout summary and made
   the one-shot closeout and preset-doc readiness gates reject accepted evidence
   captured outside `main`.
+- Added a tested `-FailOnNonMain` closeout gate so automation can reject
+  off-`main` accepted evidence directly.
 - Documented the closeout gates in README, the task index, and MIT parity
   targets so visual-validation docs are only updated after accepted evidence.
 - Extended the protocol-doc self-test to keep README and task-index closeout
