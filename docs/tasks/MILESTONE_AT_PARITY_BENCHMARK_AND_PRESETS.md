@@ -507,6 +507,9 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - The handoff command now also writes `pixel_validation_handoff.md`, a
   human-readable summary of recommended captures, closeout blockers, artifacts,
   and paste-ready commands.
+- Pixel validation handoffs now include source branch, commit, clean-tree state,
+  and origin/main reachability so later accepted evidence can be compared
+  against the command bundle that produced it.
 
 ## Remaining
 

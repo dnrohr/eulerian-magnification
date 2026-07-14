@@ -331,7 +331,9 @@ at least one recommended capture. Add `-OutputPath sample-videos\exports\live-va
 to save the full machine-readable plan used for a device session.
 The handoff bundle writes `pixel_validation_plan.json`,
 `pixel_closeout_summary.json`, `pixel_validation_commands.txt`, and the
-human-readable `pixel_validation_handoff.md`.
+human-readable `pixel_validation_handoff.md`. The handoff records the source
+branch, commit, clean-tree state, and whether the commit is reachable from
+`origin/main`.
 
 After a connected Pixel validation pass, summarize which accepted evidence
 bundles are ready to close the remaining roadmap items. The summary includes

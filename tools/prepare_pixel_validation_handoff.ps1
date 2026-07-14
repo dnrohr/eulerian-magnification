@@ -27,6 +27,30 @@ $handoffPath = Join-Path $OutputRoot "pixel_validation_handoff.md"
 $planner = Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1"
 $closeoutSummary = Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1"
 
+function Invoke-GitValue {
+    param([string[]]$Arguments)
+
+    try {
+        $output = & git @Arguments 2>$null
+        if ($LASTEXITCODE -ne 0) {
+            return $null
+        }
+        return ($output -join "`n").Trim()
+    } catch {
+        return $null
+    }
+}
+
+$sourceBranch = Invoke-GitValue -Arguments @("rev-parse", "--abbrev-ref", "HEAD")
+$sourceCommit = Invoke-GitValue -Arguments @("rev-parse", "HEAD")
+$sourceStatus = Invoke-GitValue -Arguments @("status", "--porcelain")
+$sourceClean = [string]::IsNullOrWhiteSpace($sourceStatus)
+$sourceCommitReachableFromOriginMain = $false
+if (-not [string]::IsNullOrWhiteSpace($sourceCommit)) {
+    & git merge-base --is-ancestor $sourceCommit origin/main 2>$null
+    $sourceCommitReachableFromOriginMain = ($LASTEXITCODE -eq 0)
+}
+
 $plannerArgs = @{
     EvidenceRoot = $EvidenceRoot
     OutputPath = $planPath
@@ -63,6 +87,10 @@ $handoffLines = @(
     "- Recommended captures: $(@($plan.recommendedCaptures).Count)",
     "- Closeout blockers: $(@($closeout.closeoutBlockers).Count)",
     "- Ready for preset docs: $($closeout.readyForPresetDocs)",
+    "- Source branch: $sourceBranch",
+    "- Source commit: $sourceCommit",
+    "- Source clean: $sourceClean",
+    "- Source commit reachable from origin/main: $sourceCommitReachableFromOriginMain",
     "",
     "## Artifacts",
     "",
@@ -123,6 +151,12 @@ $result = [pscustomobject]@{
     commandCount = @($commands).Count
     closeoutBlockerCount = @($closeout.closeoutBlockers).Count
     readyForPresetDocs = $closeout.readyForPresetDocs
+    source = [pscustomobject]@{
+        branch = $sourceBranch
+        commit = $sourceCommit
+        clean = $sourceClean
+        commitReachableFromOriginMain = $sourceCommitReachableFromOriginMain
+    }
 }
 
 if ($Json) {
@@ -135,6 +169,9 @@ if ($Json) {
     Write-Output "Recommended captures: $($result.recommendedCaptureCount)"
     Write-Output "Command templates: $($result.commandCount)"
     Write-Output "Closeout blockers: $($result.closeoutBlockerCount)"
+    Write-Output "Source: $($result.source.branch) $($result.source.commit)"
+    Write-Output "Source clean: $($result.source.clean)"
+    Write-Output "Source reachable from origin/main: $($result.source.commitReachableFromOriginMain)"
     Write-Output "Plan: $($result.planPath)"
     Write-Output "Closeout: $($result.closeoutPath)"
     Write-Output "Commands: $($result.commandsPath)"
