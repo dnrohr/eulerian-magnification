@@ -312,6 +312,8 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   strings for mode, view, ROI source, and controls panel before ADB launch.
 - This catches mistyped Pixel validation commands before they produce misleading
   evidence bundles.
+- Added `tools/test_live_validation_capture_contract.ps1` so those accepted
+  value sets and invalid-value failures are covered without a connected device.
 - Updated the live visual validation guide to use `Tremor` for the public Fast
   Motion / Motion path. `ObjectVibration` remains accepted only for internal
   compatibility and parity experiments.

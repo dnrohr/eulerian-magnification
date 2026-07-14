@@ -267,12 +267,15 @@ Run the summary self-test after editing capture or summary tooling:
 
 ```powershell
 .\tools\test_live_validation_summary.ps1
+.\tools\test_live_validation_capture_contract.ps1
 ```
 
 The test synthesizes a thermal-aborted bundle and an incomplete runtime bundle,
 then verifies the summary exit codes, verdicts, UI assertion behavior,
 clean-source/visual-validation/verdict/diagnostic/screenrecord/thermal-ready/
 camera-FPS/focused-app gates, and dirty source warning.
+The capture-contract self-test verifies scripted launch parameter sets and
+invalid-value rejection without needing a connected device.
 
 For ROI overlay validation, pass `-MeasureRoiExpected` with the expected
 normalized screenshot-space rectangle. The capture script then writes
