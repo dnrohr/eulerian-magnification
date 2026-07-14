@@ -54,6 +54,10 @@ Assert-True -Condition ($roi.finalEvidence.Contains("-RequireFinalVisualEvidence
 Assert-True -Condition ($linear.finalEvidence.Contains("-RequireRendererDiagnostics")) -Message "Linear final evidence should require renderer diagnostics."
 Assert-True -Condition ($phase.finalEvidence.Contains("-RequirePhaseDiagnostics")) -Message "Phase final evidence should require phase diagnostics."
 Assert-True -Condition ($preset.finalEvidence.Contains("Update README")) -Message "Preset parity plan should keep docs updates after accepted artifacts."
+$presetCloseoutCommand = @($preset.commands | Where-Object { $_.name -eq "preset-parity-closeout" } | Select-Object -First 1).command
+Assert-True -Condition ($presetCloseoutCommand.Contains("-FailOnCloseoutNotReady")) -Message "Preset parity closeout should require the roadmap closeout readiness gate."
+Assert-True -Condition ($presetCloseoutCommand.Contains("-FailOnPresetDocsNotReady")) -Message "Preset parity closeout should require the preset docs readiness gate."
+Assert-True -Condition ($presetCloseoutCommand.IndexOf("-FailOnCloseoutNotReady") -lt $presetCloseoutCommand.IndexOf("update README.md")) -Message "Preset parity docs should only be updated after closeout readiness gates."
 Assert-True -Condition (@($roi.commands | Where-Object { $_.name -eq "manual-roi-known-target-final" }).Count -eq 1) -Message "ROI plan should include explicit manual ROI final command."
 Assert-True -Condition (@($roi.commands | Where-Object { $_.name -eq "auto-face-roi-final" }).Count -eq 1) -Message "ROI plan should include explicit automatic ROI final command."
 Assert-True -Condition (@($linear.commands | Where-Object { $_.name -eq "live-linear-breathing-setup" }).Count -eq 1) -Message "Linear plan should include explicit Breathing setup command."
