@@ -14,6 +14,11 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - [x] Add warnings when selected frequencies are too close to each other, too high for the measured FPS, or likely to overlap with camera motion/heartbeat artifacts.
 - [x] Document why tremor and object-vibration bands overlap and when the setup, target, and renderer choice matter more than the label.
 - [x] Update README and parity docs with the presets that are actually validated.
+- [ ] Capture watched Pulse color visual parity evidence with the live linear protocol.
+- [ ] Capture watched Breathing visual parity evidence with the live linear protocol.
+- [ ] Capture watched Object vibration visual parity evidence with the live phase protocol.
+- [ ] Capture watched Fast tremor visual parity evidence with the live phase protocol.
+- [ ] Update README and parity docs only after watched visual artifacts are accepted.
 
 ## Completed Slice: Locked Presets And Warnings
 
