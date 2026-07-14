@@ -69,6 +69,13 @@ function Get-SourceValue {
     return $null
 }
 
+function Test-SourceBranchReady {
+    param($Summary)
+
+    $branch = Get-SourceValue -Summary $Summary -Name "branch"
+    return -not [string]::IsNullOrWhiteSpace($branch) -and $branch -eq "main"
+}
+
 function New-Slot {
     param(
         [string]$Id,
@@ -122,12 +129,27 @@ $acceptedFinalSummaries = @()
 $unmatchedAcceptedFinalEvidence = @()
 $ambiguousAcceptedFinalEvidence = @()
 $duplicateAcceptedFinalEvidence = @()
+$nonMainAcceptedFinalEvidence = @()
 foreach ($summary in $acceptedSummaries) {
     if (-not (Test-FinalVisualEvidence -Summary $summary)) {
         continue
     }
 
     $acceptedFinalSummaries += $summary
+    if (-not (Test-SourceBranchReady -Summary $summary)) {
+        $nonMainAcceptedFinalEvidence += [pscustomobject]@{
+            bundle = Split-Path -Parent $summary.summaryPath
+            label = $summary.label
+            sourceBranch = Get-SourceValue -Summary $summary -Name "branch"
+            sourceCommit = Get-SourceValue -Summary $summary -Name "commit"
+            sourceShortCommit = Get-SourceValue -Summary $summary -Name "shortCommit"
+            mode = $summary.launch.mode
+            roiSource = $summary.launch.roiSource
+            visualClaim = $summary.visualReview.visualClaim
+            reason = "accepted final evidence was not captured from main"
+        }
+    }
+
     $text = Get-SummaryText -Summary $summary
     $roiPassed = Test-GatePassed -Summary $summary -Gate "roiMeasurement"
     $rendererPassed = Test-GatePassed -Summary $summary -Gate "rendererDiagnostics"
@@ -204,14 +226,16 @@ $presetDocsEvidenceClean = (
     $presetVisualSlotsPresent -and
     $unmatchedAcceptedFinalEvidence.Count -eq 0 -and
     $ambiguousAcceptedFinalEvidence.Count -eq 0 -and
-    $duplicateAcceptedFinalEvidence.Count -eq 0
+    $duplicateAcceptedFinalEvidence.Count -eq 0 -and
+    $nonMainAcceptedFinalEvidence.Count -eq 0
 )
 $allCloseoutEvidencePresent = ($missing.Count -eq 0)
 $allCloseoutEvidenceClean = (
     $allCloseoutEvidencePresent -and
     $unmatchedAcceptedFinalEvidence.Count -eq 0 -and
     $ambiguousAcceptedFinalEvidence.Count -eq 0 -and
-    $duplicateAcceptedFinalEvidence.Count -eq 0
+    $duplicateAcceptedFinalEvidence.Count -eq 0 -and
+    $nonMainAcceptedFinalEvidence.Count -eq 0
 )
 $result = [pscustomobject]@{
     evidenceRoot = if ($rootPath) { $rootPath.Path } else { $EvidenceRoot }
@@ -220,6 +244,7 @@ $result = [pscustomobject]@{
     unmatchedAcceptedFinalEvidence = $unmatchedAcceptedFinalEvidence
     ambiguousAcceptedFinalEvidence = $ambiguousAcceptedFinalEvidence
     duplicateAcceptedFinalEvidence = $duplicateAcceptedFinalEvidence
+    nonMainAcceptedFinalEvidence = $nonMainAcceptedFinalEvidence
     slots = $slotList
     missing = $missing
     presetVisualSlotsPresent = $presetVisualSlotsPresent
@@ -239,6 +264,7 @@ if ($Json) {
     Write-Output "Unmatched accepted final evidence: $(@($result.unmatchedAcceptedFinalEvidence).Count)"
     Write-Output "Ambiguous accepted final evidence: $(@($result.ambiguousAcceptedFinalEvidence).Count)"
     Write-Output "Duplicate accepted final evidence: $(@($result.duplicateAcceptedFinalEvidence).Count)"
+    Write-Output "Non-main accepted final evidence: $(@($result.nonMainAcceptedFinalEvidence).Count)"
     Write-Output ""
     foreach ($slot in $slotList) {
         $mark = if ($slot.satisfied) { "[x]" } else { "[ ]" }
@@ -296,6 +322,17 @@ if ($Json) {
             if (-not [string]::IsNullOrWhiteSpace($evidence.originalSourceShortCommit) -or -not [string]::IsNullOrWhiteSpace($evidence.originalSourceBranch)) {
                 Write-Output "    Original source: $($evidence.originalSourceShortCommit) on $($evidence.originalSourceBranch)"
             }
+        }
+    }
+    if (@($result.nonMainAcceptedFinalEvidence).Count -gt 0) {
+        Write-Output ""
+        Write-Output "Non-main accepted final evidence:"
+        foreach ($evidence in @($result.nonMainAcceptedFinalEvidence)) {
+            Write-Output "- $($evidence.label): $($evidence.bundle)"
+            if (-not [string]::IsNullOrWhiteSpace($evidence.sourceShortCommit) -or -not [string]::IsNullOrWhiteSpace($evidence.sourceBranch)) {
+                Write-Output "    Source: $($evidence.sourceShortCommit) on $($evidence.sourceBranch)"
+            }
+            Write-Output "    $($evidence.reason)"
         }
     }
 }

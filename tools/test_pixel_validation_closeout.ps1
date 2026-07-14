@@ -147,6 +147,7 @@ try {
     Assert-Equal -Actual $result.unmatchedAcceptedFinalEvidence[0].label -Expected "accepted-unknown-final" -Message "Unmatched evidence label mismatch."
     Assert-Equal -Actual @($result.ambiguousAcceptedFinalEvidence).Count -Expected 0 -Message "Known closeout fixtures should not be ambiguous."
     Assert-Equal -Actual @($result.duplicateAcceptedFinalEvidence).Count -Expected 0 -Message "Known closeout fixtures should not duplicate slots."
+    Assert-Equal -Actual @($result.nonMainAcceptedFinalEvidence).Count -Expected 0 -Message "Known closeout fixtures should come from main."
     Assert-Equal -Actual @($result.missing).Count -Expected 0 -Message "All slots should be satisfied."
     Assert-Equal -Actual $result.presetVisualSlotsPresent -Expected $true -Message "Preset visual slots should be present when four preset slots pass."
     Assert-Equal -Actual $result.presetDocsEvidenceClean -Expected $false -Message "Unmatched evidence should prevent preset docs closeout."
@@ -240,6 +241,25 @@ try {
     Assert-Equal -Actual $classifiedPresetDocsExitCode -Expected 0 -Message "FailOnPresetDocsNotReady should pass when preset slots are satisfied and evidence is clean."
     $classifiedCloseoutReadyExitCode = Invoke-Closeout -EvidenceRoot $classifiedRoot -FailOnCloseoutNotReady
     Assert-Equal -Actual $classifiedCloseoutReadyExitCode -Expected 0 -Message "FailOnCloseoutNotReady should pass when all accepted evidence maps cleanly to slots."
+
+    $offMainRoot = Join-Path $root "off-main"
+    New-Item -ItemType Directory -Path $offMainRoot -Force | Out-Null
+    Write-Summary -Root $offMainRoot -Name "manual" -Label "manual-roi-final" -Mode "Tremor" -RoiSource "Manual" -Claim "Manual ROI outline overlaps known target" -Roi $true -Renderer $false -Phase $false
+    Write-Summary -Root $offMainRoot -Name "auto" -Label "auto-face-final" -Mode "Pulse" -RoiSource "Auto" -Claim "Automatic face skin ROI overlaps visible face" -Roi $true -Renderer $false -Phase $false
+    Write-Summary -Root $offMainRoot -Name "pulse" -Label "live-linear-pulse-final" -Mode "Pulse" -RoiSource "FullFrame" -Claim "Pulse full-frame live linear visual parity" -Roi $false -Renderer $true -Phase $false -SourceBranch "codex/test"
+    Write-Summary -Root $offMainRoot -Name "breathing" -Label "live-linear-breathing-final" -Mode "Breathing" -RoiSource "FullFrame" -Claim "Breathing slow motion live linear visual parity" -Roi $false -Renderer $true -Phase $false
+    Write-Summary -Root $offMainRoot -Name "object" -Label "live-phase-object-final" -Mode "Tremor" -RoiSource "Manual" -Claim "Object vibration edge-localized phase visual parity" -Roi $false -Renderer $false -Phase $true
+    Write-Summary -Root $offMainRoot -Name "fast" -Label "live-phase-fast-tremor-final" -Mode "Tremor" -RoiSource "Manual" -Claim "Fast tremor edge-localized phase visual parity" -Roi $false -Renderer $false -Phase $true
+    $offMain = & (Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1") -EvidenceRoot $offMainRoot -Json | ConvertFrom-Json
+    Assert-Equal -Actual @($offMain.nonMainAcceptedFinalEvidence).Count -Expected 1 -Message "Off-main accepted final evidence should be reported."
+    Assert-Equal -Actual $offMain.nonMainAcceptedFinalEvidence[0].sourceBranch -Expected "codex/test" -Message "Off-main evidence should report source branch."
+    Assert-Equal -Actual $offMain.allCloseoutEvidencePresent -Expected $true -Message "Off-main fixture should still have all closeout slots present."
+    Assert-Equal -Actual $offMain.allCloseoutEvidenceClean -Expected $false -Message "Off-main evidence should prevent clean roadmap closeout."
+    Assert-Equal -Actual $offMain.readyForPresetDocs -Expected $false -Message "Off-main evidence should prevent preset docs readiness."
+    $offMainCloseoutReadyExitCode = Invoke-Closeout -EvidenceRoot $offMainRoot -FailOnCloseoutNotReady
+    Assert-Equal -Actual $offMainCloseoutReadyExitCode -Expected 7 -Message "FailOnCloseoutNotReady should fail on off-main accepted evidence."
+    $offMainPresetDocsExitCode = Invoke-Closeout -EvidenceRoot $offMainRoot -FailOnPresetDocsNotReady
+    Assert-Equal -Actual $offMainPresetDocsExitCode -Expected 4 -Message "FailOnPresetDocsNotReady should fail on off-main accepted preset evidence."
 } finally {
     Remove-Item -LiteralPath $root -Recurse -Force
 }
