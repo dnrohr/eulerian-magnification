@@ -34,15 +34,22 @@ function Test-FinalVisualEvidence {
 function Get-SummaryText {
     param($Summary)
 
-    $parts = @(
+    $parts = @()
+    foreach ($value in @(
         $Summary.label,
-        $Summary.launch.mode,
         $Summary.launch.roiSource,
         $Summary.visualReview.targetDescription,
-        $Summary.visualReview.visualClaim,
-        @($Summary.uiDump.rendererLabels) -join " ",
-        @($Summary.uiDump.phaseLabels) -join " "
-    )
+        $Summary.visualReview.visualClaim
+    )) {
+        if (-not [string]::IsNullOrWhiteSpace($value)) {
+            $parts += [string]$value
+        }
+    }
+    foreach ($value in @($Summary.uiDump.rendererLabels) + @($Summary.uiDump.phaseLabels)) {
+        if (-not [string]::IsNullOrWhiteSpace($value)) {
+            $parts += [string]$value
+        }
+    }
 
     return (($parts | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }) -join " ").ToLowerInvariant()
 }

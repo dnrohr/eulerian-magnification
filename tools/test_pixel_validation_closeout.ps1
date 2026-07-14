@@ -148,6 +148,20 @@ try {
     $partialPresetDocsExitCode = Invoke-Closeout -EvidenceRoot $partialRoot -FailOnPresetDocsNotReady
     Assert-Equal -Actual $partialPresetDocsExitCode -Expected 4 -Message "FailOnPresetDocsNotReady should exit 4 until all preset visual slots are satisfied."
 
+    $objectOnlyRoot = Join-Path $root "object-only"
+    New-Item -ItemType Directory -Path $objectOnlyRoot -Force | Out-Null
+    Write-Summary -Root $objectOnlyRoot -Name "object" -Label "live-phase-object-final" -Mode "Tremor" -RoiSource "Manual" -Claim "Object vibration edge-localized phase visual parity" -Roi $false -Renderer $false -Phase $true
+    $objectOnly = & (Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1") -EvidenceRoot $objectOnlyRoot -Json | ConvertFrom-Json
+    Assert-Equal -Actual ($objectOnly.slots | Where-Object { $_.id -eq "objectPhase" } | Select-Object -ExpandProperty satisfied) -Expected $true -Message "Object phase evidence should satisfy the object slot."
+    Assert-Equal -Actual ($objectOnly.slots | Where-Object { $_.id -eq "fastTremorPhase" } | Select-Object -ExpandProperty satisfied) -Expected $false -Message "Object phase evidence must not satisfy fast tremor just because Mode is Tremor."
+
+    $fastOnlyRoot = Join-Path $root "fast-only"
+    New-Item -ItemType Directory -Path $fastOnlyRoot -Force | Out-Null
+    Write-Summary -Root $fastOnlyRoot -Name "fast" -Label "live-phase-fast-tremor-final" -Mode "Tremor" -RoiSource "Manual" -Claim "Fast tremor edge-localized phase visual parity" -Roi $false -Renderer $false -Phase $true
+    $fastOnly = & (Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1") -EvidenceRoot $fastOnlyRoot -Json | ConvertFrom-Json
+    Assert-Equal -Actual ($fastOnly.slots | Where-Object { $_.id -eq "fastTremorPhase" } | Select-Object -ExpandProperty satisfied) -Expected $true -Message "Fast tremor evidence should satisfy the fast tremor slot."
+    Assert-Equal -Actual ($fastOnly.slots | Where-Object { $_.id -eq "objectPhase" } | Select-Object -ExpandProperty satisfied) -Expected $false -Message "Fast tremor evidence must not satisfy the object slot."
+
     $completeExitCode = Invoke-Closeout -EvidenceRoot $root -FailOnMissing
     Assert-Equal -Actual $completeExitCode -Expected 0 -Message "FailOnMissing should exit 0 when all closeout slots are satisfied."
 

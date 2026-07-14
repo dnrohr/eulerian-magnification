@@ -361,6 +361,8 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - The closeout summary now includes protocol paths and next-command hints for
   missing slots, so the next Pixel session can continue directly from the
   failed closeout report.
+- Tightened closeout classification so the shared `Tremor` runtime mode cannot
+  make Object vibration evidence satisfy the separate Fast tremor slot.
 - Updated the live visual validation guide to use `Tremor` for the public Fast
   Motion / Motion path. `ObjectVibration` remains accepted only for internal
   compatibility and parity experiments.
