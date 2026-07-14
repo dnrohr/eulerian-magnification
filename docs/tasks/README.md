@@ -98,6 +98,10 @@ command templates:
 .\tools\show_next_pixel_validation_plan.ps1
 ```
 
+The plan includes the current closeout blocker count and next commands from
+missing evidence slots. Pass `-EvidenceRoot <path>` to review a specific
+live-validation export folder.
+
 After a connected Pixel session, summarize which accepted evidence bundles are
 ready to close roadmap items. The closeout summary includes the accepted
 source branch/commit, screenshot/screenrecord SHA-256 values, and expected

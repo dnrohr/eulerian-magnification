@@ -478,6 +478,9 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - The closeout summary now includes `closeoutBlockers`, a compact JSON/text
   checklist of missing slots and accepted-evidence issues that still block
   roadmap or README/parity closeout.
+- The Pixel validation planner now includes the current closeout blocker count
+  and missing-slot next commands, with `-EvidenceRoot` support for reviewing a
+  specific live-validation export folder.
 
 ## Remaining
 

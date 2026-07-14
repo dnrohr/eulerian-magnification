@@ -1,10 +1,12 @@
 param(
+    [string]$EvidenceRoot = "sample-videos\exports\live-validation",
     [switch]$Json
 )
 
 $ErrorActionPreference = "Stop"
 
 $roadmap = (& (Join-Path $PSScriptRoot "summarize_roadmap_status.ps1") -Json | ConvertFrom-Json)
+$closeout = (& (Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1") -EvidenceRoot $EvidenceRoot -Json | ConvertFrom-Json)
 
 $validationGroups = @(
     [pscustomobject]@{
@@ -148,6 +150,15 @@ $result = [pscustomobject]@{
     }
     coveredMilestones = $coveredMilestones
     missingMilestones = $missingMilestones
+    currentCloseout = [pscustomobject]@{
+        evidenceRoot = $closeout.evidenceRoot
+        acceptedFinalEvidenceCount = $closeout.acceptedFinalEvidenceCount
+        allCloseoutEvidencePresent = $closeout.allCloseoutEvidencePresent
+        allCloseoutEvidenceClean = $closeout.allCloseoutEvidenceClean
+        readyForPresetDocs = $closeout.readyForPresetDocs
+        blockerCount = @($closeout.closeoutBlockers).Count
+        blockers = $closeout.closeoutBlockers
+    }
     validationGroups = $validationGroups
 }
 
@@ -158,6 +169,16 @@ if ($Json) {
 
 Write-Output "Next Pixel validation plan"
 Write-Output "Roadmap: $($result.roadmap.complete)/$($result.roadmap.total) complete; $($result.roadmap.inProgress) in progress."
+Write-Output "Evidence root: $($result.currentCloseout.evidenceRoot)"
+Write-Output "Current closeout blockers: $($result.currentCloseout.blockerCount)"
+foreach ($blocker in @($result.currentCloseout.blockers)) {
+    Write-Output "- $($blocker.kind): $($blocker.message)"
+    if ($blocker.kind -eq "missingSlots") {
+        foreach ($item in @($blocker.items)) {
+            Write-Output "    Next $($item.id): $($item.nextCommand)"
+        }
+    }
+}
 
 if ($missingMilestones.Count -gt 0) {
     Write-Output "Warning: missing validation plan coverage for milestone(s): $($missingMilestones -join ', ')"

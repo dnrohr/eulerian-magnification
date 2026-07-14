@@ -23,13 +23,25 @@ function Assert-Equal {
     }
 }
 
-$plan = & (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1") -Json | ConvertFrom-Json
-$closeout = & (Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1") -EvidenceRoot (Join-Path ([System.IO.Path]::GetTempPath()) "eulerian-missing-closeout-$([guid]::NewGuid().ToString('N'))") -Json | ConvertFrom-Json
+$missingCloseoutRoot = Join-Path ([System.IO.Path]::GetTempPath()) "eulerian-missing-closeout-$([guid]::NewGuid().ToString('N'))"
+$plan = & (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1") -EvidenceRoot $missingCloseoutRoot -Json | ConvertFrom-Json
+$planText = & (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1") -EvidenceRoot $missingCloseoutRoot
+$closeout = & (Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1") -EvidenceRoot $missingCloseoutRoot -Json | ConvertFrom-Json
 
 Assert-Equal -Actual $plan.roadmap.total -Expected 47 -Message "Roadmap total mismatch."
 Assert-Equal -Actual $plan.roadmap.complete -Expected 41 -Message "Complete milestone count mismatch."
 Assert-Equal -Actual $plan.roadmap.inProgress -Expected 6 -Message "In-progress milestone count mismatch."
 Assert-Equal -Actual @($plan.missingMilestones).Count -Expected 0 -Message "Every in-progress milestone should have validation-plan coverage."
+Assert-Equal -Actual $plan.currentCloseout.evidenceRoot -Expected $missingCloseoutRoot -Message "Validation plan should pass through the evidence root used for closeout."
+Assert-Equal -Actual $plan.currentCloseout.acceptedFinalEvidenceCount -Expected 0 -Message "Missing evidence root should have no accepted final evidence."
+Assert-Equal -Actual $plan.currentCloseout.allCloseoutEvidencePresent -Expected $false -Message "Missing evidence root should not have all closeout evidence."
+Assert-Equal -Actual $plan.currentCloseout.allCloseoutEvidenceClean -Expected $false -Message "Missing evidence root should not be clean."
+Assert-Equal -Actual $plan.currentCloseout.readyForPresetDocs -Expected $false -Message "Missing evidence root should not be ready for preset docs."
+Assert-Equal -Actual $plan.currentCloseout.blockerCount -Expected 1 -Message "Missing evidence root should expose one closeout blocker."
+Assert-Equal -Actual $plan.currentCloseout.blockers[0].kind -Expected "missingSlots" -Message "Missing evidence root should expose the missing-slots blocker."
+Assert-Equal -Actual $plan.currentCloseout.blockers[0].count -Expected 6 -Message "Missing-slots blocker should include every closeout slot."
+Assert-True -Condition (($planText -join "`n").Contains("Current closeout blockers: 1")) -Message "Text plan should print current closeout blocker count."
+Assert-True -Condition (($planText -join "`n").Contains("Next manualRoi: manual-roi-known-target-setup")) -Message "Text plan should print next commands from missing closeout slots."
 
 $covered = @($plan.coveredMilestones)
 foreach ($milestone in @("M", "U", "AE", "AP", "AR", "AT")) {
