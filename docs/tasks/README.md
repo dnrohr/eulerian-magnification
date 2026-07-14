@@ -60,3 +60,15 @@ This backlog is split from `C:\Users\dnroh\Downloads\ROADMAP.md` into commit-siz
 - Relevant tests or build checks pass locally, or the reason they cannot run is documented.
 - User-facing docs or experiment notes are updated when behavior changes.
 - The commit is pushed to `main`.
+
+## Status Audit
+
+Run the roadmap status summarizer when checking what remains:
+
+```powershell
+.\tools\summarize_roadmap_status.ps1
+```
+
+The script reads this index, counts milestone statuses, lists in-progress
+milestones, flags likely phone/visual-gated work, and reports any mismatch
+between this table and a milestone file's own `Status:` line.
