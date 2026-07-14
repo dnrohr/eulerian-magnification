@@ -156,6 +156,69 @@ dirty worktree, if the bundle is still only `target_visible_unvalidated`, if the
 camera cadence is missing or low, or if known-good evidence is requested while
 warnings remain.
 
+For the separate Fast tremor parity slot, use a high-contrast fast-motion target
+and keep the label, target description, and visual claim distinct from Object
+vibration. The setup command is:
+
+```powershell
+.\tools\capture_live_validation_evidence.ps1 `
+  -Label "live-phase-fast-tremor-setup" `
+  -WaitForThermalReady `
+  -ThermalReadyBelowStatus 4 `
+  -ThermalReadySamples 2 `
+  -ThermalReadyTimeoutSeconds 900 `
+  -ThermalReadyPollSeconds 30 `
+  -Mode Tremor `
+  -View Split `
+  -RoiSource Manual `
+  -ManualRoi "0.25,0.25,0.75,0.75" `
+  -GlPreview $true `
+  -Controls $true `
+  -Panel Debug `
+  -ScreenRecordSeconds 15 `
+  -RequireScreenrecord `
+  -RequireThermalReady `
+  -RequireCameraFps `
+  -RequireFocusedApp `
+  -RequirePhaseDiagnostics `
+  -RequireEvidenceVerdict target_visible_unvalidated `
+  -RequireUiText "Renderer: Live phase motion","GL renderer: Live phase motion","phase:" `
+  -TargetDescription "fast tremor target with a high-contrast edge inside manual ROI" `
+  -VisualClaim "Live phase Split view shows edge-localized amplified fast tremor without uniform ROI flashing" `
+  -TargetVisible $true `
+  -VisualValidated $false `
+  -OperatorNotes "Set VisualValidated true only after inspecting the recording against the Fast tremor pass criteria." `
+  -Summarize
+```
+
+After inspection, close the Fast tremor slot with:
+
+```powershell
+.\tools\capture_live_validation_evidence.ps1 `
+  -Label "live-phase-fast-tremor-final" `
+  -WaitForThermalReady `
+  -ThermalReadyBelowStatus 4 `
+  -ThermalReadySamples 2 `
+  -ThermalReadyTimeoutSeconds 900 `
+  -ThermalReadyPollSeconds 30 `
+  -Mode Tremor `
+  -View Split `
+  -RoiSource Manual `
+  -ManualRoi "0.25,0.25,0.75,0.75" `
+  -GlPreview $true `
+  -Controls $false `
+  -ScreenRecordSeconds 15 `
+  -RequirePhaseDiagnostics `
+  -RequireUiText "Renderer: Live phase motion","GL renderer: Live phase motion","phase:" `
+  -TargetDescription "fast tremor target with a high-contrast edge inside manual ROI" `
+  -VisualClaim "Live phase Split view shows accepted edge-localized amplified fast tremor without uniform ROI flashing" `
+  -TargetVisible $true `
+  -VisualValidated $true `
+  -OperatorNotes "Accepted only if the recording shows edge-localized amplified fast tremor, not uniform ROI flashing or color-only change." `
+  -RequireFinalVisualEvidence `
+  -Summarize
+```
+
 The generated `evidence_summary.json` must be checked before the run can count:
 
 - `source.dirty` is `false`.

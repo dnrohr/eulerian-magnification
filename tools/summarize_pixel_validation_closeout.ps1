@@ -84,7 +84,7 @@ $slots = [ordered]@{
     pulseLinear = New-Slot -Id "pulseLinear" -Title "Pulse live linear visual parity" -Milestones @("AE", "AP", "AT") -RequiredEvidence "visual_validated final evidence with renderer diagnostics" -Protocol "docs/experiments/pixel8a_live_linear_validation.md" -NextCommand "live-linear-pulse-setup, then live-linear-pulse-final"
     breathingLinear = New-Slot -Id "breathingLinear" -Title "Breathing live linear visual parity" -Milestones @("AE", "AP", "AT") -RequiredEvidence "visual_validated final evidence with renderer diagnostics" -Protocol "docs/experiments/pixel8a_live_linear_validation.md" -NextCommand "live-linear-breathing-template"
     objectPhase = New-Slot -Id "objectPhase" -Title "Object vibration live phase visual parity" -Milestones @("AR", "AT") -RequiredEvidence "visual_validated final evidence with phase diagnostics" -Protocol "docs/experiments/pixel8a_live_phase_validation.md" -NextCommand "live-phase-object-setup, then live-phase-object-final"
-    fastTremorPhase = New-Slot -Id "fastTremorPhase" -Title "Fast tremor live phase visual parity" -Milestones @("AR", "AT") -RequiredEvidence "visual_validated final evidence with phase diagnostics" -Protocol "docs/experiments/pixel8a_live_phase_validation.md" -NextCommand "live-phase-object-setup/final with Fast tremor target notes"
+    fastTremorPhase = New-Slot -Id "fastTremorPhase" -Title "Fast tremor live phase visual parity" -Milestones @("AR", "AT") -RequiredEvidence "visual_validated final evidence with phase diagnostics" -Protocol "docs/experiments/pixel8a_live_phase_validation.md" -NextCommand "live-phase-fast-tremor-setup, then live-phase-fast-tremor-final"
 }
 
 $rootPath = Resolve-Path -LiteralPath $EvidenceRoot -ErrorAction SilentlyContinue

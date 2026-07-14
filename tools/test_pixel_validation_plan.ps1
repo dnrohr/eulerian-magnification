@@ -53,6 +53,8 @@ Assert-True -Condition ($roi.finalEvidence.Contains("-RequireFinalVisualEvidence
 Assert-True -Condition ($linear.finalEvidence.Contains("-RequireRendererDiagnostics")) -Message "Linear final evidence should require renderer diagnostics."
 Assert-True -Condition ($phase.finalEvidence.Contains("-RequirePhaseDiagnostics")) -Message "Phase final evidence should require phase diagnostics."
 Assert-True -Condition ($preset.finalEvidence.Contains("Update README")) -Message "Preset parity plan should keep docs updates after accepted artifacts."
+Assert-True -Condition (@($phase.commands | Where-Object { $_.name -eq "live-phase-fast-tremor-setup" }).Count -eq 1) -Message "Phase plan should include explicit Fast tremor setup command."
+Assert-True -Condition (@($phase.commands | Where-Object { $_.name -eq "live-phase-fast-tremor-final" }).Count -eq 1) -Message "Phase plan should include explicit Fast tremor final command."
 
 foreach ($group in $groups) {
     Assert-True -Condition (@($group.commands).Count -gt 0) -Message "Validation group '$($group.id)' should include command templates."
@@ -72,6 +74,11 @@ foreach ($expected in @(
 )) {
     Assert-True -Condition (($allCommands -join "`n").Contains($expected)) -Message "Validation commands should include '$expected'."
 }
+
+$phaseCommandText = @($phase.commands | ForEach-Object { $_.command }) -join "`n"
+Assert-True -Condition ($phaseCommandText.Contains("live-phase-object-final")) -Message "Phase commands should include explicit Object final label."
+Assert-True -Condition ($phaseCommandText.Contains("live-phase-fast-tremor-final")) -Message "Phase commands should include explicit Fast tremor final label."
+Assert-True -Condition ($phaseCommandText.Contains("fast tremor target")) -Message "Fast tremor command should carry a distinct target description."
 
 $captureScript = Join-Path $PSScriptRoot "capture_live_validation_evidence.ps1"
 $captureParameters = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)

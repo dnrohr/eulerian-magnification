@@ -71,6 +71,7 @@ Assert-DocContains -Path $phaseDoc -Expected "-RoiSource Manual" -Message "Live 
 Assert-DocContains -Path $phaseDoc -Expected "-ManualRoi" -Message "Live phase protocol must provide a manual ROI command."
 Assert-DocContains -Path $phaseDoc -Expected "-RequirePhaseDiagnostics" -Message "Live phase protocol must require phase diagnostics."
 Assert-DocContains -Path $phaseDoc -Expected "-RequireFinalVisualEvidence" -Message "Live phase protocol must include final visual evidence gates."
+Assert-DocContains -Path $phaseDoc -Expected "live-phase-fast-tremor-final" -Message "Live phase protocol must include explicit Fast tremor final evidence."
 Assert-DocContains -Path $phaseDoc -Expected "target_visible_unvalidated" -Message "Live phase setup should stop at target-visible review."
 
 Write-Output "Live validation protocol docs self-test passed."
