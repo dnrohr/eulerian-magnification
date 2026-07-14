@@ -549,10 +549,6 @@ if ($visualReview.targetVisible -eq $true -and $visualReview.visualValidated -ne
 if ($RequireVisualValidation -and $visualReview.countsAsVisualValidation -ne $true) {
     $warnings += "visual validation required but evidence verdict does not count as visual validation"
 }
-$warningCountBeforeNoWarningsGate = $warnings.Count
-if ($RequireNoWarnings -and $warningCountBeforeNoWarningsGate -gt 0) {
-    $warnings += "no warnings required but summary has $warningCountBeforeNoWarningsGate warning(s)"
-}
 
 $roiMeasurement = $null
 if (Test-Path -LiteralPath $roiMeasurementPath) {
@@ -585,6 +581,11 @@ if ($screenshotInfo -and $screenshotInfo.content.nonBlank -ne $true) {
 }
 if ($screenshotInfo -and $screenshotInfo.content.portrait -ne $true) {
     $warnings += "screenshot is not portrait-oriented"
+}
+
+$warningCountBeforeNoWarningsGate = $warnings.Count
+if ($RequireNoWarnings -and $warningCountBeforeNoWarningsGate -gt 0) {
+    $warnings += "no warnings required but summary has $warningCountBeforeNoWarningsGate warning(s)"
 }
 
 $passedRuntimeSmoke = if ($aborted) {

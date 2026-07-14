@@ -76,6 +76,26 @@ function Write-TestScreenshot {
     }
 }
 
+function Write-TestLandscapeScreenshot {
+    param([string]$Path)
+
+    Add-Type -AssemblyName System.Drawing
+    $bitmap = [System.Drawing.Bitmap]::new(96, 64)
+    try {
+        for ($y = 0; $y -lt $bitmap.Height; $y++) {
+            for ($x = 0; $x -lt $bitmap.Width; $x++) {
+                $red = [Math]::Min(255, 30 + ($x * 2))
+                $green = [Math]::Min(255, 80 + ($y * 3))
+                $blue = 150
+                $bitmap.SetPixel($x, $y, [System.Drawing.Color]::FromArgb($red, $green, $blue))
+            }
+        }
+        $bitmap.Save($Path, [System.Drawing.Imaging.ImageFormat]::Png)
+    } finally {
+        $bitmap.Dispose()
+    }
+}
+
 $root = if ([string]::IsNullOrWhiteSpace($OutputRoot)) {
     Join-Path ([System.IO.Path]::GetTempPath()) ("eulerian-live-summary-test-" + [Guid]::NewGuid().ToString("N"))
 } else {
@@ -313,6 +333,21 @@ Number Missed Vsync: 0
     Assert-Equal -Actual $warningGateSummary.requiredGates.noWarnings.passed -Expected $false -Message "No-warnings gate should fail."
     Assert-Equal -Actual $warningGateSummary.requiredGates.noWarnings.warningCount -Expected 1 -Message "No-warnings gate warning count mismatch."
     Assert-True -Condition ("no warnings required but summary has 1 warning(s)" -in @($warningGateSummary.warnings)) -Message "No-warnings gate warning missing."
+
+    $lateWarningBundle = Join-Path $root "late-warning-gate"
+    Copy-Item -LiteralPath $warningGateBundle -Destination $lateWarningBundle -Recurse
+    Write-TestLandscapeScreenshot -Path (Join-Path $lateWarningBundle "screenshot.png")
+    $lateWarningManifestPath = Join-Path $lateWarningBundle "manifest.json"
+    $lateWarningManifest = Get-Content -LiteralPath $lateWarningManifestPath -Raw | ConvertFrom-Json
+    $lateWarningManifest.warnings = @()
+    $lateWarningManifest | ConvertTo-Json -Depth 8 | Out-File -LiteralPath $lateWarningManifestPath -Encoding utf8
+
+    $lateWarningExitCode = Invoke-Summary -BundlePath $lateWarningBundle -RequireCleanSource -RequireNoWarnings
+    $lateWarningSummary = Get-Content -LiteralPath (Join-Path $lateWarningBundle "evidence_summary.json") -Raw | ConvertFrom-Json
+    Assert-Equal -Actual $lateWarningExitCode -Expected 7 -Message "Late no-warnings gate exit code mismatch."
+    Assert-Equal -Actual $lateWarningSummary.evidenceVerdict.status -Expected "wrong_orientation" -Message "Late warning verdict mismatch."
+    Assert-Equal -Actual $lateWarningSummary.requiredGates.noWarnings.warningCount -Expected 1 -Message "Late no-warnings gate warning count mismatch."
+    Assert-True -Condition ("screenshot is not portrait-oriented" -in @($lateWarningSummary.warnings)) -Message "Late screenshot warning missing."
 
     Write-Output "Live validation summary self-test passed: $root"
 } finally {

@@ -172,6 +172,16 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   warning. This helps separate exploratory diagnostics from release-quality
   visual evidence without needing the physical Pixel for this slice.
 
+## Supporting Slice: Complete Warning-Free Gate Coverage
+
+- The no-warnings gate now evaluates after ROI measurement and screenshot
+  content/orientation checks add their warnings.
+- This prevents final known-good evidence from passing `-RequireNoWarnings`
+  when a late artifact-derived warning, such as wrong screenshot orientation,
+  was generated during summarization.
+- The summary self-test now covers a landscape screenshot bundle to verify that
+  late screenshot warnings are included in the no-warnings gate.
+
 ## Supporting Slice: Aborted Evidence Gate Consistency
 
 - The capture script now uses one shared summary invocation path for normal and
