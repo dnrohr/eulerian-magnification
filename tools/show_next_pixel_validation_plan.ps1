@@ -159,7 +159,9 @@ foreach ($group in $validationGroups) {
 
 $recommendedCaptures = @()
 $missingSlotBlocker = @($closeout.closeoutBlockers | Where-Object { $_.kind -eq "missingSlots" } | Select-Object -First 1)
+$availableSlots = @($missingSlotBlocker.items | ForEach-Object { $_.id })
 $requestedSlots = @($Slot | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+$invalidRequestedSlots = @($requestedSlots | Where-Object { $_ -notin $availableSlots })
 foreach ($missingSlot in @($missingSlotBlocker.items)) {
     if ($requestedSlots.Count -gt 0 -and $missingSlot.id -notin $requestedSlots) {
         continue
@@ -206,6 +208,9 @@ $result = [pscustomobject]@{
         blockerCount = @($closeout.closeoutBlockers).Count
         blockers = $closeout.closeoutBlockers
     }
+    availableSlots = $availableSlots
+    requestedSlots = $requestedSlots
+    invalidRequestedSlots = $invalidRequestedSlots
     recommendedCaptures = $recommendedCaptures
     validationGroups = $validationGroups
 }
@@ -219,6 +224,12 @@ Write-Output "Next Pixel validation plan"
 Write-Output "Roadmap: $($result.roadmap.complete)/$($result.roadmap.total) complete; $($result.roadmap.inProgress) in progress."
 Write-Output "Evidence root: $($result.currentCloseout.evidenceRoot)"
 Write-Output "Current closeout blockers: $($result.currentCloseout.blockerCount)"
+if (@($result.availableSlots).Count -gt 0) {
+    Write-Output "Available missing slots: $($result.availableSlots -join ', ')"
+}
+if (@($result.invalidRequestedSlots).Count -gt 0) {
+    Write-Output "Warning: requested slot(s) not currently missing or unknown: $($result.invalidRequestedSlots -join ', ')"
+}
 foreach ($blocker in @($result.currentCloseout.blockers)) {
     Write-Output "- $($blocker.kind): $($blocker.message)"
     if ($blocker.kind -eq "missingSlots") {

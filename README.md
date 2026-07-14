@@ -313,7 +313,8 @@ The plan includes the current closeout blocker count and next commands from
 missing evidence slots. Pass `-EvidenceRoot <path>` to review a specific
 live-validation export folder, or `-NextOnly` to print only the recommended captures
 needed by the current closeout blockers. Add `-Slot pulseLinear` or another
-closeout slot id to focus the recommended capture queue on one validation target.
+closeout slot id to focus the recommended capture queue on one validation target;
+the plan prints available missing slots when a slot filter does not match.
 
 After a connected Pixel validation pass, summarize which accepted evidence
 bundles are ready to close the remaining roadmap items. The summary includes

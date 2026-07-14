@@ -486,6 +486,8 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   current closeout blockers.
 - Added `-Slot <slotId>` filtering to the Pixel validation planner so the
   recommended capture queue can focus on one missing closeout slot.
+- The planner now reports available missing slots and invalid requested slots
+  so mistyped slot filters do not silently produce an empty capture queue.
 
 ## Remaining
 

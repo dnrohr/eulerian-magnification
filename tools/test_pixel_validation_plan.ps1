@@ -29,6 +29,8 @@ $planText = & (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1") -E
 $nextOnlyText = & (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1") -EvidenceRoot $missingCloseoutRoot -NextOnly
 $pulseOnlyPlan = & (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1") -EvidenceRoot $missingCloseoutRoot -Slot pulseLinear -Json | ConvertFrom-Json
 $pulseOnlyText = & (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1") -EvidenceRoot $missingCloseoutRoot -Slot pulseLinear -NextOnly
+$invalidSlotPlan = & (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1") -EvidenceRoot $missingCloseoutRoot -Slot notARealSlot -Json | ConvertFrom-Json
+$invalidSlotText = & (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1") -EvidenceRoot $missingCloseoutRoot -Slot notARealSlot -NextOnly
 $closeout = & (Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1") -EvidenceRoot $missingCloseoutRoot -Json | ConvertFrom-Json
 
 Assert-Equal -Actual $plan.roadmap.total -Expected 47 -Message "Roadmap total mismatch."
@@ -43,6 +45,9 @@ Assert-Equal -Actual $plan.currentCloseout.readyForPresetDocs -Expected $false -
 Assert-Equal -Actual $plan.currentCloseout.blockerCount -Expected 1 -Message "Missing evidence root should expose one closeout blocker."
 Assert-Equal -Actual $plan.currentCloseout.blockers[0].kind -Expected "missingSlots" -Message "Missing evidence root should expose the missing-slots blocker."
 Assert-Equal -Actual $plan.currentCloseout.blockers[0].count -Expected 6 -Message "Missing-slots blocker should include every closeout slot."
+Assert-Equal -Actual @($plan.availableSlots).Count -Expected 6 -Message "Plan should expose every currently missing slot id."
+Assert-True -Condition ("pulseLinear" -in @($plan.availableSlots)) -Message "Available slots should include pulseLinear."
+Assert-Equal -Actual @($plan.invalidRequestedSlots).Count -Expected 0 -Message "Unfiltered plan should not report invalid requested slots."
 Assert-Equal -Actual @($plan.recommendedCaptures).Count -Expected 6 -Message "Missing evidence root should recommend one capture sequence per closeout slot."
 Assert-Equal -Actual $plan.recommendedCaptures[0].slot -Expected "manualRoi" -Message "First recommended capture should map to the manual ROI slot."
 Assert-Equal -Actual $plan.recommendedCaptures[0].commands[0].name -Expected "manual-roi-known-target-setup" -Message "Recommended manual ROI capture should start with setup evidence."
@@ -57,8 +62,16 @@ Assert-Equal -Actual @($pulseOnlyPlan.recommendedCaptures).Count -Expected 1 -Me
 Assert-Equal -Actual $pulseOnlyPlan.recommendedCaptures[0].slot -Expected "pulseLinear" -Message "Slot-filtered plan should keep the requested slot."
 Assert-Equal -Actual $pulseOnlyPlan.recommendedCaptures[0].commands[0].name -Expected "live-linear-pulse-setup" -Message "Pulse slot should start with Pulse setup evidence."
 Assert-Equal -Actual $pulseOnlyPlan.recommendedCaptures[0].commands[1].name -Expected "live-linear-pulse-final" -Message "Pulse slot should end with Pulse final evidence."
+Assert-Equal -Actual @($pulseOnlyPlan.requestedSlots).Count -Expected 1 -Message "Slot-filtered plan should expose requested slots."
+Assert-Equal -Actual $pulseOnlyPlan.requestedSlots[0] -Expected "pulseLinear" -Message "Slot-filtered plan should preserve the requested slot id."
+Assert-Equal -Actual @($pulseOnlyPlan.invalidRequestedSlots).Count -Expected 0 -Message "Known slot filters should not be reported invalid."
 Assert-True -Condition (($pulseOnlyText -join "`n").Contains("Pulse live linear visual parity")) -Message "Slot-filtered text should include the requested capture."
 Assert-True -Condition (-not (($pulseOnlyText -join "`n").Contains("Manual ROI known-target alignment"))) -Message "Slot-filtered text should omit unrequested captures."
+Assert-Equal -Actual @($invalidSlotPlan.recommendedCaptures).Count -Expected 0 -Message "Unknown slot filter should not recommend captures."
+Assert-Equal -Actual @($invalidSlotPlan.invalidRequestedSlots).Count -Expected 1 -Message "Unknown slot filter should be reported as invalid."
+Assert-Equal -Actual $invalidSlotPlan.invalidRequestedSlots[0] -Expected "notARealSlot" -Message "Invalid slot report should preserve the requested slot id."
+Assert-True -Condition (($invalidSlotText -join "`n").Contains("Available missing slots:")) -Message "Invalid slot text should print available slots."
+Assert-True -Condition (($invalidSlotText -join "`n").Contains("Warning: requested slot(s) not currently missing or unknown: notARealSlot")) -Message "Invalid slot text should warn about unknown slots."
 
 $covered = @($plan.coveredMilestones)
 foreach ($milestone in @("M", "U", "AE", "AP", "AR", "AT")) {
