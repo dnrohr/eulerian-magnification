@@ -481,6 +481,9 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - The Pixel validation planner now includes the current closeout blocker count
   and missing-slot next commands, with `-EvidenceRoot` support for reviewing a
   specific live-validation export folder.
+- Added `-NextOnly` to the Pixel validation planner so a connected-device
+  operator can print only the recommended setup/final captures needed by the
+  current closeout blockers.
 
 ## Remaining
 

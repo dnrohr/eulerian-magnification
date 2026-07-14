@@ -1,5 +1,6 @@
 param(
     [string]$EvidenceRoot = "sample-videos\exports\live-validation",
+    [switch]$NextOnly,
     [switch]$Json
 )
 
@@ -141,6 +142,47 @@ $validationGroups = @(
 $inProgressMilestones = @($roadmap.inProgress | ForEach-Object { $_.milestone })
 $coveredMilestones = @($validationGroups | ForEach-Object { $_.milestones } | Select-Object -Unique)
 $missingMilestones = @($inProgressMilestones | Where-Object { $_ -notin $coveredMilestones })
+$commandLookup = @{}
+foreach ($group in $validationGroups) {
+    foreach ($command in @($group.commands)) {
+        $commandLookup[$command.name] = [pscustomobject]@{
+            groupId = $group.id
+            groupTitle = $group.title
+            protocol = $group.protocol
+            name = $command.name
+            purpose = $command.purpose
+            command = $command.command
+        }
+    }
+}
+
+$recommendedCaptures = @()
+$missingSlotBlocker = @($closeout.closeoutBlockers | Where-Object { $_.kind -eq "missingSlots" } | Select-Object -First 1)
+foreach ($slot in @($missingSlotBlocker.items)) {
+    $commandNames = @($slot.nextCommand -split "\s*,\s*then\s*|\s*,\s*" | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+    $commands = @($commandNames | ForEach-Object {
+        if ($commandLookup.ContainsKey($_)) {
+            $commandLookup[$_]
+        } else {
+            [pscustomobject]@{
+                groupId = $null
+                groupTitle = $null
+                protocol = $slot.protocol
+                name = $_
+                purpose = "Missing command template."
+                command = $null
+            }
+        }
+    })
+    $recommendedCaptures += [pscustomobject]@{
+        slot = $slot.id
+        title = $slot.title
+        milestones = $slot.milestones
+        expectedFinalLabel = $slot.expectedFinalLabel
+        protocol = $slot.protocol
+        commands = $commands
+    }
+}
 
 $result = [pscustomobject]@{
     roadmap = [pscustomobject]@{
@@ -159,6 +201,7 @@ $result = [pscustomobject]@{
         blockerCount = @($closeout.closeoutBlockers).Count
         blockers = $closeout.closeoutBlockers
     }
+    recommendedCaptures = $recommendedCaptures
     validationGroups = $validationGroups
 }
 
@@ -178,6 +221,25 @@ foreach ($blocker in @($result.currentCloseout.blockers)) {
             Write-Output "    Next $($item.id): $($item.nextCommand)"
         }
     }
+}
+if (@($result.recommendedCaptures).Count -gt 0) {
+    Write-Output ""
+    Write-Output "Recommended captures:"
+    foreach ($capture in @($result.recommendedCaptures)) {
+        Write-Output "- $($capture.title) [$($capture.milestones -join ', ')]"
+        Write-Output "    Expected final label: $($capture.expectedFinalLabel)"
+        Write-Output "    Protocol: $($capture.protocol)"
+        foreach ($command in @($capture.commands)) {
+            Write-Output "    $($command.name): $($command.purpose)"
+            if (-not [string]::IsNullOrWhiteSpace($command.command)) {
+                Write-Output "      $($command.command)"
+            }
+        }
+    }
+}
+
+if ($NextOnly) {
+    exit 0
 }
 
 if ($missingMilestones.Count -gt 0) {

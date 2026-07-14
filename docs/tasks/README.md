@@ -100,7 +100,8 @@ command templates:
 
 The plan includes the current closeout blocker count and next commands from
 missing evidence slots. Pass `-EvidenceRoot <path>` to review a specific
-live-validation export folder.
+live-validation export folder, or `-NextOnly` to print only the recommended captures
+needed by the current closeout blockers.
 
 After a connected Pixel session, summarize which accepted evidence bundles are
 ready to close roadmap items. The closeout summary includes the accepted
