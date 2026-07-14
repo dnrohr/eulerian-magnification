@@ -109,9 +109,11 @@ Preferred capture command after installing the debug build:
 
 After inspecting the recording and setting `-VisualValidated $true`, repeat or
 summarize the accepted bundle with `-RequireCleanSource` and
-`-RequireVisualValidation`. A closing AR evidence run should fail fast if it was
-captured from a dirty worktree or if the bundle is still only
-`target_visible_unvalidated`.
+`-RequireVisualValidation`. Add `-RequireNoWarnings` for the final closing run
+when thermal, low-FPS, debug-overlay, dirty-source, and other warnings must be
+absent. A closing AR evidence run should fail fast if it was captured from a
+dirty worktree, if the bundle is still only `target_visible_unvalidated`, or if
+known-good evidence is requested while warnings remain.
 
 The generated `evidence_summary.json` must be checked before the run can count:
 

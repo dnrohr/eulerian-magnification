@@ -40,7 +40,8 @@ param(
     [switch]$PersistLaunchSettings,
     [switch]$Summarize,
     [switch]$RequireCleanSource,
-    [switch]$RequireVisualValidation
+    [switch]$RequireVisualValidation,
+    [switch]$RequireNoWarnings
 )
 
 $ErrorActionPreference = "Stop"
@@ -313,6 +314,9 @@ function Invoke-EvidenceSummary {
     }
     if ($RequireVisualValidation) {
         $summaryArgs.RequireVisualValidation = $true
+    }
+    if ($RequireNoWarnings) {
+        $summaryArgs.RequireNoWarnings = $true
     }
 
     & $summaryScript @summaryArgs

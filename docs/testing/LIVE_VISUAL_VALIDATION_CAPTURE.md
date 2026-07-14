@@ -82,8 +82,9 @@ When `-Summarize` is used, the capture script exits with the summary result:
 missing required UI text, `4` for a thermal/preflight abort, `5` when visual
 validation was required but the bundle does not count as visually validated,
 and `6` when a clean source tree was required but source metadata is missing or
-dirty. This keeps automated validation commands from silently passing when an
-explicit evidence assertion failed.
+dirty, and `7` when a warning-free bundle was required but the summary contains
+warnings. This keeps automated validation commands from silently passing when
+an explicit evidence assertion failed.
 If preflight thermal status or sensor status is `critical` or worse, do not use
 the run to judge full-frame FPS, apparent camera freeze, or visual parity. Let
 the phone cool, then repeat with a short capture. By default, the capture script
@@ -181,8 +182,10 @@ claim after inspection. The summary only marks `countsAsVisualValidation` true
 when both `TargetVisible` and `VisualValidated` are true.
 
 Pass `-RequireVisualValidation` when a command is meant to close a roadmap
-visual gate, and pass `-RequireCleanSource` when the evidence must come from a
-clean committed source tree:
+visual gate, pass `-RequireCleanSource` when the evidence must come from a
+clean committed source tree, and pass `-RequireNoWarnings` when final evidence
+must be free of advisory warnings such as thermal, low-FPS, dirty-source, or
+debug-overlay warnings:
 
 ```powershell
 .\tools\capture_live_validation_evidence.ps1 `
@@ -199,13 +202,15 @@ clean committed source tree:
   -VisualValidated $true `
   -RequireCleanSource `
   -RequireVisualValidation `
+  -RequireNoWarnings `
   -Summarize
 ```
 
 Use these gates only after the operator has inspected the screenshot or
 recording. For pre-inspection captures, keep `VisualValidated` false and omit
 `-RequireVisualValidation`; the summary should then report
-`target_visible_unvalidated`.
+`target_visible_unvalidated`. Omit `-RequireNoWarnings` for exploratory
+diagnostics where the warnings themselves are the evidence.
 
 The summary also writes `evidenceVerdict`, a compact classification for the
 bundle. Expected statuses include `runtime_smoke_only`, `visual_validated`,
@@ -296,6 +301,8 @@ Available launch parameters:
   metadata is missing or the captured commit had a dirty worktree.
 - `-RequireVisualValidation`: with `-Summarize`, fail the summary unless
   `evidenceVerdict.countsAsVisualValidation` is true.
+- `-RequireNoWarnings`: with `-Summarize`, fail the summary when any warning is
+  present before the no-warnings gate adds its own failure warning.
 - `-TargetDescription`: short description of the visible target/setup.
 - `-VisualClaim`: short claim this evidence is intended to prove.
 - `-TargetVisible`: whether the target is visible in the screenshot/recording.

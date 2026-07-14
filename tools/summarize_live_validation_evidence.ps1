@@ -10,7 +10,8 @@ param(
     [double]$WarnBatteryTemperatureC = 40.0,
     [string[]]$RequireUiText = @(),
     [switch]$RequireCleanSource,
-    [switch]$RequireVisualValidation
+    [switch]$RequireVisualValidation,
+    [switch]$RequireNoWarnings
 )
 
 $ErrorActionPreference = "Stop"
@@ -548,6 +549,10 @@ if ($visualReview.targetVisible -eq $true -and $visualReview.visualValidated -ne
 if ($RequireVisualValidation -and $visualReview.countsAsVisualValidation -ne $true) {
     $warnings += "visual validation required but evidence verdict does not count as visual validation"
 }
+$warningCountBeforeNoWarningsGate = $warnings.Count
+if ($RequireNoWarnings -and $warningCountBeforeNoWarningsGate -gt 0) {
+    $warnings += "no warnings required but summary has $warningCountBeforeNoWarningsGate warning(s)"
+}
 
 $roiMeasurement = $null
 if (Test-Path -LiteralPath $roiMeasurementPath) {
@@ -652,6 +657,11 @@ $result = [ordered]@{
             required = [bool]$RequireVisualValidation
             passed = (-not [bool]$RequireVisualValidation) -or ($evidenceVerdict.countsAsVisualValidation -eq $true)
         }
+        noWarnings = [ordered]@{
+            required = [bool]$RequireNoWarnings
+            warningCount = $warningCountBeforeNoWarningsGate
+            passed = (-not [bool]$RequireNoWarnings) -or ($warningCountBeforeNoWarningsGate -eq 0)
+        }
     }
     roiMeasurement = $roiMeasurement
     warnings = $warnings
@@ -687,4 +697,7 @@ if ($result.requiredGates.cleanSource.required -and -not $result.requiredGates.c
 }
 if ($result.requiredGates.visualValidation.required -and -not $result.requiredGates.visualValidation.passed) {
     exit 5
+}
+if ($result.requiredGates.noWarnings.required -and -not $result.requiredGates.noWarnings.passed) {
+    exit 7
 }

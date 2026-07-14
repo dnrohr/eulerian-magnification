@@ -31,20 +31,19 @@ function Invoke-Summary {
     param(
         [string]$BundlePath,
         [switch]$RequireCleanSource,
-        [switch]$RequireVisualValidation
+        [switch]$RequireVisualValidation,
+        [switch]$RequireNoWarnings
     )
 
     $summaryScript = Join-Path $PSScriptRoot "summarize_live_validation_evidence.ps1"
     $stdoutPath = Join-Path $BundlePath "summary_stdout.txt"
-    if ($RequireCleanSource -and $RequireVisualValidation) {
-        & $summaryScript -BundlePath $BundlePath -RequireCleanSource -RequireVisualValidation *> $stdoutPath
-    } elseif ($RequireCleanSource) {
-        & $summaryScript -BundlePath $BundlePath -RequireCleanSource *> $stdoutPath
-    } elseif ($RequireVisualValidation) {
-        & $summaryScript -BundlePath $BundlePath -RequireVisualValidation *> $stdoutPath
-    } else {
-        & $summaryScript -BundlePath $BundlePath *> $stdoutPath
+    $summaryArgs = @{
+        BundlePath = $BundlePath
     }
+    if ($RequireCleanSource) { $summaryArgs.RequireCleanSource = $true }
+    if ($RequireVisualValidation) { $summaryArgs.RequireVisualValidation = $true }
+    if ($RequireNoWarnings) { $summaryArgs.RequireNoWarnings = $true }
+    & $summaryScript @summaryArgs *> $stdoutPath
     return $LASTEXITCODE
 }
 
@@ -297,6 +296,23 @@ Number Missed Vsync: 0
     Assert-Equal -Actual $dirtyGateSummary.requiredGates.cleanSource.passed -Expected $false -Message "Clean source gate should fail."
     Assert-Equal -Actual $dirtyGateSummary.requiredGates.visualValidation.passed -Expected $true -Message "Visual gate should pass for accepted target."
     Assert-True -Condition ("clean source required but worktree was dirty during capture" -in @($dirtyGateSummary.warnings)) -Message "Clean source gate warning missing."
+
+    $warningGateBundle = Join-Path $root "warning-gate"
+    Copy-Item -LiteralPath $visualGateBundle -Destination $warningGateBundle -Recurse
+    $warningManifestPath = Join-Path $warningGateBundle "manifest.json"
+    $warningManifest = Get-Content -LiteralPath $warningManifestPath -Raw | ConvertFrom-Json
+    $warningManifest.visualReview.visualValidated = $true
+    $warningManifest.warnings = @("synthetic advisory warning")
+    $warningManifest | ConvertTo-Json -Depth 8 | Out-File -LiteralPath $warningManifestPath -Encoding utf8
+
+    $warningGateExitCode = Invoke-Summary -BundlePath $warningGateBundle -RequireCleanSource -RequireVisualValidation -RequireNoWarnings
+    $warningGateSummary = Get-Content -LiteralPath (Join-Path $warningGateBundle "evidence_summary.json") -Raw | ConvertFrom-Json
+    Assert-Equal -Actual $warningGateExitCode -Expected 7 -Message "No-warnings gate exit code mismatch."
+    Assert-Equal -Actual $warningGateSummary.requiredGates.cleanSource.passed -Expected $true -Message "Warning gate should pass clean source."
+    Assert-Equal -Actual $warningGateSummary.requiredGates.visualValidation.passed -Expected $true -Message "Warning gate should pass visual validation."
+    Assert-Equal -Actual $warningGateSummary.requiredGates.noWarnings.passed -Expected $false -Message "No-warnings gate should fail."
+    Assert-Equal -Actual $warningGateSummary.requiredGates.noWarnings.warningCount -Expected 1 -Message "No-warnings gate warning count mismatch."
+    Assert-True -Condition ("no warnings required but summary has 1 warning(s)" -in @($warningGateSummary.warnings)) -Message "No-warnings gate warning missing."
 
     Write-Output "Live validation summary self-test passed: $root"
 } finally {

@@ -159,6 +159,19 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   the remaining preset/ROI/live-renderer validation workflow without requiring
   the physical Pixel during this tooling slice.
 
+## Supporting Slice: Warning-Free Evidence Gate
+
+- Live validation summaries now accept `-RequireNoWarnings`.
+- The no-warnings gate exits `7` when advisory warnings are present before the
+  gate adds its own failure warning.
+- `tools/capture_live_validation_evidence.ps1` forwards this gate during
+  `-Summarize`, so final known-good preset artifacts can require clean source,
+  accepted visual validation, and zero warnings in one command.
+- The summary self-test covers a visually accepted, clean-source synthetic
+  bundle that still fails the no-warnings gate because it contains an explicit
+  warning. This helps separate exploratory diagnostics from release-quality
+  visual evidence without needing the physical Pixel for this slice.
+
 ## Supporting Slice: Aborted Evidence Gate Consistency
 
 - The capture script now uses one shared summary invocation path for normal and
