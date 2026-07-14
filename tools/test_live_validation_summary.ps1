@@ -34,6 +34,7 @@ function Invoke-Summary {
         [switch]$RequireVisualValidation,
         [switch]$RequireNoWarnings,
         [switch]$RequireRoiMeasurement,
+        [switch]$RequireScreenrecord,
         [switch]$RequireRendererDiagnostics,
         [switch]$RequirePhaseDiagnostics,
         [string]$RequireEvidenceVerdict = ""
@@ -48,6 +49,7 @@ function Invoke-Summary {
     if ($RequireVisualValidation) { $summaryArgs.RequireVisualValidation = $true }
     if ($RequireNoWarnings) { $summaryArgs.RequireNoWarnings = $true }
     if ($RequireRoiMeasurement) { $summaryArgs.RequireRoiMeasurement = $true }
+    if ($RequireScreenrecord) { $summaryArgs.RequireScreenrecord = $true }
     if ($RequireRendererDiagnostics) { $summaryArgs.RequireRendererDiagnostics = $true }
     if ($RequirePhaseDiagnostics) { $summaryArgs.RequirePhaseDiagnostics = $true }
     if (-not [string]::IsNullOrWhiteSpace($RequireEvidenceVerdict)) { $summaryArgs.RequireEvidenceVerdict = $RequireEvidenceVerdict }
@@ -352,6 +354,24 @@ Number Missed Vsync: 0
     Assert-Equal -Actual $mismatchedVerdictExitCode -Expected 9 -Message "Mismatched evidence verdict gate exit code mismatch."
     Assert-Equal -Actual $mismatchedVerdictSummary.requiredGates.evidenceVerdict.passed -Expected $false -Message "Mismatched evidence verdict gate should fail."
     Assert-True -Condition ("evidence verdict required visual_validated but was target_visible_unvalidated" -in @($mismatchedVerdictSummary.warnings)) -Message "Mismatched evidence verdict warning missing."
+
+    $missingScreenrecordExitCode = Invoke-Summary -BundlePath $visualGateBundle -RequireCleanSource -RequireScreenrecord
+    $missingScreenrecordSummary = Get-Content -LiteralPath (Join-Path $visualGateBundle "evidence_summary.json") -Raw | ConvertFrom-Json
+    Assert-Equal -Actual $missingScreenrecordExitCode -Expected 11 -Message "Missing screenrecord gate exit code mismatch."
+    Assert-Equal -Actual $missingScreenrecordSummary.requiredGates.screenrecord.required -Expected $true -Message "Screenrecord gate should be required."
+    Assert-Equal -Actual $missingScreenrecordSummary.requiredGates.screenrecord.present -Expected $false -Message "Screenrecord should be missing."
+    Assert-Equal -Actual $missingScreenrecordSummary.requiredGates.screenrecord.passed -Expected $false -Message "Missing screenrecord should not pass."
+    Assert-True -Condition ("screenrecord required but screenrecord.mp4 is missing" -in @($missingScreenrecordSummary.warnings)) -Message "Missing screenrecord warning missing."
+
+    $passingScreenrecordBundle = Join-Path $root "passing-screenrecord"
+    Copy-Item -LiteralPath $visualGateBundle -Destination $passingScreenrecordBundle -Recurse
+    "synthetic mp4 placeholder" | Out-File -LiteralPath (Join-Path $passingScreenrecordBundle "screenrecord.mp4") -Encoding utf8
+    $passingScreenrecordExitCode = Invoke-Summary -BundlePath $passingScreenrecordBundle -RequireCleanSource -RequireScreenrecord
+    $passingScreenrecordSummary = Get-Content -LiteralPath (Join-Path $passingScreenrecordBundle "evidence_summary.json") -Raw | ConvertFrom-Json
+    Assert-Equal -Actual $passingScreenrecordExitCode -Expected 0 -Message "Passing screenrecord gate exit code mismatch."
+    Assert-Equal -Actual $passingScreenrecordSummary.requiredGates.screenrecord.present -Expected $true -Message "Screenrecord should be present."
+    Assert-True -Condition ($passingScreenrecordSummary.requiredGates.screenrecord.bytes -gt 0) -Message "Screenrecord bytes should be positive."
+    Assert-Equal -Actual $passingScreenrecordSummary.requiredGates.screenrecord.passed -Expected $true -Message "Screenrecord gate should pass."
 
     $dirtyGateBundle = Join-Path $root "dirty-gate"
     Copy-Item -LiteralPath $visualGateBundle -Destination $dirtyGateBundle -Recurse

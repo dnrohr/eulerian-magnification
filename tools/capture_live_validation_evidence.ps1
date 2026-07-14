@@ -43,6 +43,7 @@ param(
     [switch]$RequireVisualValidation,
     [switch]$RequireNoWarnings,
     [switch]$RequireRoiMeasurement,
+    [switch]$RequireScreenrecord,
     [switch]$RequireRendererDiagnostics,
     [switch]$RequirePhaseDiagnostics,
     [ValidateSet("", "runtime_smoke_only", "visual_validated", "target_visible_unvalidated", "visual_claim_without_target", "ui_assertion_failed", "screenshot_blank", "wrong_orientation", "runtime_failed", "thermal_preflight_aborted")]
@@ -325,6 +326,9 @@ function Invoke-EvidenceSummary {
     }
     if ($RequireRoiMeasurement) {
         $summaryArgs.RequireRoiMeasurement = $true
+    }
+    if ($RequireScreenrecord) {
+        $summaryArgs.RequireScreenrecord = $true
     }
     if ($RequireRendererDiagnostics) {
         $summaryArgs.RequireRendererDiagnostics = $true

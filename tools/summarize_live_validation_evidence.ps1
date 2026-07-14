@@ -13,6 +13,7 @@ param(
     [switch]$RequireVisualValidation,
     [switch]$RequireNoWarnings,
     [switch]$RequireRoiMeasurement,
+    [switch]$RequireScreenrecord,
     [switch]$RequireRendererDiagnostics,
     [switch]$RequirePhaseDiagnostics,
     [ValidateSet("", "runtime_smoke_only", "visual_validated", "target_visible_unvalidated", "visual_claim_without_target", "ui_assertion_failed", "screenshot_blank", "wrong_orientation", "runtime_failed", "thermal_preflight_aborted")]
@@ -383,6 +384,7 @@ $manifestPath = Get-RequiredPath $bundle "manifest.json"
 $gfxPath = Get-RequiredPath $bundle "gfxinfo.txt"
 $logcatPath = Get-RequiredPath $bundle "logcat_tail.txt"
 $screenshotPath = Get-RequiredPath $bundle "screenshot.png"
+$screenrecordPath = Get-RequiredPath $bundle "screenrecord.mp4"
 $roiMeasurementPath = Get-RequiredPath $bundle "roi_overlay_measurement.json"
 $thermalPath = Get-RequiredPath $bundle "thermalservice.txt"
 $batteryPath = Get-RequiredPath $bundle "battery.txt"
@@ -566,6 +568,23 @@ if ($RequireRoiMeasurement -and $null -ne $roiMeasurement -and $roiMeasurement.p
     $warnings += "ROI measurement required but measurement did not pass"
 }
 
+$screenrecordInfo = [ordered]@{
+    path = $screenrecordPath
+    present = Test-Path -LiteralPath $screenrecordPath
+    bytes = $null
+    nonEmpty = $false
+}
+if ($screenrecordInfo.present) {
+    $screenrecordInfo.bytes = (Get-Item -LiteralPath $screenrecordPath).Length
+    $screenrecordInfo.nonEmpty = $screenrecordInfo.bytes -gt 0
+}
+if ($RequireScreenrecord -and -not $screenrecordInfo.present) {
+    $warnings += "screenrecord required but screenrecord.mp4 is missing"
+}
+if ($RequireScreenrecord -and $screenrecordInfo.present -and -not $screenrecordInfo.nonEmpty) {
+    $warnings += "screenrecord required but screenrecord.mp4 is empty"
+}
+
 $screenshotInfo = $null
 if (Test-Path -LiteralPath $screenshotPath) {
     Add-Type -AssemblyName System.Drawing
@@ -628,6 +647,7 @@ $phaseDiagnosticsPassed = (-not [bool]$RequirePhaseDiagnostics) -or (@($uiDumpSu
 if (-not $phaseDiagnosticsPassed) {
     $warnings += "phase diagnostics required but no phase labels were found in the UI dump"
 }
+$screenrecordPassed = (-not [bool]$RequireScreenrecord) -or ($screenrecordInfo.present -and $screenrecordInfo.nonEmpty)
 $warningCountBeforeNoWarningsGate = $warnings.Count
 if ($RequireNoWarnings -and $warningCountBeforeNoWarningsGate -gt 0) {
     $warnings += "no warnings required but summary has $warningCountBeforeNoWarningsGate warning(s)"
@@ -644,7 +664,8 @@ $result = [ordered]@{
     artifacts = [ordered]@{
         missingRequired = $missing
         screenshot = $screenshotInfo
-        screenrecordPresent = Test-Path -LiteralPath (Join-Path $bundle "screenrecord.mp4")
+        screenrecord = $screenrecordInfo
+        screenrecordPresent = $screenrecordInfo.present
         roiMeasurementPresent = $null -ne $roiMeasurement
         packageInfoPresent = Test-Path -LiteralPath (Join-Path $bundle "app_package.txt")
         uiDumpPresent = Test-Path -LiteralPath $uiDumpPath
@@ -685,6 +706,12 @@ $result = [ordered]@{
             required = [bool]$RequireRoiMeasurement
             present = $null -ne $roiMeasurement
             passed = (-not [bool]$RequireRoiMeasurement) -or ($null -ne $roiMeasurement -and $roiMeasurement.passed -eq $true)
+        }
+        screenrecord = [ordered]@{
+            required = [bool]$RequireScreenrecord
+            present = $screenrecordInfo.present
+            bytes = $screenrecordInfo.bytes
+            passed = $screenrecordPassed
         }
         evidenceVerdict = [ordered]@{
             required = -not [string]::IsNullOrWhiteSpace($RequireEvidenceVerdict)
@@ -745,6 +772,9 @@ if ($result.requiredGates.visualValidation.required -and -not $result.requiredGa
 }
 if ($result.requiredGates.roiMeasurement.required -and -not $result.requiredGates.roiMeasurement.passed) {
     exit 8
+}
+if ($result.requiredGates.screenrecord.required -and -not $result.requiredGates.screenrecord.passed) {
+    exit 11
 }
 if ($result.requiredGates.evidenceVerdict.required -and -not $result.requiredGates.evidenceVerdict.passed) {
     exit 9

@@ -85,7 +85,8 @@ and `6` when a clean source tree was required but source metadata is missing or
 dirty, and `7` when a warning-free bundle was required but the summary contains
 warnings, `8` when an ROI measurement was required but missing or failed, and
 `9` when the bundle did not match a required evidence verdict, and `10` when a
-required renderer or phase diagnostic label was not found.
+required renderer or phase diagnostic label was not found, and `11` when a
+required `screenrecord.mp4` artifact is missing or empty.
 This keeps automated validation commands from silently passing when an explicit
 evidence assertion failed.
 If preflight thermal status or sensor status is `critical` or worse, do not use
@@ -185,6 +186,12 @@ expanded UI must expose renderer labels such as `Renderer:`,
 diagnostic categories add warnings and make the summary command exit with code
 `10`.
 
+For watched motion-validation runs, pass `-RequireScreenrecord` with a positive
+`-ScreenRecordSeconds` value when a still screenshot would not prove the visual
+claim. The summary records whether `screenrecord.mp4` is present, its byte
+count, and whether it is non-empty. Missing or empty required recordings add a
+warning and make the summary command exit with code `11`.
+
 Use the visual-review fields for watched target runs. `TargetDescription` and
 `VisualClaim` describe what was in frame and what the capture is intended to
 prove. `TargetVisible` records whether the target is actually visible in the
@@ -213,6 +220,7 @@ debug-overlay warnings:
   -VisualValidated $true `
   -RequireCleanSource `
   -RequireVisualValidation `
+  -RequireScreenrecord `
   -RequireNoWarnings `
   -Summarize
 ```
@@ -244,8 +252,8 @@ Run the summary self-test after editing capture or summary tooling:
 
 The test synthesizes a thermal-aborted bundle and an incomplete runtime bundle,
 then verifies the summary exit codes, verdicts, UI assertion behavior,
-clean-source/visual-validation/verdict/diagnostic gates, and dirty source
-warning.
+clean-source/visual-validation/verdict/diagnostic/screenrecord gates, and dirty
+source warning.
 
 For ROI overlay validation, pass `-MeasureRoiExpected` with the expected
 normalized screenshot-space rectangle. The capture script then writes
@@ -322,6 +330,8 @@ Available launch parameters:
   present before the no-warnings gate adds its own failure warning.
 - `-RequireRoiMeasurement`: with `-Summarize`, fail the summary unless
   `roi_overlay_measurement.json` exists and reports `passed=true`.
+- `-RequireScreenrecord`: with `-Summarize`, fail the summary unless
+  `screenrecord.mp4` exists and is non-empty.
 - `-RequireEvidenceVerdict`: with `-Summarize`, fail the summary unless
   `evidenceVerdict.status` exactly matches the requested status.
 - `-RequireRendererDiagnostics`: with `-Summarize`, fail the summary unless

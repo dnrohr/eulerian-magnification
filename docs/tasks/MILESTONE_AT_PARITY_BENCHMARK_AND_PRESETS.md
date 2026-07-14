@@ -233,6 +233,20 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   under `requiredGates`. The summary self-test covers passing renderer/phase
   gates and a missing phase-diagnostics failure.
 
+## Supporting Slice: Required Screenrecord Gate
+
+- Live validation summaries now accept `-RequireScreenrecord` for watched
+  motion-validation runs where a still screenshot is not enough evidence.
+- The summary records `screenrecord.mp4` presence, byte count, and non-empty
+  status under both `artifacts.screenrecord` and
+  `requiredGates.screenrecord`.
+- `tools/capture_live_validation_evidence.ps1` forwards the requirement when
+  `-Summarize` is used, so future AP/AR/AT Pixel runs can require a video
+  artifact in the same command that captures visual-review metadata.
+- Missing or empty required recordings exit `11`. The summary self-test covers
+  both a missing screenrecord failure and a non-empty synthetic screenrecord
+  pass without needing the physical Pixel for this slice.
+
 ## Remaining
 
 - Extend Pixel 8a evidence with a known-good visual artifact and watched target
