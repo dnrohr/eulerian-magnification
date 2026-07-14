@@ -356,6 +356,8 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   updates can be blocked until all four preset visual slots are accepted.
 - Documented the closeout gates in README, the task index, and MIT parity
   targets so visual-validation docs are only updated after accepted evidence.
+- Extended the protocol-doc self-test to keep README and task-index closeout
+  gate instructions from drifting.
 - Updated the live visual validation guide to use `Tremor` for the public Fast
   Motion / Motion path. `ObjectVibration` remains accepted only for internal
   compatibility and parity experiments.

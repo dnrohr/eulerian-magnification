@@ -24,14 +24,23 @@ function Assert-DocContains {
 
 $repoRoot = Resolve-Path -LiteralPath (Join-Path $PSScriptRoot "..")
 
+$readme = Join-Path $repoRoot "README.md"
+$taskReadme = Join-Path $repoRoot "docs\tasks\README.md"
 $roiDoc = Join-Path $repoRoot "docs\testing\ROI_DEVICE_VALIDATION.md"
 $liveGuide = Join-Path $repoRoot "docs\testing\LIVE_VISUAL_VALIDATION_CAPTURE.md"
 $parityDoc = Join-Path $repoRoot "docs\testing\MIT_PARITY_TARGETS.md"
 $linearDoc = Join-Path $repoRoot "docs\experiments\pixel8a_live_linear_validation.md"
 $phaseDoc = Join-Path $repoRoot "docs\experiments\pixel8a_live_phase_validation.md"
 
-foreach ($path in @($roiDoc, $liveGuide, $parityDoc, $linearDoc, $phaseDoc)) {
+foreach ($path in @($readme, $taskReadme, $roiDoc, $liveGuide, $parityDoc, $linearDoc, $phaseDoc)) {
     Assert-True -Condition (Test-Path -LiteralPath $path) -Message "Missing protocol doc: $path"
+}
+
+foreach ($path in @($readme, $taskReadme)) {
+    Assert-DocContains -Path $path -Expected "summarize_pixel_validation_closeout.ps1" -Message "Operator docs must document closeout summary."
+    Assert-DocContains -Path $path -Expected "-FailOnMissing" -Message "Operator docs must document missing-evidence closeout gate."
+    Assert-DocContains -Path $path -Expected "-FailOnUnmatched" -Message "Operator docs must document unmatched-evidence closeout gate."
+    Assert-DocContains -Path $path -Expected "-FailOnPresetDocsNotReady" -Message "Operator docs must document preset-doc readiness gate."
 }
 
 Assert-DocContains -Path $roiDoc -Expected "-RequireRoiMeasurement" -Message "ROI protocol must require ROI measurement."
