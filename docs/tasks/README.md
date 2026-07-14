@@ -112,9 +112,10 @@ requiring no missing, unmatched, ambiguous, duplicate, non-`main`, or
 missing-artifact-hash accepted evidence, requiring accepted source commits to
 be reachable from
 `origin/main`
-(`-FailOnMissing -FailOnUnmatched -FailOnAmbiguous -FailOnDuplicate -FailOnNonMain -FailOnUnpushedSource -FailOnMissingArtifactHashes -FailOnNonFinalLabel`), and rejecting accepted evidence without a final capture label. Use
+(`-FailOnMissing -FailOnUnmatched -FailOnAmbiguous -FailOnDuplicate -FailOnNonMain -FailOnUnpushedSource -FailOnMissingArtifactHashes -FailOnNonFinalLabel -FailOnWrongSlotLabel`), and rejecting accepted evidence without a final capture label or with a label that targets a different slot. Use
 `-FailOnPresetDocsNotReady` before changing README or MIT parity visual status;
 it requires all four preset visual slots and rejects unmatched, ambiguous, or
 duplicate accepted evidence, plus accepted evidence captured outside `main` or
 from a commit that is not reachable from `origin/main`, or accepted evidence
-without screenshot/screenrecord SHA-256 values or a final capture label.
+without screenshot/screenrecord SHA-256 values, a final capture label, or the
+slot-specific final label.

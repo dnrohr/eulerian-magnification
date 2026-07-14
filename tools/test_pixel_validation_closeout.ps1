@@ -34,6 +34,7 @@ function Invoke-Closeout {
         [switch]$FailOnUnpushedSource,
         [switch]$FailOnMissingArtifactHashes,
         [switch]$FailOnNonFinalLabel,
+        [switch]$FailOnWrongSlotLabel,
         [switch]$FailOnCloseoutNotReady,
         [switch]$FailOnPresetDocsNotReady
     )
@@ -67,6 +68,9 @@ function Invoke-Closeout {
     }
     if ($FailOnNonFinalLabel) {
         $args.FailOnNonFinalLabel = $true
+    }
+    if ($FailOnWrongSlotLabel) {
+        $args.FailOnWrongSlotLabel = $true
     }
     if ($FailOnCloseoutNotReady) {
         $args.FailOnCloseoutNotReady = $true
@@ -166,8 +170,8 @@ $root = Join-Path ([System.IO.Path]::GetTempPath()) "eulerian-pixel-closeout-tes
 New-Item -ItemType Directory -Path $root -Force | Out-Null
 
 try {
-    Write-Summary -Root $root -Name "manual" -Label "manual-roi-final" -Mode "Tremor" -RoiSource "Manual" -Claim "Manual ROI outline overlaps known target" -Roi $true -Renderer $false -Phase $false
-    Write-Summary -Root $root -Name "auto" -Label "auto-face-final" -Mode "Pulse" -RoiSource "Auto" -Claim "Automatic face skin ROI overlaps visible face" -Roi $true -Renderer $false -Phase $false
+    Write-Summary -Root $root -Name "manual" -Label "manual-roi-known-target-final" -Mode "Tremor" -RoiSource "Manual" -Claim "Manual ROI outline overlaps known target" -Roi $true -Renderer $false -Phase $false
+    Write-Summary -Root $root -Name "auto" -Label "auto-face-roi-final" -Mode "Pulse" -RoiSource "Auto" -Claim "Automatic face skin ROI overlaps visible face" -Roi $true -Renderer $false -Phase $false
     Write-Summary -Root $root -Name "pulse" -Label "live-linear-pulse-final" -Mode "Pulse" -RoiSource "FullFrame" -Claim "Pulse full-frame live linear visual parity" -Roi $false -Renderer $true -Phase $false
     Write-Summary -Root $root -Name "breathing" -Label "live-linear-breathing-final" -Mode "Breathing" -RoiSource "FullFrame" -Claim "Breathing slow motion live linear visual parity" -Roi $false -Renderer $true -Phase $false
     Write-Summary -Root $root -Name "object" -Label "live-phase-object-final" -Mode "Tremor" -RoiSource "Manual" -Claim "Object vibration edge-localized phase visual parity" -Roi $false -Renderer $false -Phase $true
@@ -186,6 +190,7 @@ try {
     Assert-Equal -Actual @($result.unpushedAcceptedFinalEvidence).Count -Expected 0 -Message "Known closeout fixtures should be reachable from origin/main."
     Assert-Equal -Actual @($result.missingArtifactHashAcceptedFinalEvidence).Count -Expected 0 -Message "Known closeout fixtures should expose artifact hashes."
     Assert-Equal -Actual @($result.nonFinalLabelAcceptedFinalEvidence).Count -Expected 0 -Message "Known closeout fixtures should use final capture labels."
+    Assert-Equal -Actual @($result.wrongSlotLabelAcceptedFinalEvidence).Count -Expected 0 -Message "Known closeout fixtures should use slot-specific final labels."
     Assert-Equal -Actual @($result.missing).Count -Expected 0 -Message "All slots should be satisfied."
     Assert-Equal -Actual $result.presetVisualSlotsPresent -Expected $true -Message "Preset visual slots should be present when four preset slots pass."
     Assert-Equal -Actual $result.presetDocsEvidenceClean -Expected $false -Message "Unmatched evidence should prevent preset docs closeout."
@@ -251,15 +256,18 @@ try {
     New-Item -ItemType Directory -Path $ambiguousRoot -Force | Out-Null
     Write-Summary -Root $ambiguousRoot -Name "pulse-breathing" -Label "live-linear-pulse-breathing-final" -Mode "Pulse" -RoiSource "FullFrame" -Claim "Pulse and breathing full-frame live linear visual parity" -Roi $false -Renderer $true -Phase $false
     $ambiguous = & (Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1") -EvidenceRoot $ambiguousRoot -Json | ConvertFrom-Json
-    Assert-Equal -Actual @($ambiguous.ambiguousAcceptedFinalEvidence).Count -Expected 1 -Message "Ambiguous closeout should report evidence matching multiple slots."
-    Assert-Equal -Actual @($ambiguous.ambiguousAcceptedFinalEvidence[0].matchedSlots).Count -Expected 2 -Message "Ambiguous evidence should report both matched slots."
+    Assert-Equal -Actual @($ambiguous.ambiguousAcceptedFinalEvidence).Count -Expected 0 -Message "Ambiguous evidence should not survive wrong-slot label filtering."
+    Assert-Equal -Actual @($ambiguous.wrongSlotLabelAcceptedFinalEvidence).Count -Expected 1 -Message "Ambiguous wrong final label should be reported as a slot-label mismatch."
+    Assert-Equal -Actual @($ambiguous.wrongSlotLabelAcceptedFinalEvidence[0].mismatchedSlots).Count -Expected 2 -Message "Wrong-slot evidence should report both mismatched slots."
     $ambiguousExitCode = Invoke-Closeout -EvidenceRoot $ambiguousRoot -FailOnAmbiguous
-    Assert-Equal -Actual $ambiguousExitCode -Expected 5 -Message "FailOnAmbiguous should exit 5 when accepted final evidence matches multiple slots."
+    Assert-Equal -Actual $ambiguousExitCode -Expected 0 -Message "FailOnAmbiguous should not fire after wrong-slot label filtering removes all ambiguous matches."
+    $wrongSlotLabelExitCode = Invoke-Closeout -EvidenceRoot $ambiguousRoot -FailOnWrongSlotLabel
+    Assert-Equal -Actual $wrongSlotLabelExitCode -Expected 18 -Message "FailOnWrongSlotLabel should fail when the final label does not match the candidate slot."
 
     $duplicateRoot = Join-Path $root "duplicate"
     New-Item -ItemType Directory -Path $duplicateRoot -Force | Out-Null
-    Write-Summary -Root $duplicateRoot -Name "pulse-a" -Label "live-linear-pulse-final-a" -Mode "Pulse" -RoiSource "FullFrame" -Claim "Pulse full-frame live linear visual parity" -Roi $false -Renderer $true -Phase $false
-    Write-Summary -Root $duplicateRoot -Name "pulse-b" -Label "live-linear-pulse-final-b" -Mode "Pulse" -RoiSource "FullFrame" -Claim "Pulse full-frame live linear visual parity" -Roi $false -Renderer $true -Phase $false
+    Write-Summary -Root $duplicateRoot -Name "pulse-a" -Label "live-linear-pulse-final" -Mode "Pulse" -RoiSource "FullFrame" -Claim "Pulse full-frame live linear visual parity" -Roi $false -Renderer $true -Phase $false
+    Write-Summary -Root $duplicateRoot -Name "pulse-b" -Label "live-linear-pulse-final" -Mode "Pulse" -RoiSource "FullFrame" -Claim "Pulse full-frame live linear visual parity" -Roi $false -Renderer $true -Phase $false
     $duplicate = & (Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1") -EvidenceRoot $duplicateRoot -Json | ConvertFrom-Json
     Assert-Equal -Actual @($duplicate.duplicateAcceptedFinalEvidence).Count -Expected 1 -Message "Duplicate closeout should report extra accepted evidence for a satisfied slot."
     Assert-Equal -Actual $duplicate.duplicateAcceptedFinalEvidence[0].slot -Expected "pulseLinear" -Message "Duplicate evidence slot mismatch."
@@ -275,7 +283,7 @@ try {
     foreach ($name in @("manual", "auto", "pulse", "breathing", "object", "fast")) {
         Copy-Item -LiteralPath (Join-Path $root $name) -Destination (Join-Path $classifiedRoot $name) -Recurse
     }
-    $classifiedExitCode = Invoke-Closeout -EvidenceRoot $classifiedRoot -FailOnMissing -FailOnUnmatched -FailOnAmbiguous -FailOnDuplicate -FailOnNonMain -FailOnUnpushedSource -FailOnMissingArtifactHashes -FailOnNonFinalLabel
+    $classifiedExitCode = Invoke-Closeout -EvidenceRoot $classifiedRoot -FailOnMissing -FailOnUnmatched -FailOnAmbiguous -FailOnDuplicate -FailOnNonMain -FailOnUnpushedSource -FailOnMissingArtifactHashes -FailOnNonFinalLabel -FailOnWrongSlotLabel
     Assert-Equal -Actual $classifiedExitCode -Expected 0 -Message "Combined closeout gates should pass when all accepted evidence maps to slots on pushed main."
     $classified = & (Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1") -EvidenceRoot $classifiedRoot -Json | ConvertFrom-Json
     Assert-Equal -Actual $classified.readyForPresetDocs -Expected $true -Message "Preset docs should be ready when preset slots are satisfied and evidence is clean."
@@ -308,10 +316,20 @@ try {
     $nonFinalLabelExitCode = Invoke-Closeout -EvidenceRoot $nonFinalLabelRoot -FailOnNonFinalLabel
     Assert-Equal -Actual $nonFinalLabelExitCode -Expected 17 -Message "FailOnNonFinalLabel should fail on accepted evidence whose label is not a final capture label."
 
+    $wrongSlotLabelRoot = Join-Path $root "wrong-slot-label"
+    New-Item -ItemType Directory -Path $wrongSlotLabelRoot -Force | Out-Null
+    Write-Summary -Root $wrongSlotLabelRoot -Name "pulse-label-breathing-claim" -Label "live-linear-pulse-final" -Mode "Breathing" -RoiSource "FullFrame" -Claim "Breathing slow motion live linear visual parity" -Roi $false -Renderer $true -Phase $false
+    $wrongSlotLabel = & (Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1") -EvidenceRoot $wrongSlotLabelRoot -Json | ConvertFrom-Json
+    Assert-Equal -Actual @($wrongSlotLabel.wrongSlotLabelAcceptedFinalEvidence).Count -Expected 1 -Message "Evidence whose final label targets a different slot should be reported."
+    Assert-Equal -Actual @($wrongSlotLabel.slots | Where-Object { $_.satisfied }).Count -Expected 0 -Message "Wrong-slot final labels must not satisfy closeout slots."
+    Assert-Equal -Actual $wrongSlotLabel.readyForPresetDocs -Expected $false -Message "Wrong-slot final labels should prevent preset docs readiness."
+    $wrongSlotLabelGateExitCode = Invoke-Closeout -EvidenceRoot $wrongSlotLabelRoot -FailOnWrongSlotLabel
+    Assert-Equal -Actual $wrongSlotLabelGateExitCode -Expected 18 -Message "FailOnWrongSlotLabel should fail on accepted evidence whose label targets the wrong slot."
+
     $offMainRoot = Join-Path $root "off-main"
     New-Item -ItemType Directory -Path $offMainRoot -Force | Out-Null
-    Write-Summary -Root $offMainRoot -Name "manual" -Label "manual-roi-final" -Mode "Tremor" -RoiSource "Manual" -Claim "Manual ROI outline overlaps known target" -Roi $true -Renderer $false -Phase $false
-    Write-Summary -Root $offMainRoot -Name "auto" -Label "auto-face-final" -Mode "Pulse" -RoiSource "Auto" -Claim "Automatic face skin ROI overlaps visible face" -Roi $true -Renderer $false -Phase $false
+    Write-Summary -Root $offMainRoot -Name "manual" -Label "manual-roi-known-target-final" -Mode "Tremor" -RoiSource "Manual" -Claim "Manual ROI outline overlaps known target" -Roi $true -Renderer $false -Phase $false
+    Write-Summary -Root $offMainRoot -Name "auto" -Label "auto-face-roi-final" -Mode "Pulse" -RoiSource "Auto" -Claim "Automatic face skin ROI overlaps visible face" -Roi $true -Renderer $false -Phase $false
     Write-Summary -Root $offMainRoot -Name "pulse" -Label "live-linear-pulse-final" -Mode "Pulse" -RoiSource "FullFrame" -Claim "Pulse full-frame live linear visual parity" -Roi $false -Renderer $true -Phase $false -SourceBranch "codex/test"
     Write-Summary -Root $offMainRoot -Name "breathing" -Label "live-linear-breathing-final" -Mode "Breathing" -RoiSource "FullFrame" -Claim "Breathing slow motion live linear visual parity" -Roi $false -Renderer $true -Phase $false
     Write-Summary -Root $offMainRoot -Name "object" -Label "live-phase-object-final" -Mode "Tremor" -RoiSource "Manual" -Claim "Object vibration edge-localized phase visual parity" -Roi $false -Renderer $false -Phase $true

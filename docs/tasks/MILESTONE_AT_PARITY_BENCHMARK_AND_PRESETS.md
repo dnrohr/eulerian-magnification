@@ -413,6 +413,9 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - Added `-FailOnNonFinalLabel` to the Pixel closeout summary and planner/docs
   gates, so accidentally accepted setup-labeled bundles cannot satisfy final
   roadmap or preset parity slots.
+- Added `-FailOnWrongSlotLabel` to the Pixel closeout summary and planner/docs
+  gates, so a final-labeled bundle can only satisfy the matching manual ROI,
+  automatic ROI, Pulse, Breathing, Object phase, or Fast tremor closeout slot.
 - Documented the closeout gates in README, the task index, and MIT parity
   targets so visual-validation docs are only updated after accepted evidence.
 - Extended the protocol-doc self-test to keep README and task-index closeout
