@@ -371,6 +371,9 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   concrete setup/final commands.
 - Added a Pixel validation self-test that cross-checks closeout `Next:` command
   hints against the planner command names, preventing stale handoff guidance.
+- Added planner self-test coverage that keeps setup captures on
+  `target_visible_unvalidated` and final captures on `-RequireFinalVisualEvidence`
+  with accepted operator validation.
 - Updated the live visual validation guide to use `Tremor` for the public Fast
   Motion / Motion path. `ObjectVibration` remains accepted only for internal
   compatibility and parity experiments.

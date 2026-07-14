@@ -102,6 +102,21 @@ foreach ($slot in @($closeout.slots)) {
     }
 }
 
+$capturePlanCommands = @($groups | ForEach-Object { $_.commands } | Where-Object { $_.command.StartsWith(".\tools\capture_live_validation_evidence.ps1") })
+foreach ($command in $capturePlanCommands) {
+    $isSetup = $command.name.EndsWith("-setup") -or $command.name.EndsWith("-target")
+    $isFinal = $command.name.EndsWith("-final")
+    if ($isSetup) {
+        Assert-True -Condition ($command.command.Contains("-RequireEvidenceVerdict target_visible_unvalidated")) -Message "Setup command '$($command.name)' should stop at target_visible_unvalidated."
+        Assert-True -Condition (-not $command.command.Contains("-RequireFinalVisualEvidence")) -Message "Setup command '$($command.name)' must not use final visual evidence gates."
+    }
+    if ($isFinal) {
+        Assert-True -Condition ($command.command.Contains("-RequireFinalVisualEvidence")) -Message "Final command '$($command.name)' should use final visual evidence gates."
+        Assert-True -Condition (-not $command.command.Contains("-RequireEvidenceVerdict target_visible_unvalidated")) -Message "Final command '$($command.name)' must not use the setup-only verdict gate."
+        Assert-True -Condition ($command.command.Contains('-VisualValidated $true')) -Message "Final command '$($command.name)' should mark operator visual validation true."
+    }
+}
+
 $captureScript = Join-Path $PSScriptRoot "capture_live_validation_evidence.ps1"
 $captureParameters = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
 $captureScriptContent = Get-Content -LiteralPath $captureScript -Raw
