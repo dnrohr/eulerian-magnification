@@ -319,7 +319,8 @@ the plan prints available missing slots when a slot filter does not match. Use
 closing evidence commands, and add `-CommandsOnly` when you want paste-ready
 command templates without the surrounding checklist. Add `-FailOnInvalidSlot`
 in scripted runs so a mistyped slot filter exits nonzero instead of producing
-an empty capture queue. Add `-OutputPath sample-videos\exports\live-validation\pixel_validation_plan.json`
+an empty capture queue, or `-FailOnEmptyQueue` when automation should require
+at least one recommended capture. Add `-OutputPath sample-videos\exports\live-validation\pixel_validation_plan.json`
 to save the full machine-readable plan used for a device session.
 
 After a connected Pixel validation pass, summarize which accepted evidence

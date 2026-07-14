@@ -27,7 +27,8 @@ function Invoke-PlanExitCode {
     param(
         [string]$EvidenceRoot,
         [string[]]$Slot = @(),
-        [switch]$FailOnInvalidSlot
+        [switch]$FailOnInvalidSlot,
+        [switch]$FailOnEmptyQueue
     )
 
     $script = Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1"
@@ -38,6 +39,9 @@ function Invoke-PlanExitCode {
     }
     if ($FailOnInvalidSlot) {
         $arguments += "-FailOnInvalidSlot"
+    }
+    if ($FailOnEmptyQueue) {
+        $arguments += "-FailOnEmptyQueue"
     }
 
     & $powerShellExe @arguments *> $null
@@ -58,6 +62,8 @@ $invalidSlotPlan = & (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.p
 $invalidSlotText = & (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1") -EvidenceRoot $missingCloseoutRoot -Slot notARealSlot -NextOnly
 $validSlotExitCode = Invoke-PlanExitCode -EvidenceRoot $missingCloseoutRoot -Slot pulseLinear -FailOnInvalidSlot
 $invalidSlotExitCode = Invoke-PlanExitCode -EvidenceRoot $missingCloseoutRoot -Slot notARealSlot -FailOnInvalidSlot
+$emptyQueueExitCode = Invoke-PlanExitCode -EvidenceRoot $missingCloseoutRoot -Slot notARealSlot -FailOnEmptyQueue
+$validQueueExitCode = Invoke-PlanExitCode -EvidenceRoot $missingCloseoutRoot -Slot pulseLinear -FailOnEmptyQueue
 $savedPlanPath = Join-Path $missingCloseoutRoot "pixel_validation_plan.json"
 $savedPlanText = & (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1") -EvidenceRoot $missingCloseoutRoot -OutputPath $savedPlanPath -NextOnly
 $savedPlan = Get-Content -LiteralPath $savedPlanPath -Raw | ConvertFrom-Json
@@ -119,8 +125,11 @@ Assert-Equal -Actual @($invalidSlotPlan.invalidRequestedSlots).Count -Expected 1
 Assert-Equal -Actual $invalidSlotPlan.invalidRequestedSlots[0] -Expected "notARealSlot" -Message "Invalid slot report should preserve the requested slot id."
 Assert-True -Condition (($invalidSlotText -join "`n").Contains("Available missing slots:")) -Message "Invalid slot text should print available slots."
 Assert-True -Condition (($invalidSlotText -join "`n").Contains("Warning: requested slot(s) not currently missing or unknown: notARealSlot")) -Message "Invalid slot text should warn about unknown slots."
+Assert-True -Condition (($invalidSlotText -join "`n").Contains("Warning: no recommended captures match the current filters.")) -Message "Empty filtered plan should warn when no captures match."
 Assert-Equal -Actual $validSlotExitCode -Expected 0 -Message "FailOnInvalidSlot should allow known missing slot filters."
 Assert-Equal -Actual $invalidSlotExitCode -Expected 21 -Message "FailOnInvalidSlot should fail with exit code 21 for unknown slot filters."
+Assert-Equal -Actual $validQueueExitCode -Expected 0 -Message "FailOnEmptyQueue should allow filters with recommended captures."
+Assert-Equal -Actual $emptyQueueExitCode -Expected 22 -Message "FailOnEmptyQueue should fail with exit code 22 when no captures match."
 Assert-True -Condition (Test-Path -LiteralPath $savedPlanPath) -Message "OutputPath should write a Pixel validation plan JSON artifact."
 Assert-Equal -Actual $savedPlan.currentCloseout.evidenceRoot -Expected $missingCloseoutRoot -Message "Saved plan artifact should use the requested evidence root."
 Assert-Equal -Actual @($savedPlan.recommendedCaptures).Count -Expected 6 -Message "Saved plan artifact should preserve recommended captures."

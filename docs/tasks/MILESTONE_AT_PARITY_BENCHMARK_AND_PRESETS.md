@@ -499,6 +499,8 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - Added `-OutputPath` to the Pixel validation planner so the exact
   machine-readable command queue can be saved as `pixel_validation_plan.json`
   for a connected-device session handoff.
+- Added `-FailOnEmptyQueue` to the Pixel validation planner so automation can
+  fail when filters produce no recommended captures.
 
 ## Remaining
 

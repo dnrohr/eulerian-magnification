@@ -6,6 +6,7 @@ param(
     [switch]$NextOnly,
     [switch]$CommandsOnly,
     [switch]$FailOnInvalidSlot,
+    [switch]$FailOnEmptyQueue,
     [string]$OutputPath = "",
     [switch]$Json
 )
@@ -170,6 +171,7 @@ $availableSlots = @($missingSlotBlocker.items | ForEach-Object { $_.id })
 $requestedSlots = @($Slot | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
 $invalidRequestedSlots = @($requestedSlots | Where-Object { $_ -notin $availableSlots })
 $invalidSlotExitCode = 21
+$emptyQueueExitCode = 22
 $requestedStage = $CaptureStage
 foreach ($missingSlot in @($missingSlotBlocker.items)) {
     if ($requestedSlots.Count -gt 0 -and $missingSlot.id -notin $requestedSlots) {
@@ -241,18 +243,23 @@ if (-not [string]::IsNullOrWhiteSpace($OutputPath)) {
     Set-Content -LiteralPath $OutputPath -Value $jsonOutput -Encoding utf8
 }
 
-if ($Json) {
-    $jsonOutput
+function Exit-ForRequestedPlanFailures {
     if ($FailOnInvalidSlot -and @($result.invalidRequestedSlots).Count -gt 0) {
         exit $invalidSlotExitCode
     }
+    if ($FailOnEmptyQueue -and @($result.recommendedCaptures).Count -eq 0) {
+        exit $emptyQueueExitCode
+    }
+}
+
+if ($Json) {
+    $jsonOutput
+    Exit-ForRequestedPlanFailures
     exit 0
 }
 
 if ($CommandsOnly) {
-    if ($FailOnInvalidSlot -and @($result.invalidRequestedSlots).Count -gt 0) {
-        exit $invalidSlotExitCode
-    }
+    Exit-ForRequestedPlanFailures
     foreach ($capture in @($result.recommendedCaptures)) {
         foreach ($command in @($capture.commands)) {
             if (-not [string]::IsNullOrWhiteSpace($command.command)) {
@@ -297,11 +304,12 @@ if (@($result.recommendedCaptures).Count -gt 0) {
         }
     }
 }
+if (@($result.recommendedCaptures).Count -eq 0) {
+    Write-Output "Warning: no recommended captures match the current filters."
+}
 
 if ($NextOnly) {
-    if ($FailOnInvalidSlot -and @($result.invalidRequestedSlots).Count -gt 0) {
-        exit $invalidSlotExitCode
-    }
+    Exit-ForRequestedPlanFailures
     exit 0
 }
 
@@ -323,6 +331,4 @@ foreach ($group in $validationGroups | Sort-Object order) {
     }
 }
 
-if ($FailOnInvalidSlot -and @($result.invalidRequestedSlots).Count -gt 0) {
-    exit $invalidSlotExitCode
-}
+Exit-ForRequestedPlanFailures
