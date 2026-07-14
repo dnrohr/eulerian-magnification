@@ -63,6 +63,7 @@ Assert-True -Condition ($presetCloseoutCommand.Contains("-FailOnPresetDocsNotRea
 Assert-True -Condition ($presetCloseoutCommand.Contains("-FailOnNonMain")) -Message "Preset parity closeout should require the non-main evidence gate."
 Assert-True -Condition ($presetCloseoutCommand.Contains("-FailOnUnpushedSource")) -Message "Preset parity closeout should require the source commit containment gate."
 Assert-True -Condition ($presetCloseoutCommand.Contains("-FailOnMissingArtifactHashes")) -Message "Preset parity closeout should require artifact hashes for accepted evidence."
+Assert-True -Condition ($presetCloseoutCommand.Contains("-FailOnNonFinalLabel")) -Message "Preset parity closeout should require final capture labels for accepted evidence."
 Assert-True -Condition ($presetCloseoutCommand.IndexOf("-FailOnCloseoutNotReady") -lt $presetCloseoutCommand.IndexOf("update README.md")) -Message "Preset parity docs should only be updated after closeout readiness gates."
 Assert-True -Condition (@($roi.commands | Where-Object { $_.name -eq "manual-roi-known-target-final" }).Count -eq 1) -Message "ROI plan should include explicit manual ROI final command."
 Assert-True -Condition (@($roi.commands | Where-Object { $_.name -eq "auto-face-roi-final" }).Count -eq 1) -Message "ROI plan should include explicit automatic ROI final command."

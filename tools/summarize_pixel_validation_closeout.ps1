@@ -8,6 +8,7 @@ param(
     [switch]$FailOnNonMain,
     [switch]$FailOnUnpushedSource,
     [switch]$FailOnMissingArtifactHashes,
+    [switch]$FailOnNonFinalLabel,
     [switch]$FailOnCloseoutNotReady,
     [switch]$FailOnPresetDocsNotReady
 )
@@ -144,6 +145,16 @@ function Test-ArtifactHashesPresent {
         -not [string]::IsNullOrWhiteSpace((Get-ArtifactSha256 -Summary $Summary -Name "screenrecord"))
 }
 
+function Test-FinalLabel {
+    param($Summary)
+
+    if ([string]::IsNullOrWhiteSpace($Summary.label)) {
+        return $false
+    }
+
+    return ([string]$Summary.label).ToLowerInvariant() -match '(^|-)final($|-)'
+}
+
 function New-Slot {
     param(
         [string]$Id,
@@ -202,6 +213,7 @@ $duplicateAcceptedFinalEvidence = @()
 $nonMainAcceptedFinalEvidence = @()
 $unpushedAcceptedFinalEvidence = @()
 $missingArtifactHashAcceptedFinalEvidence = @()
+$nonFinalLabelAcceptedFinalEvidence = @()
 foreach ($summary in $acceptedSummaries) {
     if (-not (Test-FinalVisualEvidence -Summary $summary)) {
         continue
@@ -222,6 +234,12 @@ foreach ($summary in $acceptedSummaries) {
         $report = New-EvidenceReport -Summary $summary
         $report.reason = "accepted final evidence is missing screenshot or screenrecord SHA-256"
         $missingArtifactHashAcceptedFinalEvidence += [pscustomobject]$report
+    }
+    if (-not (Test-FinalLabel -Summary $summary)) {
+        $report = New-EvidenceReport -Summary $summary
+        $report.reason = "accepted final evidence label is not a final capture label"
+        $nonFinalLabelAcceptedFinalEvidence += [pscustomobject]$report
+        continue
     }
 
     $text = Get-SummaryText -Summary $summary
@@ -286,7 +304,8 @@ $presetDocsEvidenceClean = (
     $duplicateAcceptedFinalEvidence.Count -eq 0 -and
     $nonMainAcceptedFinalEvidence.Count -eq 0 -and
     $unpushedAcceptedFinalEvidence.Count -eq 0 -and
-    $missingArtifactHashAcceptedFinalEvidence.Count -eq 0
+    $missingArtifactHashAcceptedFinalEvidence.Count -eq 0 -and
+    $nonFinalLabelAcceptedFinalEvidence.Count -eq 0
 )
 $allCloseoutEvidencePresent = ($missing.Count -eq 0)
 $allCloseoutEvidenceClean = (
@@ -296,7 +315,8 @@ $allCloseoutEvidenceClean = (
     $duplicateAcceptedFinalEvidence.Count -eq 0 -and
     $nonMainAcceptedFinalEvidence.Count -eq 0 -and
     $unpushedAcceptedFinalEvidence.Count -eq 0 -and
-    $missingArtifactHashAcceptedFinalEvidence.Count -eq 0
+    $missingArtifactHashAcceptedFinalEvidence.Count -eq 0 -and
+    $nonFinalLabelAcceptedFinalEvidence.Count -eq 0
 )
 $result = [pscustomobject]@{
     evidenceRoot = if ($rootPath) { $rootPath.Path } else { $EvidenceRoot }
@@ -308,6 +328,7 @@ $result = [pscustomobject]@{
     nonMainAcceptedFinalEvidence = $nonMainAcceptedFinalEvidence
     unpushedAcceptedFinalEvidence = $unpushedAcceptedFinalEvidence
     missingArtifactHashAcceptedFinalEvidence = $missingArtifactHashAcceptedFinalEvidence
+    nonFinalLabelAcceptedFinalEvidence = $nonFinalLabelAcceptedFinalEvidence
     slots = $slotList
     missing = $missing
     presetVisualSlotsPresent = $presetVisualSlotsPresent
@@ -330,6 +351,7 @@ if ($Json) {
     Write-Output "Non-main accepted final evidence: $(@($result.nonMainAcceptedFinalEvidence).Count)"
     Write-Output "Unpushed accepted final evidence: $(@($result.unpushedAcceptedFinalEvidence).Count)"
     Write-Output "Missing artifact-hash accepted final evidence: $(@($result.missingArtifactHashAcceptedFinalEvidence).Count)"
+    Write-Output "Non-final-label accepted final evidence: $(@($result.nonFinalLabelAcceptedFinalEvidence).Count)"
     Write-Output ""
     foreach ($slot in $slotList) {
         $mark = if ($slot.satisfied) { "[x]" } else { "[ ]" }
@@ -470,6 +492,23 @@ if ($Json) {
             Write-Output "    $($evidence.reason)"
         }
     }
+    if (@($result.nonFinalLabelAcceptedFinalEvidence).Count -gt 0) {
+        Write-Output ""
+        Write-Output "Non-final-label accepted final evidence:"
+        foreach ($evidence in @($result.nonFinalLabelAcceptedFinalEvidence)) {
+            Write-Output "- $($evidence.label): $($evidence.bundle)"
+            if (-not [string]::IsNullOrWhiteSpace($evidence.sourceShortCommit) -or -not [string]::IsNullOrWhiteSpace($evidence.sourceBranch)) {
+                Write-Output "    Source: $($evidence.sourceShortCommit) on $($evidence.sourceBranch)"
+            }
+            if (-not [string]::IsNullOrWhiteSpace($evidence.screenshotSha256)) {
+                Write-Output "    Screenshot SHA-256: $($evidence.screenshotSha256)"
+            }
+            if (-not [string]::IsNullOrWhiteSpace($evidence.screenrecordSha256)) {
+                Write-Output "    Screenrecord SHA-256: $($evidence.screenrecordSha256)"
+            }
+            Write-Output "    $($evidence.reason)"
+        }
+    }
 }
 
 if ($FailOnMissing -and $missing.Count -gt 0) {
@@ -492,6 +531,9 @@ if ($FailOnUnpushedSource -and $unpushedAcceptedFinalEvidence.Count -gt 0) {
 }
 if ($FailOnMissingArtifactHashes -and $missingArtifactHashAcceptedFinalEvidence.Count -gt 0) {
     exit 16
+}
+if ($FailOnNonFinalLabel -and $nonFinalLabelAcceptedFinalEvidence.Count -gt 0) {
+    exit 17
 }
 if ($FailOnCloseoutNotReady -and -not $result.allCloseoutEvidenceClean) {
     exit 7

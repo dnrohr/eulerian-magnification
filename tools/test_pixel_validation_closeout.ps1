@@ -33,6 +33,7 @@ function Invoke-Closeout {
         [switch]$FailOnNonMain,
         [switch]$FailOnUnpushedSource,
         [switch]$FailOnMissingArtifactHashes,
+        [switch]$FailOnNonFinalLabel,
         [switch]$FailOnCloseoutNotReady,
         [switch]$FailOnPresetDocsNotReady
     )
@@ -63,6 +64,9 @@ function Invoke-Closeout {
     }
     if ($FailOnMissingArtifactHashes) {
         $args.FailOnMissingArtifactHashes = $true
+    }
+    if ($FailOnNonFinalLabel) {
+        $args.FailOnNonFinalLabel = $true
     }
     if ($FailOnCloseoutNotReady) {
         $args.FailOnCloseoutNotReady = $true
@@ -181,6 +185,7 @@ try {
     Assert-Equal -Actual @($result.nonMainAcceptedFinalEvidence).Count -Expected 0 -Message "Known closeout fixtures should come from main."
     Assert-Equal -Actual @($result.unpushedAcceptedFinalEvidence).Count -Expected 0 -Message "Known closeout fixtures should be reachable from origin/main."
     Assert-Equal -Actual @($result.missingArtifactHashAcceptedFinalEvidence).Count -Expected 0 -Message "Known closeout fixtures should expose artifact hashes."
+    Assert-Equal -Actual @($result.nonFinalLabelAcceptedFinalEvidence).Count -Expected 0 -Message "Known closeout fixtures should use final capture labels."
     Assert-Equal -Actual @($result.missing).Count -Expected 0 -Message "All slots should be satisfied."
     Assert-Equal -Actual $result.presetVisualSlotsPresent -Expected $true -Message "Preset visual slots should be present when four preset slots pass."
     Assert-Equal -Actual $result.presetDocsEvidenceClean -Expected $false -Message "Unmatched evidence should prevent preset docs closeout."
@@ -270,7 +275,7 @@ try {
     foreach ($name in @("manual", "auto", "pulse", "breathing", "object", "fast")) {
         Copy-Item -LiteralPath (Join-Path $root $name) -Destination (Join-Path $classifiedRoot $name) -Recurse
     }
-    $classifiedExitCode = Invoke-Closeout -EvidenceRoot $classifiedRoot -FailOnMissing -FailOnUnmatched -FailOnAmbiguous -FailOnDuplicate -FailOnNonMain -FailOnUnpushedSource -FailOnMissingArtifactHashes
+    $classifiedExitCode = Invoke-Closeout -EvidenceRoot $classifiedRoot -FailOnMissing -FailOnUnmatched -FailOnAmbiguous -FailOnDuplicate -FailOnNonMain -FailOnUnpushedSource -FailOnMissingArtifactHashes -FailOnNonFinalLabel
     Assert-Equal -Actual $classifiedExitCode -Expected 0 -Message "Combined closeout gates should pass when all accepted evidence maps to slots on pushed main."
     $classified = & (Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1") -EvidenceRoot $classifiedRoot -Json | ConvertFrom-Json
     Assert-Equal -Actual $classified.readyForPresetDocs -Expected $true -Message "Preset docs should be ready when preset slots are satisfied and evidence is clean."
@@ -291,6 +296,17 @@ try {
     Assert-Equal -Actual $missingHashes.readyForPresetDocs -Expected $false -Message "Missing artifact hashes should prevent preset docs readiness."
     $missingHashesExitCode = Invoke-Closeout -EvidenceRoot $missingHashesRoot -FailOnMissingArtifactHashes
     Assert-Equal -Actual $missingHashesExitCode -Expected 16 -Message "FailOnMissingArtifactHashes should fail on accepted evidence without screenshot or screenrecord hashes."
+
+    $nonFinalLabelRoot = Join-Path $root "non-final-label"
+    New-Item -ItemType Directory -Path $nonFinalLabelRoot -Force | Out-Null
+    Write-Summary -Root $nonFinalLabelRoot -Name "pulse-setup-accepted" -Label "live-linear-pulse-setup" -Mode "Pulse" -RoiSource "FullFrame" -Claim "Pulse full-frame live linear visual parity" -Roi $false -Renderer $true -Phase $false
+    $nonFinalLabel = & (Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1") -EvidenceRoot $nonFinalLabelRoot -Json | ConvertFrom-Json
+    Assert-Equal -Actual @($nonFinalLabel.nonFinalLabelAcceptedFinalEvidence).Count -Expected 1 -Message "Accepted final evidence with a setup label should be reported."
+    Assert-Equal -Actual @($nonFinalLabel.slots | Where-Object { $_.satisfied }).Count -Expected 0 -Message "Accepted setup-labeled evidence must not satisfy closeout slots."
+    Assert-Equal -Actual $nonFinalLabel.allCloseoutEvidenceClean -Expected $false -Message "Non-final labels should prevent clean roadmap closeout."
+    Assert-Equal -Actual $nonFinalLabel.readyForPresetDocs -Expected $false -Message "Non-final labels should prevent preset docs readiness."
+    $nonFinalLabelExitCode = Invoke-Closeout -EvidenceRoot $nonFinalLabelRoot -FailOnNonFinalLabel
+    Assert-Equal -Actual $nonFinalLabelExitCode -Expected 17 -Message "FailOnNonFinalLabel should fail on accepted evidence whose label is not a final capture label."
 
     $offMainRoot = Join-Path $root "off-main"
     New-Item -ItemType Directory -Path $offMainRoot -Force | Out-Null

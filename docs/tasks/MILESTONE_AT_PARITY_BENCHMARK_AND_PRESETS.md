@@ -410,6 +410,9 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - Added `-FailOnMissingArtifactHashes` to the Pixel closeout summary and
   planner/docs gates, so older accepted summaries without screenshot and
   screenrecord SHA-256 values cannot close roadmap or parity documentation.
+- Added `-FailOnNonFinalLabel` to the Pixel closeout summary and planner/docs
+  gates, so accidentally accepted setup-labeled bundles cannot satisfy final
+  roadmap or preset parity slots.
 - Documented the closeout gates in README, the task index, and MIT parity
   targets so visual-validation docs are only updated after accepted evidence.
 - Extended the protocol-doc self-test to keep README and task-index closeout
