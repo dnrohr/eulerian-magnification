@@ -369,6 +369,8 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - Added explicit manual ROI, automatic ROI, and Breathing final capture
   commands to the planner and protocol docs so every remaining closeout slot has
   concrete setup/final commands.
+- Added a Pixel validation self-test that cross-checks closeout `Next:` command
+  hints against the planner command names, preventing stale handoff guidance.
 - Updated the live visual validation guide to use `Tremor` for the public Fast
   Motion / Motion path. `ObjectVibration` remains accepted only for internal
   compatibility and parity experiments.

@@ -24,6 +24,7 @@ function Assert-Equal {
 }
 
 $plan = & (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1") -Json | ConvertFrom-Json
+$closeout = & (Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1") -EvidenceRoot (Join-Path ([System.IO.Path]::GetTempPath()) "eulerian-missing-closeout-$([guid]::NewGuid().ToString('N'))") -Json | ConvertFrom-Json
 
 Assert-Equal -Actual $plan.roadmap.total -Expected 47 -Message "Roadmap total mismatch."
 Assert-Equal -Actual $plan.roadmap.complete -Expected 41 -Message "Complete milestone count mismatch."
@@ -65,6 +66,7 @@ foreach ($group in $groups) {
 }
 
 $allCommands = @($groups | ForEach-Object { $_.commands } | ForEach-Object { $_.command })
+$allCommandNames = @($groups | ForEach-Object { $_.commands } | ForEach-Object { $_.name })
 foreach ($expected in @(
     "-RequireEvidenceVerdict target_visible_unvalidated",
     "-RequireFinalVisualEvidence",
@@ -90,6 +92,15 @@ Assert-True -Condition ($roiCommandText.Contains("auto-face-roi-final")) -Messag
 $linearCommandText = @($linear.commands | ForEach-Object { $_.command }) -join "`n"
 Assert-True -Condition ($linearCommandText.Contains("live-linear-breathing-final")) -Message "Linear commands should include explicit Breathing final label."
 Assert-True -Condition ($linearCommandText.Contains("watched slow-motion edge or breathing target")) -Message "Breathing commands should carry a distinct target description."
+
+foreach ($slot in @($closeout.slots)) {
+    foreach ($commandName in @($slot.nextCommand -split "\s*,\s*then\s*|\s*,\s*")) {
+        if ([string]::IsNullOrWhiteSpace($commandName)) {
+            continue
+        }
+        Assert-True -Condition ($commandName -in $allCommandNames) -Message "Closeout slot '$($slot.id)' references unknown planner command '$commandName'."
+    }
+}
 
 $captureScript = Join-Path $PSScriptRoot "capture_live_validation_evidence.ps1"
 $captureParameters = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
