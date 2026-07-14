@@ -26,10 +26,11 @@ $repoRoot = Resolve-Path -LiteralPath (Join-Path $PSScriptRoot "..")
 
 $roiDoc = Join-Path $repoRoot "docs\testing\ROI_DEVICE_VALIDATION.md"
 $liveGuide = Join-Path $repoRoot "docs\testing\LIVE_VISUAL_VALIDATION_CAPTURE.md"
+$parityDoc = Join-Path $repoRoot "docs\testing\MIT_PARITY_TARGETS.md"
 $linearDoc = Join-Path $repoRoot "docs\experiments\pixel8a_live_linear_validation.md"
 $phaseDoc = Join-Path $repoRoot "docs\experiments\pixel8a_live_phase_validation.md"
 
-foreach ($path in @($roiDoc, $liveGuide, $linearDoc, $phaseDoc)) {
+foreach ($path in @($roiDoc, $liveGuide, $parityDoc, $linearDoc, $phaseDoc)) {
     Assert-True -Condition (Test-Path -LiteralPath $path) -Message "Missing protocol doc: $path"
 }
 
@@ -45,6 +46,9 @@ Assert-DocContains -Path $liveGuide -Expected "-RequireThermalReady" -Message "L
 Assert-DocContains -Path $liveGuide -Expected "-RequireCameraFps" -Message "Live guide must document camera FPS gating."
 Assert-DocContains -Path $liveGuide -Expected "-RequireFocusedApp" -Message "Live guide must document focused-app gating."
 Assert-DocContains -Path $liveGuide -Expected "-RequireEvidenceVerdict" -Message "Live guide must document verdict gating."
+
+Assert-DocContains -Path $parityDoc -Expected "summarize_pixel_validation_closeout.ps1" -Message "Parity targets must document closeout summary."
+Assert-DocContains -Path $parityDoc -Expected "-FailOnPresetDocsNotReady" -Message "Parity targets must document the preset docs readiness gate."
 
 Assert-DocContains -Path $linearDoc -Expected "-Mode Pulse" -Message "Live linear protocol must include the Pulse command."
 Assert-DocContains -Path $linearDoc -Expected "-Mode Breathing" -Message "Live linear protocol must include the Breathing variant."

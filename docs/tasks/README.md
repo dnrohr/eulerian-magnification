@@ -104,3 +104,6 @@ ready to close roadmap items:
 ```powershell
 .\tools\summarize_pixel_validation_closeout.ps1
 ```
+
+Use `-FailOnMissing -FailOnUnmatched` before closing roadmap items, and use
+`-FailOnPresetDocsNotReady` before changing README or MIT parity visual status.

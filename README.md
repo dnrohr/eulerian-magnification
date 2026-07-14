@@ -316,6 +316,14 @@ bundles are ready to close the remaining roadmap items:
 .\tools\summarize_pixel_validation_closeout.ps1
 ```
 
+Use the closeout gates before editing visual-validation status in README or
+parity docs:
+
+```powershell
+.\tools\summarize_pixel_validation_closeout.ps1 -FailOnMissing -FailOnUnmatched
+.\tools\summarize_pixel_validation_closeout.ps1 -FailOnPresetDocsNotReady
+```
+
 Open the repo in Android Studio, connect a Pixel 8a, and run the `app`
 configuration when device testing is needed.
 

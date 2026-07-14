@@ -206,6 +206,20 @@ internal/parity setup label; normal public high-frequency validation should use
 the Fast Motion / `Tremor` path unless a task explicitly asks for the internal
 compatibility mode.
 
+After watched Pixel captures, summarize accepted evidence before changing this
+table:
+
+```powershell
+.\tools\summarize_pixel_validation_closeout.ps1
+```
+
+Do not mark preset visual parity as validated until the preset closeout gate
+passes:
+
+```powershell
+.\tools\summarize_pixel_validation_closeout.ps1 -FailOnPresetDocsNotReady
+```
+
 For local file integrity:
 
 ```powershell
