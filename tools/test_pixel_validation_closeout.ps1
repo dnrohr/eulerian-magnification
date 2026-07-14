@@ -217,6 +217,9 @@ try {
     Assert-Equal -Actual $result.slots[0].sourceShortCommit -Expected $currentShortHead -Message "Satisfied closeout slots should expose source short commit."
     Assert-Equal -Actual $result.slots[0].screenshotSha256 -Expected "screenshot-manual-sha256" -Message "Satisfied closeout slots should expose screenshot hashes."
     Assert-Equal -Actual $result.slots[0].screenrecordSha256 -Expected "screenrecord-manual-sha256" -Message "Satisfied closeout slots should expose screenrecord hashes."
+    Assert-True -Condition ($result.slots[0].artifactNote.Contains("Manual ROI known-target alignment")) -Message "Satisfied closeout slots should expose docs-ready artifact notes."
+    Assert-True -Condition ($result.slots[0].artifactNote.Contains("screenshot SHA-256 screenshot-manual-sha256")) -Message "Artifact notes should include screenshot hashes."
+    Assert-True -Condition ($result.slots[0].artifactNote.Contains("screenrecord SHA-256 screenrecord-manual-sha256")) -Message "Artifact notes should include screenrecord hashes."
     Assert-Equal -Actual $result.unmatchedAcceptedFinalEvidence[0].sourceShortCommit -Expected $currentShortHead -Message "Unmatched closeout evidence should expose source short commit."
     Assert-Equal -Actual $result.unmatchedAcceptedFinalEvidence[0].screenshotSha256 -Expected "screenshot-accepted-unknown-sha256" -Message "Unmatched closeout evidence should expose screenshot hashes."
     Assert-Equal -Actual $result.unmatchedAcceptedFinalEvidence[0].screenrecordSha256 -Expected "screenrecord-accepted-unknown-sha256" -Message "Unmatched closeout evidence should expose screenrecord hashes."
@@ -235,6 +238,7 @@ try {
     Assert-Equal -Actual $partial.allCloseoutEvidenceClean -Expected $false -Message "Partial closeout should not be clean."
     Assert-True -Condition ($partial.missing[0].nextCommand.Length -gt 0) -Message "Missing closeout slots should include next command hints."
     Assert-True -Condition ($partial.missing[0].expectedFinalLabel.Length -gt 0) -Message "Missing closeout slots should include expected final labels."
+    Assert-Equal -Actual $partial.missing[0].artifactNote -Expected $null -Message "Missing closeout slots should not expose artifact notes."
 
     $partialExitCode = Invoke-Closeout -EvidenceRoot $partialRoot -FailOnMissing
     Assert-Equal -Actual $partialExitCode -Expected 2 -Message "FailOnMissing should exit 2 when closeout slots are missing."
@@ -321,6 +325,7 @@ try {
     Assert-Equal -Actual $writtenCloseout.allCloseoutEvidenceClean -Expected $true -Message "Written closeout JSON should preserve clean closeout status."
     Assert-Equal -Actual @($writtenCloseout.slots).Count -Expected 6 -Message "Written closeout JSON should include closeout slots."
     Assert-Equal -Actual $writtenCloseout.slots[0].expectedFinalLabel -Expected "manual-roi-known-target-final" -Message "Written closeout JSON should include expected final labels."
+    Assert-True -Condition ($writtenCloseout.slots[0].artifactNote.Contains("bundle")) -Message "Written closeout JSON should include docs-ready artifact notes."
 
     $missingHashesRoot = Join-Path $root "missing-hashes"
     New-Item -ItemType Directory -Path $missingHashesRoot -Force | Out-Null

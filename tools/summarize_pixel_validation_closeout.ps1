@@ -211,6 +211,27 @@ function Get-ExpectedLabelsForSlots {
     return $labels
 }
 
+function New-ArtifactNote {
+    param($Slot)
+
+    $parts = @(
+        "$($Slot.title)",
+        "label $($Slot.label)",
+        "bundle $($Slot.bundle)"
+    )
+    if (-not [string]::IsNullOrWhiteSpace($Slot.sourceShortCommit) -or -not [string]::IsNullOrWhiteSpace($Slot.sourceBranch)) {
+        $parts += "source $($Slot.sourceShortCommit) on $($Slot.sourceBranch)"
+    }
+    if (-not [string]::IsNullOrWhiteSpace($Slot.screenshotSha256)) {
+        $parts += "screenshot SHA-256 $($Slot.screenshotSha256)"
+    }
+    if (-not [string]::IsNullOrWhiteSpace($Slot.screenrecordSha256)) {
+        $parts += "screenrecord SHA-256 $($Slot.screenrecordSha256)"
+    }
+
+    return ($parts -join "; ")
+}
+
 function New-Slot {
     param(
         [string]$Id,
@@ -238,6 +259,7 @@ function New-Slot {
         sourceShortCommit = $null
         screenshotSha256 = $null
         screenrecordSha256 = $null
+        artifactNote = $null
         reason = "missing accepted evidence"
     }
 }
@@ -366,6 +388,7 @@ foreach ($summary in $acceptedSummaries) {
             $slots[$slotId].screenshotSha256 = Get-ArtifactSha256 -Summary $summary -Name "screenshot"
             $slots[$slotId].screenrecordSha256 = Get-ArtifactSha256 -Summary $summary -Name "screenrecord"
             $slots[$slotId].reason = "accepted final evidence"
+            $slots[$slotId].artifactNote = New-ArtifactNote -Slot $slots[$slotId]
         } else {
             $report = New-EvidenceReport -Summary $summary
             $report.slot = $slotId
@@ -481,6 +504,9 @@ if ($Json) {
             }
             if (-not [string]::IsNullOrWhiteSpace($slot.screenrecordSha256)) {
                 Write-Output "    Screenrecord SHA-256: $($slot.screenrecordSha256)"
+            }
+            if (-not [string]::IsNullOrWhiteSpace($slot.artifactNote)) {
+                Write-Output "    Artifact note: $($slot.artifactNote)"
             }
         } else {
             Write-Output "    Status: $($slot.reason)"

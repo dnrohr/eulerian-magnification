@@ -111,7 +111,9 @@ that closeout slot.
 ```
 
 Use `pixel_closeout_summary.json` as the saved closeout artifact for final
-README and parity-doc updates after the gates pass.
+README and parity-doc updates after the gates pass. Satisfied slots include an
+`artifactNote` with the bundle, source, screenshot hash, and screenrecord hash
+needed for release notes.
 
 Use `-FailOnCloseoutNotReady` before closing roadmap items; it is equivalent to
 requiring no missing, unmatched, ambiguous, duplicate, non-`main`, or

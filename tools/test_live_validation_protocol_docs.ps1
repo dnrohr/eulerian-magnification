@@ -132,6 +132,7 @@ foreach ($path in @($readme, $taskReadme)) {
     Assert-DocContains -Path $path -Expected "-FailOnPresetDocsNotReady" -Message "Operator docs must document preset-doc readiness gate."
     Assert-DocContains -Path $path -Expected "-OutputPath" -Message "Operator docs must document closeout summary output path."
     Assert-DocContains -Path $path -Expected "pixel_closeout_summary.json" -Message "Operator docs must document the saved closeout artifact name."
+    Assert-DocContains -Path $path -Expected "artifactNote" -Message "Operator docs must document closeout artifact notes."
     Assert-DocContains -Path $path -Expected "expected final label" -Message "Operator docs must mention expected final labels in closeout output."
     Assert-DocContains -Path $path -Expected "Wrong-slot reports include the expected final label" -Message "Operator docs must mention expected labels in wrong-slot reports."
 }
@@ -169,6 +170,7 @@ Assert-DocContains -Path $parityDoc -Expected "-FailOnMissingVisualReviewText" -
 Assert-DocContains -Path $parityDoc -Expected "-FailOnCloseoutNotReady" -Message "Parity targets must document one-shot closeout readiness gate."
 Assert-DocContains -Path $parityDoc -Expected "-OutputPath" -Message "Parity targets must document closeout summary output path."
 Assert-DocContains -Path $parityDoc -Expected "pixel_closeout_summary.json" -Message "Parity targets must document the saved closeout artifact name."
+Assert-DocContains -Path $parityDoc -Expected "artifactNote" -Message "Parity targets must document closeout artifact notes."
 Assert-DocContains -Path $parityDoc -Expected "expected final label" -Message "Parity targets must mention expected final labels in closeout output."
 Assert-DocContains -Path $parityDoc -Expected "Wrong-slot reports include the expected final label" -Message "Parity targets must mention expected labels in wrong-slot reports."
 

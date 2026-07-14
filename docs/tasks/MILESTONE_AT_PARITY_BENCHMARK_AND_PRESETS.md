@@ -439,6 +439,8 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - The closeout summary now supports `-OutputPath`, and the Pixel planner writes
   `pixel_closeout_summary.json` so final README/parity updates can cite a saved
   closeout artifact.
+- Satisfied closeout slots now include an `artifactNote` with bundle, source,
+  screenshot hash, and screenrecord hash for final README/parity release notes.
 - Tightened closeout classification so the shared `Tremor` runtime mode cannot
   make Object vibration evidence satisfy the separate Fast tremor slot.
 - Added explicit Fast tremor setup/final capture commands to the Pixel
