@@ -361,6 +361,9 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   roadmap-closeout readiness check.
 - Added a tested `-FailOnPresetDocsNotReady` closeout gate so README/parity doc
   updates can be blocked until all four preset visual slots are accepted.
+- Tightened `-FailOnPresetDocsNotReady` so preset doc updates also fail on
+  unmatched, ambiguous, or duplicate accepted evidence, even when all four
+  preset slots are present.
 - Documented the closeout gates in README, the task index, and MIT parity
   targets so visual-validation docs are only updated after accepted evidence.
 - Extended the protocol-doc self-test to keep README and task-index closeout

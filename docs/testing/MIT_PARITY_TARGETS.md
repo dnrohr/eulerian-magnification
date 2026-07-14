@@ -214,7 +214,8 @@ table:
 ```
 
 Do not mark preset visual parity as validated until the preset closeout gate
-passes:
+passes. The gate requires all four preset visual slots and rejects unmatched,
+ambiguous, or duplicate accepted evidence:
 
 ```powershell
 .\tools\summarize_pixel_validation_closeout.ps1 -FailOnPresetDocsNotReady

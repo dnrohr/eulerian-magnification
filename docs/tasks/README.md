@@ -108,4 +108,6 @@ ready to close roadmap items:
 Use `-FailOnCloseoutNotReady` before closing roadmap items; it is equivalent to
 requiring no missing, unmatched, ambiguous, or duplicate accepted evidence
 (`-FailOnMissing -FailOnUnmatched -FailOnAmbiguous -FailOnDuplicate`). Use
-`-FailOnPresetDocsNotReady` before changing README or MIT parity visual status.
+`-FailOnPresetDocsNotReady` before changing README or MIT parity visual status;
+it requires all four preset visual slots and rejects unmatched, ambiguous, or
+duplicate accepted evidence.

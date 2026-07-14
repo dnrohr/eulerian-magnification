@@ -169,6 +169,13 @@ foreach ($summary in $acceptedSummaries) {
 
 $slotList = @($slots.Values | ForEach-Object { [pscustomobject]$_ })
 $missing = @($slotList | Where-Object { -not $_.satisfied })
+$readyForPresetDocs = (@($slotList | Where-Object { $_.id -in @("pulseLinear", "breathingLinear", "objectPhase", "fastTremorPhase") -and $_.satisfied }).Count -eq 4)
+$presetDocsEvidenceClean = (
+    $readyForPresetDocs -and
+    $unmatchedAcceptedFinalEvidence.Count -eq 0 -and
+    $ambiguousAcceptedFinalEvidence.Count -eq 0 -and
+    $duplicateAcceptedFinalEvidence.Count -eq 0
+)
 $allCloseoutEvidencePresent = ($missing.Count -eq 0)
 $allCloseoutEvidenceClean = (
     $allCloseoutEvidencePresent -and
@@ -185,7 +192,8 @@ $result = [pscustomobject]@{
     duplicateAcceptedFinalEvidence = $duplicateAcceptedFinalEvidence
     slots = $slotList
     missing = $missing
-    readyForPresetDocs = (@($slotList | Where-Object { $_.id -in @("pulseLinear", "breathingLinear", "objectPhase", "fastTremorPhase") -and $_.satisfied }).Count -eq 4)
+    readyForPresetDocs = $readyForPresetDocs
+    presetDocsEvidenceClean = $presetDocsEvidenceClean
     allCloseoutEvidencePresent = $allCloseoutEvidencePresent
     allCloseoutEvidenceClean = $allCloseoutEvidenceClean
 }
@@ -215,6 +223,7 @@ if ($Json) {
     }
     Write-Output ""
     Write-Output "Ready for preset docs update: $($result.readyForPresetDocs)"
+    Write-Output "Preset docs evidence clean: $($result.presetDocsEvidenceClean)"
     Write-Output "All closeout evidence present: $($result.allCloseoutEvidencePresent)"
     Write-Output "All closeout evidence clean: $($result.allCloseoutEvidenceClean)"
     if (@($result.unmatchedAcceptedFinalEvidence).Count -gt 0) {
@@ -259,7 +268,7 @@ if ($FailOnDuplicate -and $duplicateAcceptedFinalEvidence.Count -gt 0) {
 if ($FailOnCloseoutNotReady -and -not $result.allCloseoutEvidenceClean) {
     exit 7
 }
-if ($FailOnPresetDocsNotReady -and -not $result.readyForPresetDocs) {
+if ($FailOnPresetDocsNotReady -and -not $result.presetDocsEvidenceClean) {
     exit 4
 }
 
