@@ -123,6 +123,7 @@ foreach ($path in @($readme, $taskReadme)) {
     Assert-DocContains -Path $path -Expected "-Slot" -Message "Operator docs must document planner slot filtering."
     Assert-DocContains -Path $path -Expected "-CaptureStage" -Message "Operator docs must document planner capture-stage filtering."
     Assert-DocContains -Path $path -Expected "-CommandsOnly" -Message "Operator docs must document command-only planner output."
+    Assert-DocContains -Path $path -Expected "-FailOnInvalidSlot" -Message "Operator docs must document invalid slot failure mode."
     Assert-DocContains -Path $path -Expected "available missing slots" -Message "Operator docs must document planner slot-filter feedback."
     Assert-DocContains -Path $path -Expected "recommended captures" -Message "Operator docs must document recommended capture output."
     Assert-DocContains -Path $path -Expected "summarize_pixel_validation_closeout.ps1" -Message "Operator docs must document closeout summary."

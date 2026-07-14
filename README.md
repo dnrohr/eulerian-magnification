@@ -317,7 +317,9 @@ closeout slot id to focus the recommended capture queue on one validation target
 the plan prints available missing slots when a slot filter does not match. Use
 `-CaptureStage Setup` or `-CaptureStage Final` to print only pre-inspection or
 closing evidence commands, and add `-CommandsOnly` when you want paste-ready
-command templates without the surrounding checklist.
+command templates without the surrounding checklist. Add `-FailOnInvalidSlot`
+in scripted runs so a mistyped slot filter exits nonzero instead of producing
+an empty capture queue.
 
 After a connected Pixel validation pass, summarize which accepted evidence
 bundles are ready to close the remaining roadmap items. The summary includes

@@ -493,6 +493,9 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   closing evidence captures.
 - Added `-CommandsOnly` to the Pixel validation planner so a filtered queue can
   emit paste-ready capture command templates without checklist text.
+- Added `-FailOnInvalidSlot` to the Pixel validation planner so scripted
+  connected-device runs fail fast when a mistyped slot filter would otherwise
+  emit an empty capture queue.
 
 ## Remaining
 

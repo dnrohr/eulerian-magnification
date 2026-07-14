@@ -5,6 +5,7 @@ param(
     [string]$CaptureStage = "All",
     [switch]$NextOnly,
     [switch]$CommandsOnly,
+    [switch]$FailOnInvalidSlot,
     [switch]$Json
 )
 
@@ -167,6 +168,7 @@ $missingSlotBlocker = @($closeout.closeoutBlockers | Where-Object { $_.kind -eq 
 $availableSlots = @($missingSlotBlocker.items | ForEach-Object { $_.id })
 $requestedSlots = @($Slot | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
 $invalidRequestedSlots = @($requestedSlots | Where-Object { $_ -notin $availableSlots })
+$invalidSlotExitCode = 21
 $requestedStage = $CaptureStage
 foreach ($missingSlot in @($missingSlotBlocker.items)) {
     if ($requestedSlots.Count -gt 0 -and $missingSlot.id -notin $requestedSlots) {
@@ -231,10 +233,16 @@ $result = [pscustomobject]@{
 
 if ($Json) {
     $result | ConvertTo-Json -Depth 6
+    if ($FailOnInvalidSlot -and @($result.invalidRequestedSlots).Count -gt 0) {
+        exit $invalidSlotExitCode
+    }
     exit 0
 }
 
 if ($CommandsOnly) {
+    if ($FailOnInvalidSlot -and @($result.invalidRequestedSlots).Count -gt 0) {
+        exit $invalidSlotExitCode
+    }
     foreach ($capture in @($result.recommendedCaptures)) {
         foreach ($command in @($capture.commands)) {
             if (-not [string]::IsNullOrWhiteSpace($command.command)) {
@@ -281,6 +289,9 @@ if (@($result.recommendedCaptures).Count -gt 0) {
 }
 
 if ($NextOnly) {
+    if ($FailOnInvalidSlot -and @($result.invalidRequestedSlots).Count -gt 0) {
+        exit $invalidSlotExitCode
+    }
     exit 0
 }
 
@@ -300,4 +311,8 @@ foreach ($group in $validationGroups | Sort-Object order) {
         Write-Output "   - $($command.name): $($command.purpose)"
         Write-Output "     $($command.command)"
     }
+}
+
+if ($FailOnInvalidSlot -and @($result.invalidRequestedSlots).Count -gt 0) {
+    exit $invalidSlotExitCode
 }

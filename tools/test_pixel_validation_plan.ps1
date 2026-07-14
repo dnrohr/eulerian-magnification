@@ -23,6 +23,27 @@ function Assert-Equal {
     }
 }
 
+function Invoke-PlanExitCode {
+    param(
+        [string]$EvidenceRoot,
+        [string[]]$Slot = @(),
+        [switch]$FailOnInvalidSlot
+    )
+
+    $script = Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1"
+    $powerShellExe = (Get-Process -Id $PID).Path
+    $arguments = @("-NoProfile", "-File", $script, "-EvidenceRoot", $EvidenceRoot)
+    foreach ($slotId in $Slot) {
+        $arguments += @("-Slot", $slotId)
+    }
+    if ($FailOnInvalidSlot) {
+        $arguments += "-FailOnInvalidSlot"
+    }
+
+    & $powerShellExe @arguments *> $null
+    return $LASTEXITCODE
+}
+
 $missingCloseoutRoot = Join-Path ([System.IO.Path]::GetTempPath()) "eulerian-missing-closeout-$([guid]::NewGuid().ToString('N'))"
 $plan = & (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1") -EvidenceRoot $missingCloseoutRoot -Json | ConvertFrom-Json
 $planText = & (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1") -EvidenceRoot $missingCloseoutRoot
@@ -35,6 +56,8 @@ $finalOnlyText = & (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1
 $pulseFinalCommandsOnly = @(& (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1") -EvidenceRoot $missingCloseoutRoot -Slot pulseLinear -CaptureStage Final -CommandsOnly)
 $invalidSlotPlan = & (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1") -EvidenceRoot $missingCloseoutRoot -Slot notARealSlot -Json | ConvertFrom-Json
 $invalidSlotText = & (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1") -EvidenceRoot $missingCloseoutRoot -Slot notARealSlot -NextOnly
+$validSlotExitCode = Invoke-PlanExitCode -EvidenceRoot $missingCloseoutRoot -Slot pulseLinear -FailOnInvalidSlot
+$invalidSlotExitCode = Invoke-PlanExitCode -EvidenceRoot $missingCloseoutRoot -Slot notARealSlot -FailOnInvalidSlot
 $closeout = & (Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1") -EvidenceRoot $missingCloseoutRoot -Json | ConvertFrom-Json
 
 Assert-Equal -Actual $plan.roadmap.total -Expected 47 -Message "Roadmap total mismatch."
@@ -93,6 +116,8 @@ Assert-Equal -Actual @($invalidSlotPlan.invalidRequestedSlots).Count -Expected 1
 Assert-Equal -Actual $invalidSlotPlan.invalidRequestedSlots[0] -Expected "notARealSlot" -Message "Invalid slot report should preserve the requested slot id."
 Assert-True -Condition (($invalidSlotText -join "`n").Contains("Available missing slots:")) -Message "Invalid slot text should print available slots."
 Assert-True -Condition (($invalidSlotText -join "`n").Contains("Warning: requested slot(s) not currently missing or unknown: notARealSlot")) -Message "Invalid slot text should warn about unknown slots."
+Assert-Equal -Actual $validSlotExitCode -Expected 0 -Message "FailOnInvalidSlot should allow known missing slot filters."
+Assert-Equal -Actual $invalidSlotExitCode -Expected 21 -Message "FailOnInvalidSlot should fail with exit code 21 for unknown slot filters."
 
 $covered = @($plan.coveredMilestones)
 foreach ($milestone in @("M", "U", "AE", "AP", "AR", "AT")) {
