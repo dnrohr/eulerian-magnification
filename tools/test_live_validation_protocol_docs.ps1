@@ -123,6 +123,7 @@ foreach ($path in @($readme, $taskReadme)) {
     Assert-DocContains -Path $path -Expected "-FailOnDuplicate" -Message "Operator docs must document duplicate-evidence closeout gate."
     Assert-DocContains -Path $path -Expected "-FailOnNonMain" -Message "Operator docs must document non-main-evidence closeout gate."
     Assert-DocContains -Path $path -Expected "-FailOnUnpushedSource" -Message "Operator docs must document pushed-source closeout gate."
+    Assert-DocContains -Path $path -Expected "-FailOnMissingArtifactHashes" -Message "Operator docs must document artifact-hash closeout gate."
     Assert-DocContains -Path $path -Expected "-FailOnCloseoutNotReady" -Message "Operator docs must document one-shot closeout readiness gate."
     Assert-DocContains -Path $path -Expected "-FailOnPresetDocsNotReady" -Message "Operator docs must document preset-doc readiness gate."
 }
@@ -149,6 +150,7 @@ Assert-DocContains -Path $parityDoc -Expected "-FailOnAmbiguous" -Message "Parit
 Assert-DocContains -Path $parityDoc -Expected "-FailOnDuplicate" -Message "Parity targets must document duplicate accepted evidence gate."
 Assert-DocContains -Path $parityDoc -Expected "-FailOnNonMain" -Message "Parity targets must document non-main accepted evidence gate."
 Assert-DocContains -Path $parityDoc -Expected "-FailOnUnpushedSource" -Message "Parity targets must document pushed-source accepted evidence gate."
+Assert-DocContains -Path $parityDoc -Expected "-FailOnMissingArtifactHashes" -Message "Parity targets must document artifact-hash accepted evidence gate."
 Assert-DocContains -Path $parityDoc -Expected "-FailOnCloseoutNotReady" -Message "Parity targets must document one-shot closeout readiness gate."
 
 Assert-DocContains -Path $linearDoc -Expected "-Mode Pulse" -Message "Live linear protocol must include the Pulse command."

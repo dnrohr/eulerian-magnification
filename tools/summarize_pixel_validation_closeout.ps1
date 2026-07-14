@@ -7,6 +7,7 @@ param(
     [switch]$FailOnDuplicate,
     [switch]$FailOnNonMain,
     [switch]$FailOnUnpushedSource,
+    [switch]$FailOnMissingArtifactHashes,
     [switch]$FailOnCloseoutNotReady,
     [switch]$FailOnPresetDocsNotReady
 )
@@ -136,6 +137,13 @@ function Test-SourceCommitOnOriginMain {
     }
 }
 
+function Test-ArtifactHashesPresent {
+    param($Summary)
+
+    return -not [string]::IsNullOrWhiteSpace((Get-ArtifactSha256 -Summary $Summary -Name "screenshot")) -and
+        -not [string]::IsNullOrWhiteSpace((Get-ArtifactSha256 -Summary $Summary -Name "screenrecord"))
+}
+
 function New-Slot {
     param(
         [string]$Id,
@@ -193,6 +201,7 @@ $ambiguousAcceptedFinalEvidence = @()
 $duplicateAcceptedFinalEvidence = @()
 $nonMainAcceptedFinalEvidence = @()
 $unpushedAcceptedFinalEvidence = @()
+$missingArtifactHashAcceptedFinalEvidence = @()
 foreach ($summary in $acceptedSummaries) {
     if (-not (Test-FinalVisualEvidence -Summary $summary)) {
         continue
@@ -208,6 +217,11 @@ foreach ($summary in $acceptedSummaries) {
         $report = New-EvidenceReport -Summary $summary
         $report.reason = "accepted final evidence source commit is not reachable from origin/main"
         $unpushedAcceptedFinalEvidence += [pscustomobject]$report
+    }
+    if (-not (Test-ArtifactHashesPresent -Summary $summary)) {
+        $report = New-EvidenceReport -Summary $summary
+        $report.reason = "accepted final evidence is missing screenshot or screenrecord SHA-256"
+        $missingArtifactHashAcceptedFinalEvidence += [pscustomobject]$report
     }
 
     $text = Get-SummaryText -Summary $summary
@@ -271,7 +285,8 @@ $presetDocsEvidenceClean = (
     $ambiguousAcceptedFinalEvidence.Count -eq 0 -and
     $duplicateAcceptedFinalEvidence.Count -eq 0 -and
     $nonMainAcceptedFinalEvidence.Count -eq 0 -and
-    $unpushedAcceptedFinalEvidence.Count -eq 0
+    $unpushedAcceptedFinalEvidence.Count -eq 0 -and
+    $missingArtifactHashAcceptedFinalEvidence.Count -eq 0
 )
 $allCloseoutEvidencePresent = ($missing.Count -eq 0)
 $allCloseoutEvidenceClean = (
@@ -280,7 +295,8 @@ $allCloseoutEvidenceClean = (
     $ambiguousAcceptedFinalEvidence.Count -eq 0 -and
     $duplicateAcceptedFinalEvidence.Count -eq 0 -and
     $nonMainAcceptedFinalEvidence.Count -eq 0 -and
-    $unpushedAcceptedFinalEvidence.Count -eq 0
+    $unpushedAcceptedFinalEvidence.Count -eq 0 -and
+    $missingArtifactHashAcceptedFinalEvidence.Count -eq 0
 )
 $result = [pscustomobject]@{
     evidenceRoot = if ($rootPath) { $rootPath.Path } else { $EvidenceRoot }
@@ -291,6 +307,7 @@ $result = [pscustomobject]@{
     duplicateAcceptedFinalEvidence = $duplicateAcceptedFinalEvidence
     nonMainAcceptedFinalEvidence = $nonMainAcceptedFinalEvidence
     unpushedAcceptedFinalEvidence = $unpushedAcceptedFinalEvidence
+    missingArtifactHashAcceptedFinalEvidence = $missingArtifactHashAcceptedFinalEvidence
     slots = $slotList
     missing = $missing
     presetVisualSlotsPresent = $presetVisualSlotsPresent
@@ -312,6 +329,7 @@ if ($Json) {
     Write-Output "Duplicate accepted final evidence: $(@($result.duplicateAcceptedFinalEvidence).Count)"
     Write-Output "Non-main accepted final evidence: $(@($result.nonMainAcceptedFinalEvidence).Count)"
     Write-Output "Unpushed accepted final evidence: $(@($result.unpushedAcceptedFinalEvidence).Count)"
+    Write-Output "Missing artifact-hash accepted final evidence: $(@($result.missingArtifactHashAcceptedFinalEvidence).Count)"
     Write-Output ""
     foreach ($slot in $slotList) {
         $mark = if ($slot.satisfied) { "[x]" } else { "[ ]" }
@@ -435,6 +453,23 @@ if ($Json) {
             Write-Output "    $($evidence.reason)"
         }
     }
+    if (@($result.missingArtifactHashAcceptedFinalEvidence).Count -gt 0) {
+        Write-Output ""
+        Write-Output "Missing artifact-hash accepted final evidence:"
+        foreach ($evidence in @($result.missingArtifactHashAcceptedFinalEvidence)) {
+            Write-Output "- $($evidence.label): $($evidence.bundle)"
+            if (-not [string]::IsNullOrWhiteSpace($evidence.sourceShortCommit) -or -not [string]::IsNullOrWhiteSpace($evidence.sourceBranch)) {
+                Write-Output "    Source: $($evidence.sourceShortCommit) on $($evidence.sourceBranch)"
+            }
+            if (-not [string]::IsNullOrWhiteSpace($evidence.screenshotSha256)) {
+                Write-Output "    Screenshot SHA-256: $($evidence.screenshotSha256)"
+            }
+            if (-not [string]::IsNullOrWhiteSpace($evidence.screenrecordSha256)) {
+                Write-Output "    Screenrecord SHA-256: $($evidence.screenrecordSha256)"
+            }
+            Write-Output "    $($evidence.reason)"
+        }
+    }
 }
 
 if ($FailOnMissing -and $missing.Count -gt 0) {
@@ -454,6 +489,9 @@ if ($FailOnNonMain -and $nonMainAcceptedFinalEvidence.Count -gt 0) {
 }
 if ($FailOnUnpushedSource -and $unpushedAcceptedFinalEvidence.Count -gt 0) {
     exit 15
+}
+if ($FailOnMissingArtifactHashes -and $missingArtifactHashAcceptedFinalEvidence.Count -gt 0) {
+    exit 16
 }
 if ($FailOnCloseoutNotReady -and -not $result.allCloseoutEvidenceClean) {
     exit 7

@@ -130,7 +130,7 @@ $validationGroups = @(
             [pscustomobject]@{
                 name = "preset-parity-closeout"
                 purpose = "Documentation closeout after accepted visual artifacts exist."
-                command = "Run .\tools\summarize_pixel_validation_closeout.ps1 -FailOnNonMain -FailOnUnpushedSource, .\tools\summarize_pixel_validation_closeout.ps1 -FailOnCloseoutNotReady, and .\tools\summarize_pixel_validation_closeout.ps1 -FailOnPresetDocsNotReady. If all pass, update README.md and docs/testing/MIT_PARITY_TARGETS.md with visual-validation status and artifact notes, then rerun .\tools\test_offline_project_tooling.ps1."
+                command = "Run .\tools\summarize_pixel_validation_closeout.ps1 -FailOnNonMain -FailOnUnpushedSource -FailOnMissingArtifactHashes, .\tools\summarize_pixel_validation_closeout.ps1 -FailOnCloseoutNotReady, and .\tools\summarize_pixel_validation_closeout.ps1 -FailOnPresetDocsNotReady. If all pass, update README.md and docs/testing/MIT_PARITY_TARGETS.md with visual-validation status and artifact notes, then rerun .\tools\test_offline_project_tooling.ps1."
             }
         )
     }

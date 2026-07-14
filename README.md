@@ -320,11 +320,11 @@ accepted bundle, so final docs can cite the exact visual artifacts:
 
 Use the closeout gates before editing visual-validation status in README or
 parity docs. `-FailOnPresetDocsNotReady` requires the four preset slots to be
-present and rejects unmatched, ambiguous, duplicate, non-`main`, or unpushed
-accepted evidence:
+present and rejects unmatched, ambiguous, duplicate, non-`main`, unpushed, or
+missing-artifact-hash accepted evidence:
 
 ```powershell
-.\tools\summarize_pixel_validation_closeout.ps1 -FailOnMissing -FailOnUnmatched -FailOnAmbiguous -FailOnDuplicate -FailOnNonMain -FailOnUnpushedSource
+.\tools\summarize_pixel_validation_closeout.ps1 -FailOnMissing -FailOnUnmatched -FailOnAmbiguous -FailOnDuplicate -FailOnNonMain -FailOnUnpushedSource -FailOnMissingArtifactHashes
 .\tools\summarize_pixel_validation_closeout.ps1 -FailOnCloseoutNotReady
 .\tools\summarize_pixel_validation_closeout.ps1 -FailOnPresetDocsNotReady
 ```

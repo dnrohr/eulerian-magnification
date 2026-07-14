@@ -407,6 +407,9 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   SHA-256 values into satisfied slots and flagged accepted-evidence reports, so
   the final roadmap/README parity update can cite artifacts directly from one
   closeout summary.
+- Added `-FailOnMissingArtifactHashes` to the Pixel closeout summary and
+  planner/docs gates, so older accepted summaries without screenshot and
+  screenrecord SHA-256 values cannot close roadmap or parity documentation.
 - Documented the closeout gates in README, the task index, and MIT parity
   targets so visual-validation docs are only updated after accepted evidence.
 - Extended the protocol-doc self-test to keep README and task-index closeout

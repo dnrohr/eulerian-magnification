@@ -32,6 +32,7 @@ function Invoke-Closeout {
         [switch]$FailOnDuplicate,
         [switch]$FailOnNonMain,
         [switch]$FailOnUnpushedSource,
+        [switch]$FailOnMissingArtifactHashes,
         [switch]$FailOnCloseoutNotReady,
         [switch]$FailOnPresetDocsNotReady
     )
@@ -60,6 +61,9 @@ function Invoke-Closeout {
     if ($FailOnUnpushedSource) {
         $args.FailOnUnpushedSource = $true
     }
+    if ($FailOnMissingArtifactHashes) {
+        $args.FailOnMissingArtifactHashes = $true
+    }
     if ($FailOnCloseoutNotReady) {
         $args.FailOnCloseoutNotReady = $true
     }
@@ -84,7 +88,8 @@ function Write-Summary {
         [bool]$Phase,
         [bool]$Final = $true,
         [string]$SourceBranch = "main",
-        [string]$SourceCommit = ""
+        [string]$SourceCommit = "",
+        [bool]$IncludeArtifactHashes = $true
     )
 
     $dir = Join-Path $Root $Name
@@ -133,7 +138,10 @@ function Write-Summary {
             rendererDiagnostics = (& $gate $Renderer)
             phaseDiagnostics = (& $gate $Phase)
         }
-        artifacts = [ordered]@{
+    }
+
+    if ($IncludeArtifactHashes) {
+        $summary.artifacts = [ordered]@{
             screenshot = [ordered]@{
                 sha256 = "screenshot-$Name-sha256"
             }
@@ -172,6 +180,7 @@ try {
     Assert-Equal -Actual @($result.duplicateAcceptedFinalEvidence).Count -Expected 0 -Message "Known closeout fixtures should not duplicate slots."
     Assert-Equal -Actual @($result.nonMainAcceptedFinalEvidence).Count -Expected 0 -Message "Known closeout fixtures should come from main."
     Assert-Equal -Actual @($result.unpushedAcceptedFinalEvidence).Count -Expected 0 -Message "Known closeout fixtures should be reachable from origin/main."
+    Assert-Equal -Actual @($result.missingArtifactHashAcceptedFinalEvidence).Count -Expected 0 -Message "Known closeout fixtures should expose artifact hashes."
     Assert-Equal -Actual @($result.missing).Count -Expected 0 -Message "All slots should be satisfied."
     Assert-Equal -Actual $result.presetVisualSlotsPresent -Expected $true -Message "Preset visual slots should be present when four preset slots pass."
     Assert-Equal -Actual $result.presetDocsEvidenceClean -Expected $false -Message "Unmatched evidence should prevent preset docs closeout."
@@ -261,7 +270,7 @@ try {
     foreach ($name in @("manual", "auto", "pulse", "breathing", "object", "fast")) {
         Copy-Item -LiteralPath (Join-Path $root $name) -Destination (Join-Path $classifiedRoot $name) -Recurse
     }
-    $classifiedExitCode = Invoke-Closeout -EvidenceRoot $classifiedRoot -FailOnMissing -FailOnUnmatched -FailOnAmbiguous -FailOnDuplicate -FailOnNonMain -FailOnUnpushedSource
+    $classifiedExitCode = Invoke-Closeout -EvidenceRoot $classifiedRoot -FailOnMissing -FailOnUnmatched -FailOnAmbiguous -FailOnDuplicate -FailOnNonMain -FailOnUnpushedSource -FailOnMissingArtifactHashes
     Assert-Equal -Actual $classifiedExitCode -Expected 0 -Message "Combined closeout gates should pass when all accepted evidence maps to slots on pushed main."
     $classified = & (Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1") -EvidenceRoot $classifiedRoot -Json | ConvertFrom-Json
     Assert-Equal -Actual $classified.readyForPresetDocs -Expected $true -Message "Preset docs should be ready when preset slots are satisfied and evidence is clean."
@@ -271,6 +280,17 @@ try {
     Assert-Equal -Actual $classifiedPresetDocsExitCode -Expected 0 -Message "FailOnPresetDocsNotReady should pass when preset slots are satisfied and evidence is clean."
     $classifiedCloseoutReadyExitCode = Invoke-Closeout -EvidenceRoot $classifiedRoot -FailOnCloseoutNotReady
     Assert-Equal -Actual $classifiedCloseoutReadyExitCode -Expected 0 -Message "FailOnCloseoutNotReady should pass when all accepted evidence maps cleanly to slots."
+
+    $missingHashesRoot = Join-Path $root "missing-hashes"
+    New-Item -ItemType Directory -Path $missingHashesRoot -Force | Out-Null
+    Write-Summary -Root $missingHashesRoot -Name "pulse" -Label "live-linear-pulse-final" -Mode "Pulse" -RoiSource "FullFrame" -Claim "Pulse full-frame live linear visual parity" -Roi $false -Renderer $true -Phase $false -IncludeArtifactHashes $false
+    $missingHashes = & (Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1") -EvidenceRoot $missingHashesRoot -Json | ConvertFrom-Json
+    Assert-Equal -Actual @($missingHashes.missingArtifactHashAcceptedFinalEvidence).Count -Expected 1 -Message "Accepted final evidence without artifact hashes should be reported."
+    Assert-Equal -Actual $missingHashes.missingArtifactHashAcceptedFinalEvidence[0].label -Expected "live-linear-pulse-final" -Message "Missing artifact-hash evidence label mismatch."
+    Assert-Equal -Actual $missingHashes.allCloseoutEvidenceClean -Expected $false -Message "Missing artifact hashes should prevent clean roadmap closeout."
+    Assert-Equal -Actual $missingHashes.readyForPresetDocs -Expected $false -Message "Missing artifact hashes should prevent preset docs readiness."
+    $missingHashesExitCode = Invoke-Closeout -EvidenceRoot $missingHashesRoot -FailOnMissingArtifactHashes
+    Assert-Equal -Actual $missingHashesExitCode -Expected 16 -Message "FailOnMissingArtifactHashes should fail on accepted evidence without screenshot or screenrecord hashes."
 
     $offMainRoot = Join-Path $root "off-main"
     New-Item -ItemType Directory -Path $offMainRoot -Force | Out-Null
