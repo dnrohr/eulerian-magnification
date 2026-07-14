@@ -4,6 +4,7 @@ param(
     [ValidateSet("All", "Setup", "Final")]
     [string]$CaptureStage = "All",
     [switch]$NextOnly,
+    [switch]$CommandsOnly,
     [switch]$Json
 )
 
@@ -230,6 +231,17 @@ $result = [pscustomobject]@{
 
 if ($Json) {
     $result | ConvertTo-Json -Depth 6
+    exit 0
+}
+
+if ($CommandsOnly) {
+    foreach ($capture in @($result.recommendedCaptures)) {
+        foreach ($command in @($capture.commands)) {
+            if (-not [string]::IsNullOrWhiteSpace($command.command)) {
+                Write-Output $command.command
+            }
+        }
+    }
     exit 0
 }
 

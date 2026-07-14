@@ -32,6 +32,7 @@ $pulseOnlyText = & (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1
 $setupOnlyPlan = & (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1") -EvidenceRoot $missingCloseoutRoot -CaptureStage Setup -Json | ConvertFrom-Json
 $finalOnlyPlan = & (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1") -EvidenceRoot $missingCloseoutRoot -CaptureStage Final -Json | ConvertFrom-Json
 $finalOnlyText = & (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1") -EvidenceRoot $missingCloseoutRoot -CaptureStage Final -NextOnly
+$pulseFinalCommandsOnly = @(& (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1") -EvidenceRoot $missingCloseoutRoot -Slot pulseLinear -CaptureStage Final -CommandsOnly)
 $invalidSlotPlan = & (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1") -EvidenceRoot $missingCloseoutRoot -Slot notARealSlot -Json | ConvertFrom-Json
 $invalidSlotText = & (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1") -EvidenceRoot $missingCloseoutRoot -Slot notARealSlot -NextOnly
 $closeout = & (Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1") -EvidenceRoot $missingCloseoutRoot -Json | ConvertFrom-Json
@@ -83,6 +84,10 @@ Assert-Equal -Actual $finalOnlyPlan.recommendedCaptures[0].commands[0].captureSt
 Assert-True -Condition (($finalOnlyText -join "`n").Contains("Capture stage: Final")) -Message "Text plan should print requested capture stage."
 Assert-True -Condition (-not (($finalOnlyText -join "`n").Contains("manual-roi-known-target-setup:"))) -Message "Final-only text should omit setup commands."
 Assert-True -Condition (($finalOnlyText -join "`n").Contains("manual-roi-known-target-final:")) -Message "Final-only text should include final commands."
+Assert-Equal -Actual @($pulseFinalCommandsOnly).Count -Expected 1 -Message "CommandsOnly should respect slot and stage filters."
+Assert-True -Condition ($pulseFinalCommandsOnly[0].StartsWith(".\tools\capture_live_validation_evidence.ps1")) -Message "CommandsOnly output should contain command templates only."
+Assert-True -Condition ($pulseFinalCommandsOnly[0].Contains('live-linear-pulse-final')) -Message "CommandsOnly output should include the requested final command."
+Assert-True -Condition (-not ($pulseFinalCommandsOnly[0].Contains("Recommended captures"))) -Message "CommandsOnly output should omit headings."
 Assert-Equal -Actual @($invalidSlotPlan.recommendedCaptures).Count -Expected 0 -Message "Unknown slot filter should not recommend captures."
 Assert-Equal -Actual @($invalidSlotPlan.invalidRequestedSlots).Count -Expected 1 -Message "Unknown slot filter should be reported as invalid."
 Assert-Equal -Actual $invalidSlotPlan.invalidRequestedSlots[0] -Expected "notARealSlot" -Message "Invalid slot report should preserve the requested slot id."

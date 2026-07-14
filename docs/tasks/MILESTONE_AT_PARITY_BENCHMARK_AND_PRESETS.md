@@ -491,6 +491,8 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - Added `-CaptureStage Setup|Final` filtering to the Pixel validation planner
   so connected-device sessions can run pre-inspection captures separately from
   closing evidence captures.
+- Added `-CommandsOnly` to the Pixel validation planner so a filtered queue can
+  emit paste-ready capture command templates without checklist text.
 
 ## Remaining
 
