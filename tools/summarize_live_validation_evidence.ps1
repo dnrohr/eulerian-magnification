@@ -249,6 +249,21 @@ function Test-RequiredUiText {
     return $checks
 }
 
+function Test-Mp4Signature {
+    param([string]$Path)
+
+    if (-not (Test-Path -LiteralPath $Path)) {
+        return $false
+    }
+    $bytes = [System.IO.File]::ReadAllBytes($Path)
+    if ($bytes.Length -lt 12) {
+        return $false
+    }
+    $headerLength = [Math]::Min($bytes.Length, 32)
+    $header = [System.Text.Encoding]::ASCII.GetString($bytes, 0, $headerLength)
+    return $header.IndexOf("ftyp", [System.StringComparison]::Ordinal) -ge 0
+}
+
 function Measure-ScreenshotContent {
     param([System.Drawing.Bitmap]$Bitmap)
 
@@ -573,16 +588,21 @@ $screenrecordInfo = [ordered]@{
     present = Test-Path -LiteralPath $screenrecordPath
     bytes = $null
     nonEmpty = $false
+    mp4Signature = $false
 }
 if ($screenrecordInfo.present) {
     $screenrecordInfo.bytes = (Get-Item -LiteralPath $screenrecordPath).Length
     $screenrecordInfo.nonEmpty = $screenrecordInfo.bytes -gt 0
+    $screenrecordInfo.mp4Signature = Test-Mp4Signature $screenrecordPath
 }
 if ($RequireScreenrecord -and -not $screenrecordInfo.present) {
     $warnings += "screenrecord required but screenrecord.mp4 is missing"
 }
 if ($RequireScreenrecord -and $screenrecordInfo.present -and -not $screenrecordInfo.nonEmpty) {
     $warnings += "screenrecord required but screenrecord.mp4 is empty"
+}
+if ($RequireScreenrecord -and $screenrecordInfo.present -and $screenrecordInfo.nonEmpty -and -not $screenrecordInfo.mp4Signature) {
+    $warnings += "screenrecord required but screenrecord.mp4 does not look like an MP4 file"
 }
 
 $screenshotInfo = $null
@@ -647,7 +667,7 @@ $phaseDiagnosticsPassed = (-not [bool]$RequirePhaseDiagnostics) -or (@($uiDumpSu
 if (-not $phaseDiagnosticsPassed) {
     $warnings += "phase diagnostics required but no phase labels were found in the UI dump"
 }
-$screenrecordPassed = (-not [bool]$RequireScreenrecord) -or ($screenrecordInfo.present -and $screenrecordInfo.nonEmpty)
+$screenrecordPassed = (-not [bool]$RequireScreenrecord) -or ($screenrecordInfo.present -and $screenrecordInfo.nonEmpty -and $screenrecordInfo.mp4Signature)
 $warningCountBeforeNoWarningsGate = $warnings.Count
 if ($RequireNoWarnings -and $warningCountBeforeNoWarningsGate -gt 0) {
     $warnings += "no warnings required but summary has $warningCountBeforeNoWarningsGate warning(s)"
@@ -711,6 +731,7 @@ $result = [ordered]@{
             required = [bool]$RequireScreenrecord
             present = $screenrecordInfo.present
             bytes = $screenrecordInfo.bytes
+            mp4Signature = $screenrecordInfo.mp4Signature
             passed = $screenrecordPassed
         }
         evidenceVerdict = [ordered]@{

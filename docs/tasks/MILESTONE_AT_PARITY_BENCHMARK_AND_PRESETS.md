@@ -237,15 +237,15 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 
 - Live validation summaries now accept `-RequireScreenrecord` for watched
   motion-validation runs where a still screenshot is not enough evidence.
-- The summary records `screenrecord.mp4` presence, byte count, and non-empty
-  status under both `artifacts.screenrecord` and
+- The summary records `screenrecord.mp4` presence, byte count, non-empty
+  status, and MP4 signature detection under both `artifacts.screenrecord` and
   `requiredGates.screenrecord`.
 - `tools/capture_live_validation_evidence.ps1` forwards the requirement when
   `-Summarize` is used, so future AP/AR/AT Pixel runs can require a video
   artifact in the same command that captures visual-review metadata.
-- Missing or empty required recordings exit `11`. The summary self-test covers
-  both a missing screenrecord failure and a non-empty synthetic screenrecord
-  pass without needing the physical Pixel for this slice.
+- Missing, empty, or invalid required recordings exit `11`. The summary
+  self-test covers missing and invalid screenrecord failures plus a synthetic
+  MP4-signature pass without needing the physical Pixel for this slice.
 
 ## Remaining
 

@@ -363,14 +363,29 @@ Number Missed Vsync: 0
     Assert-Equal -Actual $missingScreenrecordSummary.requiredGates.screenrecord.passed -Expected $false -Message "Missing screenrecord should not pass."
     Assert-True -Condition ("screenrecord required but screenrecord.mp4 is missing" -in @($missingScreenrecordSummary.warnings)) -Message "Missing screenrecord warning missing."
 
+    $invalidScreenrecordBundle = Join-Path $root "invalid-screenrecord"
+    Copy-Item -LiteralPath $visualGateBundle -Destination $invalidScreenrecordBundle -Recurse
+    "synthetic non-mp4 placeholder" | Out-File -LiteralPath (Join-Path $invalidScreenrecordBundle "screenrecord.mp4") -Encoding utf8
+    $invalidScreenrecordExitCode = Invoke-Summary -BundlePath $invalidScreenrecordBundle -RequireCleanSource -RequireScreenrecord
+    $invalidScreenrecordSummary = Get-Content -LiteralPath (Join-Path $invalidScreenrecordBundle "evidence_summary.json") -Raw | ConvertFrom-Json
+    Assert-Equal -Actual $invalidScreenrecordExitCode -Expected 11 -Message "Invalid screenrecord gate exit code mismatch."
+    Assert-Equal -Actual $invalidScreenrecordSummary.requiredGates.screenrecord.present -Expected $true -Message "Invalid screenrecord should be present."
+    Assert-Equal -Actual $invalidScreenrecordSummary.requiredGates.screenrecord.mp4Signature -Expected $false -Message "Invalid screenrecord should not have an MP4 signature."
+    Assert-Equal -Actual $invalidScreenrecordSummary.requiredGates.screenrecord.passed -Expected $false -Message "Invalid screenrecord should not pass."
+    Assert-True -Condition ("screenrecord required but screenrecord.mp4 does not look like an MP4 file" -in @($invalidScreenrecordSummary.warnings)) -Message "Invalid screenrecord warning missing."
+
     $passingScreenrecordBundle = Join-Path $root "passing-screenrecord"
     Copy-Item -LiteralPath $visualGateBundle -Destination $passingScreenrecordBundle -Recurse
-    "synthetic mp4 placeholder" | Out-File -LiteralPath (Join-Path $passingScreenrecordBundle "screenrecord.mp4") -Encoding utf8
+    [System.IO.File]::WriteAllBytes(
+        (Join-Path $passingScreenrecordBundle "screenrecord.mp4"),
+        [byte[]](0, 0, 0, 24, 102, 116, 121, 112, 105, 115, 111, 109, 0, 0, 2, 0, 105, 115, 111, 109, 105, 115, 111, 50)
+    )
     $passingScreenrecordExitCode = Invoke-Summary -BundlePath $passingScreenrecordBundle -RequireCleanSource -RequireScreenrecord
     $passingScreenrecordSummary = Get-Content -LiteralPath (Join-Path $passingScreenrecordBundle "evidence_summary.json") -Raw | ConvertFrom-Json
     Assert-Equal -Actual $passingScreenrecordExitCode -Expected 0 -Message "Passing screenrecord gate exit code mismatch."
     Assert-Equal -Actual $passingScreenrecordSummary.requiredGates.screenrecord.present -Expected $true -Message "Screenrecord should be present."
     Assert-True -Condition ($passingScreenrecordSummary.requiredGates.screenrecord.bytes -gt 0) -Message "Screenrecord bytes should be positive."
+    Assert-Equal -Actual $passingScreenrecordSummary.requiredGates.screenrecord.mp4Signature -Expected $true -Message "Screenrecord should have an MP4 signature."
     Assert-Equal -Actual $passingScreenrecordSummary.requiredGates.screenrecord.passed -Expected $true -Message "Screenrecord gate should pass."
 
     $dirtyGateBundle = Join-Path $root "dirty-gate"
