@@ -23,6 +23,7 @@ foreach ($line in Get-Content -LiteralPath $index.Path) {
         $taskPath = Join-Path $taskRoot $relativePath
         $fileStatus = $null
         $phoneGated = $false
+        $openTasks = @()
 
         if (Test-Path -LiteralPath $taskPath) {
             $content = Get-Content -LiteralPath $taskPath
@@ -33,6 +34,11 @@ foreach ($line in Get-Content -LiteralPath $index.Path) {
             $phoneGated = [bool]($content | Where-Object {
                 $_ -match 'Pixel|phone|device|known target|visual validation|watched target'
             } | Select-Object -First 1)
+            $openTasks = @($content | ForEach-Object {
+                if ($_ -match '^- \[ \] (.+?)\s*$') {
+                    $Matches[1].Trim()
+                }
+            })
         }
 
         $rows += [pscustomobject]@{
@@ -43,6 +49,7 @@ foreach ($line in Get-Content -LiteralPath $index.Path) {
             fileStatus = $fileStatus
             statusMismatch = ($null -ne $fileStatus -and (Convert-ToStatusKey $fileStatus) -ne (Convert-ToStatusKey $indexStatus))
             phoneGated = $phoneGated
+            openTasks = $openTasks
         }
     }
 }
@@ -81,6 +88,12 @@ if ($inProgress.Count -gt 0) {
     foreach ($row in $inProgress) {
         $suffix = if ($row.phoneGated) { " (phone/visual gated)" } else { "" }
         Write-Output "- $($row.milestone): $($row.path)$suffix"
+        foreach ($task in $row.openTasks) {
+            Write-Output "  - [ ] $task"
+        }
+        if ($row.openTasks.Count -eq 0) {
+            Write-Output "  - No unchecked task bullets; inspect Remaining/Done When sections."
+        }
     }
 }
 
