@@ -221,9 +221,10 @@ prove. `TargetVisible` records whether the target is actually visible in the
 evidence. `VisualValidated` records whether the operator accepted the visual
 claim after inspection. The summary only marks `countsAsVisualValidation` true
 when both `TargetVisible` and `VisualValidated` are true. Final accepted
-evidence must also include non-empty `OperatorNotes`; summaries warn when
-`VisualValidated=true` is set without notes, and `-RequireFinalVisualEvidence`
-fails through the no-warnings gate.
+evidence must also include non-empty `TargetDescription`, `VisualClaim`, and
+`OperatorNotes`; summaries warn when `VisualValidated=true` is set without
+that review text, and `-RequireFinalVisualEvidence` fails through the
+no-warnings gate.
 
 Pass `-RequireVisualValidation` when a command is meant to close a roadmap
 visual gate, pass `-RequireCleanSource` when the evidence must come from a
@@ -247,6 +248,7 @@ focused app, and no warnings:
   -VisualClaim "Fast Motion preset visibly magnifies localized object vibration" `
   -TargetVisible $true `
   -VisualValidated $true `
+  -OperatorNotes "Accepted only after inspecting the recording against the Fast Motion pass criteria" `
   -RequireFinalVisualEvidence `
   -Summarize
 ```

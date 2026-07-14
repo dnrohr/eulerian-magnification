@@ -449,6 +449,21 @@ Number Missed Vsync: 0
     Assert-Equal -Actual $missingOperatorNotesSummary.requiredGates.noWarnings.passed -Expected $false -Message "Missing notes should fail the final no-warnings gate."
     Assert-True -Condition ("visualValidated=true requires non-empty operator notes" -in @($missingOperatorNotesSummary.warnings)) -Message "Missing operator notes warning missing."
 
+    $missingVisualReviewTextBundle = Join-Path $root "missing-visual-review-text"
+    Copy-Item -LiteralPath $passingFinalEvidenceBundle -Destination $missingVisualReviewTextBundle -Recurse
+    $missingVisualReviewTextManifestPath = Join-Path $missingVisualReviewTextBundle "manifest.json"
+    $missingVisualReviewTextManifest = Get-Content -LiteralPath $missingVisualReviewTextManifestPath -Raw | ConvertFrom-Json
+    $missingVisualReviewTextManifest.visualReview.targetDescription = ""
+    $missingVisualReviewTextManifest.visualReview.visualClaim = ""
+    $missingVisualReviewTextManifest | ConvertTo-Json -Depth 8 | Out-File -LiteralPath $missingVisualReviewTextManifestPath -Encoding utf8
+    $missingVisualReviewTextExitCode = Invoke-Summary -BundlePath $missingVisualReviewTextBundle -RequireFinalVisualEvidence
+    $missingVisualReviewTextSummary = Get-Content -LiteralPath (Join-Path $missingVisualReviewTextBundle "evidence_summary.json") -Raw | ConvertFrom-Json
+    Assert-Equal -Actual $missingVisualReviewTextExitCode -Expected 7 -Message "Missing visual-review text final evidence exit code mismatch."
+    Assert-Equal -Actual $missingVisualReviewTextSummary.requiredGates.visualValidation.passed -Expected $true -Message "Missing visual-review text should still have accepted visual validation."
+    Assert-Equal -Actual $missingVisualReviewTextSummary.requiredGates.noWarnings.passed -Expected $false -Message "Missing visual-review text should fail the final no-warnings gate."
+    Assert-True -Condition ("visualValidated=true requires non-empty target description" -in @($missingVisualReviewTextSummary.warnings)) -Message "Missing target description warning missing."
+    Assert-True -Condition ("visualValidated=true requires non-empty visual claim" -in @($missingVisualReviewTextSummary.warnings)) -Message "Missing visual claim warning missing."
+
     $rendererDiagnosticsExitCode = Invoke-Summary -BundlePath $visualGateBundle -RequireCleanSource -RequireRendererDiagnostics
     $rendererDiagnosticsSummary = Get-Content -LiteralPath (Join-Path $visualGateBundle "evidence_summary.json") -Raw | ConvertFrom-Json
     Assert-Equal -Actual $rendererDiagnosticsExitCode -Expected 0 -Message "Renderer diagnostics gate exit code mismatch."

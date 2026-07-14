@@ -36,6 +36,7 @@ function Invoke-Closeout {
         [switch]$FailOnNonFinalLabel,
         [switch]$FailOnWrongSlotLabel,
         [switch]$FailOnMissingOperatorNotes,
+        [switch]$FailOnMissingVisualReviewText,
         [switch]$FailOnCloseoutNotReady,
         [switch]$FailOnPresetDocsNotReady
     )
@@ -76,6 +77,9 @@ function Invoke-Closeout {
     if ($FailOnMissingOperatorNotes) {
         $args.FailOnMissingOperatorNotes = $true
     }
+    if ($FailOnMissingVisualReviewText) {
+        $args.FailOnMissingVisualReviewText = $true
+    }
     if ($FailOnCloseoutNotReady) {
         $args.FailOnCloseoutNotReady = $true
     }
@@ -102,7 +106,9 @@ function Write-Summary {
         [string]$SourceBranch = "main",
         [string]$SourceCommit = "",
         [bool]$IncludeArtifactHashes = $true,
-        [string]$OperatorNotes = "tool self-test accepted visual evidence"
+        [string]$OperatorNotes = "tool self-test accepted visual evidence",
+        [string]$TargetDescription = $Claim,
+        [string]$VisualClaim = $Claim
     )
 
     $dir = Join-Path $Root $Name
@@ -129,8 +135,8 @@ function Write-Summary {
             dirty = $false
         }
         visualReview = [ordered]@{
-            targetDescription = $Claim
-            visualClaim = $Claim
+            targetDescription = $TargetDescription
+            visualClaim = $VisualClaim
             operatorNotes = $OperatorNotes
         }
         evidenceVerdict = [ordered]@{
@@ -198,6 +204,7 @@ try {
     Assert-Equal -Actual @($result.nonFinalLabelAcceptedFinalEvidence).Count -Expected 0 -Message "Known closeout fixtures should use final capture labels."
     Assert-Equal -Actual @($result.wrongSlotLabelAcceptedFinalEvidence).Count -Expected 0 -Message "Known closeout fixtures should use slot-specific final labels."
     Assert-Equal -Actual @($result.missingOperatorNotesAcceptedFinalEvidence).Count -Expected 0 -Message "Known closeout fixtures should include operator notes."
+    Assert-Equal -Actual @($result.missingVisualReviewTextAcceptedFinalEvidence).Count -Expected 0 -Message "Known closeout fixtures should include visual-review text."
     Assert-Equal -Actual @($result.missing).Count -Expected 0 -Message "All slots should be satisfied."
     Assert-Equal -Actual $result.presetVisualSlotsPresent -Expected $true -Message "Preset visual slots should be present when four preset slots pass."
     Assert-Equal -Actual $result.presetDocsEvidenceClean -Expected $false -Message "Unmatched evidence should prevent preset docs closeout."
@@ -290,7 +297,7 @@ try {
     foreach ($name in @("manual", "auto", "pulse", "breathing", "object", "fast")) {
         Copy-Item -LiteralPath (Join-Path $root $name) -Destination (Join-Path $classifiedRoot $name) -Recurse
     }
-    $classifiedExitCode = Invoke-Closeout -EvidenceRoot $classifiedRoot -FailOnMissing -FailOnUnmatched -FailOnAmbiguous -FailOnDuplicate -FailOnNonMain -FailOnUnpushedSource -FailOnMissingArtifactHashes -FailOnNonFinalLabel -FailOnWrongSlotLabel -FailOnMissingOperatorNotes
+    $classifiedExitCode = Invoke-Closeout -EvidenceRoot $classifiedRoot -FailOnMissing -FailOnUnmatched -FailOnAmbiguous -FailOnDuplicate -FailOnNonMain -FailOnUnpushedSource -FailOnMissingArtifactHashes -FailOnNonFinalLabel -FailOnWrongSlotLabel -FailOnMissingOperatorNotes -FailOnMissingVisualReviewText
     Assert-Equal -Actual $classifiedExitCode -Expected 0 -Message "Combined closeout gates should pass when all accepted evidence maps to slots on pushed main."
     $classified = & (Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1") -EvidenceRoot $classifiedRoot -Json | ConvertFrom-Json
     Assert-Equal -Actual $classified.readyForPresetDocs -Expected $true -Message "Preset docs should be ready when preset slots are satisfied and evidence is clean."
@@ -342,6 +349,17 @@ try {
     Assert-Equal -Actual $missingOperatorNotes.readyForPresetDocs -Expected $false -Message "Missing operator notes should prevent preset docs readiness."
     $missingOperatorNotesExitCode = Invoke-Closeout -EvidenceRoot $missingOperatorNotesRoot -FailOnMissingOperatorNotes
     Assert-Equal -Actual $missingOperatorNotesExitCode -Expected 19 -Message "FailOnMissingOperatorNotes should fail on accepted evidence without operator notes."
+
+    $missingVisualReviewTextRoot = Join-Path $root "missing-visual-review-text"
+    New-Item -ItemType Directory -Path $missingVisualReviewTextRoot -Force | Out-Null
+    Write-Summary -Root $missingVisualReviewTextRoot -Name "pulse" -Label "live-linear-pulse-final" -Mode "Pulse" -RoiSource "FullFrame" -Claim "Pulse full-frame live linear visual parity" -Roi $false -Renderer $true -Phase $false -TargetDescription "" -VisualClaim ""
+    $missingVisualReviewText = & (Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1") -EvidenceRoot $missingVisualReviewTextRoot -Json | ConvertFrom-Json
+    Assert-Equal -Actual @($missingVisualReviewText.missingVisualReviewTextAcceptedFinalEvidence).Count -Expected 1 -Message "Accepted final evidence without visual-review text should be reported."
+    Assert-Equal -Actual $missingVisualReviewText.missingVisualReviewTextAcceptedFinalEvidence[0].label -Expected "live-linear-pulse-final" -Message "Missing visual-review text evidence label mismatch."
+    Assert-Equal -Actual $missingVisualReviewText.allCloseoutEvidenceClean -Expected $false -Message "Missing visual-review text should prevent clean roadmap closeout."
+    Assert-Equal -Actual $missingVisualReviewText.readyForPresetDocs -Expected $false -Message "Missing visual-review text should prevent preset docs readiness."
+    $missingVisualReviewTextExitCode = Invoke-Closeout -EvidenceRoot $missingVisualReviewTextRoot -FailOnMissingVisualReviewText
+    Assert-Equal -Actual $missingVisualReviewTextExitCode -Expected 20 -Message "FailOnMissingVisualReviewText should fail on accepted evidence without target description or visual claim."
 
     $offMainRoot = Join-Path $root "off-main"
     New-Item -ItemType Directory -Path $offMainRoot -Force | Out-Null

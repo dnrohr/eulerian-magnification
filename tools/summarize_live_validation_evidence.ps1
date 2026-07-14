@@ -640,6 +640,12 @@ if ($visualReview.targetVisible -eq $true -and $visualReview.visualValidated -ne
 if ($visualReview.visualValidated -eq $true -and [string]::IsNullOrWhiteSpace($visualReview.operatorNotes)) {
     $warnings += "visualValidated=true requires non-empty operator notes"
 }
+if ($visualReview.visualValidated -eq $true -and [string]::IsNullOrWhiteSpace($visualReview.targetDescription)) {
+    $warnings += "visualValidated=true requires non-empty target description"
+}
+if ($visualReview.visualValidated -eq $true -and [string]::IsNullOrWhiteSpace($visualReview.visualClaim)) {
+    $warnings += "visualValidated=true requires non-empty visual claim"
+}
 
 $roiMeasurement = $null
 if (Test-Path -LiteralPath $roiMeasurementPath) {

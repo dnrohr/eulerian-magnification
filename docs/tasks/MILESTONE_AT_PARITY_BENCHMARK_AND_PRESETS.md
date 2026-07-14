@@ -419,6 +419,10 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - Added final-evidence operator-note enforcement to live summaries and Pixel
   closeout, so accepted visual evidence must explain what the operator
   accepted before it can close roadmap or parity documentation.
+- Added final-evidence visual-review text enforcement to live summaries and
+  Pixel closeout, so accepted visual evidence must include the watched target
+  description and visual claim before it can close roadmap or parity
+  documentation.
 - Documented the closeout gates in README, the task index, and MIT parity
   targets so visual-validation docs are only updated after accepted evidence.
 - Extended the protocol-doc self-test to keep README and task-index closeout
