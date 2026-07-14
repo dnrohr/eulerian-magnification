@@ -367,6 +367,9 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - Split the closeout summary's preset readiness signal into
   `presetVisualSlotsPresent` and `presetDocsEvidenceClean`, and made
   `readyForPresetDocs` mean the stricter doc-update readiness condition.
+- Added source branch and commit fields to satisfied closeout slots and
+  unmatched/ambiguous/duplicate accepted-evidence reports, so final parity docs
+  can cite the exact app build that produced each accepted artifact.
 - Documented the closeout gates in README, the task index, and MIT parity
   targets so visual-validation docs are only updated after accepted evidence.
 - Extended the protocol-doc self-test to keep README and task-index closeout

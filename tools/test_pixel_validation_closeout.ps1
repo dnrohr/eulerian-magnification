@@ -74,7 +74,9 @@ function Write-Summary {
         [bool]$Roi,
         [bool]$Renderer,
         [bool]$Phase,
-        [bool]$Final = $true
+        [bool]$Final = $true,
+        [string]$SourceBranch = "main",
+        [string]$SourceCommit = "abcdef1234567890"
     )
 
     $dir = Join-Path $Root $Name
@@ -90,6 +92,12 @@ function Write-Summary {
         launch = [ordered]@{
             mode = $Mode
             roiSource = $RoiSource
+        }
+        source = [ordered]@{
+            branch = $SourceBranch
+            commit = $SourceCommit
+            shortCommit = if ($SourceCommit.Length -gt 7) { $SourceCommit.Substring(0, 7) } else { $SourceCommit }
+            dirty = $false
         }
         visualReview = [ordered]@{
             targetDescription = $Claim
@@ -146,6 +154,9 @@ try {
     Assert-Equal -Actual $result.allCloseoutEvidencePresent -Expected $true -Message "All closeout evidence should be present."
     Assert-Equal -Actual $result.allCloseoutEvidenceClean -Expected $false -Message "Unmatched evidence should prevent clean roadmap closeout."
     Assert-Equal -Actual $result.slots[0].protocol -Expected "docs/testing/ROI_DEVICE_VALIDATION.md" -Message "Closeout slots should expose protocol docs."
+    Assert-Equal -Actual $result.slots[0].sourceBranch -Expected "main" -Message "Satisfied closeout slots should expose source branch."
+    Assert-Equal -Actual $result.slots[0].sourceShortCommit -Expected "abcdef1" -Message "Satisfied closeout slots should expose source short commit."
+    Assert-Equal -Actual $result.unmatchedAcceptedFinalEvidence[0].sourceShortCommit -Expected "abcdef1" -Message "Unmatched closeout evidence should expose source short commit."
     Assert-True -Condition ($result.slots[0].nextCommand.Contains("manual-roi-known-target-setup")) -Message "Manual ROI slot should expose next command hint."
 
     $partialRoot = Join-Path $root "partial"
@@ -209,6 +220,8 @@ try {
     $duplicate = & (Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1") -EvidenceRoot $duplicateRoot -Json | ConvertFrom-Json
     Assert-Equal -Actual @($duplicate.duplicateAcceptedFinalEvidence).Count -Expected 1 -Message "Duplicate closeout should report extra accepted evidence for a satisfied slot."
     Assert-Equal -Actual $duplicate.duplicateAcceptedFinalEvidence[0].slot -Expected "pulseLinear" -Message "Duplicate evidence slot mismatch."
+    Assert-Equal -Actual $duplicate.duplicateAcceptedFinalEvidence[0].sourceShortCommit -Expected "abcdef1" -Message "Duplicate evidence should expose source short commit."
+    Assert-Equal -Actual $duplicate.duplicateAcceptedFinalEvidence[0].originalSourceShortCommit -Expected "abcdef1" -Message "Duplicate evidence should expose original source short commit."
     $duplicateExitCode = Invoke-Closeout -EvidenceRoot $duplicateRoot -FailOnDuplicate
     Assert-Equal -Actual $duplicateExitCode -Expected 6 -Message "FailOnDuplicate should exit 6 when multiple accepted evidence bundles match the same slot."
 

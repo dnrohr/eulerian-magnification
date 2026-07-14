@@ -57,6 +57,18 @@ function Get-SummaryText {
     return (($parts | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }) -join " ").ToLowerInvariant()
 }
 
+function Get-SourceValue {
+    param(
+        $Summary,
+        [string]$Name
+    )
+
+    if ($Summary.source -and ($Summary.source.PSObject.Properties.Name -contains $Name)) {
+        return $Summary.source.$Name
+    }
+    return $null
+}
+
 function New-Slot {
     param(
         [string]$Id,
@@ -77,6 +89,9 @@ function New-Slot {
         satisfied = $false
         bundle = $null
         label = $null
+        sourceBranch = $null
+        sourceCommit = $null
+        sourceShortCommit = $null
         reason = "missing accepted evidence"
     }
 }
@@ -130,6 +145,9 @@ foreach ($summary in $acceptedSummaries) {
         $unmatchedAcceptedFinalEvidence += [pscustomobject]@{
             bundle = Split-Path -Parent $summary.summaryPath
             label = $summary.label
+            sourceBranch = Get-SourceValue -Summary $summary -Name "branch"
+            sourceCommit = Get-SourceValue -Summary $summary -Name "commit"
+            sourceShortCommit = Get-SourceValue -Summary $summary -Name "shortCommit"
             mode = $summary.launch.mode
             roiSource = $summary.launch.roiSource
             visualClaim = $summary.visualReview.visualClaim
@@ -140,6 +158,9 @@ foreach ($summary in $acceptedSummaries) {
         $ambiguousAcceptedFinalEvidence += [pscustomobject]@{
             bundle = Split-Path -Parent $summary.summaryPath
             label = $summary.label
+            sourceBranch = Get-SourceValue -Summary $summary -Name "branch"
+            sourceCommit = Get-SourceValue -Summary $summary -Name "commit"
+            sourceShortCommit = Get-SourceValue -Summary $summary -Name "shortCommit"
             mode = $summary.launch.mode
             roiSource = $summary.launch.roiSource
             visualClaim = $summary.visualReview.visualClaim
@@ -153,14 +174,23 @@ foreach ($summary in $acceptedSummaries) {
             $slots[$slotId].satisfied = $true
             $slots[$slotId].bundle = Split-Path -Parent $summary.summaryPath
             $slots[$slotId].label = $summary.label
+            $slots[$slotId].sourceBranch = Get-SourceValue -Summary $summary -Name "branch"
+            $slots[$slotId].sourceCommit = Get-SourceValue -Summary $summary -Name "commit"
+            $slots[$slotId].sourceShortCommit = Get-SourceValue -Summary $summary -Name "shortCommit"
             $slots[$slotId].reason = "accepted final evidence"
         } else {
             $duplicateAcceptedFinalEvidence += [pscustomobject]@{
                 slot = $slotId
                 bundle = Split-Path -Parent $summary.summaryPath
                 label = $summary.label
+                sourceBranch = Get-SourceValue -Summary $summary -Name "branch"
+                sourceCommit = Get-SourceValue -Summary $summary -Name "commit"
+                sourceShortCommit = Get-SourceValue -Summary $summary -Name "shortCommit"
                 originalBundle = $slots[$slotId].bundle
                 originalLabel = $slots[$slotId].label
+                originalSourceBranch = $slots[$slotId].sourceBranch
+                originalSourceCommit = $slots[$slotId].sourceCommit
+                originalSourceShortCommit = $slots[$slotId].sourceShortCommit
                 reason = "accepted final evidence matched an already satisfied closeout slot"
             }
         }
@@ -217,6 +247,9 @@ if ($Json) {
         Write-Output "    Protocol: $($slot.protocol)"
         if ($slot.satisfied) {
             Write-Output "    Evidence: $($slot.bundle)"
+            if (-not [string]::IsNullOrWhiteSpace($slot.sourceShortCommit) -or -not [string]::IsNullOrWhiteSpace($slot.sourceBranch)) {
+                Write-Output "    Source: $($slot.sourceShortCommit) on $($slot.sourceBranch)"
+            }
         } else {
             Write-Output "    Status: $($slot.reason)"
             Write-Output "    Next: $($slot.nextCommand)"
@@ -233,6 +266,9 @@ if ($Json) {
         Write-Output "Unmatched accepted final evidence:"
         foreach ($evidence in @($result.unmatchedAcceptedFinalEvidence)) {
             Write-Output "- $($evidence.label): $($evidence.bundle)"
+            if (-not [string]::IsNullOrWhiteSpace($evidence.sourceShortCommit) -or -not [string]::IsNullOrWhiteSpace($evidence.sourceBranch)) {
+                Write-Output "    Source: $($evidence.sourceShortCommit) on $($evidence.sourceBranch)"
+            }
             Write-Output "    $($evidence.reason)"
         }
     }
@@ -241,6 +277,9 @@ if ($Json) {
         Write-Output "Ambiguous accepted final evidence:"
         foreach ($evidence in @($result.ambiguousAcceptedFinalEvidence)) {
             Write-Output "- $($evidence.label): $($evidence.bundle)"
+            if (-not [string]::IsNullOrWhiteSpace($evidence.sourceShortCommit) -or -not [string]::IsNullOrWhiteSpace($evidence.sourceBranch)) {
+                Write-Output "    Source: $($evidence.sourceShortCommit) on $($evidence.sourceBranch)"
+            }
             Write-Output "    $($evidence.reason): $($evidence.matchedSlots -join ', ')"
         }
     }
@@ -249,8 +288,14 @@ if ($Json) {
         Write-Output "Duplicate accepted final evidence:"
         foreach ($evidence in @($result.duplicateAcceptedFinalEvidence)) {
             Write-Output "- $($evidence.label): $($evidence.bundle)"
+            if (-not [string]::IsNullOrWhiteSpace($evidence.sourceShortCommit) -or -not [string]::IsNullOrWhiteSpace($evidence.sourceBranch)) {
+                Write-Output "    Source: $($evidence.sourceShortCommit) on $($evidence.sourceBranch)"
+            }
             Write-Output "    $($evidence.reason): $($evidence.slot)"
             Write-Output "    Original: $($evidence.originalLabel): $($evidence.originalBundle)"
+            if (-not [string]::IsNullOrWhiteSpace($evidence.originalSourceShortCommit) -or -not [string]::IsNullOrWhiteSpace($evidence.originalSourceBranch)) {
+                Write-Output "    Original source: $($evidence.originalSourceShortCommit) on $($evidence.originalSourceBranch)"
+            }
         }
     }
 }
