@@ -29,6 +29,7 @@ function Invoke-Closeout {
         [switch]$FailOnMissing,
         [switch]$FailOnUnmatched,
         [switch]$FailOnAmbiguous,
+        [switch]$FailOnDuplicate,
         [switch]$FailOnPresetDocsNotReady
     )
 
@@ -46,6 +47,9 @@ function Invoke-Closeout {
     }
     if ($FailOnAmbiguous) {
         $args.FailOnAmbiguous = $true
+    }
+    if ($FailOnDuplicate) {
+        $args.FailOnDuplicate = $true
     }
     if ($FailOnPresetDocsNotReady) {
         $args.FailOnPresetDocsNotReady = $true
@@ -130,6 +134,7 @@ try {
     Assert-Equal -Actual @($result.unmatchedAcceptedFinalEvidence).Count -Expected 1 -Message "Unmatched accepted final evidence count mismatch."
     Assert-Equal -Actual $result.unmatchedAcceptedFinalEvidence[0].label -Expected "accepted-unknown-final" -Message "Unmatched evidence label mismatch."
     Assert-Equal -Actual @($result.ambiguousAcceptedFinalEvidence).Count -Expected 0 -Message "Known closeout fixtures should not be ambiguous."
+    Assert-Equal -Actual @($result.duplicateAcceptedFinalEvidence).Count -Expected 0 -Message "Known closeout fixtures should not duplicate slots."
     Assert-Equal -Actual @($result.missing).Count -Expected 0 -Message "All slots should be satisfied."
     Assert-Equal -Actual $result.readyForPresetDocs -Expected $true -Message "Preset docs should be ready when four preset slots pass."
     Assert-Equal -Actual $result.allCloseoutEvidencePresent -Expected $true -Message "All closeout evidence should be present."
@@ -185,12 +190,22 @@ try {
     $ambiguousExitCode = Invoke-Closeout -EvidenceRoot $ambiguousRoot -FailOnAmbiguous
     Assert-Equal -Actual $ambiguousExitCode -Expected 5 -Message "FailOnAmbiguous should exit 5 when accepted final evidence matches multiple slots."
 
+    $duplicateRoot = Join-Path $root "duplicate"
+    New-Item -ItemType Directory -Path $duplicateRoot -Force | Out-Null
+    Write-Summary -Root $duplicateRoot -Name "pulse-a" -Label "live-linear-pulse-final-a" -Mode "Pulse" -RoiSource "FullFrame" -Claim "Pulse full-frame live linear visual parity" -Roi $false -Renderer $true -Phase $false
+    Write-Summary -Root $duplicateRoot -Name "pulse-b" -Label "live-linear-pulse-final-b" -Mode "Pulse" -RoiSource "FullFrame" -Claim "Pulse full-frame live linear visual parity" -Roi $false -Renderer $true -Phase $false
+    $duplicate = & (Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1") -EvidenceRoot $duplicateRoot -Json | ConvertFrom-Json
+    Assert-Equal -Actual @($duplicate.duplicateAcceptedFinalEvidence).Count -Expected 1 -Message "Duplicate closeout should report extra accepted evidence for a satisfied slot."
+    Assert-Equal -Actual $duplicate.duplicateAcceptedFinalEvidence[0].slot -Expected "pulseLinear" -Message "Duplicate evidence slot mismatch."
+    $duplicateExitCode = Invoke-Closeout -EvidenceRoot $duplicateRoot -FailOnDuplicate
+    Assert-Equal -Actual $duplicateExitCode -Expected 6 -Message "FailOnDuplicate should exit 6 when multiple accepted evidence bundles match the same slot."
+
     $classifiedRoot = Join-Path $root "classified"
     New-Item -ItemType Directory -Path $classifiedRoot -Force | Out-Null
     foreach ($name in @("manual", "auto", "pulse", "breathing", "object", "fast")) {
         Copy-Item -LiteralPath (Join-Path $root $name) -Destination (Join-Path $classifiedRoot $name) -Recurse
     }
-    $classifiedExitCode = Invoke-Closeout -EvidenceRoot $classifiedRoot -FailOnMissing -FailOnUnmatched -FailOnAmbiguous
+    $classifiedExitCode = Invoke-Closeout -EvidenceRoot $classifiedRoot -FailOnMissing -FailOnUnmatched -FailOnAmbiguous -FailOnDuplicate
     Assert-Equal -Actual $classifiedExitCode -Expected 0 -Message "Combined closeout gates should pass when all accepted evidence maps to slots."
 } finally {
     Remove-Item -LiteralPath $root -Recurse -Force

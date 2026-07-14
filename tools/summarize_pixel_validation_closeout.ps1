@@ -4,6 +4,7 @@ param(
     [switch]$FailOnMissing,
     [switch]$FailOnUnmatched,
     [switch]$FailOnAmbiguous,
+    [switch]$FailOnDuplicate,
     [switch]$FailOnPresetDocsNotReady
 )
 
@@ -104,6 +105,7 @@ foreach ($file in $summaryFiles) {
 $acceptedFinalSummaries = @()
 $unmatchedAcceptedFinalEvidence = @()
 $ambiguousAcceptedFinalEvidence = @()
+$duplicateAcceptedFinalEvidence = @()
 foreach ($summary in $acceptedSummaries) {
     if (-not (Test-FinalVisualEvidence -Summary $summary)) {
         continue
@@ -151,6 +153,15 @@ foreach ($summary in $acceptedSummaries) {
             $slots[$slotId].bundle = Split-Path -Parent $summary.summaryPath
             $slots[$slotId].label = $summary.label
             $slots[$slotId].reason = "accepted final evidence"
+        } else {
+            $duplicateAcceptedFinalEvidence += [pscustomobject]@{
+                slot = $slotId
+                bundle = Split-Path -Parent $summary.summaryPath
+                label = $summary.label
+                originalBundle = $slots[$slotId].bundle
+                originalLabel = $slots[$slotId].label
+                reason = "accepted final evidence matched an already satisfied closeout slot"
+            }
         }
     }
 }
@@ -163,6 +174,7 @@ $result = [pscustomobject]@{
     acceptedFinalEvidenceCount = $acceptedFinalSummaries.Count
     unmatchedAcceptedFinalEvidence = $unmatchedAcceptedFinalEvidence
     ambiguousAcceptedFinalEvidence = $ambiguousAcceptedFinalEvidence
+    duplicateAcceptedFinalEvidence = $duplicateAcceptedFinalEvidence
     slots = $slotList
     missing = $missing
     readyForPresetDocs = (@($slotList | Where-Object { $_.id -in @("pulseLinear", "breathingLinear", "objectPhase", "fastTremorPhase") -and $_.satisfied }).Count -eq 4)
@@ -178,6 +190,7 @@ if ($Json) {
     Write-Output "Accepted final evidence: $($result.acceptedFinalEvidenceCount)"
     Write-Output "Unmatched accepted final evidence: $(@($result.unmatchedAcceptedFinalEvidence).Count)"
     Write-Output "Ambiguous accepted final evidence: $(@($result.ambiguousAcceptedFinalEvidence).Count)"
+    Write-Output "Duplicate accepted final evidence: $(@($result.duplicateAcceptedFinalEvidence).Count)"
     Write-Output ""
     foreach ($slot in $slotList) {
         $mark = if ($slot.satisfied) { "[x]" } else { "[ ]" }
@@ -210,6 +223,15 @@ if ($Json) {
             Write-Output "    $($evidence.reason): $($evidence.matchedSlots -join ', ')"
         }
     }
+    if (@($result.duplicateAcceptedFinalEvidence).Count -gt 0) {
+        Write-Output ""
+        Write-Output "Duplicate accepted final evidence:"
+        foreach ($evidence in @($result.duplicateAcceptedFinalEvidence)) {
+            Write-Output "- $($evidence.label): $($evidence.bundle)"
+            Write-Output "    $($evidence.reason): $($evidence.slot)"
+            Write-Output "    Original: $($evidence.originalLabel): $($evidence.originalBundle)"
+        }
+    }
 }
 
 if ($FailOnMissing -and $missing.Count -gt 0) {
@@ -220,6 +242,9 @@ if ($FailOnUnmatched -and $unmatchedAcceptedFinalEvidence.Count -gt 0) {
 }
 if ($FailOnAmbiguous -and $ambiguousAcceptedFinalEvidence.Count -gt 0) {
     exit 5
+}
+if ($FailOnDuplicate -and $duplicateAcceptedFinalEvidence.Count -gt 0) {
+    exit 6
 }
 if ($FailOnPresetDocsNotReady -and -not $result.readyForPresetDocs) {
     exit 4

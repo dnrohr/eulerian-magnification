@@ -120,6 +120,7 @@ foreach ($path in @($readme, $taskReadme)) {
     Assert-DocContains -Path $path -Expected "-FailOnMissing" -Message "Operator docs must document missing-evidence closeout gate."
     Assert-DocContains -Path $path -Expected "-FailOnUnmatched" -Message "Operator docs must document unmatched-evidence closeout gate."
     Assert-DocContains -Path $path -Expected "-FailOnAmbiguous" -Message "Operator docs must document ambiguous-evidence closeout gate."
+    Assert-DocContains -Path $path -Expected "-FailOnDuplicate" -Message "Operator docs must document duplicate-evidence closeout gate."
     Assert-DocContains -Path $path -Expected "-FailOnPresetDocsNotReady" -Message "Operator docs must document preset-doc readiness gate."
 }
 
@@ -141,6 +142,7 @@ Assert-DocContains -Path $liveGuide -Expected "-RequireEvidenceVerdict" -Message
 Assert-DocContains -Path $parityDoc -Expected "summarize_pixel_validation_closeout.ps1" -Message "Parity targets must document closeout summary."
 Assert-DocContains -Path $parityDoc -Expected "-FailOnPresetDocsNotReady" -Message "Parity targets must document the preset docs readiness gate."
 Assert-DocContains -Path $parityDoc -Expected "-FailOnAmbiguous" -Message "Parity targets must document ambiguous accepted evidence gate."
+Assert-DocContains -Path $parityDoc -Expected "-FailOnDuplicate" -Message "Parity targets must document duplicate accepted evidence gate."
 
 Assert-DocContains -Path $linearDoc -Expected "-Mode Pulse" -Message "Live linear protocol must include the Pulse command."
 Assert-DocContains -Path $linearDoc -Expected "-Mode Breathing" -Message "Live linear protocol must include the Breathing variant."
