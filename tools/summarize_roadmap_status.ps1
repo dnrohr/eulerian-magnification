@@ -112,3 +112,5 @@ if ($mismatches.Count -gt 0) {
 if ($FailOnMismatch -and $mismatches.Count -gt 0) {
     exit 2
 }
+
+exit 0

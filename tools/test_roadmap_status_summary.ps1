@@ -156,4 +156,8 @@ Write-TextFile -Path (Join-Path $taskRoot "MILESTONE_C.md") -Lines @(
 $cleanExitCode = Invoke-SummaryExitCode -TaskIndexPath $indexPath -FailOnMismatch
 Assert-Equal -Actual $cleanExitCode -Expected 0 -Message "Clean strict exit code"
 
+$global:LASTEXITCODE = 8
+& $summaryScript -TaskIndexPath $indexPath *> $null
+Assert-Equal -Actual $LASTEXITCODE -Expected 0 -Message "Clean text summary should clear stale exit codes."
+
 Write-Output "Roadmap status summary self-test passed: $root"

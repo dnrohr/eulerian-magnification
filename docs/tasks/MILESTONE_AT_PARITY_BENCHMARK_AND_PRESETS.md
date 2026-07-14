@@ -377,6 +377,11 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   off-`main` accepted evidence directly.
 - Added `-FailOnNonMain` to the `preset-parity-closeout` planner command, with
   self-test coverage to keep the printed Pixel closeout checklist aligned.
+- Updated the combined closeout self-test to include `-FailOnNonMain`, matching
+  the explicit gate set documented for roadmap closeout.
+- Fixed the roadmap status text summary to exit `0` on success and added a
+  regression check so stale PowerShell exit codes do not fail CI after passing
+  phone-free tests.
 - Documented the closeout gates in README, the task index, and MIT parity
   targets so visual-validation docs are only updated after accepted evidence.
 - Extended the protocol-doc self-test to keep README and task-index closeout
