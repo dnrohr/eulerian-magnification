@@ -131,6 +131,7 @@ foreach ($path in @($readme, $taskReadme)) {
     Assert-DocContains -Path $path -Expected "-FailOnCloseoutNotReady" -Message "Operator docs must document one-shot closeout readiness gate."
     Assert-DocContains -Path $path -Expected "-FailOnPresetDocsNotReady" -Message "Operator docs must document preset-doc readiness gate."
     Assert-DocContains -Path $path -Expected "expected final label" -Message "Operator docs must mention expected final labels in closeout output."
+    Assert-DocContains -Path $path -Expected "Wrong-slot reports include the expected final label" -Message "Operator docs must mention expected labels in wrong-slot reports."
 }
 
 Assert-DocContains -Path $roiDoc -Expected "-RequireRoiMeasurement" -Message "ROI protocol must require ROI measurement."
@@ -165,6 +166,7 @@ Assert-DocContains -Path $parityDoc -Expected "-FailOnMissingOperatorNotes" -Mes
 Assert-DocContains -Path $parityDoc -Expected "-FailOnMissingVisualReviewText" -Message "Parity targets must document visual-review text accepted evidence gate."
 Assert-DocContains -Path $parityDoc -Expected "-FailOnCloseoutNotReady" -Message "Parity targets must document one-shot closeout readiness gate."
 Assert-DocContains -Path $parityDoc -Expected "expected final label" -Message "Parity targets must mention expected final labels in closeout output."
+Assert-DocContains -Path $parityDoc -Expected "Wrong-slot reports include the expected final label" -Message "Parity targets must mention expected labels in wrong-slot reports."
 
 Assert-DocContains -Path $linearDoc -Expected "-Mode Pulse" -Message "Live linear protocol must include the Pulse command."
 Assert-DocContains -Path $linearDoc -Expected "-Mode Breathing" -Message "Live linear protocol must include the Breathing variant."

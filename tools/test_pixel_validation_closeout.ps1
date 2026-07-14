@@ -275,6 +275,9 @@ try {
     Assert-Equal -Actual @($ambiguous.ambiguousAcceptedFinalEvidence).Count -Expected 0 -Message "Ambiguous evidence should not survive wrong-slot label filtering."
     Assert-Equal -Actual @($ambiguous.wrongSlotLabelAcceptedFinalEvidence).Count -Expected 1 -Message "Ambiguous wrong final label should be reported as a slot-label mismatch."
     Assert-Equal -Actual @($ambiguous.wrongSlotLabelAcceptedFinalEvidence[0].mismatchedSlots).Count -Expected 2 -Message "Wrong-slot evidence should report both mismatched slots."
+    Assert-Equal -Actual @($ambiguous.wrongSlotLabelAcceptedFinalEvidence[0].expectedFinalLabels).Count -Expected 2 -Message "Wrong-slot evidence should report expected labels for both mismatched slots."
+    Assert-Equal -Actual ($ambiguous.wrongSlotLabelAcceptedFinalEvidence[0].expectedFinalLabels | Where-Object { $_.slot -eq "pulseLinear" } | Select-Object -ExpandProperty expectedFinalLabel) -Expected "live-linear-pulse-final" -Message "Wrong-slot evidence should report the Pulse expected label."
+    Assert-Equal -Actual ($ambiguous.wrongSlotLabelAcceptedFinalEvidence[0].expectedFinalLabels | Where-Object { $_.slot -eq "breathingLinear" } | Select-Object -ExpandProperty expectedFinalLabel) -Expected "live-linear-breathing-final" -Message "Wrong-slot evidence should report the Breathing expected label."
     $ambiguousExitCode = Invoke-Closeout -EvidenceRoot $ambiguousRoot -FailOnAmbiguous
     Assert-Equal -Actual $ambiguousExitCode -Expected 0 -Message "FailOnAmbiguous should not fire after wrong-slot label filtering removes all ambiguous matches."
     $wrongSlotLabelExitCode = Invoke-Closeout -EvidenceRoot $ambiguousRoot -FailOnWrongSlotLabel
@@ -337,6 +340,7 @@ try {
     Write-Summary -Root $wrongSlotLabelRoot -Name "pulse-label-breathing-claim" -Label "live-linear-pulse-final" -Mode "Breathing" -RoiSource "FullFrame" -Claim "Breathing slow motion live linear visual parity" -Roi $false -Renderer $true -Phase $false
     $wrongSlotLabel = & (Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1") -EvidenceRoot $wrongSlotLabelRoot -Json | ConvertFrom-Json
     Assert-Equal -Actual @($wrongSlotLabel.wrongSlotLabelAcceptedFinalEvidence).Count -Expected 1 -Message "Evidence whose final label targets a different slot should be reported."
+    Assert-Equal -Actual $wrongSlotLabel.wrongSlotLabelAcceptedFinalEvidence[0].expectedFinalLabels[0].expectedFinalLabel -Expected "live-linear-breathing-final" -Message "Wrong-slot evidence should include the expected final label."
     Assert-Equal -Actual @($wrongSlotLabel.slots | Where-Object { $_.satisfied }).Count -Expected 0 -Message "Wrong-slot final labels must not satisfy closeout slots."
     Assert-Equal -Actual $wrongSlotLabel.readyForPresetDocs -Expected $false -Message "Wrong-slot final labels should prevent preset docs readiness."
     $wrongSlotLabelGateExitCode = Invoke-Closeout -EvidenceRoot $wrongSlotLabelRoot -FailOnWrongSlotLabel

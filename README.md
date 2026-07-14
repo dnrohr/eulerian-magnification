@@ -324,7 +324,8 @@ parity docs. `-FailOnPresetDocsNotReady` requires the four preset slots to be
 present and rejects unmatched, ambiguous, duplicate, non-`main`, unpushed, or
 missing-artifact-hash accepted evidence, plus accepted evidence whose label is
 not one of the final capture labels, does not match its closeout slot, lacks
-operator notes, or lacks target description / visual claim text:
+operator notes, or lacks target description / visual claim text.
+Wrong-slot reports include the expected final label for each mismatched slot:
 
 ```powershell
 .\tools\summarize_pixel_validation_closeout.ps1 -FailOnMissing -FailOnUnmatched -FailOnAmbiguous -FailOnDuplicate -FailOnNonMain -FailOnUnpushedSource -FailOnMissingArtifactHashes -FailOnNonFinalLabel -FailOnWrongSlotLabel -FailOnMissingOperatorNotes -FailOnMissingVisualReviewText

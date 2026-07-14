@@ -122,3 +122,4 @@ from a commit that is not reachable from `origin/main`, or accepted evidence
 without screenshot/screenrecord SHA-256 values, a final capture label, the
 slot-specific final label, operator notes, or target description / visual claim
 text.
+Wrong-slot reports include the expected final label for each mismatched slot.

@@ -191,6 +191,25 @@ function Test-VisualReviewTextPresent {
         -not [string]::IsNullOrWhiteSpace($Summary.visualReview.visualClaim)
 }
 
+function Get-ExpectedLabelsForSlots {
+    param(
+        [string[]]$SlotIds,
+        $Slots
+    )
+
+    $labels = @()
+    foreach ($slotId in @($SlotIds)) {
+        if (-not $Slots.Contains($slotId)) {
+            continue
+        }
+        $labels += [pscustomobject]@{
+            slot = $slotId
+            expectedFinalLabel = $Slots[$slotId].expectedFinalLabel
+        }
+    }
+    return $labels
+}
+
 function New-Slot {
     param(
         [string]$Id,
@@ -317,6 +336,7 @@ foreach ($summary in $acceptedSummaries) {
         $report = New-EvidenceReport -Summary $summary
         $report.matchedSlots = $matchedSlots
         $report.mismatchedSlots = $slotLabelMismatches
+        $report.expectedFinalLabels = Get-ExpectedLabelsForSlots -SlotIds $slotLabelMismatches -Slots $slots
         $report.reason = "accepted final evidence label does not match the closeout slot"
         $wrongSlotLabelAcceptedFinalEvidence += [pscustomobject]$report
         $matchedSlots = @()
@@ -604,6 +624,9 @@ if ($Json) {
                 Write-Output "    Screenrecord SHA-256: $($evidence.screenrecordSha256)"
             }
             Write-Output "    $($evidence.reason): $($evidence.mismatchedSlots -join ', ')"
+            foreach ($expected in @($evidence.expectedFinalLabels)) {
+                Write-Output "    Expected $($expected.slot): $($expected.expectedFinalLabel)"
+            }
         }
     }
     if (@($result.missingOperatorNotesAcceptedFinalEvidence).Count -gt 0) {
