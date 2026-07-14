@@ -45,6 +45,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $scriptParameters = $PSBoundParameters
+$script:LastEvidenceSummaryExitCode = 0
 
 function Find-Adb {
     $sdkAdb = Join-Path $env:LOCALAPPDATA "Android\Sdk\platform-tools\adb.exe"
@@ -296,7 +297,8 @@ function Invoke-EvidenceSummary {
     $summaryScript = Join-Path $PSScriptRoot "summarize_live_validation_evidence.ps1"
     if (-not (Test-Path -LiteralPath $summaryScript)) {
         Write-Warning "Summary requested, but summarize_live_validation_evidence.ps1 was not found."
-        return 0
+        $script:LastEvidenceSummaryExitCode = 0
+        return
     }
 
     $requiredUiTextArgs = @($RequireUiText | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
@@ -314,7 +316,7 @@ function Invoke-EvidenceSummary {
     }
 
     & $summaryScript @summaryArgs
-    return $LASTEXITCODE
+    $script:LastEvidenceSummaryExitCode = $LASTEXITCODE
 }
 
 $devicesPath = Join-Path $outputDir "adb_devices.txt"
@@ -651,7 +653,8 @@ $manifest | ConvertTo-Json -Depth 5 | Out-File -LiteralPath $manifestPath -Encod
 
 $summaryExitCode = 0
 if ($Summarize) {
-    $summaryExitCode = Invoke-EvidenceSummary -OutputDir $outputDir
+    Invoke-EvidenceSummary -OutputDir $outputDir
+    $summaryExitCode = $script:LastEvidenceSummaryExitCode
 }
 
 Write-Output "Live validation evidence captured:"

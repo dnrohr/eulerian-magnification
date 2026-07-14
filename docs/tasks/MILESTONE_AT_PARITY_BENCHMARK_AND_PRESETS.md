@@ -165,6 +165,8 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   prelaunch-aborted bundles.
 - Thermal/preflight-aborted summaries record requested strict gates under
   `requiredGates`, while preserving exit code `4` for the abort itself.
+- The shared summary helper stores the child summary exit code separately from
+  emitted summary text so normal captures still propagate a numeric result.
 - The summary self-test now covers gated aborted bundles so future Pixel
   validation scripts cannot lose gate metadata when the phone is too hot to
   launch.
