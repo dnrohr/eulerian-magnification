@@ -36,6 +36,7 @@ function Invoke-Summary {
         [switch]$RequireRoiMeasurement,
         [switch]$RequireScreenrecord,
         [switch]$RequireThermalReady,
+        [switch]$RequireCameraFps,
         [switch]$RequireRendererDiagnostics,
         [switch]$RequirePhaseDiagnostics,
         [string]$RequireEvidenceVerdict = ""
@@ -52,6 +53,7 @@ function Invoke-Summary {
     if ($RequireRoiMeasurement) { $summaryArgs.RequireRoiMeasurement = $true }
     if ($RequireScreenrecord) { $summaryArgs.RequireScreenrecord = $true }
     if ($RequireThermalReady) { $summaryArgs.RequireThermalReady = $true }
+    if ($RequireCameraFps) { $summaryArgs.RequireCameraFps = $true }
     if ($RequireRendererDiagnostics) { $summaryArgs.RequireRendererDiagnostics = $true }
     if ($RequirePhaseDiagnostics) { $summaryArgs.RequirePhaseDiagnostics = $true }
     if (-not [string]::IsNullOrWhiteSpace($RequireEvidenceVerdict)) { $summaryArgs.RequireEvidenceVerdict = $RequireEvidenceVerdict }
@@ -329,6 +331,33 @@ Number Missed Vsync: 0
     Assert-Equal -Actual $visualGateSummary.requiredGates.cleanSource.passed -Expected $true -Message "Clean source gate should pass."
     Assert-Equal -Actual $visualGateSummary.requiredGates.visualValidation.passed -Expected $false -Message "Visual validation gate should fail."
     Assert-True -Condition ("visual validation required but evidence verdict does not count as visual validation" -in @($visualGateSummary.warnings)) -Message "Visual gate warning missing."
+
+    $cameraFpsExitCode = Invoke-Summary -BundlePath $visualGateBundle -RequireCleanSource -RequireCameraFps
+    $cameraFpsSummary = Get-Content -LiteralPath (Join-Path $visualGateBundle "evidence_summary.json") -Raw | ConvertFrom-Json
+    Assert-Equal -Actual $cameraFpsExitCode -Expected 0 -Message "Camera FPS gate exit code mismatch."
+    Assert-Equal -Actual $cameraFpsSummary.requiredGates.cameraFps.required -Expected $true -Message "Camera FPS gate should be required."
+    Assert-Equal -Actual $cameraFpsSummary.requiredGates.cameraFps.sampleCount -Expected 1 -Message "Camera FPS sample count mismatch."
+    Assert-Equal -Actual $cameraFpsSummary.requiredGates.cameraFps.passed -Expected $true -Message "Camera FPS gate should pass."
+
+    $missingCameraFpsBundle = Join-Path $root "missing-camera-fps"
+    Copy-Item -LiteralPath $visualGateBundle -Destination $missingCameraFpsBundle -Recurse
+    "Camera opened without cadence line" | Out-File -LiteralPath (Join-Path $missingCameraFpsBundle "logcat_tail.txt") -Encoding utf8
+    $missingCameraFpsExitCode = Invoke-Summary -BundlePath $missingCameraFpsBundle -RequireCleanSource -RequireCameraFps
+    $missingCameraFpsSummary = Get-Content -LiteralPath (Join-Path $missingCameraFpsBundle "evidence_summary.json") -Raw | ConvertFrom-Json
+    Assert-Equal -Actual $missingCameraFpsExitCode -Expected 13 -Message "Missing camera FPS gate exit code mismatch."
+    Assert-Equal -Actual $missingCameraFpsSummary.requiredGates.cameraFps.sampleCount -Expected 0 -Message "Missing camera FPS sample count mismatch."
+    Assert-Equal -Actual $missingCameraFpsSummary.requiredGates.cameraFps.passed -Expected $false -Message "Missing camera FPS gate should fail."
+    Assert-True -Condition ("camera HAL FPS required but no FPS samples were found" -in @($missingCameraFpsSummary.warnings)) -Message "Missing camera FPS warning missing."
+
+    $lowCameraFpsBundle = Join-Path $root "low-camera-fps"
+    Copy-Item -LiteralPath $visualGateBundle -Destination $lowCameraFpsBundle -Recurse
+    "Camera FPS: 12.5" | Out-File -LiteralPath (Join-Path $lowCameraFpsBundle "logcat_tail.txt") -Encoding utf8
+    $lowCameraFpsExitCode = Invoke-Summary -BundlePath $lowCameraFpsBundle -RequireCleanSource -RequireCameraFps
+    $lowCameraFpsSummary = Get-Content -LiteralPath (Join-Path $lowCameraFpsBundle "evidence_summary.json") -Raw | ConvertFrom-Json
+    Assert-Equal -Actual $lowCameraFpsExitCode -Expected 13 -Message "Low camera FPS gate exit code mismatch."
+    Assert-Equal -Actual $lowCameraFpsSummary.requiredGates.cameraFps.sampleCount -Expected 1 -Message "Low camera FPS sample count mismatch."
+    Assert-Equal -Actual $lowCameraFpsSummary.requiredGates.cameraFps.passed -Expected $false -Message "Low camera FPS gate should fail."
+    Assert-True -Condition ("camera HAL FPS required but minimum FPS was below 23.5 fps" -in @($lowCameraFpsSummary.warnings)) -Message "Low camera FPS required warning missing."
 
     $rendererDiagnosticsExitCode = Invoke-Summary -BundlePath $visualGateBundle -RequireCleanSource -RequireRendererDiagnostics
     $rendererDiagnosticsSummary = Get-Content -LiteralPath (Join-Path $visualGateBundle "evidence_summary.json") -Raw | ConvertFrom-Json

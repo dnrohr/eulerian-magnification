@@ -88,7 +88,8 @@ warnings, `8` when an ROI measurement was required but missing or failed, and
 required renderer or phase diagnostic label was not found, and `11` when a
 required `screenrecord.mp4` artifact is missing, empty, or does not look like an
 MP4 file, and `12` when required thermal-readiness evidence is missing or not
-ready.
+ready, and `13` when required camera HAL FPS evidence is missing or below the
+warning threshold.
 This keeps automated validation commands from silently passing when an explicit
 evidence assertion failed.
 If preflight thermal status or sensor status is `critical` or worse, do not use
@@ -198,6 +199,12 @@ count, whether it is non-empty, and whether the file has an MP4 `ftyp`
 signature near the start. Missing, empty, or invalid required recordings add a
 warning and make the summary command exit with code `11`.
 
+For final live-preview evidence, pass `-RequireCameraFps` so the summary fails
+unless scoped logcat contains camera HAL `FPS:` samples and the minimum sample
+is at least the configured warning threshold, `23.5 FPS` by default. This
+prevents final evidence from passing when the camera cadence was missing,
+frozen, or too low to judge motion.
+
 Use the visual-review fields for watched target runs. `TargetDescription` and
 `VisualClaim` describe what was in frame and what the capture is intended to
 prove. `TargetVisible` records whether the target is actually visible in the
@@ -228,6 +235,7 @@ debug-overlay warnings:
   -RequireVisualValidation `
   -RequireScreenrecord `
   -RequireThermalReady `
+  -RequireCameraFps `
   -RequireNoWarnings `
   -Summarize
 ```
@@ -259,8 +267,8 @@ Run the summary self-test after editing capture or summary tooling:
 
 The test synthesizes a thermal-aborted bundle and an incomplete runtime bundle,
 then verifies the summary exit codes, verdicts, UI assertion behavior,
-clean-source/visual-validation/verdict/diagnostic/screenrecord/thermal-ready
-gates, and dirty source warning.
+clean-source/visual-validation/verdict/diagnostic/screenrecord/thermal-ready/
+camera-FPS gates, and dirty source warning.
 
 For ROI overlay validation, pass `-MeasureRoiExpected` with the expected
 normalized screenshot-space rectangle. The capture script then writes
@@ -341,6 +349,8 @@ Available launch parameters:
   `screenrecord.mp4` exists, is non-empty, and has an MP4 signature.
 - `-RequireThermalReady`: with `-Summarize`, fail the summary unless
   `thermal_ready_wait.json` exists and reports `ready=true`.
+- `-RequireCameraFps`: with `-Summarize`, fail the summary unless camera HAL
+  `FPS:` samples exist and the minimum sample is at least `-WarnCameraFps`.
 - `-RequireEvidenceVerdict`: with `-Summarize`, fail the summary unless
   `evidenceVerdict.status` exactly matches the requested status.
 - `-RequireRendererDiagnostics`: with `-Summarize`, fail the summary unless

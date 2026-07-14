@@ -260,6 +260,22 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - The summary self-test covers missing, failed, and passing thermal-readiness
   artifacts without needing the physical Pixel for this slice.
 
+## Supporting Slice: Required Camera-FPS Gate
+
+- Live validation summaries now accept `-RequireCameraFps` so final Pixel
+  evidence can require scoped camera HAL `FPS:` samples instead of treating
+  missing cadence data as acceptable.
+- The gate fails when no FPS samples are found or when the minimum parsed sample
+  is below `-WarnCameraFps` (`23.5 FPS` by default), then records sample count,
+  minimum FPS, threshold, and pass/fail state under `requiredGates.cameraFps`.
+- `tools/capture_live_validation_evidence.ps1` forwards the requirement when
+  `-Summarize` is used. This pairs with `-RequireNoWarnings` for final AP/AR/AT
+  live-preview captures where frozen or low-FPS camera evidence should not
+  pass.
+- Missing or low camera-FPS evidence exits `13`. The summary self-test covers
+  missing, low, and passing camera-FPS bundles without needing the physical
+  Pixel for this slice.
+
 ## Remaining
 
 - Extend Pixel 8a evidence with a known-good visual artifact and watched target

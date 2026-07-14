@@ -15,6 +15,7 @@ param(
     [switch]$RequireRoiMeasurement,
     [switch]$RequireScreenrecord,
     [switch]$RequireThermalReady,
+    [switch]$RequireCameraFps,
     [switch]$RequireRendererDiagnostics,
     [switch]$RequirePhaseDiagnostics,
     [ValidateSet("", "runtime_smoke_only", "visual_validated", "target_visible_unvalidated", "visual_claim_without_target", "ui_assertion_failed", "screenshot_blank", "wrong_orientation", "runtime_failed", "thermal_preflight_aborted")]
@@ -481,6 +482,11 @@ $thermalReadyWait = if (Test-Path -LiteralPath $thermalReadyWaitPath) {
 }
 $thermalReadyPassed = (-not [bool]$RequireThermalReady) -or ($null -ne $thermalReadyWait -and $thermalReadyWait.ready -eq $true)
 $cameraFpsSummary = Parse-CameraFpsSummary $logcat
+$cameraFpsPassed = (-not [bool]$RequireCameraFps) -or (
+    $cameraFpsSummary.sampleCount -gt 0 -and
+    $null -ne $cameraFpsSummary.minFps -and
+    $cameraFpsSummary.minFps -ge $WarnCameraFps
+)
 $batteryText = Read-TextIfExists $batteryPath
 $batterySummary = Parse-BatterySummary $batteryText
 $uiDumpSummary = Parse-UiDumpSummary $uiDumpPath
@@ -547,6 +553,12 @@ if ($null -ne $thermalSummary.maxSensorStatus -and $thermalSummary.maxSensorStat
 }
 if ($cameraFpsSummary.sampleCount -gt 0 -and $null -ne $cameraFpsSummary.minFps -and $cameraFpsSummary.minFps -lt $WarnCameraFps) {
     $warnings += "camera HAL FPS below $WarnCameraFps fps"
+}
+if ($RequireCameraFps -and $cameraFpsSummary.sampleCount -eq 0) {
+    $warnings += "camera HAL FPS required but no FPS samples were found"
+}
+if ($RequireCameraFps -and $cameraFpsSummary.sampleCount -gt 0 -and $null -ne $cameraFpsSummary.minFps -and $cameraFpsSummary.minFps -lt $WarnCameraFps) {
+    $warnings += "camera HAL FPS required but minimum FPS was below $WarnCameraFps fps"
 }
 if ($batterySummary.powered) {
     $warnings += "device is externally powered during capture"
@@ -748,6 +760,13 @@ $result = [ordered]@{
             ready = if ($null -ne $thermalReadyWait) { $thermalReadyWait.ready } else { $null }
             passed = $thermalReadyPassed
         }
+        cameraFps = [ordered]@{
+            required = [bool]$RequireCameraFps
+            sampleCount = $cameraFpsSummary.sampleCount
+            minFps = $cameraFpsSummary.minFps
+            thresholdFps = $WarnCameraFps
+            passed = $cameraFpsPassed
+        }
         evidenceVerdict = [ordered]@{
             required = -not [string]::IsNullOrWhiteSpace($RequireEvidenceVerdict)
             expected = if ([string]::IsNullOrWhiteSpace($RequireEvidenceVerdict)) { $null } else { $RequireEvidenceVerdict }
@@ -813,6 +832,9 @@ if ($result.requiredGates.screenrecord.required -and -not $result.requiredGates.
 }
 if ($result.requiredGates.thermalReady.required -and -not $result.requiredGates.thermalReady.passed) {
     exit 12
+}
+if ($result.requiredGates.cameraFps.required -and -not $result.requiredGates.cameraFps.passed) {
+    exit 13
 }
 if ($result.requiredGates.evidenceVerdict.required -and -not $result.requiredGates.evidenceVerdict.passed) {
     exit 9
