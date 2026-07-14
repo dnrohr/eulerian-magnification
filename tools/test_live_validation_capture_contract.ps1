@@ -73,6 +73,7 @@ function Assert-InvalidParameterValue {
 
 $captureScript = Join-Path $PSScriptRoot "capture_live_validation_evidence.ps1"
 $command = Get-Command $captureScript
+$captureScriptContent = Get-Content -LiteralPath $captureScript -Raw
 
 Assert-SequenceEqual `
     -Actual (Get-ValidateSetValues -Command $command -ParameterName "Mode") `
@@ -121,5 +122,16 @@ Assert-InvalidParameterValue -ScriptPath $captureScript -ParameterName "RoiSourc
 Assert-InvalidParameterValue -ScriptPath $captureScript -ParameterName "Panel" -InvalidValue "Overlay"
 Assert-InvalidParameterValue -ScriptPath $captureScript -ParameterName "MeasureRoiKind" -InvalidValue "Blue"
 Assert-InvalidParameterValue -ScriptPath $captureScript -ParameterName "RequireEvidenceVerdict" -InvalidValue "maybe"
+
+foreach ($expectedSourceContract in @(
+    "commitReachableFromOriginMain",
+    "merge-base",
+    "--is-ancestor",
+    "origin/main"
+)) {
+    if (-not $captureScriptContent.Contains($expectedSourceContract)) {
+        throw "Capture script must preserve source reachability contract: missing '$expectedSourceContract'."
+    }
+}
 
 Write-Output "Live validation capture contract self-test passed."
