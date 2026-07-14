@@ -36,6 +36,18 @@ foreach ($path in @($readme, $taskReadme, $roiDoc, $liveGuide, $parityDoc, $line
     Assert-True -Condition (Test-Path -LiteralPath $path) -Message "Missing protocol doc: $path"
 }
 
+$plan = & (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1") -Json | ConvertFrom-Json
+foreach ($group in @($plan.validationGroups)) {
+    $protocolPath = Join-Path $repoRoot $group.protocol
+    Assert-True -Condition (Test-Path -LiteralPath $protocolPath) -Message "Missing planner protocol doc: $protocolPath"
+    foreach ($command in @($group.commands)) {
+        if (-not $command.command.StartsWith(".\tools\capture_live_validation_evidence.ps1")) {
+            continue
+        }
+        Assert-DocContains -Path $protocolPath -Expected $command.name -Message "Protocol doc '$($group.protocol)' must include planner command '$($command.name)'."
+    }
+}
+
 foreach ($path in @($readme, $taskReadme)) {
     Assert-DocContains -Path $path -Expected "summarize_pixel_validation_closeout.ps1" -Message "Operator docs must document closeout summary."
     Assert-DocContains -Path $path -Expected "-FailOnMissing" -Message "Operator docs must document missing-evidence closeout gate."

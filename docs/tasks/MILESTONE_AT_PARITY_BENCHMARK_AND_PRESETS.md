@@ -374,6 +374,8 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - Added planner self-test coverage that keeps setup captures on
   `target_visible_unvalidated` and final captures on `-RequireFinalVisualEvidence`
   with accepted operator validation.
+- Added protocol-doc self-test coverage that requires every planner capture
+  command name to appear in its corresponding protocol doc.
 - Updated the live visual validation guide to use `Tremor` for the public Fast
   Motion / Motion path. `ObjectVibration` remains accepted only for internal
   compatibility and parity experiments.

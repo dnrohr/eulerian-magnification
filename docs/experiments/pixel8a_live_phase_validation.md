@@ -82,6 +82,8 @@ Failure artifacts:
 
 Preferred capture command after installing the debug build:
 
+Planner command name: `live-phase-object-setup`.
+
 ```powershell
 .\tools\capture_live_validation_evidence.ps1 `
   -Label "live-phase-object" `

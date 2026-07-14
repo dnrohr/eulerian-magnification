@@ -27,6 +27,8 @@ rectangle. The first command is a pre-inspection capture: it should prove that
 the target is visible and the ROI measurement exists, but it should stop at
 `target_visible_unvalidated` until the operator accepts the alignment.
 
+Planner command name: `manual-roi-known-target-setup`.
+
 ```powershell
 .\tools\capture_live_validation_evidence.ps1 `
   -Label "manual-roi-known-target" `
@@ -117,6 +119,8 @@ warnings.
 7. If the ROI remains far from the face while `Tracking`, capture non-sensitive evidence and inspect `PreviewRoiMapper`.
 
 Use the same screenshot analyzer for the green automatic ROI outline:
+
+Planner command name: `auto-face-roi-setup`.
 
 ```powershell
 .\tools\capture_live_validation_evidence.ps1 `
