@@ -314,6 +314,8 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   evidence bundles.
 - Added `tools/test_live_validation_capture_contract.ps1` so those accepted
   value sets and invalid-value failures are covered without a connected device.
+- Added `tools/test_live_validation_tooling.ps1` as the aggregate offline
+  validation-tooling suite for capture contract and evidence-summary checks.
 - Updated the live visual validation guide to use `Tremor` for the public Fast
   Motion / Motion path. `ObjectVibration` remains accepted only for internal
   compatibility and parity experiments.
