@@ -55,12 +55,13 @@ Pass `-Summarize` to write `evidence_summary.json` as part of the capture:
   -Summarize
 ```
 
-The manifest records the current Git branch, full and short commit, dirty
-worktree flag, short status lines, and installed package dump artifact. The
-summary carries the same source identity plus launch state, required artifact
-presence, screenshot dimensions, gfx frame pacing, runtime crash/ANR/GL-error
-signals, camera HAL FPS samples from logcat, Android thermal status, battery
-temperature/charging context, sampled screenshot content metrics,
+The manifest records the current Git branch, full and short commit, whether the
+commit is reachable from `origin/main`, dirty worktree flag, short status lines,
+and installed package dump artifact. The summary carries the same source
+identity plus launch state, required artifact presence, screenshot dimensions,
+gfx frame pacing, runtime crash/ANR/GL-error signals, camera HAL FPS samples
+from logcat, Android thermal status, battery temperature/charging context,
+sampled screenshot content metrics,
 machine-readable UI text from `ui_dump.xml`, extracted renderer/ROI/quality/
 phase labels, optional thermal readiness wait results, and optional ROI overlay
 measurement status.
@@ -68,6 +69,9 @@ If the source worktree was dirty when the bundle was captured, the summary adds
 an explicit warning. Dirty captures can be useful when validating a script or
 in-progress fix, but do not treat them as release-quality visual-validation
 evidence until the same claim is repeated from a clean commit.
+If the manifest reports that its source commit is not reachable from
+`origin/main`, the summary also warns so final warning-free evidence cannot
+quietly come from a local-only commit.
 The script also records `thermalservice_preflight.txt` before clearing logcat or
 launching the app. The manifest and summary expose this as `thermalPreflight`,
 so a capture can show that the device was already throttled before the app was

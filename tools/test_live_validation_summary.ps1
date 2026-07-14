@@ -565,6 +565,23 @@ Number Missed Vsync: 0
     Assert-Equal -Actual $warningGateSummary.requiredGates.noWarnings.warningCount -Expected 1 -Message "No-warnings gate warning count mismatch."
     Assert-True -Condition ("no warnings required but summary has 1 warning(s)" -in @($warningGateSummary.warnings)) -Message "No-warnings gate warning missing."
 
+    $unpushedSourceBundle = Join-Path $root "unpushed-source-gate"
+    Copy-Item -LiteralPath $visualGateBundle -Destination $unpushedSourceBundle -Recurse
+    $unpushedSourceManifestPath = Join-Path $unpushedSourceBundle "manifest.json"
+    $unpushedSourceManifest = Get-Content -LiteralPath $unpushedSourceManifestPath -Raw | ConvertFrom-Json
+    $unpushedSourceManifest.source | Add-Member -NotePropertyName commitReachableFromOriginMain -NotePropertyValue $false -Force
+    $unpushedSourceManifest.visualReview.visualValidated = $true
+    $unpushedSourceManifest | ConvertTo-Json -Depth 8 | Out-File -LiteralPath $unpushedSourceManifestPath -Encoding utf8
+
+    $unpushedSourceExitCode = Invoke-Summary -BundlePath $unpushedSourceBundle -RequireCleanSource -RequireVisualValidation -RequireNoWarnings
+    $unpushedSourceSummary = Get-Content -LiteralPath (Join-Path $unpushedSourceBundle "evidence_summary.json") -Raw | ConvertFrom-Json
+    Assert-Equal -Actual $unpushedSourceExitCode -Expected 7 -Message "Unpushed-source warning gate exit code mismatch."
+    Assert-Equal -Actual $unpushedSourceSummary.requiredGates.cleanSource.passed -Expected $true -Message "Unpushed-source bundle should still pass clean-source gate."
+    Assert-Equal -Actual $unpushedSourceSummary.requiredGates.cleanSource.commitReachableFromOriginMain -Expected $false -Message "Clean-source gate should report source reachability."
+    Assert-Equal -Actual $unpushedSourceSummary.requiredGates.visualValidation.passed -Expected $true -Message "Unpushed-source bundle should pass visual validation."
+    Assert-Equal -Actual $unpushedSourceSummary.requiredGates.noWarnings.passed -Expected $false -Message "Unpushed-source warning should fail no-warnings gate."
+    Assert-True -Condition ("source commit was not reachable from origin/main during capture" -in @($unpushedSourceSummary.warnings)) -Message "Unpushed-source warning missing."
+
     $lateWarningBundle = Join-Path $root "late-warning-gate"
     Copy-Item -LiteralPath $warningGateBundle -Destination $lateWarningBundle -Recurse
     Write-TestLandscapeScreenshot -Path (Join-Path $lateWarningBundle "screenshot.png")

@@ -152,6 +152,21 @@ function Get-GitValue {
     return (($output | Out-String).Trim())
 }
 
+function Test-GitSuccess {
+    param([string[]]$Arguments)
+
+    $git = Get-Command git -ErrorAction SilentlyContinue
+    if (-not $git) {
+        return $null
+    }
+    $previousErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    & $git.Source @Arguments *> $null
+    $exitCode = $LASTEXITCODE
+    $ErrorActionPreference = $previousErrorActionPreference
+    return $exitCode -eq 0
+}
+
 function Get-GitMetadata {
     $commit = Get-GitValue -Arguments @("rev-parse", "HEAD")
     $shortCommit = Get-GitValue -Arguments @("rev-parse", "--short", "HEAD")
@@ -165,6 +180,7 @@ function Get-GitMetadata {
         commit = $commit
         shortCommit = $shortCommit
         branch = $branch
+        commitReachableFromOriginMain = if ([string]::IsNullOrWhiteSpace($commit)) { $null } else { Test-GitSuccess -Arguments @("merge-base", "--is-ancestor", $commit, "origin/main") }
         dirty = -not [string]::IsNullOrWhiteSpace($status)
         statusShort = $statusLines
     }

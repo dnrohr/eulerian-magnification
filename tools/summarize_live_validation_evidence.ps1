@@ -543,8 +543,12 @@ foreach ($entry in $runtimePatterns.GetEnumerator()) {
 $warnings = @()
 $sourcePresent = $manifest -and ($manifest.PSObject.Properties.Name -contains "source") -and $manifest.source
 $sourceDirty = $false
+$sourceCommitReachableFromOriginMain = $null
 if ($sourcePresent -and ($manifest.source.PSObject.Properties.Name -contains "dirty")) {
     $sourceDirty = $manifest.source.dirty -eq $true
+}
+if ($sourcePresent -and ($manifest.source.PSObject.Properties.Name -contains "commitReachableFromOriginMain")) {
+    $sourceCommitReachableFromOriginMain = $manifest.source.commitReachableFromOriginMain
 }
 if ($manifest -and $manifest.PSObject.Properties.Name -contains "warnings") {
     foreach ($warning in @($manifest.warnings)) {
@@ -555,6 +559,9 @@ if ($manifest -and $manifest.PSObject.Properties.Name -contains "warnings") {
 }
 if ($sourceDirty) {
     $warnings += "source worktree was dirty during capture"
+}
+if ($sourceCommitReachableFromOriginMain -eq $false) {
+    $warnings += "source commit was not reachable from origin/main during capture"
 }
 if ($RequireCleanSource -and (-not $sourcePresent)) {
     $warnings += "clean source required but source metadata is missing"
@@ -770,6 +777,7 @@ $result = [ordered]@{
         cleanSource = [ordered]@{
             required = [bool]$RequireCleanSource
             sourceMetadataPresent = [bool]$sourcePresent
+            commitReachableFromOriginMain = $sourceCommitReachableFromOriginMain
             passed = (-not [bool]$RequireCleanSource) -or ($sourcePresent -and (-not $sourceDirty))
         }
         visualValidation = [ordered]@{

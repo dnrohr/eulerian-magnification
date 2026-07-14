@@ -388,6 +388,9 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - Extended the protocol-doc self-test to require the pushed-source closeout
   gate in operator-facing docs, preventing the stricter evidence requirement
   from drifting out of the next Pixel handoff instructions.
+- Capture manifests now record whether the captured commit is reachable from
+  `origin/main`; summaries warn when it is not, so final warning-free watched
+  evidence cannot quietly come from a local-only commit.
 - Documented the closeout gates in README, the task index, and MIT parity
   targets so visual-validation docs are only updated after accepted evidence.
 - Extended the protocol-doc self-test to keep README and task-index closeout
