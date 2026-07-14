@@ -22,6 +22,7 @@ if (-not (Test-Path -LiteralPath $OutputRoot)) {
 $planPath = Join-Path $OutputRoot "pixel_validation_plan.json"
 $closeoutPath = Join-Path $OutputRoot "pixel_closeout_summary.json"
 $commandsPath = Join-Path $OutputRoot "pixel_validation_commands.txt"
+$handoffPath = Join-Path $OutputRoot "pixel_validation_handoff.md"
 
 $planner = Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1"
 $closeoutSummary = Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1"
@@ -50,6 +51,63 @@ $commands = @(& $planner @commandsArgs)
 Set-Content -LiteralPath $commandsPath -Value ([string]::Join([Environment]::NewLine, $commands)) -Encoding utf8
 
 $closeout = & $closeoutSummary -EvidenceRoot $EvidenceRoot -OutputPath $closeoutPath -Json | ConvertFrom-Json
+$requestedSlotLabel = if (@($plan.requestedSlots).Count -gt 0) { $plan.requestedSlots -join ", " } else { "All" }
+
+$handoffLines = @(
+    "# Pixel Validation Handoff",
+    "",
+    ('- Evidence root: `{0}`' -f $EvidenceRoot),
+    ('- Output root: `{0}`' -f $OutputRoot),
+    ('- Capture stage: `{0}`' -f $plan.captureStage),
+    ('- Requested slots: `{0}`' -f $requestedSlotLabel),
+    "- Recommended captures: $(@($plan.recommendedCaptures).Count)",
+    "- Closeout blockers: $(@($closeout.closeoutBlockers).Count)",
+    "- Ready for preset docs: $($closeout.readyForPresetDocs)",
+    "",
+    "## Artifacts",
+    "",
+    ('- Plan JSON: `{0}`' -f $planPath),
+    ('- Closeout JSON: `{0}`' -f $closeoutPath),
+    ('- Command list: `{0}`' -f $commandsPath),
+    "",
+    "## Recommended Captures",
+    ""
+)
+
+if (@($plan.recommendedCaptures).Count -eq 0) {
+    $handoffLines += "- No recommended captures match the current filters."
+} else {
+    foreach ($capture in @($plan.recommendedCaptures)) {
+        $handoffLines += "- $($capture.title) [$($capture.milestones -join ', ')]"
+        $handoffLines += ('  - Slot: `{0}`' -f $capture.slot)
+        $handoffLines += ('  - Expected final label: `{0}`' -f $capture.expectedFinalLabel)
+        $handoffLines += ('  - Protocol: `{0}`' -f $capture.protocol)
+    }
+}
+
+$handoffLines += @(
+    "",
+    "## Closeout Blockers",
+    ""
+)
+
+if (@($closeout.closeoutBlockers).Count -eq 0) {
+    $handoffLines += "- None."
+} else {
+    foreach ($blocker in @($closeout.closeoutBlockers)) {
+        $handoffLines += "- $($blocker.kind): $($blocker.message)"
+    }
+}
+
+$handoffLines += @(
+    "",
+    "## Commands",
+    "",
+    '```powershell'
+)
+$handoffLines += $commands
+$handoffLines += '```'
+Set-Content -LiteralPath $handoffPath -Value $handoffLines -Encoding utf8
 
 $result = [pscustomobject]@{
     evidenceRoot = $EvidenceRoot
@@ -57,6 +115,7 @@ $result = [pscustomobject]@{
     planPath = $planPath
     closeoutPath = $closeoutPath
     commandsPath = $commandsPath
+    handoffPath = $handoffPath
     requestedSlots = @($plan.requestedSlots)
     invalidRequestedSlots = @($plan.invalidRequestedSlots)
     captureStage = $plan.captureStage
@@ -79,6 +138,7 @@ if ($Json) {
     Write-Output "Plan: $($result.planPath)"
     Write-Output "Closeout: $($result.closeoutPath)"
     Write-Output "Commands: $($result.commandsPath)"
+    Write-Output "Handoff: $($result.handoffPath)"
     if (@($result.invalidRequestedSlots).Count -gt 0) {
         Write-Output "Warning: requested slot(s) not currently missing or unknown: $($result.invalidRequestedSlots -join ', ')"
     }

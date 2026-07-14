@@ -330,7 +330,8 @@ an empty capture queue, or `-FailOnEmptyQueue` when automation should require
 at least one recommended capture. Add `-OutputPath sample-videos\exports\live-validation\pixel_validation_plan.json`
 to save the full machine-readable plan used for a device session.
 The handoff bundle writes `pixel_validation_plan.json`,
-`pixel_closeout_summary.json`, and `pixel_validation_commands.txt`.
+`pixel_closeout_summary.json`, `pixel_validation_commands.txt`, and the
+human-readable `pixel_validation_handoff.md`.
 
 After a connected Pixel validation pass, summarize which accepted evidence
 bundles are ready to close the remaining roadmap items. The summary includes

@@ -504,6 +504,9 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - Added `tools/prepare_pixel_validation_handoff.ps1` so a phone-free command can
   write `pixel_validation_plan.json`, `pixel_closeout_summary.json`, and
   `pixel_validation_commands.txt` for the next connected-device session.
+- The handoff command now also writes `pixel_validation_handoff.md`, a
+  human-readable summary of recommended captures, closeout blockers, artifacts,
+  and paste-ready commands.
 
 ## Remaining
 

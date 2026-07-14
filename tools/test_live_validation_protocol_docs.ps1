@@ -128,6 +128,7 @@ foreach ($path in @($readme, $taskReadme)) {
     Assert-DocContains -Path $path -Expected "-FailOnEmptyQueue" -Message "Operator docs must document empty queue failure mode."
     Assert-DocContains -Path $path -Expected "pixel_validation_plan.json" -Message "Operator docs must document the saved planner artifact name."
     Assert-DocContains -Path $path -Expected "pixel_validation_commands.txt" -Message "Operator docs must document the saved command-list artifact name."
+    Assert-DocContains -Path $path -Expected "pixel_validation_handoff.md" -Message "Operator docs must document the readable handoff artifact name."
     Assert-DocContains -Path $path -Expected "available missing slots" -Message "Operator docs must document planner slot-filter feedback."
     Assert-DocContains -Path $path -Expected "recommended captures" -Message "Operator docs must document recommended capture output."
     Assert-DocContains -Path $path -Expected "summarize_pixel_validation_closeout.ps1" -Message "Operator docs must document closeout summary."
