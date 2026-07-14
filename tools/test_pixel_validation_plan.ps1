@@ -51,8 +51,11 @@ Assert-True -Condition ($null -ne $preset) -Message "Preset parity validation gr
 
 Assert-True -Condition ($roi.finalEvidence.Contains("-RequireRoiMeasurement")) -Message "ROI final evidence should require ROI measurement."
 Assert-True -Condition ($roi.finalEvidence.Contains("-RequireFinalVisualEvidence")) -Message "ROI final evidence should require final visual evidence."
+Assert-True -Condition ($roi.finalEvidence.Contains("origin/main")) -Message "ROI final evidence should require a source commit reachable from origin/main."
 Assert-True -Condition ($linear.finalEvidence.Contains("-RequireRendererDiagnostics")) -Message "Linear final evidence should require renderer diagnostics."
+Assert-True -Condition ($linear.finalEvidence.Contains("origin/main")) -Message "Linear final evidence should require a source commit reachable from origin/main."
 Assert-True -Condition ($phase.finalEvidence.Contains("-RequirePhaseDiagnostics")) -Message "Phase final evidence should require phase diagnostics."
+Assert-True -Condition ($phase.finalEvidence.Contains("origin/main")) -Message "Phase final evidence should require a source commit reachable from origin/main."
 Assert-True -Condition ($preset.finalEvidence.Contains("Update README")) -Message "Preset parity plan should keep docs updates after accepted artifacts."
 $presetCloseoutCommand = @($preset.commands | Where-Object { $_.name -eq "preset-parity-closeout" } | Select-Object -First 1).command
 Assert-True -Condition ($presetCloseoutCommand.Contains("-FailOnCloseoutNotReady")) -Message "Preset parity closeout should require the roadmap closeout readiness gate."

@@ -14,7 +14,7 @@ $validationGroups = @(
         milestones = @("M", "U")
         protocol = "docs/testing/ROI_DEVICE_VALIDATION.md"
         setupEvidence = "Manual known target and automatic visible face/skin setup captures should stop at target_visible_unvalidated."
-        finalEvidence = "Final runs require -RequireRoiMeasurement plus -RequireFinalVisualEvidence from a clean source tree."
+        finalEvidence = "Final runs require -RequireRoiMeasurement plus -RequireFinalVisualEvidence from a clean source tree whose commit is reachable from origin/main."
         closes = @(
             "portrait/front-camera ROI mapping confidence",
             "manual ROI known-target alignment",
@@ -50,7 +50,7 @@ $validationGroups = @(
         milestones = @("AE", "AP")
         protocol = "docs/experiments/pixel8a_live_linear_validation.md"
         setupEvidence = "Pulse and Breathing setup captures should show renderer diagnostics and stop at target_visible_unvalidated."
-        finalEvidence = "Final Pulse and Breathing runs require -RequireRendererDiagnostics plus -RequireFinalVisualEvidence."
+        finalEvidence = "Final Pulse and Breathing runs require -RequireRendererDiagnostics plus -RequireFinalVisualEvidence from a clean source tree whose commit is reachable from origin/main."
         closes = @(
             "portrait full-frame live EVM preview validation",
             "live linear reconstruction visual evidence",
@@ -86,7 +86,7 @@ $validationGroups = @(
         milestones = @("AR")
         protocol = "docs/experiments/pixel8a_live_phase_validation.md"
         setupEvidence = "Controlled high-contrast moving-edge setup should stop at target_visible_unvalidated."
-        finalEvidence = "Final Motion/Fast tremor runs require -RequirePhaseDiagnostics plus -RequireFinalVisualEvidence."
+        finalEvidence = "Final Motion/Fast tremor runs require -RequirePhaseDiagnostics plus -RequireFinalVisualEvidence from a clean source tree whose commit is reachable from origin/main."
         closes = @(
             "controlled object-motion live phase validation",
             "Object vibration and Fast tremor preset visual parity inputs"
