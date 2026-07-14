@@ -218,7 +218,7 @@ Do not mark preset visual parity as validated until the preset closeout gate
 passes. The gate requires all four preset visual slots and rejects unmatched,
 ambiguous, duplicate, non-`main`, unpushed, or missing-artifact-hash accepted
 evidence, plus accepted evidence whose label is not a final capture label or
-does not match its closeout slot:
+does not match its closeout slot or lacks operator notes:
 
 ```powershell
 .\tools\summarize_pixel_validation_closeout.ps1 -FailOnPresetDocsNotReady
@@ -226,10 +226,10 @@ does not match its closeout slot:
 
 Before closing roadmap items, also reject missing, unmatched, ambiguous,
 duplicate, non-`main`, unpushed, missing-artifact-hash, or non-final-label
-accepted evidence, plus wrong-slot final labels:
+accepted evidence, plus wrong-slot final labels or missing operator notes:
 
 ```powershell
-.\tools\summarize_pixel_validation_closeout.ps1 -FailOnMissing -FailOnUnmatched -FailOnAmbiguous -FailOnDuplicate -FailOnNonMain -FailOnUnpushedSource -FailOnMissingArtifactHashes -FailOnNonFinalLabel -FailOnWrongSlotLabel
+.\tools\summarize_pixel_validation_closeout.ps1 -FailOnMissing -FailOnUnmatched -FailOnAmbiguous -FailOnDuplicate -FailOnNonMain -FailOnUnpushedSource -FailOnMissingArtifactHashes -FailOnNonFinalLabel -FailOnWrongSlotLabel -FailOnMissingOperatorNotes
 .\tools\summarize_pixel_validation_closeout.ps1 -FailOnCloseoutNotReady
 ```
 

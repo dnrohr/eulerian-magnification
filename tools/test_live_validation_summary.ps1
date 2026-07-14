@@ -436,6 +436,19 @@ Number Missed Vsync: 0
     Assert-Equal -Actual $passingFinalEvidenceSummary.artifacts.screenshot.sha256 -Expected (Get-FileHash -LiteralPath (Join-Path $passingFinalEvidenceBundle "screenshot.png") -Algorithm SHA256).Hash -Message "Final evidence screenshot hash mismatch."
     Assert-Equal -Actual $passingFinalEvidenceSummary.artifacts.screenrecord.sha256 -Expected (Get-FileHash -LiteralPath (Join-Path $passingFinalEvidenceBundle "screenrecord.mp4") -Algorithm SHA256).Hash -Message "Final evidence screenrecord hash mismatch."
 
+    $missingOperatorNotesBundle = Join-Path $root "missing-operator-notes"
+    Copy-Item -LiteralPath $passingFinalEvidenceBundle -Destination $missingOperatorNotesBundle -Recurse
+    $missingOperatorNotesManifestPath = Join-Path $missingOperatorNotesBundle "manifest.json"
+    $missingOperatorNotesManifest = Get-Content -LiteralPath $missingOperatorNotesManifestPath -Raw | ConvertFrom-Json
+    $missingOperatorNotesManifest.visualReview.operatorNotes = ""
+    $missingOperatorNotesManifest | ConvertTo-Json -Depth 8 | Out-File -LiteralPath $missingOperatorNotesManifestPath -Encoding utf8
+    $missingOperatorNotesExitCode = Invoke-Summary -BundlePath $missingOperatorNotesBundle -RequireFinalVisualEvidence
+    $missingOperatorNotesSummary = Get-Content -LiteralPath (Join-Path $missingOperatorNotesBundle "evidence_summary.json") -Raw | ConvertFrom-Json
+    Assert-Equal -Actual $missingOperatorNotesExitCode -Expected 7 -Message "Missing operator notes final evidence exit code mismatch."
+    Assert-Equal -Actual $missingOperatorNotesSummary.requiredGates.visualValidation.passed -Expected $true -Message "Missing notes should still have accepted visual validation."
+    Assert-Equal -Actual $missingOperatorNotesSummary.requiredGates.noWarnings.passed -Expected $false -Message "Missing notes should fail the final no-warnings gate."
+    Assert-True -Condition ("visualValidated=true requires non-empty operator notes" -in @($missingOperatorNotesSummary.warnings)) -Message "Missing operator notes warning missing."
+
     $rendererDiagnosticsExitCode = Invoke-Summary -BundlePath $visualGateBundle -RequireCleanSource -RequireRendererDiagnostics
     $rendererDiagnosticsSummary = Get-Content -LiteralPath (Join-Path $visualGateBundle "evidence_summary.json") -Raw | ConvertFrom-Json
     Assert-Equal -Actual $rendererDiagnosticsExitCode -Expected 0 -Message "Renderer diagnostics gate exit code mismatch."

@@ -10,6 +10,7 @@ param(
     [switch]$FailOnMissingArtifactHashes,
     [switch]$FailOnNonFinalLabel,
     [switch]$FailOnWrongSlotLabel,
+    [switch]$FailOnMissingOperatorNotes,
     [switch]$FailOnCloseoutNotReady,
     [switch]$FailOnPresetDocsNotReady
 )
@@ -102,6 +103,7 @@ function New-EvidenceReport {
         sourceShortCommit = Get-SourceValue -Summary $Summary -Name "shortCommit"
         screenshotSha256 = Get-ArtifactSha256 -Summary $Summary -Name "screenshot"
         screenrecordSha256 = Get-ArtifactSha256 -Summary $Summary -Name "screenrecord"
+        operatorNotes = $Summary.visualReview.operatorNotes
         mode = $Summary.launch.mode
         roiSource = $Summary.launch.roiSource
         visualClaim = $Summary.visualReview.visualClaim
@@ -178,6 +180,12 @@ function Test-SlotLabel {
     }
 }
 
+function Test-OperatorNotesPresent {
+    param($Summary)
+
+    return $Summary.visualReview -and -not [string]::IsNullOrWhiteSpace($Summary.visualReview.operatorNotes)
+}
+
 function New-Slot {
     param(
         [string]$Id,
@@ -238,6 +246,7 @@ $unpushedAcceptedFinalEvidence = @()
 $missingArtifactHashAcceptedFinalEvidence = @()
 $nonFinalLabelAcceptedFinalEvidence = @()
 $wrongSlotLabelAcceptedFinalEvidence = @()
+$missingOperatorNotesAcceptedFinalEvidence = @()
 foreach ($summary in $acceptedSummaries) {
     if (-not (Test-FinalVisualEvidence -Summary $summary)) {
         continue
@@ -264,6 +273,11 @@ foreach ($summary in $acceptedSummaries) {
         $report.reason = "accepted final evidence label is not a final capture label"
         $nonFinalLabelAcceptedFinalEvidence += [pscustomobject]$report
         continue
+    }
+    if (-not (Test-OperatorNotesPresent -Summary $summary)) {
+        $report = New-EvidenceReport -Summary $summary
+        $report.reason = "accepted final evidence is missing operator notes"
+        $missingOperatorNotesAcceptedFinalEvidence += [pscustomobject]$report
     }
 
     $text = Get-SummaryText -Summary $summary
@@ -346,7 +360,8 @@ $presetDocsEvidenceClean = (
     $unpushedAcceptedFinalEvidence.Count -eq 0 -and
     $missingArtifactHashAcceptedFinalEvidence.Count -eq 0 -and
     $nonFinalLabelAcceptedFinalEvidence.Count -eq 0 -and
-    $wrongSlotLabelAcceptedFinalEvidence.Count -eq 0
+    $wrongSlotLabelAcceptedFinalEvidence.Count -eq 0 -and
+    $missingOperatorNotesAcceptedFinalEvidence.Count -eq 0
 )
 $allCloseoutEvidencePresent = ($missing.Count -eq 0)
 $allCloseoutEvidenceClean = (
@@ -358,7 +373,8 @@ $allCloseoutEvidenceClean = (
     $unpushedAcceptedFinalEvidence.Count -eq 0 -and
     $missingArtifactHashAcceptedFinalEvidence.Count -eq 0 -and
     $nonFinalLabelAcceptedFinalEvidence.Count -eq 0 -and
-    $wrongSlotLabelAcceptedFinalEvidence.Count -eq 0
+    $wrongSlotLabelAcceptedFinalEvidence.Count -eq 0 -and
+    $missingOperatorNotesAcceptedFinalEvidence.Count -eq 0
 )
 $result = [pscustomobject]@{
     evidenceRoot = if ($rootPath) { $rootPath.Path } else { $EvidenceRoot }
@@ -372,6 +388,7 @@ $result = [pscustomobject]@{
     missingArtifactHashAcceptedFinalEvidence = $missingArtifactHashAcceptedFinalEvidence
     nonFinalLabelAcceptedFinalEvidence = $nonFinalLabelAcceptedFinalEvidence
     wrongSlotLabelAcceptedFinalEvidence = $wrongSlotLabelAcceptedFinalEvidence
+    missingOperatorNotesAcceptedFinalEvidence = $missingOperatorNotesAcceptedFinalEvidence
     slots = $slotList
     missing = $missing
     presetVisualSlotsPresent = $presetVisualSlotsPresent
@@ -396,6 +413,7 @@ if ($Json) {
     Write-Output "Missing artifact-hash accepted final evidence: $(@($result.missingArtifactHashAcceptedFinalEvidence).Count)"
     Write-Output "Non-final-label accepted final evidence: $(@($result.nonFinalLabelAcceptedFinalEvidence).Count)"
     Write-Output "Wrong-slot-label accepted final evidence: $(@($result.wrongSlotLabelAcceptedFinalEvidence).Count)"
+    Write-Output "Missing-operator-notes accepted final evidence: $(@($result.missingOperatorNotesAcceptedFinalEvidence).Count)"
     Write-Output ""
     foreach ($slot in $slotList) {
         $mark = if ($slot.satisfied) { "[x]" } else { "[ ]" }
@@ -570,6 +588,23 @@ if ($Json) {
             Write-Output "    $($evidence.reason): $($evidence.mismatchedSlots -join ', ')"
         }
     }
+    if (@($result.missingOperatorNotesAcceptedFinalEvidence).Count -gt 0) {
+        Write-Output ""
+        Write-Output "Missing-operator-notes accepted final evidence:"
+        foreach ($evidence in @($result.missingOperatorNotesAcceptedFinalEvidence)) {
+            Write-Output "- $($evidence.label): $($evidence.bundle)"
+            if (-not [string]::IsNullOrWhiteSpace($evidence.sourceShortCommit) -or -not [string]::IsNullOrWhiteSpace($evidence.sourceBranch)) {
+                Write-Output "    Source: $($evidence.sourceShortCommit) on $($evidence.sourceBranch)"
+            }
+            if (-not [string]::IsNullOrWhiteSpace($evidence.screenshotSha256)) {
+                Write-Output "    Screenshot SHA-256: $($evidence.screenshotSha256)"
+            }
+            if (-not [string]::IsNullOrWhiteSpace($evidence.screenrecordSha256)) {
+                Write-Output "    Screenrecord SHA-256: $($evidence.screenrecordSha256)"
+            }
+            Write-Output "    $($evidence.reason)"
+        }
+    }
 }
 
 if ($FailOnMissing -and $missing.Count -gt 0) {
@@ -598,6 +633,9 @@ if ($FailOnNonFinalLabel -and $nonFinalLabelAcceptedFinalEvidence.Count -gt 0) {
 }
 if ($FailOnWrongSlotLabel -and $wrongSlotLabelAcceptedFinalEvidence.Count -gt 0) {
     exit 18
+}
+if ($FailOnMissingOperatorNotes -and $missingOperatorNotesAcceptedFinalEvidence.Count -gt 0) {
+    exit 19
 }
 if ($FailOnCloseoutNotReady -and -not $result.allCloseoutEvidenceClean) {
     exit 7

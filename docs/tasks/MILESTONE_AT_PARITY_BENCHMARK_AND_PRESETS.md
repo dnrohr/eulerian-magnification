@@ -416,6 +416,9 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - Added `-FailOnWrongSlotLabel` to the Pixel closeout summary and planner/docs
   gates, so a final-labeled bundle can only satisfy the matching manual ROI,
   automatic ROI, Pulse, Breathing, Object phase, or Fast tremor closeout slot.
+- Added final-evidence operator-note enforcement to live summaries and Pixel
+  closeout, so accepted visual evidence must explain what the operator
+  accepted before it can close roadmap or parity documentation.
 - Documented the closeout gates in README, the task index, and MIT parity
   targets so visual-validation docs are only updated after accepted evidence.
 - Extended the protocol-doc self-test to keep README and task-index closeout

@@ -126,6 +126,7 @@ foreach ($path in @($readme, $taskReadme)) {
     Assert-DocContains -Path $path -Expected "-FailOnMissingArtifactHashes" -Message "Operator docs must document artifact-hash closeout gate."
     Assert-DocContains -Path $path -Expected "-FailOnNonFinalLabel" -Message "Operator docs must document final-label closeout gate."
     Assert-DocContains -Path $path -Expected "-FailOnWrongSlotLabel" -Message "Operator docs must document slot-label closeout gate."
+    Assert-DocContains -Path $path -Expected "-FailOnMissingOperatorNotes" -Message "Operator docs must document operator-notes closeout gate."
     Assert-DocContains -Path $path -Expected "-FailOnCloseoutNotReady" -Message "Operator docs must document one-shot closeout readiness gate."
     Assert-DocContains -Path $path -Expected "-FailOnPresetDocsNotReady" -Message "Operator docs must document preset-doc readiness gate."
 }
@@ -145,6 +146,7 @@ Assert-DocContains -Path $liveGuide -Expected "-RequireThermalReady" -Message "L
 Assert-DocContains -Path $liveGuide -Expected "-RequireCameraFps" -Message "Live guide must document camera FPS gating."
 Assert-DocContains -Path $liveGuide -Expected "-RequireFocusedApp" -Message "Live guide must document focused-app gating."
 Assert-DocContains -Path $liveGuide -Expected "-RequireEvidenceVerdict" -Message "Live guide must document verdict gating."
+Assert-DocContains -Path $liveGuide -Expected "OperatorNotes" -Message "Live guide must document final operator notes."
 
 Assert-DocContains -Path $parityDoc -Expected "summarize_pixel_validation_closeout.ps1" -Message "Parity targets must document closeout summary."
 Assert-DocContains -Path $parityDoc -Expected "-FailOnPresetDocsNotReady" -Message "Parity targets must document the preset docs readiness gate."
@@ -155,6 +157,7 @@ Assert-DocContains -Path $parityDoc -Expected "-FailOnUnpushedSource" -Message "
 Assert-DocContains -Path $parityDoc -Expected "-FailOnMissingArtifactHashes" -Message "Parity targets must document artifact-hash accepted evidence gate."
 Assert-DocContains -Path $parityDoc -Expected "-FailOnNonFinalLabel" -Message "Parity targets must document final-label accepted evidence gate."
 Assert-DocContains -Path $parityDoc -Expected "-FailOnWrongSlotLabel" -Message "Parity targets must document slot-label accepted evidence gate."
+Assert-DocContains -Path $parityDoc -Expected "-FailOnMissingOperatorNotes" -Message "Parity targets must document operator-notes accepted evidence gate."
 Assert-DocContains -Path $parityDoc -Expected "-FailOnCloseoutNotReady" -Message "Parity targets must document one-shot closeout readiness gate."
 
 Assert-DocContains -Path $linearDoc -Expected "-Mode Pulse" -Message "Live linear protocol must include the Pulse command."

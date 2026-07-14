@@ -637,6 +637,9 @@ if (-not [string]::IsNullOrWhiteSpace($visualReview.visualClaim) -and $visualRev
 if ($visualReview.targetVisible -eq $true -and $visualReview.visualValidated -ne $true) {
     $warnings += "target visible but visualValidated is not true"
 }
+if ($visualReview.visualValidated -eq $true -and [string]::IsNullOrWhiteSpace($visualReview.operatorNotes)) {
+    $warnings += "visualValidated=true requires non-empty operator notes"
+}
 
 $roiMeasurement = $null
 if (Test-Path -LiteralPath $roiMeasurementPath) {
