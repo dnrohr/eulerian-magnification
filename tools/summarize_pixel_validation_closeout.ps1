@@ -2,7 +2,8 @@ param(
     [string]$EvidenceRoot = "sample-videos\exports\live-validation",
     [switch]$Json,
     [switch]$FailOnMissing,
-    [switch]$FailOnUnmatched
+    [switch]$FailOnUnmatched,
+    [switch]$FailOnPresetDocsNotReady
 )
 
 $ErrorActionPreference = "Stop"
@@ -180,6 +181,9 @@ if ($FailOnMissing -and $missing.Count -gt 0) {
 }
 if ($FailOnUnmatched -and $unmatchedAcceptedFinalEvidence.Count -gt 0) {
     exit 3
+}
+if ($FailOnPresetDocsNotReady -and -not $result.readyForPresetDocs) {
+    exit 4
 }
 
 exit 0

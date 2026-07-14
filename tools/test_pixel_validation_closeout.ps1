@@ -27,7 +27,8 @@ function Invoke-Closeout {
     param(
         [string]$EvidenceRoot,
         [switch]$FailOnMissing,
-        [switch]$FailOnUnmatched
+        [switch]$FailOnUnmatched,
+        [switch]$FailOnPresetDocsNotReady
     )
 
     $script = Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1"
@@ -41,6 +42,9 @@ function Invoke-Closeout {
     }
     if ($FailOnUnmatched) {
         $args.FailOnUnmatched = $true
+    }
+    if ($FailOnPresetDocsNotReady) {
+        $args.FailOnPresetDocsNotReady = $true
     }
 
     & $script @args *> $stdout
@@ -138,8 +142,14 @@ try {
     $partialExitCode = Invoke-Closeout -EvidenceRoot $partialRoot -FailOnMissing
     Assert-Equal -Actual $partialExitCode -Expected 2 -Message "FailOnMissing should exit 2 when closeout slots are missing."
 
+    $partialPresetDocsExitCode = Invoke-Closeout -EvidenceRoot $partialRoot -FailOnPresetDocsNotReady
+    Assert-Equal -Actual $partialPresetDocsExitCode -Expected 4 -Message "FailOnPresetDocsNotReady should exit 4 until all preset visual slots are satisfied."
+
     $completeExitCode = Invoke-Closeout -EvidenceRoot $root -FailOnMissing
     Assert-Equal -Actual $completeExitCode -Expected 0 -Message "FailOnMissing should exit 0 when all closeout slots are satisfied."
+
+    $completePresetDocsExitCode = Invoke-Closeout -EvidenceRoot $root -FailOnPresetDocsNotReady
+    Assert-Equal -Actual $completePresetDocsExitCode -Expected 0 -Message "FailOnPresetDocsNotReady should exit 0 when preset visual slots are satisfied."
 
     $unmatchedExitCode = Invoke-Closeout -EvidenceRoot $root -FailOnUnmatched
     Assert-Equal -Actual $unmatchedExitCode -Expected 3 -Message "FailOnUnmatched should exit 3 when accepted final evidence is not mapped to a closeout slot."
