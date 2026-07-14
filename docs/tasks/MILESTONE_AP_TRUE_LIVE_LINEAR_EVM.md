@@ -202,6 +202,21 @@ showing true pyramid reconstruction or a fallback bridge.
 - Re-ran the standard JVM/build verification and reinstalled the current debug
   build on the Pixel 8a after capturing evidence.
 
+## Supporting Slice: Watched Live Linear Validation Protocol
+
+- Added `docs/experiments/pixel8a_live_linear_validation.md` for the remaining
+  AP/AE watched Pixel evidence.
+- The protocol separates renderer-state setup captures from final accepted
+  visual evidence: setup runs must stop at `target_visible_unvalidated`, while
+  final Pulse and Breathing runs must use `-RequireFinalVisualEvidence` plus
+  renderer diagnostics.
+- The final visual gate requires a clean source tree, accepted visual
+  validation, valid MP4 screenrecord, thermal readiness, camera-FPS evidence,
+  focused-app evidence, and a warning-free summary.
+- This makes the next Pixel session reproducible, but it does not close AP
+  until the known pulse and slow-motion targets are actually recorded and
+  accepted.
+
 ## Supporting Slice: Scripted Debug Panel Capture
 
 - Added `validation.panel` launch support and `-Panel` capture-script plumbing

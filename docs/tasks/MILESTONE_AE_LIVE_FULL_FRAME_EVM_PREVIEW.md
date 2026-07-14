@@ -199,10 +199,13 @@ Goal: integrate the full-frame EVM renderer into the live preview path.
 ## Evidence
 
 - `docs/experiments/live_full_frame_preview_bridge.md`
+- `docs/experiments/pixel8a_live_linear_validation.md`
 - `docs/testing/ROI_DEVICE_VALIDATION.md`
 
 ## Done When
 
 - Live preview can show full-frame reconstructed EVM output for at least one mode.
 - Split view compares raw vs reconstructed output, not raw vs ROI tint.
+- Pixel portrait validation follows the watched live linear protocol and closes
+  only with `-RequireFinalVisualEvidence` from a clean, target-visible run.
 - Relevant tests/device checks pass, and the task is committed and pushed to `main`.
