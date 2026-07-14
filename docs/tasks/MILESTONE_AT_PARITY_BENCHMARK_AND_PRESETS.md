@@ -318,6 +318,17 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   Motion / Motion path. `ObjectVibration` remains accepted only for internal
   compatibility and parity experiments.
 
+## Supporting Slice: Parity Evidence Protocol Links
+
+- Updated README and `docs/testing/MIT_PARITY_TARGETS.md` so the preset visual
+  parity table points at the strict watched-evidence protocols before any
+  preset can be marked visually validated.
+- Pulse color and Breathing point to the live linear Pixel protocol; Fast
+  Motion/Object setups point to the live phase Pixel protocol; ROI alignment
+  points to the ROI device validation protocol.
+- The docs now call out the required final evidence profile plus renderer,
+  phase, or ROI measurement gates for those domains.
+
 ## Remaining
 
 - Extend Pixel 8a evidence with a known-good visual artifact and watched target

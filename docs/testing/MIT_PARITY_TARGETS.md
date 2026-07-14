@@ -189,6 +189,23 @@ visual claims. A preset becomes visually validated only after a watched run with
 a known target stores a screenshot, processed export, or evidence note showing
 the expected visible effect.
 
+Watched visual evidence must use the strict live validation protocols:
+
+- Pulse color and Breathing:
+  `docs/experiments/pixel8a_live_linear_validation.md`.
+- Object vibration and Fast tremor / public Motion:
+  `docs/experiments/pixel8a_live_phase_validation.md`.
+- ROI alignment and target mapping:
+  `docs/testing/ROI_DEVICE_VALIDATION.md`.
+
+Final visual parity evidence should require `-RequireFinalVisualEvidence` plus
+the matching domain-specific gate: `-RequireRendererDiagnostics` for live
+linear reconstruction, `-RequirePhaseDiagnostics` for live phase motion, and
+`-RequireRoiMeasurement` for ROI alignment. Object vibration remains an
+internal/parity setup label; normal public high-frequency validation should use
+the Fast Motion / `Tremor` path unless a task explicitly asks for the internal
+compatibility mode.
+
 For local file integrity:
 
 ```powershell

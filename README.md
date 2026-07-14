@@ -262,6 +262,15 @@ not final MIT-parity visual claims.
 | Object vibration | Validated | Validated | Validated | Not yet validated |
 | Fast tremor | Validated | Validated | Validated | Not yet validated |
 
+Watched visual parity must be closed through the strict live evidence flows:
+Pulse color and Breathing use
+`docs/experiments/pixel8a_live_linear_validation.md`; high-frequency Motion /
+Object setups use `docs/experiments/pixel8a_live_phase_validation.md`; ROI
+alignment uses `docs/testing/ROI_DEVICE_VALIDATION.md`. Final accepted evidence
+should use `-RequireFinalVisualEvidence` and any domain-specific gate such as
+`-RequireRendererDiagnostics`, `-RequirePhaseDiagnostics`, or
+`-RequireRoiMeasurement`.
+
 ## Requirements
 
 - Windows with PowerShell.
@@ -300,6 +309,8 @@ Use recorded or synthetic inputs before relying on live phone behavior:
 - MIT parity targets: `docs/testing/MIT_PARITY_TARGETS.md`
 - Signal/renderer/visualization model: `docs/architecture/SIGNAL_VISUALIZATION_MODEL.md`
 - ROI device validation flow: `docs/testing/ROI_DEVICE_VALIDATION.md`
+- Live linear Pixel validation: `docs/experiments/pixel8a_live_linear_validation.md`
+- Live phase Pixel validation: `docs/experiments/pixel8a_live_phase_validation.md`
 - Public sample plan: `docs/testing/SAMPLE_VIDEO_SOURCES.md`
 - Riesz / phase-mode reference: `docs/architecture/RIESZ_MODE.md`
 
