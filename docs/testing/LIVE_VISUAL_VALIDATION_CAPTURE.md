@@ -222,7 +222,10 @@ Pass `-RequireVisualValidation` when a command is meant to close a roadmap
 visual gate, pass `-RequireCleanSource` when the evidence must come from a
 clean committed source tree, and pass `-RequireNoWarnings` when final evidence
 must be free of advisory warnings such as thermal, low-FPS, dirty-source, or
-debug-overlay warnings:
+debug-overlay warnings. For normal watched final evidence, prefer
+`-RequireFinalVisualEvidence`, which turns on the standard final gates for
+clean source, visual validation, screenrecord, thermal readiness, camera FPS,
+focused app, and no warnings:
 
 ```powershell
 .\tools\capture_live_validation_evidence.ps1 `
@@ -237,13 +240,7 @@ debug-overlay warnings:
   -VisualClaim "Object preset visibly magnifies localized object vibration" `
   -TargetVisible $true `
   -VisualValidated $true `
-  -RequireCleanSource `
-  -RequireVisualValidation `
-  -RequireScreenrecord `
-  -RequireThermalReady `
-  -RequireCameraFps `
-  -RequireFocusedApp `
-  -RequireNoWarnings `
+  -RequireFinalVisualEvidence `
   -Summarize
 ```
 
@@ -344,6 +341,9 @@ Available launch parameters:
 - `-MeasureRoiAllowMultipleComponents`: allows more than one connected overlay
   component when a test intentionally expects duplicate marks.
 - `-RequireUiText`: comma-separated expected Android view-hierarchy text values.
+- `-RequireFinalVisualEvidence`: with `-Summarize`, enables the standard final
+  visual evidence gates: clean source, visual validation, screenrecord, thermal
+  readiness, camera FPS, focused app, and no warnings.
 - `-RequireCleanSource`: with `-Summarize`, fail the summary when source
   metadata is missing or the captured commit had a dirty worktree.
 - `-RequireVisualValidation`: with `-Summarize`, fail the summary unless

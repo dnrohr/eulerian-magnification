@@ -39,6 +39,7 @@ param(
     [switch]$PreserveLogcat,
     [switch]$PersistLaunchSettings,
     [switch]$Summarize,
+    [switch]$RequireFinalVisualEvidence,
     [switch]$RequireCleanSource,
     [switch]$RequireVisualValidation,
     [switch]$RequireNoWarnings,
@@ -314,6 +315,9 @@ function Invoke-EvidenceSummary {
     $requiredUiTextArgs = @($RequireUiText | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
     $summaryArgs = @{
         BundlePath = $OutputDir
+    }
+    if ($RequireFinalVisualEvidence) {
+        $summaryArgs.RequireFinalVisualEvidence = $true
     }
     if ($requiredUiTextArgs.Count -gt 0) {
         $summaryArgs.RequireUiText = $requiredUiTextArgs

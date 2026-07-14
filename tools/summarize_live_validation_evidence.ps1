@@ -9,6 +9,7 @@ param(
     [double]$WarnCameraFps = 23.5,
     [double]$WarnBatteryTemperatureC = 40.0,
     [string[]]$RequireUiText = @(),
+    [switch]$RequireFinalVisualEvidence,
     [switch]$RequireCleanSource,
     [switch]$RequireVisualValidation,
     [switch]$RequireNoWarnings,
@@ -24,6 +25,16 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+
+if ($RequireFinalVisualEvidence) {
+    $RequireCleanSource = $true
+    $RequireVisualValidation = $true
+    $RequireNoWarnings = $true
+    $RequireScreenrecord = $true
+    $RequireThermalReady = $true
+    $RequireCameraFps = $true
+    $RequireFocusedApp = $true
+}
 
 function Read-TextIfExists {
     param([string]$Path)

@@ -30,6 +30,7 @@ function Assert-True {
 function Invoke-Summary {
     param(
         [string]$BundlePath,
+        [switch]$RequireFinalVisualEvidence,
         [switch]$RequireCleanSource,
         [switch]$RequireVisualValidation,
         [switch]$RequireNoWarnings,
@@ -48,6 +49,7 @@ function Invoke-Summary {
     $summaryArgs = @{
         BundlePath = $BundlePath
     }
+    if ($RequireFinalVisualEvidence) { $summaryArgs.RequireFinalVisualEvidence = $true }
     if ($RequireCleanSource) { $summaryArgs.RequireCleanSource = $true }
     if ($RequireVisualValidation) { $summaryArgs.RequireVisualValidation = $true }
     if ($RequireNoWarnings) { $summaryArgs.RequireNoWarnings = $true }
@@ -391,6 +393,46 @@ Number Missed Vsync: 0
     Assert-Equal -Actual $passingFocusedAppSummary.requiredGates.focusedApp.present -Expected $true -Message "Passing focused-app artifact should be present."
     Assert-Equal -Actual $passingFocusedAppSummary.requiredGates.focusedApp.packageVisible -Expected $true -Message "Passing focused-app package should be visible."
     Assert-Equal -Actual $passingFocusedAppSummary.requiredGates.focusedApp.passed -Expected $true -Message "Focused-app gate should pass."
+
+    $missingFinalEvidenceExitCode = Invoke-Summary -BundlePath $visualGateBundle -RequireFinalVisualEvidence
+    $missingFinalEvidenceSummary = Get-Content -LiteralPath (Join-Path $visualGateBundle "evidence_summary.json") -Raw | ConvertFrom-Json
+    Assert-Equal -Actual $missingFinalEvidenceExitCode -Expected 5 -Message "Missing final visual evidence exit code mismatch."
+    Assert-Equal -Actual $missingFinalEvidenceSummary.requiredGates.cleanSource.required -Expected $true -Message "Final evidence should require clean source."
+    Assert-Equal -Actual $missingFinalEvidenceSummary.requiredGates.visualValidation.required -Expected $true -Message "Final evidence should require visual validation."
+    Assert-Equal -Actual $missingFinalEvidenceSummary.requiredGates.screenrecord.required -Expected $true -Message "Final evidence should require screenrecord."
+    Assert-Equal -Actual $missingFinalEvidenceSummary.requiredGates.thermalReady.required -Expected $true -Message "Final evidence should require thermal readiness."
+    Assert-Equal -Actual $missingFinalEvidenceSummary.requiredGates.cameraFps.required -Expected $true -Message "Final evidence should require camera FPS."
+    Assert-Equal -Actual $missingFinalEvidenceSummary.requiredGates.focusedApp.required -Expected $true -Message "Final evidence should require focused app."
+    Assert-Equal -Actual $missingFinalEvidenceSummary.requiredGates.noWarnings.required -Expected $true -Message "Final evidence should require no warnings."
+
+    $passingFinalEvidenceBundle = Join-Path $root "passing-final-evidence"
+    Copy-Item -LiteralPath $visualGateBundle -Destination $passingFinalEvidenceBundle -Recurse
+    $passingFinalManifestPath = Join-Path $passingFinalEvidenceBundle "manifest.json"
+    $passingFinalManifest = Get-Content -LiteralPath $passingFinalManifestPath -Raw | ConvertFrom-Json
+    $passingFinalManifest.visualReview.visualValidated = $true
+    $passingFinalManifest | ConvertTo-Json -Depth 8 | Out-File -LiteralPath $passingFinalManifestPath -Encoding utf8
+    [System.IO.File]::WriteAllBytes(
+        (Join-Path $passingFinalEvidenceBundle "screenrecord.mp4"),
+        [byte[]](0, 0, 0, 24, 102, 116, 121, 112, 105, 115, 111, 109, 0, 0, 2, 0, 105, 115, 111, 109, 105, 115, 111, 50)
+    )
+    Write-JsonFile -Path (Join-Path $passingFinalEvidenceBundle "thermal_ready_wait.json") -Value ([ordered]@{
+        ready = $true
+        readyBelowThermalStatus = 4
+        requiredReadySamples = 2
+        consecutiveReadySamples = 2
+    })
+    "mCurrentFocus=Window{456 u0 com.dnrohr.eulerianmagnification/.MainActivity}" |
+        Out-File -LiteralPath (Join-Path $passingFinalEvidenceBundle "window_focus.txt") -Encoding utf8
+
+    $passingFinalEvidenceExitCode = Invoke-Summary -BundlePath $passingFinalEvidenceBundle -RequireFinalVisualEvidence
+    $passingFinalEvidenceSummary = Get-Content -LiteralPath (Join-Path $passingFinalEvidenceBundle "evidence_summary.json") -Raw | ConvertFrom-Json
+    Assert-Equal -Actual $passingFinalEvidenceExitCode -Expected 0 -Message "Passing final visual evidence exit code mismatch."
+    Assert-Equal -Actual $passingFinalEvidenceSummary.requiredGates.visualValidation.passed -Expected $true -Message "Final evidence visual gate should pass."
+    Assert-Equal -Actual $passingFinalEvidenceSummary.requiredGates.screenrecord.passed -Expected $true -Message "Final evidence screenrecord gate should pass."
+    Assert-Equal -Actual $passingFinalEvidenceSummary.requiredGates.thermalReady.passed -Expected $true -Message "Final evidence thermal-ready gate should pass."
+    Assert-Equal -Actual $passingFinalEvidenceSummary.requiredGates.cameraFps.passed -Expected $true -Message "Final evidence camera FPS gate should pass."
+    Assert-Equal -Actual $passingFinalEvidenceSummary.requiredGates.focusedApp.passed -Expected $true -Message "Final evidence focused-app gate should pass."
+    Assert-Equal -Actual $passingFinalEvidenceSummary.requiredGates.noWarnings.passed -Expected $true -Message "Final evidence no-warnings gate should pass."
 
     $rendererDiagnosticsExitCode = Invoke-Summary -BundlePath $visualGateBundle -RequireCleanSource -RequireRendererDiagnostics
     $rendererDiagnosticsSummary = Get-Content -LiteralPath (Join-Path $visualGateBundle "evidence_summary.json") -Raw | ConvertFrom-Json

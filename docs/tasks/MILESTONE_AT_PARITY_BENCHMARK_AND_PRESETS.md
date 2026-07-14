@@ -291,6 +291,21 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   missing, wrong-package, and passing focused-window bundles without needing the
   physical Pixel for this slice.
 
+## Supporting Slice: Final Visual Evidence Profile
+
+- Live validation summaries now accept `-RequireFinalVisualEvidence`, a
+  composite gate for final watched visual evidence.
+- The profile expands to the standard closing gates: clean source, accepted
+  visual validation, warning-free summary, MP4 screenrecord, thermal-ready
+  evidence, camera-FPS evidence, and focused-app evidence.
+- `tools/capture_live_validation_evidence.ps1` forwards the profile when
+  `-Summarize` is used, so future AP/AR/AT final capture commands do not need
+  to repeat every strict gate by hand.
+- The summary self-test covers both an incomplete bundle that records all
+  required component gates and a complete synthetic final-evidence bundle that
+  passes the composite profile without needing the physical Pixel for this
+  slice.
+
 ## Remaining
 
 - Extend Pixel 8a evidence with a known-good visual artifact and watched target
