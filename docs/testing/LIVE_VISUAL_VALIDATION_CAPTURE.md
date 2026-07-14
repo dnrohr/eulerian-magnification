@@ -59,9 +59,9 @@ The manifest records the current Git branch, full and short commit, whether the
 commit is reachable from `origin/main`, dirty worktree flag, short status lines,
 and installed package dump artifact. The summary carries the same source
 identity plus launch state, required artifact presence, screenshot dimensions,
-gfx frame pacing, runtime crash/ANR/GL-error signals, camera HAL FPS samples
-from logcat, Android thermal status, battery temperature/charging context,
-sampled screenshot content metrics,
+SHA-256 hashes for screenshots and recordings, gfx frame pacing, runtime
+crash/ANR/GL-error signals, camera HAL FPS samples from logcat, Android thermal
+status, battery temperature/charging context, sampled screenshot content metrics,
 machine-readable UI text from `ui_dump.xml`, extracted renderer/ROI/quality/
 phase labels, optional thermal readiness wait results, and optional ROI overlay
 measurement status.

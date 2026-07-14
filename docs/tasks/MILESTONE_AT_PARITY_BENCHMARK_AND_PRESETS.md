@@ -400,6 +400,9 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - Updated the generated Pixel validation plan to call out the same
   `origin/main` source reachability requirement in each final evidence group,
   with planner self-test coverage so the handoff checklist stays aligned.
+- Live validation summaries now include SHA-256 hashes for present screenshots
+  and screen recordings, giving final accepted evidence durable artifact
+  identifiers for README/parity-doc closeout notes.
 - Documented the closeout gates in README, the task index, and MIT parity
   targets so visual-validation docs are only updated after accepted evidence.
 - Extended the protocol-doc self-test to keep README and task-index closeout

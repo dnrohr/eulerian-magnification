@@ -433,6 +433,8 @@ Number Missed Vsync: 0
     Assert-Equal -Actual $passingFinalEvidenceSummary.requiredGates.cameraFps.passed -Expected $true -Message "Final evidence camera FPS gate should pass."
     Assert-Equal -Actual $passingFinalEvidenceSummary.requiredGates.focusedApp.passed -Expected $true -Message "Final evidence focused-app gate should pass."
     Assert-Equal -Actual $passingFinalEvidenceSummary.requiredGates.noWarnings.passed -Expected $true -Message "Final evidence no-warnings gate should pass."
+    Assert-Equal -Actual $passingFinalEvidenceSummary.artifacts.screenshot.sha256 -Expected (Get-FileHash -LiteralPath (Join-Path $passingFinalEvidenceBundle "screenshot.png") -Algorithm SHA256).Hash -Message "Final evidence screenshot hash mismatch."
+    Assert-Equal -Actual $passingFinalEvidenceSummary.artifacts.screenrecord.sha256 -Expected (Get-FileHash -LiteralPath (Join-Path $passingFinalEvidenceBundle "screenrecord.mp4") -Algorithm SHA256).Hash -Message "Final evidence screenrecord hash mismatch."
 
     $rendererDiagnosticsExitCode = Invoke-Summary -BundlePath $visualGateBundle -RequireCleanSource -RequireRendererDiagnostics
     $rendererDiagnosticsSummary = Get-Content -LiteralPath (Join-Path $visualGateBundle "evidence_summary.json") -Raw | ConvertFrom-Json
@@ -491,6 +493,7 @@ Number Missed Vsync: 0
     Assert-Equal -Actual $passingScreenrecordExitCode -Expected 0 -Message "Passing screenrecord gate exit code mismatch."
     Assert-Equal -Actual $passingScreenrecordSummary.requiredGates.screenrecord.present -Expected $true -Message "Screenrecord should be present."
     Assert-True -Condition ($passingScreenrecordSummary.requiredGates.screenrecord.bytes -gt 0) -Message "Screenrecord bytes should be positive."
+    Assert-Equal -Actual $passingScreenrecordSummary.artifacts.screenrecord.sha256 -Expected (Get-FileHash -LiteralPath (Join-Path $passingScreenrecordBundle "screenrecord.mp4") -Algorithm SHA256).Hash -Message "Passing screenrecord hash mismatch."
     Assert-Equal -Actual $passingScreenrecordSummary.requiredGates.screenrecord.mp4Signature -Expected $true -Message "Screenrecord should have an MP4 signature."
     Assert-Equal -Actual $passingScreenrecordSummary.requiredGates.screenrecord.passed -Expected $true -Message "Screenrecord gate should pass."
 

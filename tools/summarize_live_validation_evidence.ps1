@@ -64,6 +64,16 @@ function Get-RequiredPath {
     return Join-Path $Root $Name
 }
 
+function Get-FileSha256IfExists {
+    param([string]$Path)
+
+    if (-not (Test-Path -LiteralPath $Path)) {
+        return $null
+    }
+
+    return (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash
+}
+
 function Thermal-StatusLabel {
     param([Nullable[int]]$Status)
     switch ($Status) {
@@ -646,11 +656,13 @@ $screenrecordInfo = [ordered]@{
     path = $screenrecordPath
     present = Test-Path -LiteralPath $screenrecordPath
     bytes = $null
+    sha256 = $null
     nonEmpty = $false
     mp4Signature = $false
 }
 if ($screenrecordInfo.present) {
     $screenrecordInfo.bytes = (Get-Item -LiteralPath $screenrecordPath).Length
+    $screenrecordInfo.sha256 = Get-FileSha256IfExists $screenrecordPath
     $screenrecordInfo.nonEmpty = $screenrecordInfo.bytes -gt 0
     $screenrecordInfo.mp4Signature = Test-Mp4Signature $screenrecordPath
 }
@@ -675,6 +687,7 @@ if (Test-Path -LiteralPath $screenshotPath) {
             width = $bitmap.Width
             height = $bitmap.Height
             bytes = (Get-Item -LiteralPath $screenshotPath).Length
+            sha256 = Get-FileSha256IfExists $screenshotPath
             content = $content
         }
     } finally {
