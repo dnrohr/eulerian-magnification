@@ -163,23 +163,18 @@ function Test-FinalLabel {
 function Test-SlotLabel {
     param(
         $Summary,
-        [string]$SlotId
+        $Slot
     )
 
     if ([string]::IsNullOrWhiteSpace($Summary.label)) {
         return $false
     }
+    if (-not $Slot -or [string]::IsNullOrWhiteSpace($Slot.expectedFinalLabel)) {
+        return $false
+    }
 
     $label = ([string]$Summary.label).ToLowerInvariant()
-    switch ($SlotId) {
-        "manualRoi" { return $label -eq "manual-roi-known-target-final" }
-        "autoRoi" { return $label -eq "auto-face-roi-final" }
-        "pulseLinear" { return $label -eq "live-linear-pulse-final" }
-        "breathingLinear" { return $label -eq "live-linear-breathing-final" }
-        "objectPhase" { return $label -eq "live-phase-object-final" }
-        "fastTremorPhase" { return $label -eq "live-phase-fast-tremor-final" }
-        default { return $false }
-    }
+    return $label -eq ([string]$Slot.expectedFinalLabel).ToLowerInvariant()
 }
 
 function Test-OperatorNotesPresent {
@@ -203,6 +198,7 @@ function New-Slot {
         [string[]]$Milestones,
         [string]$RequiredEvidence,
         [string]$Protocol,
+        [string]$ExpectedFinalLabel,
         [string]$NextCommand
     )
 
@@ -212,6 +208,7 @@ function New-Slot {
         milestones = $Milestones
         requiredEvidence = $RequiredEvidence
         protocol = $Protocol
+        expectedFinalLabel = $ExpectedFinalLabel
         nextCommand = $NextCommand
         satisfied = $false
         bundle = $null
@@ -226,12 +223,12 @@ function New-Slot {
 }
 
 $slots = [ordered]@{
-    manualRoi = New-Slot -Id "manualRoi" -Title "Manual ROI known-target alignment" -Milestones @("M", "U") -RequiredEvidence "visual_validated final evidence with passing ROI measurement" -Protocol "docs/testing/ROI_DEVICE_VALIDATION.md" -NextCommand "manual-roi-known-target-setup, then manual-roi-known-target-final"
-    autoRoi = New-Slot -Id "autoRoi" -Title "Automatic face/skin ROI alignment" -Milestones @("M", "U") -RequiredEvidence "visual_validated final evidence with passing ROI measurement" -Protocol "docs/testing/ROI_DEVICE_VALIDATION.md" -NextCommand "auto-face-roi-setup, then auto-face-roi-final"
-    pulseLinear = New-Slot -Id "pulseLinear" -Title "Pulse live linear visual parity" -Milestones @("AE", "AP", "AT") -RequiredEvidence "visual_validated final evidence with renderer diagnostics" -Protocol "docs/experiments/pixel8a_live_linear_validation.md" -NextCommand "live-linear-pulse-setup, then live-linear-pulse-final"
-    breathingLinear = New-Slot -Id "breathingLinear" -Title "Breathing live linear visual parity" -Milestones @("AE", "AP", "AT") -RequiredEvidence "visual_validated final evidence with renderer diagnostics" -Protocol "docs/experiments/pixel8a_live_linear_validation.md" -NextCommand "live-linear-breathing-setup, then live-linear-breathing-final"
-    objectPhase = New-Slot -Id "objectPhase" -Title "Object vibration live phase visual parity" -Milestones @("AR", "AT") -RequiredEvidence "visual_validated final evidence with phase diagnostics" -Protocol "docs/experiments/pixel8a_live_phase_validation.md" -NextCommand "live-phase-object-setup, then live-phase-object-final"
-    fastTremorPhase = New-Slot -Id "fastTremorPhase" -Title "Fast tremor live phase visual parity" -Milestones @("AR", "AT") -RequiredEvidence "visual_validated final evidence with phase diagnostics" -Protocol "docs/experiments/pixel8a_live_phase_validation.md" -NextCommand "live-phase-fast-tremor-setup, then live-phase-fast-tremor-final"
+    manualRoi = New-Slot -Id "manualRoi" -Title "Manual ROI known-target alignment" -Milestones @("M", "U") -RequiredEvidence "visual_validated final evidence with passing ROI measurement" -Protocol "docs/testing/ROI_DEVICE_VALIDATION.md" -ExpectedFinalLabel "manual-roi-known-target-final" -NextCommand "manual-roi-known-target-setup, then manual-roi-known-target-final"
+    autoRoi = New-Slot -Id "autoRoi" -Title "Automatic face/skin ROI alignment" -Milestones @("M", "U") -RequiredEvidence "visual_validated final evidence with passing ROI measurement" -Protocol "docs/testing/ROI_DEVICE_VALIDATION.md" -ExpectedFinalLabel "auto-face-roi-final" -NextCommand "auto-face-roi-setup, then auto-face-roi-final"
+    pulseLinear = New-Slot -Id "pulseLinear" -Title "Pulse live linear visual parity" -Milestones @("AE", "AP", "AT") -RequiredEvidence "visual_validated final evidence with renderer diagnostics" -Protocol "docs/experiments/pixel8a_live_linear_validation.md" -ExpectedFinalLabel "live-linear-pulse-final" -NextCommand "live-linear-pulse-setup, then live-linear-pulse-final"
+    breathingLinear = New-Slot -Id "breathingLinear" -Title "Breathing live linear visual parity" -Milestones @("AE", "AP", "AT") -RequiredEvidence "visual_validated final evidence with renderer diagnostics" -Protocol "docs/experiments/pixel8a_live_linear_validation.md" -ExpectedFinalLabel "live-linear-breathing-final" -NextCommand "live-linear-breathing-setup, then live-linear-breathing-final"
+    objectPhase = New-Slot -Id "objectPhase" -Title "Object vibration live phase visual parity" -Milestones @("AR", "AT") -RequiredEvidence "visual_validated final evidence with phase diagnostics" -Protocol "docs/experiments/pixel8a_live_phase_validation.md" -ExpectedFinalLabel "live-phase-object-final" -NextCommand "live-phase-object-setup, then live-phase-object-final"
+    fastTremorPhase = New-Slot -Id "fastTremorPhase" -Title "Fast tremor live phase visual parity" -Milestones @("AR", "AT") -RequiredEvidence "visual_validated final evidence with phase diagnostics" -Protocol "docs/experiments/pixel8a_live_phase_validation.md" -ExpectedFinalLabel "live-phase-fast-tremor-final" -NextCommand "live-phase-fast-tremor-setup, then live-phase-fast-tremor-final"
 }
 
 $rootPath = Resolve-Path -LiteralPath $EvidenceRoot -ErrorAction SilentlyContinue
@@ -312,7 +309,7 @@ foreach ($summary in $acceptedSummaries) {
     $hadCandidateSlots = $matchedSlots.Count -gt 0
     $slotLabelMismatches = @()
     foreach ($slotId in @($matchedSlots)) {
-        if (-not (Test-SlotLabel -Summary $summary -SlotId $slotId)) {
+        if (-not (Test-SlotLabel -Summary $summary -Slot $slots[$slotId])) {
             $slotLabelMismatches += $slotId
         }
     }
@@ -440,6 +437,7 @@ if ($Json) {
         Write-Output "$mark $($slot.title) [$($slot.milestones -join ', ')]"
         Write-Output "    Required: $($slot.requiredEvidence)"
         Write-Output "    Protocol: $($slot.protocol)"
+        Write-Output "    Expected final label: $($slot.expectedFinalLabel)"
         if ($slot.satisfied) {
             Write-Output "    Evidence: $($slot.bundle)"
             if (-not [string]::IsNullOrWhiteSpace($slot.sourceShortCommit) -or -not [string]::IsNullOrWhiteSpace($slot.sourceBranch)) {

@@ -108,6 +108,8 @@ Assert-True -Condition ($linearCommandText.Contains("live-linear-breathing-final
 Assert-True -Condition ($linearCommandText.Contains("watched slow-motion edge or breathing target")) -Message "Breathing commands should carry a distinct target description."
 
 foreach ($slot in @($closeout.slots)) {
+    Assert-True -Condition (-not [string]::IsNullOrWhiteSpace($slot.expectedFinalLabel)) -Message "Closeout slot '$($slot.id)' should expose an expected final label."
+    Assert-True -Condition ($slot.expectedFinalLabel -in $allCommandNames) -Message "Closeout slot '$($slot.id)' expected final label '$($slot.expectedFinalLabel)' should map to a planner command."
     foreach ($commandName in @($slot.nextCommand -split "\s*,\s*then\s*|\s*,\s*")) {
         if ([string]::IsNullOrWhiteSpace($commandName)) {
             continue

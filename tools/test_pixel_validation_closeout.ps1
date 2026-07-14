@@ -212,6 +212,7 @@ try {
     Assert-Equal -Actual $result.allCloseoutEvidencePresent -Expected $true -Message "All closeout evidence should be present."
     Assert-Equal -Actual $result.allCloseoutEvidenceClean -Expected $false -Message "Unmatched evidence should prevent clean roadmap closeout."
     Assert-Equal -Actual $result.slots[0].protocol -Expected "docs/testing/ROI_DEVICE_VALIDATION.md" -Message "Closeout slots should expose protocol docs."
+    Assert-Equal -Actual $result.slots[0].expectedFinalLabel -Expected "manual-roi-known-target-final" -Message "Closeout slots should expose expected final labels."
     Assert-Equal -Actual $result.slots[0].sourceBranch -Expected "main" -Message "Satisfied closeout slots should expose source branch."
     Assert-Equal -Actual $result.slots[0].sourceShortCommit -Expected $currentShortHead -Message "Satisfied closeout slots should expose source short commit."
     Assert-Equal -Actual $result.slots[0].screenshotSha256 -Expected "screenshot-manual-sha256" -Message "Satisfied closeout slots should expose screenshot hashes."
@@ -233,6 +234,7 @@ try {
     Assert-Equal -Actual $partial.presetVisualSlotsPresent -Expected $false -Message "Partial closeout should not have all preset slots."
     Assert-Equal -Actual $partial.allCloseoutEvidenceClean -Expected $false -Message "Partial closeout should not be clean."
     Assert-True -Condition ($partial.missing[0].nextCommand.Length -gt 0) -Message "Missing closeout slots should include next command hints."
+    Assert-True -Condition ($partial.missing[0].expectedFinalLabel.Length -gt 0) -Message "Missing closeout slots should include expected final labels."
 
     $partialExitCode = Invoke-Closeout -EvidenceRoot $partialRoot -FailOnMissing
     Assert-Equal -Actual $partialExitCode -Expected 2 -Message "FailOnMissing should exit 2 when closeout slots are missing."

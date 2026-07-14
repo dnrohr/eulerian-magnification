@@ -430,6 +430,9 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - The closeout summary now includes protocol paths and next-command hints for
   missing slots, so the next Pixel session can continue directly from the
   failed closeout report.
+- The closeout summary now exposes each slot's expected final label in JSON and
+  text output, so label enforcement and operator handoff use the same slot
+  metadata.
 - Tightened closeout classification so the shared `Tremor` runtime mode cannot
   make Object vibration evidence satisfy the separate Fast tremor slot.
 - Added explicit Fast tremor setup/final capture commands to the Pixel

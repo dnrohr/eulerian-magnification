@@ -100,8 +100,10 @@ command templates:
 
 After a connected Pixel session, summarize which accepted evidence bundles are
 ready to close roadmap items. The closeout summary includes the accepted
-source branch/commit and screenshot/screenrecord SHA-256 values needed for
-final README and parity-doc citations:
+source branch/commit, screenshot/screenrecord SHA-256 values, and expected
+final label for each slot needed for final README and parity-doc citations:
+In the JSON/text output, `expectedFinalLabel` is the expected final label for
+that closeout slot.
 
 ```powershell
 .\tools\summarize_pixel_validation_closeout.ps1

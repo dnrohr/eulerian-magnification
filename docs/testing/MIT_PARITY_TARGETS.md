@@ -208,7 +208,8 @@ compatibility mode.
 
 After watched Pixel captures, summarize accepted evidence before changing this
 table. The closeout summary carries source branch/commit and
-screenshot/screenrecord SHA-256 values for the accepted artifacts:
+screenshot/screenrecord SHA-256 values for the accepted artifacts, plus the
+expected final label for each closeout slot:
 
 ```powershell
 .\tools\summarize_pixel_validation_closeout.ps1

@@ -312,7 +312,8 @@ checklist and command templates:
 After a connected Pixel validation pass, summarize which accepted evidence
 bundles are ready to close the remaining roadmap items. The summary includes
 source branch/commit plus screenshot and screenrecord SHA-256 values for each
-accepted bundle, so final docs can cite the exact visual artifacts:
+accepted bundle, and prints the expected final label for each slot so final
+docs can cite the exact visual artifacts:
 
 ```powershell
 .\tools\summarize_pixel_validation_closeout.ps1
