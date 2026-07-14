@@ -73,4 +73,32 @@ foreach ($expected in @(
     Assert-True -Condition (($allCommands -join "`n").Contains($expected)) -Message "Validation commands should include '$expected'."
 }
 
+$captureScript = Join-Path $PSScriptRoot "capture_live_validation_evidence.ps1"
+$captureParameters = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+$captureScriptContent = Get-Content -LiteralPath $captureScript -Raw
+if ($captureScriptContent -notmatch '(?s)^param\((.*?)\)\s*\$ErrorActionPreference') {
+    throw "Could not parse capture script param block."
+}
+
+foreach ($match in [regex]::Matches($Matches[1], '\$(\w+)')) {
+    [void]$captureParameters.Add($match.Groups[1].Value)
+}
+
+$captureCommands = @($allCommands | Where-Object { $_.StartsWith(".\tools\capture_live_validation_evidence.ps1") })
+Assert-True -Condition ($captureCommands.Count -ge 4) -Message "Expected capture command templates in the Pixel validation plan."
+
+foreach ($command in $captureCommands) {
+    $parseErrors = $null
+    $tokens = [System.Management.Automation.PSParser]::Tokenize($command, [ref]$parseErrors)
+    Assert-Equal -Actual @($parseErrors).Count -Expected 0 -Message "Capture command template should parse as PowerShell."
+
+    $executable = @($tokens | Where-Object { $_.Type -eq "Command" } | Select-Object -First 1).Content
+    Assert-Equal -Actual $executable -Expected ".\tools\capture_live_validation_evidence.ps1" -Message "Capture command should call the live validation capture script."
+
+    foreach ($token in @($tokens | Where-Object { $_.Type -eq "CommandParameter" })) {
+        $parameterName = $token.Content.TrimStart("-")
+        Assert-True -Condition ($captureParameters.Contains($parameterName)) -Message "Unknown capture command parameter '$($token.Content)' in template: $command"
+    }
+}
+
 Write-Output "Pixel validation plan self-test passed."
