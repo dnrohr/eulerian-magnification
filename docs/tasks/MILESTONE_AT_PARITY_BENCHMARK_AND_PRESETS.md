@@ -501,6 +501,9 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   for a connected-device session handoff.
 - Added `-FailOnEmptyQueue` to the Pixel validation planner so automation can
   fail when filters produce no recommended captures.
+- Added `tools/prepare_pixel_validation_handoff.ps1` so a phone-free command can
+  write `pixel_validation_plan.json`, `pixel_closeout_summary.json`, and
+  `pixel_validation_commands.txt` for the next connected-device session.
 
 ## Remaining
 

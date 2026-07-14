@@ -5,6 +5,7 @@ $tests = @(
     "test_roadmap_status_summary.ps1",
     "test_github_workflows.ps1",
     "test_pixel_validation_plan.ps1",
+    "test_pixel_validation_handoff.ps1",
     "test_pixel_validation_closeout.ps1"
 )
 

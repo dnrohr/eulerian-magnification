@@ -98,6 +98,13 @@ command templates:
 .\tools\show_next_pixel_validation_plan.ps1
 ```
 
+For a connected-session handoff bundle, write the plan, closeout summary, and
+paste-ready command list together:
+
+```powershell
+.\tools\prepare_pixel_validation_handoff.ps1 -OutputRoot sample-videos\exports\live-validation
+```
+
 The plan includes the current closeout blocker count and next commands from
 missing evidence slots. Pass `-EvidenceRoot <path>` to review a specific
 live-validation export folder, or `-NextOnly` to print only the recommended captures
@@ -111,6 +118,8 @@ in scripted runs so a mistyped slot filter exits nonzero instead of producing
 an empty capture queue, or `-FailOnEmptyQueue` when automation should require
 at least one recommended capture. Add `-OutputPath sample-videos\exports\live-validation\pixel_validation_plan.json`
 to save the full machine-readable plan used for a device session.
+The handoff bundle writes `pixel_validation_plan.json`,
+`pixel_closeout_summary.json`, and `pixel_validation_commands.txt`.
 
 After a connected Pixel session, summarize which accepted evidence bundles are
 ready to close roadmap items. The closeout summary includes the accepted
