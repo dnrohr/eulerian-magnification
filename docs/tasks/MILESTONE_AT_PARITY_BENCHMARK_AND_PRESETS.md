@@ -330,6 +330,9 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   pushes to `main` and pull requests.
 - Added `tools/test_github_workflows.ps1` so the offline CI workflow trigger,
   runner, shell, and suite target are covered by the phone-free test command.
+- Added `tools/test_live_validation_protocol_docs.ps1` so the ROI, live linear,
+  and live phase validation guides cannot quietly drop required final evidence
+  gates before the next Pixel visual-validation pass.
 - Updated the live visual validation guide to use `Tremor` for the public Fast
   Motion / Motion path. `ObjectVibration` remains accepted only for internal
   compatibility and parity experiments.

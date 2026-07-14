@@ -269,19 +269,22 @@ Run the live validation tooling suite after editing capture or summary tooling:
 .\tools\test_live_validation_tooling.ps1
 ```
 
-The suite runs the capture-contract self-test and the summary self-test without
-needing a connected device. The summary test synthesizes a thermal-aborted
-bundle and an incomplete runtime bundle, then verifies the summary exit codes,
-verdicts, UI assertion behavior, clean-source/visual-validation/verdict/
-diagnostic/screenrecord/thermal-ready/camera-FPS/focused-app gates, and dirty
-source warning. The capture-contract self-test verifies scripted launch
-parameter sets and invalid-value rejection.
+The suite runs the capture-contract self-test, summary self-test, and protocol
+documentation self-test without needing a connected device. The summary test
+synthesizes a thermal-aborted bundle and an incomplete runtime bundle, then
+verifies the summary exit codes, verdicts, UI assertion behavior,
+clean-source/visual-validation/verdict/diagnostic/screenrecord/thermal-ready/
+camera-FPS/focused-app gates, and dirty source warning. The capture-contract
+self-test verifies scripted launch parameter sets and invalid-value rejection.
+The protocol documentation test verifies that the ROI, live linear, and live
+phase validation guides keep the required final evidence gates.
 
 For focused debugging, the individual tests are:
 
 ```powershell
 .\tools\test_live_validation_capture_contract.ps1
 .\tools\test_live_validation_summary.ps1
+.\tools\test_live_validation_protocol_docs.ps1
 ```
 
 For ROI overlay validation, pass `-MeasureRoiExpected` with the expected
