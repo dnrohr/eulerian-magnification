@@ -88,5 +88,11 @@ For a broader phone-free tooling check, run:
 ```
 
 That suite runs live validation tooling tests, roadmap summarizer self-tests,
-GitHub workflow contract tests, and the real roadmap status audit with
-`-FailOnMismatch`.
+GitHub workflow contract tests, Pixel validation plan tests, and the real
+roadmap status audit with `-FailOnMismatch`.
+
+Before the next connected Pixel session, print the ordered validation plan:
+
+```powershell
+.\tools\show_next_pixel_validation_plan.ps1
+```

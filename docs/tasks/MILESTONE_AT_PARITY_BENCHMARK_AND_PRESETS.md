@@ -333,6 +333,9 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - Added `tools/test_live_validation_protocol_docs.ps1` so the ROI, live linear,
   and live phase validation guides cannot quietly drop required final evidence
   gates before the next Pixel visual-validation pass.
+- Added `tools/show_next_pixel_validation_plan.ps1` and
+  `tools/test_pixel_validation_plan.ps1` so the next connected Pixel session has
+  an ordered checklist that covers every remaining in-progress milestone.
 - Updated the live visual validation guide to use `Tremor` for the public Fast
   Motion / Motion path. `ObjectVibration` remains accepted only for internal
   compatibility and parity experiments.
