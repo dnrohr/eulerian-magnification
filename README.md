@@ -296,6 +296,7 @@ state.
 ```powershell
 .\gradlew.bat testDebugUnitTest
 .\gradlew.bat assembleDebug
+.\tools\test_offline_project_tooling.ps1
 ```
 
 Open the repo in Android Studio, connect a Pixel 8a, and run the `app`

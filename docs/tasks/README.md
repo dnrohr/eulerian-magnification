@@ -78,3 +78,9 @@ After editing the backlog index or status summarizer, run:
 ```powershell
 .\tools\test_roadmap_status_summary.ps1
 ```
+
+For a broader phone-free tooling check, run:
+
+```powershell
+.\tools\test_offline_project_tooling.ps1
+```
