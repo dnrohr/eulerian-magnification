@@ -86,3 +86,6 @@ For a broader phone-free tooling check, run:
 ```powershell
 .\tools\test_offline_project_tooling.ps1
 ```
+
+That suite runs live validation tooling tests, roadmap summarizer self-tests,
+and the real roadmap status audit with `-FailOnMismatch`.

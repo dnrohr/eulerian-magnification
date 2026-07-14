@@ -11,4 +11,7 @@ foreach ($test in $tests) {
     & $testPath
 }
 
+Write-Output "Running summarize_roadmap_status.ps1 -FailOnMismatch..."
+& (Join-Path $PSScriptRoot "summarize_roadmap_status.ps1") -FailOnMismatch
+
 Write-Output "Offline project tooling self-tests passed."

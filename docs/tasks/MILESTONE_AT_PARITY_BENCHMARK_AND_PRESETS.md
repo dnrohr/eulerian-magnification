@@ -324,6 +324,8 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - Added `tools/test_offline_project_tooling.ps1` as the broader phone-free
   project tooling suite, covering live-validation tooling and roadmap status
   auditing in one command.
+- The broader suite now also runs the real roadmap status audit with
+  `-FailOnMismatch`, so task-index drift fails the main phone-free check.
 - Updated the live visual validation guide to use `Tremor` for the public Fast
   Motion / Motion path. `ObjectVibration` remains accepted only for internal
   compatibility and parity experiments.
