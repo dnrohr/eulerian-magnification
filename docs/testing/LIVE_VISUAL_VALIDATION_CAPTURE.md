@@ -89,7 +89,8 @@ required renderer or phase diagnostic label was not found, and `11` when a
 required `screenrecord.mp4` artifact is missing, empty, or does not look like an
 MP4 file, and `12` when required thermal-readiness evidence is missing or not
 ready, and `13` when required camera HAL FPS evidence is missing or below the
-warning threshold.
+warning threshold, and `14` when the expected app package is not present in the
+focused-window dump.
 This keeps automated validation commands from silently passing when an explicit
 evidence assertion failed.
 If preflight thermal status or sensor status is `critical` or worse, do not use
@@ -205,6 +206,11 @@ is at least the configured warning threshold, `23.5 FPS` by default. This
 prevents final evidence from passing when the camera cadence was missing,
 frozen, or too low to judge motion.
 
+Pass `-RequireFocusedApp` for final captured evidence so the summary fails
+unless `window_focus.txt` contains the expected app package. This helps catch
+captures where the launcher, a permission prompt, or another foreground window
+was recorded instead of the app preview.
+
 Use the visual-review fields for watched target runs. `TargetDescription` and
 `VisualClaim` describe what was in frame and what the capture is intended to
 prove. `TargetVisible` records whether the target is actually visible in the
@@ -236,6 +242,7 @@ debug-overlay warnings:
   -RequireScreenrecord `
   -RequireThermalReady `
   -RequireCameraFps `
+  -RequireFocusedApp `
   -RequireNoWarnings `
   -Summarize
 ```
@@ -268,7 +275,7 @@ Run the summary self-test after editing capture or summary tooling:
 The test synthesizes a thermal-aborted bundle and an incomplete runtime bundle,
 then verifies the summary exit codes, verdicts, UI assertion behavior,
 clean-source/visual-validation/verdict/diagnostic/screenrecord/thermal-ready/
-camera-FPS gates, and dirty source warning.
+camera-FPS/focused-app gates, and dirty source warning.
 
 For ROI overlay validation, pass `-MeasureRoiExpected` with the expected
 normalized screenshot-space rectangle. The capture script then writes
@@ -351,6 +358,8 @@ Available launch parameters:
   `thermal_ready_wait.json` exists and reports `ready=true`.
 - `-RequireCameraFps`: with `-Summarize`, fail the summary unless camera HAL
   `FPS:` samples exist and the minimum sample is at least `-WarnCameraFps`.
+- `-RequireFocusedApp`: with `-Summarize`, fail the summary unless
+  `window_focus.txt` contains the expected app package.
 - `-RequireEvidenceVerdict`: with `-Summarize`, fail the summary unless
   `evidenceVerdict.status` exactly matches the requested status.
 - `-RequireRendererDiagnostics`: with `-Summarize`, fail the summary unless

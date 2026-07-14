@@ -46,6 +46,7 @@ param(
     [switch]$RequireScreenrecord,
     [switch]$RequireThermalReady,
     [switch]$RequireCameraFps,
+    [switch]$RequireFocusedApp,
     [switch]$RequireRendererDiagnostics,
     [switch]$RequirePhaseDiagnostics,
     [ValidateSet("", "runtime_smoke_only", "visual_validated", "target_visible_unvalidated", "visual_claim_without_target", "ui_assertion_failed", "screenshot_blank", "wrong_orientation", "runtime_failed", "thermal_preflight_aborted")]
@@ -337,6 +338,9 @@ function Invoke-EvidenceSummary {
     }
     if ($RequireCameraFps) {
         $summaryArgs.RequireCameraFps = $true
+    }
+    if ($RequireFocusedApp) {
+        $summaryArgs.RequireFocusedApp = $true
     }
     if ($RequireRendererDiagnostics) {
         $summaryArgs.RequireRendererDiagnostics = $true

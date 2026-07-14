@@ -37,6 +37,7 @@ function Invoke-Summary {
         [switch]$RequireScreenrecord,
         [switch]$RequireThermalReady,
         [switch]$RequireCameraFps,
+        [switch]$RequireFocusedApp,
         [switch]$RequireRendererDiagnostics,
         [switch]$RequirePhaseDiagnostics,
         [string]$RequireEvidenceVerdict = ""
@@ -54,6 +55,7 @@ function Invoke-Summary {
     if ($RequireScreenrecord) { $summaryArgs.RequireScreenrecord = $true }
     if ($RequireThermalReady) { $summaryArgs.RequireThermalReady = $true }
     if ($RequireCameraFps) { $summaryArgs.RequireCameraFps = $true }
+    if ($RequireFocusedApp) { $summaryArgs.RequireFocusedApp = $true }
     if ($RequireRendererDiagnostics) { $summaryArgs.RequireRendererDiagnostics = $true }
     if ($RequirePhaseDiagnostics) { $summaryArgs.RequirePhaseDiagnostics = $true }
     if (-not [string]::IsNullOrWhiteSpace($RequireEvidenceVerdict)) { $summaryArgs.RequireEvidenceVerdict = $RequireEvidenceVerdict }
@@ -358,6 +360,37 @@ Number Missed Vsync: 0
     Assert-Equal -Actual $lowCameraFpsSummary.requiredGates.cameraFps.sampleCount -Expected 1 -Message "Low camera FPS sample count mismatch."
     Assert-Equal -Actual $lowCameraFpsSummary.requiredGates.cameraFps.passed -Expected $false -Message "Low camera FPS gate should fail."
     Assert-True -Condition ("camera HAL FPS required but minimum FPS was below 23.5 fps" -in @($lowCameraFpsSummary.warnings)) -Message "Low camera FPS required warning missing."
+
+    $missingFocusedAppExitCode = Invoke-Summary -BundlePath $visualGateBundle -RequireCleanSource -RequireFocusedApp
+    $missingFocusedAppSummary = Get-Content -LiteralPath (Join-Path $visualGateBundle "evidence_summary.json") -Raw | ConvertFrom-Json
+    Assert-Equal -Actual $missingFocusedAppExitCode -Expected 14 -Message "Missing focused-app gate exit code mismatch."
+    Assert-Equal -Actual $missingFocusedAppSummary.requiredGates.focusedApp.required -Expected $true -Message "Focused-app gate should be required."
+    Assert-Equal -Actual $missingFocusedAppSummary.requiredGates.focusedApp.present -Expected $false -Message "Focused-app artifact should be missing."
+    Assert-Equal -Actual $missingFocusedAppSummary.requiredGates.focusedApp.passed -Expected $false -Message "Missing focused-app artifact should not pass."
+    Assert-True -Condition ("focused app required but window_focus.txt is missing" -in @($missingFocusedAppSummary.warnings)) -Message "Missing focused-app warning missing."
+
+    $wrongFocusedAppBundle = Join-Path $root "wrong-focused-app"
+    Copy-Item -LiteralPath $visualGateBundle -Destination $wrongFocusedAppBundle -Recurse
+    "mCurrentFocus=Window{123 u0 com.android.launcher/.Launcher}" |
+        Out-File -LiteralPath (Join-Path $wrongFocusedAppBundle "window_focus.txt") -Encoding utf8
+    $wrongFocusedAppExitCode = Invoke-Summary -BundlePath $wrongFocusedAppBundle -RequireCleanSource -RequireFocusedApp
+    $wrongFocusedAppSummary = Get-Content -LiteralPath (Join-Path $wrongFocusedAppBundle "evidence_summary.json") -Raw | ConvertFrom-Json
+    Assert-Equal -Actual $wrongFocusedAppExitCode -Expected 14 -Message "Wrong focused-app gate exit code mismatch."
+    Assert-Equal -Actual $wrongFocusedAppSummary.requiredGates.focusedApp.present -Expected $true -Message "Wrong focused-app artifact should be present."
+    Assert-Equal -Actual $wrongFocusedAppSummary.requiredGates.focusedApp.packageVisible -Expected $false -Message "Wrong focused-app package should not be visible."
+    Assert-Equal -Actual $wrongFocusedAppSummary.requiredGates.focusedApp.passed -Expected $false -Message "Wrong focused-app gate should fail."
+    Assert-True -Condition ("focused app required but com.dnrohr.eulerianmagnification was not found in window_focus.txt" -in @($wrongFocusedAppSummary.warnings)) -Message "Wrong focused-app warning missing."
+
+    $passingFocusedAppBundle = Join-Path $root "passing-focused-app"
+    Copy-Item -LiteralPath $visualGateBundle -Destination $passingFocusedAppBundle -Recurse
+    "mCurrentFocus=Window{456 u0 com.dnrohr.eulerianmagnification/.MainActivity}" |
+        Out-File -LiteralPath (Join-Path $passingFocusedAppBundle "window_focus.txt") -Encoding utf8
+    $passingFocusedAppExitCode = Invoke-Summary -BundlePath $passingFocusedAppBundle -RequireCleanSource -RequireFocusedApp
+    $passingFocusedAppSummary = Get-Content -LiteralPath (Join-Path $passingFocusedAppBundle "evidence_summary.json") -Raw | ConvertFrom-Json
+    Assert-Equal -Actual $passingFocusedAppExitCode -Expected 0 -Message "Passing focused-app gate exit code mismatch."
+    Assert-Equal -Actual $passingFocusedAppSummary.requiredGates.focusedApp.present -Expected $true -Message "Passing focused-app artifact should be present."
+    Assert-Equal -Actual $passingFocusedAppSummary.requiredGates.focusedApp.packageVisible -Expected $true -Message "Passing focused-app package should be visible."
+    Assert-Equal -Actual $passingFocusedAppSummary.requiredGates.focusedApp.passed -Expected $true -Message "Focused-app gate should pass."
 
     $rendererDiagnosticsExitCode = Invoke-Summary -BundlePath $visualGateBundle -RequireCleanSource -RequireRendererDiagnostics
     $rendererDiagnosticsSummary = Get-Content -LiteralPath (Join-Path $visualGateBundle "evidence_summary.json") -Raw | ConvertFrom-Json

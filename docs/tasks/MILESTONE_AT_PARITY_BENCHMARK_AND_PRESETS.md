@@ -276,6 +276,21 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   missing, low, and passing camera-FPS bundles without needing the physical
   Pixel for this slice.
 
+## Supporting Slice: Required Focused-App Gate
+
+- Live validation summaries now accept `-RequireFocusedApp` so final captured
+  evidence can prove the app package was present in `window_focus.txt`.
+- The gate fails when the focused-window artifact is missing or when the
+  expected package is not found, then records artifact presence, expected
+  package, package visibility, and pass/fail state under
+  `requiredGates.focusedApp`.
+- `tools/capture_live_validation_evidence.ps1` forwards the requirement when
+  `-Summarize` is used. This helps future AP/AR/AT evidence fail if the capture
+  accidentally records the launcher, permission UI, or another foreground app.
+- Missing or wrong focused-app evidence exits `14`. The summary self-test covers
+  missing, wrong-package, and passing focused-window bundles without needing the
+  physical Pixel for this slice.
+
 ## Remaining
 
 - Extend Pixel 8a evidence with a known-good visual artifact and watched target

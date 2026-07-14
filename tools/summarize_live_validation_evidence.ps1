@@ -16,6 +16,7 @@ param(
     [switch]$RequireScreenrecord,
     [switch]$RequireThermalReady,
     [switch]$RequireCameraFps,
+    [switch]$RequireFocusedApp,
     [switch]$RequireRendererDiagnostics,
     [switch]$RequirePhaseDiagnostics,
     [ValidateSet("", "runtime_smoke_only", "visual_validated", "target_visible_unvalidated", "visual_claim_without_target", "ui_assertion_failed", "screenshot_blank", "wrong_orientation", "runtime_failed", "thermal_preflight_aborted")]
@@ -407,6 +408,7 @@ $thermalPath = Get-RequiredPath $bundle "thermalservice.txt"
 $batteryPath = Get-RequiredPath $bundle "battery.txt"
 $uiDumpPath = Get-RequiredPath $bundle "ui_dump.xml"
 $thermalReadyWaitPath = Get-RequiredPath $bundle "thermal_ready_wait.json"
+$windowFocusPath = Get-RequiredPath $bundle "window_focus.txt"
 
 $manifest = $null
 if (Test-Path -LiteralPath $manifestPath) {
@@ -419,6 +421,11 @@ $abortReason = if ($aborted -and $manifest.PSObject.Properties.Name -contains "a
     $manifest.abortReason
 } else {
     $null
+}
+$expectedPackage = if ($manifest -and $manifest.PSObject.Properties.Name -contains "package" -and -not [string]::IsNullOrWhiteSpace($manifest.package)) {
+    $manifest.package
+} else {
+    "com.dnrohr.eulerianmagnification"
 }
 
 $missing = @()
@@ -467,6 +474,14 @@ if ($manifest -and $manifest.PSObject.Properties.Name -contains "visualReview") 
 
 $gfx = Read-TextIfExists $gfxPath
 $logcat = Read-TextIfExists $logcatPath
+$windowFocusText = Read-TextIfExists $windowFocusPath
+$focusedAppSummary = [ordered]@{
+    present = Test-Path -LiteralPath $windowFocusPath
+    expectedPackage = $expectedPackage
+    packageVisible = -not [string]::IsNullOrWhiteSpace($windowFocusText) -and
+        $windowFocusText.IndexOf($expectedPackage, [System.StringComparison]::OrdinalIgnoreCase) -ge 0
+}
+$focusedAppPassed = (-not [bool]$RequireFocusedApp) -or ($focusedAppSummary.present -and $focusedAppSummary.packageVisible)
 $thermalText = Read-TextIfExists $thermalPath
 $thermalSummary = Parse-ThermalSummary $thermalText
 $thermalPreflightSummary = if ($manifest -and $manifest.PSObject.Properties.Name -contains "thermalPreflight") {
@@ -559,6 +574,12 @@ if ($RequireCameraFps -and $cameraFpsSummary.sampleCount -eq 0) {
 }
 if ($RequireCameraFps -and $cameraFpsSummary.sampleCount -gt 0 -and $null -ne $cameraFpsSummary.minFps -and $cameraFpsSummary.minFps -lt $WarnCameraFps) {
     $warnings += "camera HAL FPS required but minimum FPS was below $WarnCameraFps fps"
+}
+if ($RequireFocusedApp -and -not $focusedAppSummary.present) {
+    $warnings += "focused app required but window_focus.txt is missing"
+}
+if ($RequireFocusedApp -and $focusedAppSummary.present -and -not $focusedAppSummary.packageVisible) {
+    $warnings += "focused app required but $expectedPackage was not found in window_focus.txt"
 }
 if ($batterySummary.powered) {
     $warnings += "device is externally powered during capture"
@@ -708,6 +729,7 @@ $result = [ordered]@{
         screenrecordPresent = $screenrecordInfo.present
         roiMeasurementPresent = $null -ne $roiMeasurement
         packageInfoPresent = Test-Path -LiteralPath (Join-Path $bundle "app_package.txt")
+        windowFocusPresent = $focusedAppSummary.present
         uiDumpPresent = Test-Path -LiteralPath $uiDumpPath
         thermalReadyWaitPresent = $null -ne $thermalReadyWait
     }
@@ -720,6 +742,7 @@ $result = [ordered]@{
     }
     runtimeFindings = $runtimeFindings
     cameraHal = $cameraFpsSummary
+    focusedApp = $focusedAppSummary
     thermalReadyWait = $thermalReadyWait
     thermalPreflight = $thermalPreflightSummary
     thermal = $thermalSummary
@@ -766,6 +789,13 @@ $result = [ordered]@{
             minFps = $cameraFpsSummary.minFps
             thresholdFps = $WarnCameraFps
             passed = $cameraFpsPassed
+        }
+        focusedApp = [ordered]@{
+            required = [bool]$RequireFocusedApp
+            present = $focusedAppSummary.present
+            expectedPackage = $expectedPackage
+            packageVisible = $focusedAppSummary.packageVisible
+            passed = $focusedAppPassed
         }
         evidenceVerdict = [ordered]@{
             required = -not [string]::IsNullOrWhiteSpace($RequireEvidenceVerdict)
@@ -835,6 +865,9 @@ if ($result.requiredGates.thermalReady.required -and -not $result.requiredGates.
 }
 if ($result.requiredGates.cameraFps.required -and -not $result.requiredGates.cameraFps.passed) {
     exit 13
+}
+if ($result.requiredGates.focusedApp.required -and -not $result.requiredGates.focusedApp.passed) {
+    exit 14
 }
 if ($result.requiredGates.evidenceVerdict.required -and -not $result.requiredGates.evidenceVerdict.passed) {
     exit 9
