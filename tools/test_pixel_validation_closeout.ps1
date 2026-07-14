@@ -26,7 +26,8 @@ function Assert-Equal {
 function Invoke-Closeout {
     param(
         [string]$EvidenceRoot,
-        [switch]$FailOnMissing
+        [switch]$FailOnMissing,
+        [switch]$FailOnUnmatched
     )
 
     $script = Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1"
@@ -37,6 +38,9 @@ function Invoke-Closeout {
     }
     if ($FailOnMissing) {
         $args.FailOnMissing = $true
+    }
+    if ($FailOnUnmatched) {
+        $args.FailOnUnmatched = $true
     }
 
     & $script @args *> $stdout
@@ -136,6 +140,17 @@ try {
 
     $completeExitCode = Invoke-Closeout -EvidenceRoot $root -FailOnMissing
     Assert-Equal -Actual $completeExitCode -Expected 0 -Message "FailOnMissing should exit 0 when all closeout slots are satisfied."
+
+    $unmatchedExitCode = Invoke-Closeout -EvidenceRoot $root -FailOnUnmatched
+    Assert-Equal -Actual $unmatchedExitCode -Expected 3 -Message "FailOnUnmatched should exit 3 when accepted final evidence is not mapped to a closeout slot."
+
+    $classifiedRoot = Join-Path $root "classified"
+    New-Item -ItemType Directory -Path $classifiedRoot -Force | Out-Null
+    foreach ($name in @("manual", "auto", "pulse", "breathing", "object", "fast")) {
+        Copy-Item -LiteralPath (Join-Path $root $name) -Destination (Join-Path $classifiedRoot $name) -Recurse
+    }
+    $classifiedExitCode = Invoke-Closeout -EvidenceRoot $classifiedRoot -FailOnMissing -FailOnUnmatched
+    Assert-Equal -Actual $classifiedExitCode -Expected 0 -Message "Combined closeout gates should pass when all accepted evidence maps to slots."
 } finally {
     Remove-Item -LiteralPath $root -Recurse -Force
 }

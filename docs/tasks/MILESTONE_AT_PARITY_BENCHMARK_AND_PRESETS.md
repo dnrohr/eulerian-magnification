@@ -350,6 +350,8 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - The closeout script now reports accepted final evidence bundles that do not
   match any roadmap closeout slot, preventing accepted-but-unclassified Pixel
   artifacts from being missed during review.
+- Added a tested `-FailOnUnmatched` closeout gate so unclassified accepted
+  evidence can fail automation separately from missing closeout slots.
 - Updated the live visual validation guide to use `Tremor` for the public Fast
   Motion / Motion path. `ObjectVibration` remains accepted only for internal
   compatibility and parity experiments.
