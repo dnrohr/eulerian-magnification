@@ -52,7 +52,9 @@ function New-Slot {
         [string]$Id,
         [string]$Title,
         [string[]]$Milestones,
-        [string]$RequiredEvidence
+        [string]$RequiredEvidence,
+        [string]$Protocol,
+        [string]$NextCommand
     )
 
     return [ordered]@{
@@ -60,6 +62,8 @@ function New-Slot {
         title = $Title
         milestones = $Milestones
         requiredEvidence = $RequiredEvidence
+        protocol = $Protocol
+        nextCommand = $NextCommand
         satisfied = $false
         bundle = $null
         label = $null
@@ -68,12 +72,12 @@ function New-Slot {
 }
 
 $slots = [ordered]@{
-    manualRoi = New-Slot -Id "manualRoi" -Title "Manual ROI known-target alignment" -Milestones @("M", "U") -RequiredEvidence "visual_validated final evidence with passing ROI measurement"
-    autoRoi = New-Slot -Id "autoRoi" -Title "Automatic face/skin ROI alignment" -Milestones @("M", "U") -RequiredEvidence "visual_validated final evidence with passing ROI measurement"
-    pulseLinear = New-Slot -Id "pulseLinear" -Title "Pulse live linear visual parity" -Milestones @("AE", "AP", "AT") -RequiredEvidence "visual_validated final evidence with renderer diagnostics"
-    breathingLinear = New-Slot -Id "breathingLinear" -Title "Breathing live linear visual parity" -Milestones @("AE", "AP", "AT") -RequiredEvidence "visual_validated final evidence with renderer diagnostics"
-    objectPhase = New-Slot -Id "objectPhase" -Title "Object vibration live phase visual parity" -Milestones @("AR", "AT") -RequiredEvidence "visual_validated final evidence with phase diagnostics"
-    fastTremorPhase = New-Slot -Id "fastTremorPhase" -Title "Fast tremor live phase visual parity" -Milestones @("AR", "AT") -RequiredEvidence "visual_validated final evidence with phase diagnostics"
+    manualRoi = New-Slot -Id "manualRoi" -Title "Manual ROI known-target alignment" -Milestones @("M", "U") -RequiredEvidence "visual_validated final evidence with passing ROI measurement" -Protocol "docs/testing/ROI_DEVICE_VALIDATION.md" -NextCommand "manual-roi-known-target-setup, then roi-final-template"
+    autoRoi = New-Slot -Id "autoRoi" -Title "Automatic face/skin ROI alignment" -Milestones @("M", "U") -RequiredEvidence "visual_validated final evidence with passing ROI measurement" -Protocol "docs/testing/ROI_DEVICE_VALIDATION.md" -NextCommand "auto-face-roi-setup, then roi-final-template"
+    pulseLinear = New-Slot -Id "pulseLinear" -Title "Pulse live linear visual parity" -Milestones @("AE", "AP", "AT") -RequiredEvidence "visual_validated final evidence with renderer diagnostics" -Protocol "docs/experiments/pixel8a_live_linear_validation.md" -NextCommand "live-linear-pulse-setup, then live-linear-pulse-final"
+    breathingLinear = New-Slot -Id "breathingLinear" -Title "Breathing live linear visual parity" -Milestones @("AE", "AP", "AT") -RequiredEvidence "visual_validated final evidence with renderer diagnostics" -Protocol "docs/experiments/pixel8a_live_linear_validation.md" -NextCommand "live-linear-breathing-template"
+    objectPhase = New-Slot -Id "objectPhase" -Title "Object vibration live phase visual parity" -Milestones @("AR", "AT") -RequiredEvidence "visual_validated final evidence with phase diagnostics" -Protocol "docs/experiments/pixel8a_live_phase_validation.md" -NextCommand "live-phase-object-setup, then live-phase-object-final"
+    fastTremorPhase = New-Slot -Id "fastTremorPhase" -Title "Fast tremor live phase visual parity" -Milestones @("AR", "AT") -RequiredEvidence "visual_validated final evidence with phase diagnostics" -Protocol "docs/experiments/pixel8a_live_phase_validation.md" -NextCommand "live-phase-object-setup/final with Fast tremor target notes"
 }
 
 $rootPath = Resolve-Path -LiteralPath $EvidenceRoot -ErrorAction SilentlyContinue
@@ -157,10 +161,12 @@ if ($Json) {
         $mark = if ($slot.satisfied) { "[x]" } else { "[ ]" }
         Write-Output "$mark $($slot.title) [$($slot.milestones -join ', ')]"
         Write-Output "    Required: $($slot.requiredEvidence)"
+        Write-Output "    Protocol: $($slot.protocol)"
         if ($slot.satisfied) {
             Write-Output "    Evidence: $($slot.bundle)"
         } else {
             Write-Output "    Status: $($slot.reason)"
+            Write-Output "    Next: $($slot.nextCommand)"
         }
     }
     Write-Output ""
