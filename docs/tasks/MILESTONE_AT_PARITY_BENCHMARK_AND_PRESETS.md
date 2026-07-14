@@ -328,6 +328,8 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   `-FailOnMismatch`, so task-index drift fails the main phone-free check.
 - Added a GitHub Actions workflow that runs the phone-free tooling suite on
   pushes to `main` and pull requests.
+- Added `tools/test_github_workflows.ps1` so the offline CI workflow trigger,
+  runner, shell, and suite target are covered by the phone-free test command.
 - Updated the live visual validation guide to use `Tremor` for the public Fast
   Motion / Motion path. `ObjectVibration` remains accepted only for internal
   compatibility and parity experiments.

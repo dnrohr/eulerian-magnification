@@ -88,4 +88,5 @@ For a broader phone-free tooling check, run:
 ```
 
 That suite runs live validation tooling tests, roadmap summarizer self-tests,
-and the real roadmap status audit with `-FailOnMismatch`.
+GitHub workflow contract tests, and the real roadmap status audit with
+`-FailOnMismatch`.
