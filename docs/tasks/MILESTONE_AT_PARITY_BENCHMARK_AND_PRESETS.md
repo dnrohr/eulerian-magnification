@@ -496,6 +496,9 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - Added `-FailOnInvalidSlot` to the Pixel validation planner so scripted
   connected-device runs fail fast when a mistyped slot filter would otherwise
   emit an empty capture queue.
+- Added `-OutputPath` to the Pixel validation planner so the exact
+  machine-readable command queue can be saved as `pixel_validation_plan.json`
+  for a connected-device session handoff.
 
 ## Remaining
 

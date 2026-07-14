@@ -6,6 +6,7 @@ param(
     [switch]$NextOnly,
     [switch]$CommandsOnly,
     [switch]$FailOnInvalidSlot,
+    [string]$OutputPath = "",
     [switch]$Json
 )
 
@@ -231,8 +232,17 @@ $result = [pscustomobject]@{
     validationGroups = $validationGroups
 }
 
+$jsonOutput = $result | ConvertTo-Json -Depth 6
+if (-not [string]::IsNullOrWhiteSpace($OutputPath)) {
+    $outputParent = Split-Path -Parent $OutputPath
+    if (-not [string]::IsNullOrWhiteSpace($outputParent) -and -not (Test-Path -LiteralPath $outputParent)) {
+        New-Item -ItemType Directory -Path $outputParent | Out-Null
+    }
+    Set-Content -LiteralPath $OutputPath -Value $jsonOutput -Encoding utf8
+}
+
 if ($Json) {
-    $result | ConvertTo-Json -Depth 6
+    $jsonOutput
     if ($FailOnInvalidSlot -and @($result.invalidRequestedSlots).Count -gt 0) {
         exit $invalidSlotExitCode
     }

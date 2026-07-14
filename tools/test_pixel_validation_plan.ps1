@@ -58,6 +58,9 @@ $invalidSlotPlan = & (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.p
 $invalidSlotText = & (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1") -EvidenceRoot $missingCloseoutRoot -Slot notARealSlot -NextOnly
 $validSlotExitCode = Invoke-PlanExitCode -EvidenceRoot $missingCloseoutRoot -Slot pulseLinear -FailOnInvalidSlot
 $invalidSlotExitCode = Invoke-PlanExitCode -EvidenceRoot $missingCloseoutRoot -Slot notARealSlot -FailOnInvalidSlot
+$savedPlanPath = Join-Path $missingCloseoutRoot "pixel_validation_plan.json"
+$savedPlanText = & (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1") -EvidenceRoot $missingCloseoutRoot -OutputPath $savedPlanPath -NextOnly
+$savedPlan = Get-Content -LiteralPath $savedPlanPath -Raw | ConvertFrom-Json
 $closeout = & (Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1") -EvidenceRoot $missingCloseoutRoot -Json | ConvertFrom-Json
 
 Assert-Equal -Actual $plan.roadmap.total -Expected 47 -Message "Roadmap total mismatch."
@@ -118,6 +121,10 @@ Assert-True -Condition (($invalidSlotText -join "`n").Contains("Available missin
 Assert-True -Condition (($invalidSlotText -join "`n").Contains("Warning: requested slot(s) not currently missing or unknown: notARealSlot")) -Message "Invalid slot text should warn about unknown slots."
 Assert-Equal -Actual $validSlotExitCode -Expected 0 -Message "FailOnInvalidSlot should allow known missing slot filters."
 Assert-Equal -Actual $invalidSlotExitCode -Expected 21 -Message "FailOnInvalidSlot should fail with exit code 21 for unknown slot filters."
+Assert-True -Condition (Test-Path -LiteralPath $savedPlanPath) -Message "OutputPath should write a Pixel validation plan JSON artifact."
+Assert-Equal -Actual $savedPlan.currentCloseout.evidenceRoot -Expected $missingCloseoutRoot -Message "Saved plan artifact should use the requested evidence root."
+Assert-Equal -Actual @($savedPlan.recommendedCaptures).Count -Expected 6 -Message "Saved plan artifact should preserve recommended captures."
+Assert-True -Condition (($savedPlanText -join "`n").Contains("Recommended captures:")) -Message "OutputPath should not suppress text output."
 
 $covered = @($plan.coveredMilestones)
 foreach ($milestone in @("M", "U", "AE", "AP", "AR", "AT")) {
