@@ -109,11 +109,14 @@ try {
     Write-Summary -Root $root -Name "breathing" -Label "live-linear-breathing-final" -Mode "Breathing" -RoiSource "FullFrame" -Claim "Breathing slow motion live linear visual parity" -Roi $false -Renderer $true -Phase $false
     Write-Summary -Root $root -Name "object" -Label "live-phase-object-final" -Mode "Tremor" -RoiSource "Manual" -Claim "Object vibration edge-localized phase visual parity" -Roi $false -Renderer $false -Phase $true
     Write-Summary -Root $root -Name "fast" -Label "live-phase-fast-tremor-final" -Mode "Tremor" -RoiSource "Manual" -Claim "Fast tremor edge-localized phase visual parity" -Roi $false -Renderer $false -Phase $true
+    Write-Summary -Root $root -Name "accepted-unknown" -Label "accepted-unknown-final" -Mode "Pulse" -RoiSource "FullFrame" -Claim "Accepted final evidence with no closeout slot words" -Roi $false -Renderer $false -Phase $false
     Write-Summary -Root $root -Name "setup-only" -Label "live-linear-pulse-setup" -Mode "Pulse" -RoiSource "FullFrame" -Claim "Pulse setup target visible" -Roi $false -Renderer $true -Phase $false -Final $false
 
     $result = & (Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1") -EvidenceRoot $root -Json | ConvertFrom-Json
-    Assert-Equal -Actual $result.summaryCount -Expected 7 -Message "Summary count mismatch."
-    Assert-Equal -Actual $result.acceptedFinalEvidenceCount -Expected 6 -Message "Accepted final evidence count mismatch."
+    Assert-Equal -Actual $result.summaryCount -Expected 8 -Message "Summary count mismatch."
+    Assert-Equal -Actual $result.acceptedFinalEvidenceCount -Expected 7 -Message "Accepted final evidence count mismatch."
+    Assert-Equal -Actual @($result.unmatchedAcceptedFinalEvidence).Count -Expected 1 -Message "Unmatched accepted final evidence count mismatch."
+    Assert-Equal -Actual $result.unmatchedAcceptedFinalEvidence[0].label -Expected "accepted-unknown-final" -Message "Unmatched evidence label mismatch."
     Assert-Equal -Actual @($result.missing).Count -Expected 0 -Message "All slots should be satisfied."
     Assert-Equal -Actual $result.readyForPresetDocs -Expected $true -Message "Preset docs should be ready when four preset slots pass."
     Assert-Equal -Actual $result.allCloseoutEvidencePresent -Expected $true -Message "All closeout evidence should be present."
@@ -125,6 +128,7 @@ try {
     $partial = & (Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1") -EvidenceRoot $partialRoot -Json | ConvertFrom-Json
     Assert-Equal -Actual $partial.summaryCount -Expected 1 -Message "Partial summary count mismatch."
     Assert-Equal -Actual @($partial.missing).Count -Expected 5 -Message "Partial closeout should report missing slots."
+    Assert-Equal -Actual @($partial.unmatchedAcceptedFinalEvidence).Count -Expected 0 -Message "Partial closeout should not have unmatched accepted evidence."
     Assert-Equal -Actual $partial.readyForPresetDocs -Expected $false -Message "Partial closeout should not be ready for preset docs."
 
     $partialExitCode = Invoke-Closeout -EvidenceRoot $partialRoot -FailOnMissing

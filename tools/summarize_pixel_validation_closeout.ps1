@@ -87,11 +87,14 @@ foreach ($file in $summaryFiles) {
     $acceptedSummaries += $summary
 }
 
+$acceptedFinalSummaries = @()
+$unmatchedAcceptedFinalEvidence = @()
 foreach ($summary in $acceptedSummaries) {
     if (-not (Test-FinalVisualEvidence -Summary $summary)) {
         continue
     }
 
+    $acceptedFinalSummaries += $summary
     $text = Get-SummaryText -Summary $summary
     $roiPassed = Test-GatePassed -Summary $summary -Gate "roiMeasurement"
     $rendererPassed = Test-GatePassed -Summary $summary -Gate "rendererDiagnostics"
@@ -104,6 +107,17 @@ foreach ($summary in $acceptedSummaries) {
     if ($rendererPassed -and $text -match 'breath|slow-motion|slow motion') { $matchedSlots += "breathingLinear" }
     if ($phasePassed -and $text -match 'object|vibration') { $matchedSlots += "objectPhase" }
     if ($phasePassed -and $text -match 'fast|tremor') { $matchedSlots += "fastTremorPhase" }
+
+    if ($matchedSlots.Count -eq 0) {
+        $unmatchedAcceptedFinalEvidence += [pscustomobject]@{
+            bundle = Split-Path -Parent $summary.summaryPath
+            label = $summary.label
+            mode = $summary.launch.mode
+            roiSource = $summary.launch.roiSource
+            visualClaim = $summary.visualReview.visualClaim
+            reason = "accepted final evidence did not match any closeout slot"
+        }
+    }
 
     foreach ($slotId in $matchedSlots) {
         if (-not $slots[$slotId].satisfied) {
@@ -120,7 +134,8 @@ $missing = @($slotList | Where-Object { -not $_.satisfied })
 $result = [pscustomobject]@{
     evidenceRoot = if ($rootPath) { $rootPath.Path } else { $EvidenceRoot }
     summaryCount = $summaryFiles.Count
-    acceptedFinalEvidenceCount = @($acceptedSummaries | Where-Object { Test-FinalVisualEvidence -Summary $_ }).Count
+    acceptedFinalEvidenceCount = $acceptedFinalSummaries.Count
+    unmatchedAcceptedFinalEvidence = $unmatchedAcceptedFinalEvidence
     slots = $slotList
     missing = $missing
     readyForPresetDocs = (@($slotList | Where-Object { $_.id -in @("pulseLinear", "breathingLinear", "objectPhase", "fastTremorPhase") -and $_.satisfied }).Count -eq 4)
@@ -134,6 +149,7 @@ if ($Json) {
     Write-Output "Evidence root: $($result.evidenceRoot)"
     Write-Output "Evidence summaries: $($result.summaryCount)"
     Write-Output "Accepted final evidence: $($result.acceptedFinalEvidenceCount)"
+    Write-Output "Unmatched accepted final evidence: $(@($result.unmatchedAcceptedFinalEvidence).Count)"
     Write-Output ""
     foreach ($slot in $slotList) {
         $mark = if ($slot.satisfied) { "[x]" } else { "[ ]" }
@@ -148,6 +164,14 @@ if ($Json) {
     Write-Output ""
     Write-Output "Ready for preset docs update: $($result.readyForPresetDocs)"
     Write-Output "All closeout evidence present: $($result.allCloseoutEvidencePresent)"
+    if (@($result.unmatchedAcceptedFinalEvidence).Count -gt 0) {
+        Write-Output ""
+        Write-Output "Unmatched accepted final evidence:"
+        foreach ($evidence in @($result.unmatchedAcceptedFinalEvidence)) {
+            Write-Output "- $($evidence.label): $($evidence.bundle)"
+            Write-Output "    $($evidence.reason)"
+        }
+    }
 }
 
 if ($FailOnMissing -and $missing.Count -gt 0) {
