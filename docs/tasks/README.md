@@ -72,3 +72,9 @@ Run the roadmap status summarizer when checking what remains:
 The script reads this index, counts milestone statuses, lists in-progress
 milestones, flags likely phone/visual-gated work, and reports any mismatch
 between this table and a milestone file's own `Status:` line.
+
+After editing the backlog index or status summarizer, run:
+
+```powershell
+.\tools\test_roadmap_status_summary.ps1
+```
