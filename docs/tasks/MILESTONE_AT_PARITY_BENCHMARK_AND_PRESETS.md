@@ -606,6 +606,10 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - The runbook now begins with source/device preflight checks, including the
   handoff source commit, clean-tree state, origin/main reachability, expected
   device availability, manifest path, and paste-ready Git recheck commands.
+- Added `tools/verify_pixel_validation_handoff.ps1` so the first runbook command
+  can fail stale handoff bundles before install: it verifies manifest artifact
+  hashes, source commit/clean/reachability state, and expected Pixel
+  availability.
 
 ## Remaining
 

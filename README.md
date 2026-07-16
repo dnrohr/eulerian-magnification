@@ -358,7 +358,10 @@ at handoff time. The Markdown handoff and manifest include a matching
 `install_debug_on_pixel.ps1 -Build -Launch` command for the same device serial.
 The runbook file starts with source/device preflight checks, then orders
 install/launch, thermal preflight, capture commands, and review-sheet commands
-for a watched device session.
+for a watched device session. The first runbook command calls
+`verify_pixel_validation_handoff.ps1` to confirm the manifest artifact hashes,
+source commit/clean state, `origin/main` reachability, and expected Pixel
+connection before installing the app.
 The planner and handoff also include
 a `wait_for_device_thermal_ready.ps1` preflight command; run it before watched
 phone validation when the device is warm, FPS is low, or the preview looks

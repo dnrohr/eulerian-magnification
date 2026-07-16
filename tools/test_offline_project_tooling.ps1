@@ -7,6 +7,7 @@ $tests = @(
     "test_debug_install_helper.ps1",
     "test_pixel_validation_plan.ps1",
     "test_pixel_validation_handoff.ps1",
+    "test_pixel_validation_handoff_verifier.ps1",
     "test_pixel_validation_closeout.ps1"
 )
 
