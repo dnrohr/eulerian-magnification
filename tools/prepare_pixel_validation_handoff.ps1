@@ -150,6 +150,7 @@ $handoffLines = @(
     ('- Capture stage: `{0}`' -f $plan.captureStage),
     ('- Requested slots: `{0}`' -f $requestedSlotLabel),
     "- Recommended captures: $(@($plan.recommendedCaptures).Count)",
+    ('- Thermal readiness command: `{0}`' -f $plan.thermalReadiness.command),
     "- Pending review sheets: $($reviewQueue.pendingReviewSheetCount)",
     "- Pending review-sheet issue types: $($reviewIssueCounts.Count)",
     "- Closeout blockers: $(@($closeout.closeoutBlockers).Count)",
@@ -185,6 +186,14 @@ if (@($plan.recommendedCaptures).Count -eq 0) {
 }
 
 $handoffLines += @(
+    "",
+    "## Thermal Preflight",
+    "",
+    "Run this before a watched phone validation session if the device may be warm, the camera preview looks frozen, or FPS is low:",
+    "",
+    '```powershell',
+    $plan.thermalReadiness.command,
+    '```',
     "",
     "## Closeout Blockers",
     ""
@@ -260,6 +269,7 @@ $manifest = [pscustomobject]@{
         issueCounts = [pscustomobject]$reviewIssueCounts
         ffmpegPath = $FfmpegPath
     }
+    thermalReadiness = $plan.thermalReadiness
 }
 $manifest | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $manifestPath -Encoding utf8
 
@@ -286,6 +296,7 @@ $result = [pscustomobject]@{
     reviewCommandCount = @($reviewCommands).Count
     closeoutBlockerCount = @($closeout.closeoutBlockers).Count
     readyForPresetDocs = $closeout.readyForPresetDocs
+    thermalReadiness = $plan.thermalReadiness
     source = [pscustomobject]@{
         branch = $sourceBranch
         commit = $sourceCommit

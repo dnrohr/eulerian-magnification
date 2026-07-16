@@ -349,7 +349,10 @@ The handoff bundle writes `pixel_validation_plan.json`,
 `pixel_validation_handoff_manifest.json` with SHA-256 hashes for those handoff
 artifacts. The handoff records the target device serial, source branch, commit,
 clean-tree state, whether the commit is reachable from `origin/main`, and a
-compact pending review-sheet issue count.
+compact pending review-sheet issue count. The planner and handoff also include
+a `wait_for_device_thermal_ready.ps1` preflight command; run it before watched
+phone validation when the device is warm, FPS is low, or the preview looks
+nearly frozen.
 
 After a connected Pixel validation pass, summarize which accepted evidence
 bundles are ready to close the remaining roadmap items. The summary includes

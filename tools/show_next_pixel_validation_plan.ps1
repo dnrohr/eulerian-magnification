@@ -160,6 +160,29 @@ if (-not [string]::IsNullOrWhiteSpace($DeviceSerial)) {
     }
 }
 
+$thermalReadinessOutputPath = Join-Path $EvidenceRoot "thermal_ready_wait_preflight.json"
+$thermalReadinessCommandParts = @(
+    ".\tools\wait_for_device_thermal_ready.ps1",
+    "-ReadyBelowThermalStatus 4",
+    "-RequiredReadySamples 2",
+    "-TimeoutSeconds 900",
+    "-PollSeconds 30",
+    ('-OutputPath "{0}"' -f $thermalReadinessOutputPath)
+)
+if (-not [string]::IsNullOrWhiteSpace($DeviceSerial)) {
+    $escapedDeviceSerial = $DeviceSerial -replace '"', '\"'
+    $thermalReadinessCommandParts = @($thermalReadinessCommandParts[0], "-DeviceSerial `"$escapedDeviceSerial`"") + @($thermalReadinessCommandParts | Select-Object -Skip 1)
+}
+$thermalReadiness = [pscustomobject]@{
+    readyBelowThermalStatus = 4
+    requiredReadySamples = 2
+    timeoutSeconds = 900
+    pollSeconds = 30
+    outputPath = $thermalReadinessOutputPath
+    command = ($thermalReadinessCommandParts -join " ")
+    note = "Run before a watched phone validation session when the device may be warm or the camera preview appears slow."
+}
+
 $inProgressMilestones = @($roadmap.inProgress | ForEach-Object { $_.milestone })
 $coveredMilestones = @($validationGroups | ForEach-Object { $_.milestones } | Select-Object -Unique)
 $missingMilestones = @($inProgressMilestones | Where-Object { $_ -notin $coveredMilestones })
@@ -245,6 +268,7 @@ $result = [pscustomobject]@{
     invalidRequestedSlots = $invalidRequestedSlots
     captureStage = $requestedStage
     deviceSerial = $DeviceSerial
+    thermalReadiness = $thermalReadiness
     recommendedCaptures = $recommendedCaptures
     validationGroups = $validationGroups
 }
@@ -290,6 +314,7 @@ Write-Output "Roadmap: $($result.roadmap.complete)/$($result.roadmap.total) comp
 Write-Output "Evidence root: $($result.currentCloseout.evidenceRoot)"
 Write-Output "Capture stage: $($result.captureStage)"
 Write-Output "Current closeout blockers: $($result.currentCloseout.blockerCount)"
+Write-Output "Thermal readiness command: $($result.thermalReadiness.command)"
 if (@($result.availableSlots).Count -gt 0) {
     Write-Output "Available missing slots: $($result.availableSlots -join ', ')"
 }

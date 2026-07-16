@@ -575,6 +575,9 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - Review contact sheets now have a browser fallback through
   `npx playwright screenshot`, so captured screenrecords can be sampled on
   machines where `ffmpeg` is not installed.
+- Pixel validation planner and handoff now surface a thermal readiness preflight
+  command so watched capture sessions can explicitly wait for a cool enough
+  device before camera validation starts.
 
 ## Remaining
 
