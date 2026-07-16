@@ -129,7 +129,9 @@ at least one recommended capture. Add `-FailOnPendingReviewSheets` when a
 handoff should fail until every captured screenrecord has a matching review
 sheet. Add `-FailOnDirtySource` when a handoff should fail if the current
 worktree is not clean, or `-FailOnUnpushedSource` when the source commit must
-already be reachable from `origin/main`. Add `-OutputPath sample-videos\exports\live-validation\pixel_validation_plan.json`
+already be reachable from `origin/main`. Add `-FailOnDeviceUnavailable` when a
+watched handoff should fail unless ADB reports the expected Pixel serial as
+connected. Add `-OutputPath sample-videos\exports\live-validation\pixel_validation_plan.json`
 to save the full machine-readable plan used for a device session. Generated
 capture commands default to `-DeviceSerial 47091JEKB05516`; pass
 `-DeviceSerial <serial>` to target a different connected device. Generated
@@ -143,7 +145,9 @@ The handoff bundle writes `pixel_validation_plan.json`,
 `pixel_validation_handoff_manifest.json` with SHA-256 hashes for those handoff
 artifacts. The handoff records the target device serial, source branch, commit,
 clean-tree state, whether the commit is reachable from `origin/main`, and a
-compact pending review-sheet issue count. The planner and handoff also include
+compact pending review-sheet issue count. It also records ADB/device
+availability metadata, including whether the expected Pixel serial is connected
+at handoff time. The planner and handoff also include
 a `wait_for_device_thermal_ready.ps1` preflight command; run it before watched
 phone validation when the device is warm, FPS is low, or the preview looks
 nearly frozen. Generated Pixel validation commands wait below thermal status

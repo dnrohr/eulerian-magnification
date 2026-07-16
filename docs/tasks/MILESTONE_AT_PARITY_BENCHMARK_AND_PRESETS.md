@@ -593,6 +593,9 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - Pixel validation handoffs now record ADB/device availability metadata,
   including whether the expected Pixel serial is connected, so operators can
   catch an unplugged or wrong device before starting watched captures.
+- Pixel validation handoffs now support `-FailOnDeviceUnavailable`, exiting
+  nonzero when ADB cannot confirm the expected Pixel serial is connected for a
+  watched validation handoff.
 
 ## Remaining
 

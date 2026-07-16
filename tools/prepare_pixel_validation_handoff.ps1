@@ -13,6 +13,7 @@ param(
     [switch]$FailOnPendingReviewSheets,
     [switch]$FailOnDirtySource,
     [switch]$FailOnUnpushedSource,
+    [switch]$FailOnDeviceUnavailable,
     [switch]$Json
 )
 
@@ -466,4 +467,7 @@ if ($FailOnDirtySource -and -not $result.source.clean) {
 }
 if ($FailOnUnpushedSource -and -not $result.source.commitReachableFromOriginMain) {
     exit 25
+}
+if ($FailOnDeviceUnavailable -and -not $result.deviceAvailability.connected) {
+    exit 26
 }

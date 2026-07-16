@@ -33,6 +33,8 @@ function Invoke-HandoffExitCode {
         [switch]$FailOnPendingReviewSheets,
         [switch]$FailOnDirtySource,
         [switch]$FailOnUnpushedSource,
+        [switch]$FailOnDeviceUnavailable,
+        [string]$AdbPath = "",
         [string]$SourceRoot = ""
     )
 
@@ -40,6 +42,9 @@ function Invoke-HandoffExitCode {
     $powerShellExe = (Get-Process -Id $PID).Path
     $arguments = @("-NoProfile", "-File", $script, "-EvidenceRoot", $EvidenceRoot, "-OutputRoot", $OutputRoot)
     $arguments += @("-DeviceSerial", "PIXEL-HANDOFF-TEST")
+    if (-not [string]::IsNullOrWhiteSpace($AdbPath)) {
+        $arguments += @("-AdbPath", $AdbPath)
+    }
     if (-not [string]::IsNullOrWhiteSpace($SourceRoot)) {
         $arguments += @("-SourceRoot", $SourceRoot)
     }
@@ -61,6 +66,9 @@ function Invoke-HandoffExitCode {
     if ($FailOnUnpushedSource) {
         $arguments += "-FailOnUnpushedSource"
     }
+    if ($FailOnDeviceUnavailable) {
+        $arguments += "-FailOnDeviceUnavailable"
+    }
 
     & $powerShellExe @arguments *> $null
     return $LASTEXITCODE
@@ -76,6 +84,11 @@ Set-Content -LiteralPath $fakeAdb -Encoding ascii -Value @(
     "@echo off",
     "echo List of devices attached",
     "echo PIXEL-HANDOFF-TEST device product:pixel model:Pixel_8a"
+)
+$fakeNoDeviceAdb = Join-Path $outputRoot "fake-no-device-adb.cmd"
+Set-Content -LiteralPath $fakeNoDeviceAdb -Encoding ascii -Value @(
+    "@echo off",
+    "echo List of devices attached"
 )
 
 $result = & (Join-Path $PSScriptRoot "prepare_pixel_validation_handoff.ps1") `
@@ -199,10 +212,11 @@ Assert-True -Condition (($textOutput -join "`n").Contains("Manifest:")) -Message
 Assert-True -Condition (($textOutput -join "`n").Contains("Warning: requested slot(s) not currently missing or unknown: notARealSlot")) -Message "Text handoff should warn about invalid slots."
 Assert-True -Condition (($textOutput -join "`n").Contains("Warning: no recommended captures match the current filters.")) -Message "Text handoff should warn about empty queues."
 
-$validExitCode = Invoke-HandoffExitCode -EvidenceRoot $evidenceRoot -OutputRoot $outputRoot -Slot pulseLinear -FailOnInvalidSlot -FailOnEmptyQueue
+$validExitCode = Invoke-HandoffExitCode -EvidenceRoot $evidenceRoot -OutputRoot $outputRoot -Slot pulseLinear -FailOnInvalidSlot -FailOnEmptyQueue -FailOnDeviceUnavailable -AdbPath $fakeAdb
 $invalidExitCode = Invoke-HandoffExitCode -EvidenceRoot $evidenceRoot -OutputRoot $outputRoot -Slot notARealSlot -FailOnInvalidSlot
 $emptyExitCode = Invoke-HandoffExitCode -EvidenceRoot $evidenceRoot -OutputRoot $outputRoot -Slot notARealSlot -FailOnEmptyQueue
 $pendingReviewExitCode = Invoke-HandoffExitCode -EvidenceRoot $evidenceRoot -OutputRoot $outputRoot -Slot pulseLinear -FailOnPendingReviewSheets
+$deviceUnavailableExitCode = Invoke-HandoffExitCode -EvidenceRoot $evidenceRoot -OutputRoot $outputRoot -Slot pulseLinear -FailOnDeviceUnavailable -AdbPath $fakeNoDeviceAdb
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $dirtyProbePath = Join-Path $repoRoot "handoff_dirty_source_probe.tmp"
 try {
@@ -240,5 +254,6 @@ Assert-Equal -Actual $emptyExitCode -Expected 22 -Message "Handoff should fail e
 Assert-Equal -Actual $pendingReviewExitCode -Expected 23 -Message "Handoff should fail pending review-sheet issues with exit code 23."
 Assert-Equal -Actual $dirtySourceExitCode -Expected 24 -Message "Handoff should fail dirty source trees with exit code 24."
 Assert-Equal -Actual $unpushedSourceExitCode -Expected 25 -Message "Handoff should fail source commits that are not reachable from origin/main with exit code 25."
+Assert-Equal -Actual $deviceUnavailableExitCode -Expected 26 -Message "Handoff should fail unavailable expected devices with exit code 26."
 
 Write-Output "Pixel validation handoff self-test passed."
