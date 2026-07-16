@@ -266,6 +266,10 @@ Goal: prove that automatic and manual ROI coordinates align with the live previe
   fits in the manual and automatic ROI evidence flow.
 - Updated the generated Pixel validation plan so manual and automatic ROI
   operator setup guidance points to the converter before final evidence capture.
+- `tools/capture_live_validation_evidence.ps1` now fails before ADB launch when
+  `-MeasureRoiExpected` or `-ManualRoi` still contains a placeholder or an
+  invalid normalized rectangle, preventing wasted Pixel captures from stale
+  command templates.
 
 ## Done When
 

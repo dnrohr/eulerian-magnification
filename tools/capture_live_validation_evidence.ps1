@@ -249,6 +249,33 @@ function Parse-ThermalSummary {
     }
 }
 
+function Test-NormalizedRoiArgument {
+    param(
+        [string]$Value,
+        [string]$ParameterName
+    )
+
+    if ([string]::IsNullOrWhiteSpace($Value)) {
+        return
+    }
+    if ($Value.Contains("<") -or $Value.Contains(">")) {
+        throw "$ParameterName still contains a placeholder. Use tools\convert_roi_bounds_to_normalized.ps1 to convert visible screenshot pixel bounds into a normalized ROI string before capture."
+    }
+
+    $parts = $Value.Split(",") | ForEach-Object {
+        [double]::Parse($_.Trim(), [Globalization.CultureInfo]::InvariantCulture)
+    }
+    if ($parts.Count -ne 4) {
+        throw "$ParameterName must be four comma-separated normalized values: left,top,right,bottom."
+    }
+    if ($parts[0] -lt 0.0 -or $parts[1] -lt 0.0 -or $parts[2] -gt 1.0 -or $parts[3] -gt 1.0 -or $parts[2] -le $parts[0] -or $parts[3] -le $parts[1]) {
+        throw "$ParameterName must be normalized to 0..1 with right > left and bottom > top."
+    }
+}
+
+Test-NormalizedRoiArgument -Value $MeasureRoiExpected -ParameterName "MeasureRoiExpected"
+Test-NormalizedRoiArgument -Value $ManualRoi -ParameterName "ManualRoi"
+
 $adb = Find-Adb -ExplicitPath $AdbPath
 $script:AdbDeviceArgs = if ([string]::IsNullOrWhiteSpace($DeviceSerial)) {
     @()

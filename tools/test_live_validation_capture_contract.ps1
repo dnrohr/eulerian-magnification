@@ -71,6 +71,32 @@ function Assert-InvalidParameterValue {
     throw "Parameter '$ParameterName' accepted invalid value '$InvalidValue'."
 }
 
+function Assert-InvalidRoiArgument {
+    param(
+        [string]$ScriptPath,
+        [string]$ParameterName,
+        [string]$InvalidValue,
+        [string]$ExpectedMessage
+    )
+
+    $arguments = @{
+        SkipLaunch = $true
+        ScreenRecordSeconds = 0
+    }
+    $arguments[$ParameterName] = $InvalidValue
+
+    try {
+        & $ScriptPath @arguments *> $null
+    } catch {
+        if ($_.Exception.Message.Contains($ExpectedMessage)) {
+            return
+        }
+        throw
+    }
+
+    throw "Parameter '$ParameterName' accepted invalid ROI value '$InvalidValue'."
+}
+
 $captureScript = Join-Path $PSScriptRoot "capture_live_validation_evidence.ps1"
 $thermalScript = Join-Path $PSScriptRoot "wait_for_device_thermal_ready.ps1"
 $command = Get-Command $captureScript
@@ -137,6 +163,18 @@ Assert-InvalidParameterValue -ScriptPath $captureScript -ParameterName "RoiSourc
 Assert-InvalidParameterValue -ScriptPath $captureScript -ParameterName "Panel" -InvalidValue "Overlay"
 Assert-InvalidParameterValue -ScriptPath $captureScript -ParameterName "MeasureRoiKind" -InvalidValue "Blue"
 Assert-InvalidParameterValue -ScriptPath $captureScript -ParameterName "RequireEvidenceVerdict" -InvalidValue "maybe"
+Assert-InvalidRoiArgument -ScriptPath $captureScript -ParameterName "MeasureRoiExpected" -InvalidValue "<visible-target-bounds-in-screenshot-space>" -ExpectedMessage "still contains a placeholder"
+Assert-InvalidRoiArgument -ScriptPath $captureScript -ParameterName "MeasureRoiExpected" -InvalidValue "0.1,0.2,0.3" -ExpectedMessage "four comma-separated normalized values"
+Assert-InvalidRoiArgument -ScriptPath $captureScript -ParameterName "MeasureRoiExpected" -InvalidValue "0.8,0.2,0.3,0.7" -ExpectedMessage "right > left and bottom > top"
+Assert-InvalidRoiArgument -ScriptPath $captureScript -ParameterName "ManualRoi" -InvalidValue "0.1,0.2,1.2,0.7" -ExpectedMessage "normalized to 0..1"
+
+try {
+    & $captureScript -SkipLaunch -ScreenRecordSeconds 0 -MeasureRoiExpected "0.1,0.2,0.3,0.7" -ManualRoi "0.2,0.3,0.4,0.8" -AdbPath "missing-adb-for-contract-test.exe" *> $null
+} catch {
+    if (-not $_.Exception.Message.Contains("Requested adb path does not exist")) {
+        throw
+    }
+}
 
 foreach ($expectedSourceContract in @(
     "commitReachableFromOriginMain",

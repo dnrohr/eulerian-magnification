@@ -81,6 +81,8 @@ to the paste-ready value with:
 Use the printed `MeasureRoiExpected` value only when those pixel bounds came
 from the visible target in the captured app screenshot, not from the overlay
 box itself.
+The capture script fails before ADB launch if `-MeasureRoiExpected` still
+contains a placeholder or is not a normalized `left,top,right,bottom` rectangle.
 
 For the final accepted manual ROI run, repeat the command from a clean committed
 source tree with `-VisualValidated $true`, keep `-RequireRoiMeasurement`, and

@@ -366,6 +366,11 @@ normalized screenshot-space rectangle. The capture script then writes
 coordinates. A passing measurement proves the visible overlay position; it only
 proves target alignment when the expected rectangle was derived from the visible
 known target in that screenshot.
+Capture commands fail before ADB launch if `-MeasureRoiExpected` or
+`-ManualRoi` still contains a placeholder, is not four comma-separated values,
+or is outside normalized `0..1` bounds. Use
+`tools\convert_roi_bounds_to_normalized.ps1` to convert measured screenshot
+pixel bounds before running final ROI evidence.
 
 ## Scripted App State
 
