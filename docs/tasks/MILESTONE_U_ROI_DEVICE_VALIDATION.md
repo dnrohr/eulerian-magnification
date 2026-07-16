@@ -289,6 +289,10 @@ Goal: prove that automatic and manual ROI coordinates align with the live previe
 - Pixel validation runbooks and Markdown handoffs now split all-stage ROI
   handoffs so setup and non-placeholder commands appear separately from
   placeholder final ROI templates, which are commented as reference-only.
+- Handoff consistency verification now rejects runbook or Markdown handoff ROI
+  final placeholders unless those lines are commented as `# TEMPLATE ONLY:`,
+  forcing watched sessions through `prepare_roi_final_capture_command.ps1`
+  after measuring the setup screenshot.
 
 ## Done When
 

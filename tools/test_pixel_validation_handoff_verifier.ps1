@@ -143,7 +143,7 @@ try {
     Assert-Equal -Actual $result.expectedDeviceConnected -Expected $true -Message "Valid handoff should find the expected device serial."
     Assert-Equal -Actual @($result.artifactChecks).Count -Expected 2 -Message "Verifier should report every manifest artifact."
     Assert-Equal -Actual @($result.source.checks).Count -Expected 3 -Message "Verifier should report source checks."
-    Assert-Equal -Actual @($result.handoffConsistencyChecks).Count -Expected 2 -Message "Verifier should report ROI helper consistency checks."
+    Assert-Equal -Actual @($result.handoffConsistencyChecks).Count -Expected 4 -Message "Verifier should report ROI helper and reference-only template consistency checks."
     Assert-True -Condition (($result.artifactChecks | Where-Object { $_.name -eq "runbook" }).passed -eq $true) -Message "Runbook artifact should pass hash verification."
 
     $validExitCode = Invoke-VerifierExitCode -ManifestPath $manifestPath -SourceRoot $repoRoot -AdbPath $fakeAdb -FailOnArtifactMismatch -FailOnSourceMismatch -FailOnDeviceUnavailable -FailOnHandoffConsistencyMismatch
@@ -237,6 +237,46 @@ try {
         -AdbPath $fakeAdb `
         -Json | ConvertFrom-Json
     Assert-Equal -Actual $pairedRoiResult.handoffConsistencyMismatchCount -Expected 0 -Message "ROI placeholder paired with helper guidance should pass consistency checks."
+
+    $rawTemplateRunbook = @(
+        ".\tools\prepare_roi_final_capture_command.ps1 -Slot manualRoi -SetupBundle ""<manual-roi-setup-bundle>"" -PixelBounds ""<left,top,right,bottom-from-setup-screenshot>""",
+        ".\tools\capture_live_validation_evidence.ps1 -Label ""manual-roi-known-target-final"" -MeasureRoiExpected ""<visible-target-bounds-in-screenshot-space>"""
+    )
+    $rawTemplateHandoff = @(
+        ".\tools\prepare_roi_final_capture_command.ps1 -Slot manualRoi -SetupBundle ""<manual-roi-setup-bundle>"" -PixelBounds ""<left,top,right,bottom-from-setup-screenshot>""",
+        ".\tools\capture_live_validation_evidence.ps1 -Label ""manual-roi-known-target-final"" -MeasureRoiExpected ""<visible-target-bounds-in-screenshot-space>"""
+    )
+    $rawTemplateRunbook | Set-Content -LiteralPath $artifactA -Encoding utf8
+    $rawTemplateHandoff | Set-Content -LiteralPath $artifactB -Encoding utf8
+    $rawTemplateManifestPath = Join-Path $bundleRoot "raw_roi_template_manifest.json"
+    $rawTemplateManifest = [ordered]@{
+        deviceSerial = "PIXEL-VERIFY-TEST"
+        source = [ordered]@{
+            branch = "main"
+            commit = $sourceCommit
+            clean = $true
+            commitReachableFromOriginMain = $true
+        }
+        artifacts = @(
+            New-ArtifactRecord -Name "commands" -Path $commandsArtifact
+            New-ArtifactRecord -Name "runbook" -Path $artifactA
+            New-ArtifactRecord -Name "handoff" -Path $artifactB
+        )
+        roiFinalHelperCommands = @(
+            '.\tools\prepare_roi_final_capture_command.ps1 -Slot manualRoi -SetupBundle "<manual-roi-setup-bundle>" -PixelBounds "<left,top,right,bottom-from-setup-screenshot>"'
+        )
+    }
+    $rawTemplateManifest | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $rawTemplateManifestPath -Encoding utf8
+    $rawTemplateResult = & (Join-Path $PSScriptRoot "verify_pixel_validation_handoff.ps1") `
+        -ManifestPath $rawTemplateManifestPath `
+        -SourceRoot $repoRoot `
+        -AdbPath $fakeAdb `
+        -Json | ConvertFrom-Json
+    Assert-Equal -Actual $rawTemplateResult.handoffConsistencyMismatchCount -Expected 2 -Message "Runnable ROI final templates should fail runbook and Markdown consistency checks."
+    Assert-True -Condition (($rawTemplateResult.handoffConsistencyChecks | Where-Object { $_.name -eq "runbookRoiFinalTemplatesReferenceOnly" }).passed -eq $false) -Message "Runbook reference-only check should fail for a raw ROI final placeholder."
+    Assert-True -Condition (($rawTemplateResult.handoffConsistencyChecks | Where-Object { $_.name -eq "handoffRoiFinalTemplatesReferenceOnly" }).passed -eq $false) -Message "Markdown handoff reference-only check should fail for a raw ROI final placeholder."
+    $rawTemplateExitCode = Invoke-VerifierExitCode -ManifestPath $rawTemplateManifestPath -SourceRoot $repoRoot -AdbPath $fakeAdb -FailOnHandoffConsistencyMismatch
+    Assert-Equal -Actual $rawTemplateExitCode -Expected 34 -Message "Runnable ROI final template gate should exit 34."
 
     "runbook artifact" | Set-Content -LiteralPath $artifactA -Encoding utf8
     "handoff artifact" | Set-Content -LiteralPath $artifactB -Encoding utf8

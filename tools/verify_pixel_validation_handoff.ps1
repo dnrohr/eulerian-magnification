@@ -172,6 +172,36 @@ function Get-ArtifactText {
     return Get-Content -LiteralPath $path -Raw
 }
 
+function Get-UncommentedRoiFinalTemplateLines {
+    param([string]$Text)
+
+    if ([string]::IsNullOrWhiteSpace($Text)) {
+        return @()
+    }
+
+    $lines = $Text -split "`r?`n"
+    $uncommented = @()
+    for ($index = 0; $index -lt $lines.Count; $index++) {
+        $line = $lines[$index]
+        $hasFinalPlaceholder = $line.Contains("<visible-target-bounds-in-screenshot-space>") -or
+            $line.Contains("<visible-face-or-skin-target-bounds-in-screenshot-space>")
+        if (-not $hasFinalPlaceholder) {
+            continue
+        }
+
+        if ($line.TrimStart().StartsWith("# TEMPLATE ONLY:")) {
+            continue
+        }
+
+        $uncommented += [pscustomobject]@{
+            lineNumber = $index + 1
+            line = $line
+        }
+    }
+
+    return $uncommented
+}
+
 $resolvedManifest = Resolve-Path -LiteralPath $ManifestPath -ErrorAction SilentlyContinue
 if (-not $resolvedManifest) {
     throw "Handoff manifest not found: $ManifestPath"
@@ -205,9 +235,13 @@ $roiHelperText = @($manifest.roiFinalHelperCommands) -join "`n"
 $manualRoiPlaceholderPresent = $commandText.Contains("<visible-target-bounds-in-screenshot-space>")
 $autoRoiPlaceholderPresent = $commandText.Contains("<visible-face-or-skin-target-bounds-in-screenshot-space>")
 $helperTextPresent = $runbookText.Contains("prepare_roi_final_capture_command.ps1") -and $handoffText.Contains("prepare_roi_final_capture_command.ps1")
+$runbookUncommentedRoiFinalTemplateLines = @(Get-UncommentedRoiFinalTemplateLines -Text $runbookText)
+$handoffUncommentedRoiFinalTemplateLines = @(Get-UncommentedRoiFinalTemplateLines -Text $handoffText)
 $handoffConsistencyChecks = @(
     New-Check -Name "manualRoiFinalHelper" -Passed (-not $manualRoiPlaceholderPresent -or ($roiHelperText.Contains("-Slot manualRoi") -and $helperTextPresent)) -Message $(if (-not $manualRoiPlaceholderPresent) { "manual ROI final command has no placeholder" } elseif ($roiHelperText.Contains("-Slot manualRoi") -and $helperTextPresent) { "manual ROI placeholder is paired with final-command helper guidance" } else { "manual ROI placeholder is missing final-command helper guidance" }) -Details ([pscustomobject]@{ placeholderPresent = $manualRoiPlaceholderPresent; helperCommandPresent = $roiHelperText.Contains("-Slot manualRoi"); helperTextPresent = $helperTextPresent })
     New-Check -Name "autoRoiFinalHelper" -Passed (-not $autoRoiPlaceholderPresent -or ($roiHelperText.Contains("-Slot autoRoi") -and $helperTextPresent)) -Message $(if (-not $autoRoiPlaceholderPresent) { "automatic ROI final command has no placeholder" } elseif ($roiHelperText.Contains("-Slot autoRoi") -and $helperTextPresent) { "automatic ROI placeholder is paired with final-command helper guidance" } else { "automatic ROI placeholder is missing final-command helper guidance" }) -Details ([pscustomobject]@{ placeholderPresent = $autoRoiPlaceholderPresent; helperCommandPresent = $roiHelperText.Contains("-Slot autoRoi"); helperTextPresent = $helperTextPresent })
+    New-Check -Name "runbookRoiFinalTemplatesReferenceOnly" -Passed (@($runbookUncommentedRoiFinalTemplateLines).Count -eq 0) -Message $(if (@($runbookUncommentedRoiFinalTemplateLines).Count -eq 0) { "runbook ROI final templates are reference-only" } else { "runbook has pasteable ROI final placeholder commands" }) -Details ([pscustomobject]@{ uncommentedLineCount = @($runbookUncommentedRoiFinalTemplateLines).Count; uncommentedLines = $runbookUncommentedRoiFinalTemplateLines })
+    New-Check -Name "handoffRoiFinalTemplatesReferenceOnly" -Passed (@($handoffUncommentedRoiFinalTemplateLines).Count -eq 0) -Message $(if (@($handoffUncommentedRoiFinalTemplateLines).Count -eq 0) { "Markdown handoff ROI final templates are reference-only" } else { "Markdown handoff has pasteable ROI final placeholder commands" }) -Details ([pscustomobject]@{ uncommentedLineCount = @($handoffUncommentedRoiFinalTemplateLines).Count; uncommentedLines = $handoffUncommentedRoiFinalTemplateLines })
 )
 
 $currentBranch = Invoke-GitValue -Root $SourceRoot -Arguments @("rev-parse", "--abbrev-ref", "HEAD")
