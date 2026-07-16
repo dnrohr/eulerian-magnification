@@ -23,6 +23,60 @@ function ConvertTo-FileUri {
     return ([System.Uri](Resolve-Path -LiteralPath $Path).Path).AbsoluteUri
 }
 
+function Read-JsonIfExists {
+    param([string]$Path)
+
+    if (-not (Test-Path -LiteralPath $Path)) {
+        return $null
+    }
+
+    return Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json
+}
+
+function Get-SummaryValue {
+    param(
+        [object]$Summary,
+        [string[]]$Path
+    )
+
+    $current = $Summary
+    foreach ($part in $Path) {
+        if ($null -eq $current -or -not ($current.PSObject.Properties.Name -contains $part)) {
+            return ""
+        }
+        $current = $current.$part
+    }
+    return $current
+}
+
+function Format-GateStatus {
+    param(
+        [object]$Summary,
+        [string]$Gate
+    )
+
+    $gateInfo = Get-SummaryValue -Summary $Summary -Path @("requiredGates", $Gate)
+    if ($null -eq $gateInfo -or $gateInfo -eq "") {
+        return "n/a"
+    }
+
+    $required = if ($gateInfo.PSObject.Properties.Name -contains "required") { [bool]$gateInfo.required } else { $false }
+    $passed = if ($gateInfo.PSObject.Properties.Name -contains "passed") { $gateInfo.passed } else { $null }
+    if ($required) {
+        if ($passed -eq $true) {
+            return "required pass"
+        }
+        return "required fail"
+    }
+    if ($passed -eq $true) {
+        return "pass"
+    }
+    if ($passed -eq $false) {
+        return "fail"
+    }
+    return "not required"
+}
+
 $rootPath = Resolve-Path -LiteralPath $EvidenceRoot -ErrorAction SilentlyContinue
 if (-not $rootPath) {
     Write-Output "Evidence root was not found: $EvidenceRoot"
@@ -50,6 +104,7 @@ $cards = foreach ($entry in $entries) {
     $screenrecordPath = Join-Path $entry.bundle "screenrecord.mp4"
     $sheetPath = Join-Path $entry.bundle "review_contact_sheet.jpg"
     $summaryPath = Join-Path $entry.bundle "evidence_summary.json"
+    $summary = Read-JsonIfExists -Path $summaryPath
     $videoUri = ConvertTo-FileUri -Path $screenrecordPath
     $sheetHtml = if ($entry.reviewContactSheetPresent -and (Test-Path -LiteralPath $sheetPath)) {
         '<img src="' + (ConvertTo-FileUri -Path $sheetPath) + '" alt="Review contact sheet for ' + (ConvertTo-HtmlText $entry.label) + '" />'
@@ -62,6 +117,10 @@ $cards = foreach ($entry in $entries) {
         '<span>no evidence_summary.json</span>'
     }
     $issue = if ([string]::IsNullOrWhiteSpace($entry.reviewSheetIssue)) { "ready" } else { $entry.reviewSheetIssue }
+    $gateLabels = @("visualValidation", "screenrecord", "thermalReady", "cameraFps", "focusedApp", "rendererDiagnostics", "phaseDiagnostics", "roiMeasurement", "reviewContactSheet")
+    $gateRows = foreach ($gate in $gateLabels) {
+        '<tr><th>' + (ConvertTo-HtmlText $gate) + '</th><td>' + (ConvertTo-HtmlText (Format-GateStatus -Summary $summary -Gate $gate)) + '</td></tr>'
+    }
     @"
 <section class="bundle">
   <header>
@@ -70,6 +129,22 @@ $cards = foreach ($entry in $entries) {
   </header>
   <video controls preload="metadata" src="$videoUri"></video>
   $sheetHtml
+  <div class="review-context">
+    <h3>Validation Context</h3>
+    <dl>
+      <dt>Mode</dt><dd>$(ConvertTo-HtmlText (Get-SummaryValue -Summary $summary -Path @("launch", "mode")))</dd>
+      <dt>View</dt><dd>$(ConvertTo-HtmlText (Get-SummaryValue -Summary $summary -Path @("launch", "view")))</dd>
+      <dt>ROI source</dt><dd>$(ConvertTo-HtmlText (Get-SummaryValue -Summary $summary -Path @("launch", "roiSource")))</dd>
+      <dt>Verdict</dt><dd>$(ConvertTo-HtmlText (Get-SummaryValue -Summary $summary -Path @("evidenceVerdict", "status")))</dd>
+      <dt>Target</dt><dd>$(ConvertTo-HtmlText (Get-SummaryValue -Summary $summary -Path @("visualReview", "targetDescription")))</dd>
+      <dt>Claim</dt><dd>$(ConvertTo-HtmlText (Get-SummaryValue -Summary $summary -Path @("visualReview", "visualClaim")))</dd>
+      <dt>Operator notes</dt><dd>$(ConvertTo-HtmlText (Get-SummaryValue -Summary $summary -Path @("visualReview", "operatorNotes")))</dd>
+    </dl>
+    <table>
+      <caption>Required gates</caption>
+      <tbody>$($gateRows -join "")</tbody>
+    </table>
+  </div>
   <dl>
     <dt>Bundle</dt><dd>$(ConvertTo-HtmlText $entry.bundle)</dd>
     <dt>Screenrecord SHA-256</dt><dd>$(ConvertTo-HtmlText $entry.screenrecordSha256)</dd>
@@ -103,6 +178,11 @@ $html = @"
     dl { display: grid; grid-template-columns: max-content 1fr; gap: 6px 10px; font-size: 12px; overflow-wrap: anywhere; }
     dt { font-weight: 600; color: #57606a; }
     dd { margin: 0; }
+    h3 { font-size: 14px; margin: 12px 0 8px; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px; }
+    caption { text-align: left; font-weight: 600; color: #57606a; margin-bottom: 4px; }
+    th, td { border-top: 1px solid #d8dee4; padding: 4px 6px; text-align: left; }
+    th { width: 44%; color: #57606a; font-weight: 600; }
     pre { white-space: pre-wrap; overflow-wrap: anywhere; background: #f6f8fa; padding: 8px; border-radius: 4px; font-size: 12px; }
   </style>
 </head>

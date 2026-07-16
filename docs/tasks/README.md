@@ -197,9 +197,10 @@ If `ffmpeg` is not available yet, generate a local dashboard for manual review:
 ```
 
 The dashboard embeds playable `screenrecord.mp4` files, existing contact
-sheets, SHA-256 fields, queue issue reasons, and regeneration commands. It is a
-review aid only; final closeout still requires matching contact sheets and the
-strict evidence gates.
+sheets, SHA-256 fields, queue issue reasons, regeneration commands, and the
+target/claim/verdict/gate context from `evidence_summary.json`. It is a review
+aid only; final closeout still requires matching contact sheets and the strict
+evidence gates.
 Pixel validation handoff bundles write the same dashboard for the current
 pending review-sheet queue.
 

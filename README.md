@@ -397,7 +397,9 @@ entries include a `reviewSheetIssue` reason such as `missingContactSheet`,
 When `ffmpeg` is not installed, create a local review dashboard instead. It
 does not satisfy the review contact sheet gate, but it gives one browser page
 with playable recordings, existing sheets, hashes, issue reasons, and
-regeneration commands:
+regeneration commands. Each card also shows the captured mode, ROI source,
+evidence verdict, target description, visual claim, operator notes, and key
+gate status from `evidence_summary.json`:
 
 ```powershell
 .\tools\export_live_validation_review_dashboard.ps1

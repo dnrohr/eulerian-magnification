@@ -558,6 +558,9 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   available to generate contact sheets.
 - Pixel validation handoff bundles now include
   `live_validation_review_dashboard.html` and hash it in the handoff manifest.
+- The review dashboard now surfaces mode, ROI source, evidence verdict,
+  target description, visual claim, operator notes, and key gate status from
+  `evidence_summary.json`.
 
 ## Remaining
 

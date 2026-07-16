@@ -248,8 +248,8 @@ you arrange contact-sheet generation:
 ```
 
 The dashboard embeds playable recordings, existing sheets, hashes, issue
-reasons, and the review-sheet export commands. It does not replace
-`review_contact_sheet.jpg` for final closeout.
+reasons, target/claim/verdict/gate context, and the review-sheet export
+commands. It does not replace `review_contact_sheet.jpg` for final closeout.
 
 For final live-preview evidence, pass `-RequireCameraFps` so the summary fails
 unless scoped logcat contains camera HAL `FPS:` samples and the minimum sample

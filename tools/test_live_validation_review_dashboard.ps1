@@ -42,8 +42,35 @@ try {
     [System.IO.File]::WriteAllBytes((Join-Path $pending "screenrecord.mp4"), [byte[]](0, 0, 0, 24, 102, 116, 121, 112))
     [System.IO.File]::WriteAllBytes((Join-Path $complete "screenrecord.mp4"), [byte[]](0, 0, 0, 24, 102, 116, 121, 113))
     [System.IO.File]::WriteAllBytes((Join-Path $complete "review_contact_sheet.jpg"), [byte[]](255, 216, 255, 217))
-    Write-JsonFile -Path (Join-Path $pending "evidence_summary.json") -Value ([ordered]@{ label = "pending-dashboard" })
-    Write-JsonFile -Path (Join-Path $complete "evidence_summary.json") -Value ([ordered]@{ label = "complete-dashboard" })
+    Write-JsonFile -Path (Join-Path $pending "evidence_summary.json") -Value ([ordered]@{
+        label = "pending-dashboard"
+        launch = [ordered]@{
+            mode = "Pulse"
+            view = "Split"
+            roiSource = "FullFrame"
+        }
+        evidenceVerdict = [ordered]@{
+            status = "target_visible_unvalidated"
+        }
+        visualReview = [ordered]@{
+            targetDescription = "synthetic pulse target"
+            visualClaim = "dashboard shows visual claim"
+            operatorNotes = "review me"
+        }
+        requiredGates = [ordered]@{
+            visualValidation = [ordered]@{ required = $true; passed = $false }
+            screenrecord = [ordered]@{ required = $true; passed = $true }
+            cameraFps = [ordered]@{ required = $true; passed = $true }
+        }
+    })
+    Write-JsonFile -Path (Join-Path $complete "evidence_summary.json") -Value ([ordered]@{
+        label = "complete-dashboard"
+        visualReview = [ordered]@{
+            targetDescription = "complete target"
+            visualClaim = "complete claim"
+            operatorNotes = "complete notes"
+        }
+    })
     Write-JsonFile -Path (Join-Path $complete "review_contact_sheet_manifest.json") -Value ([ordered]@{
         screenrecordSha256 = (Get-FileHash -LiteralPath (Join-Path $complete "screenrecord.mp4") -Algorithm SHA256).Hash
         contactSheetSha256 = (Get-FileHash -LiteralPath (Join-Path $complete "review_contact_sheet.jpg") -Algorithm SHA256).Hash
@@ -60,6 +87,12 @@ try {
     Assert-True -Condition ($html.Contains("<video controls")) -Message "Dashboard should include playable videos."
     Assert-True -Condition ($html.Contains("review_contact_sheet.jpg")) -Message "Dashboard should include existing contact sheet images."
     Assert-True -Condition ($html.Contains("export_live_validation_review_sheet.ps1")) -Message "Dashboard should include regeneration commands."
+    Assert-True -Condition ($html.Contains("Validation Context")) -Message "Dashboard should include validation context."
+    Assert-True -Condition ($html.Contains("synthetic pulse target")) -Message "Dashboard should include target descriptions."
+    Assert-True -Condition ($html.Contains("dashboard shows visual claim")) -Message "Dashboard should include visual claims."
+    Assert-True -Condition ($html.Contains("target_visible_unvalidated")) -Message "Dashboard should include evidence verdicts."
+    Assert-True -Condition ($html.Contains("required fail")) -Message "Dashboard should include required gate failures."
+    Assert-True -Condition ($html.Contains("required pass")) -Message "Dashboard should include required gate passes."
 
     $pendingOnlyPath = Join-Path $root "pending-dashboard.html"
     & (Join-Path $PSScriptRoot "export_live_validation_review_dashboard.ps1") -EvidenceRoot $root -OutputPath $pendingOnlyPath -PendingOnly *> $null
