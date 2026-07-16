@@ -603,6 +603,9 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - Pixel validation handoffs now write `pixel_validation_runbook.txt`, an
   ordered paste-ready runbook with install/launch, thermal preflight, capture,
   and review-sheet commands for the selected slots.
+- The runbook now begins with source/device preflight checks, including the
+  handoff source commit, clean-tree state, origin/main reachability, expected
+  device availability, manifest path, and paste-ready Git recheck commands.
 
 ## Remaining
 

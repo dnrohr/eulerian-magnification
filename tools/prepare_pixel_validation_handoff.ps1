@@ -256,6 +256,17 @@ if (-not [string]::IsNullOrWhiteSpace($AdbPath)) {
 $installCommand = $installCommandParts -join " "
 $runbookLines = @(
     "# Pixel validation runbook",
+    "# 0. Confirm this handoff still matches the intended source and device state.",
+    "# Source branch: $sourceBranch",
+    "# Source commit: $sourceCommit",
+    "# Source clean at handoff time: $sourceClean",
+    "# Source commit reachable from origin/main: $sourceCommitReachableFromOriginMain",
+    "# Expected device connected at handoff time: $($deviceAvailability.connected)",
+    "# Handoff manifest: $manifestPath",
+    "git -C $(Format-CommandArgument $SourceRoot) status --short",
+    "git -C $(Format-CommandArgument $SourceRoot) rev-parse HEAD",
+    "git -C $(Format-CommandArgument $SourceRoot) merge-base --is-ancestor $(Format-CommandArgument $sourceCommit) origin/main",
+    "",
     "# 1. Install and launch the current debug build.",
     $installCommand,
     "",

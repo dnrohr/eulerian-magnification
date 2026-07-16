@@ -356,8 +356,9 @@ compact pending review-sheet issue count. It also records ADB/device
 availability metadata, including whether the expected Pixel serial is connected
 at handoff time. The Markdown handoff and manifest include a matching
 `install_debug_on_pixel.ps1 -Build -Launch` command for the same device serial.
-The runbook file orders install/launch, thermal preflight, capture commands,
-and review-sheet commands for a watched device session.
+The runbook file starts with source/device preflight checks, then orders
+install/launch, thermal preflight, capture commands, and review-sheet commands
+for a watched device session.
 The planner and handoff also include
 a `wait_for_device_thermal_ready.ps1` preflight command; run it before watched
 phone validation when the device is warm, FPS is low, or the preview looks
