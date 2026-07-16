@@ -117,6 +117,7 @@ foreach ($path in @($roiDoc, $linearDoc, $phaseDoc)) {
 
 foreach ($path in @($readme, $taskReadme)) {
     Assert-DocContains -Path $path -Expected "show_next_pixel_validation_plan.ps1" -Message "Operator docs must document the Pixel validation planner."
+    Assert-DocContains -Path $path -Expected "install_debug_on_pixel.ps1" -Message "Operator docs must document the debug install helper."
     Assert-DocContains -Path $path -Expected "prepare_pixel_validation_handoff.ps1" -Message "Operator docs must document the Pixel validation handoff bundle."
     Assert-DocContains -Path $path -Expected "closeout blocker count" -Message "Operator docs must document planner closeout blocker output."
     Assert-DocContains -Path $path -Expected "-EvidenceRoot" -Message "Operator docs must document planner evidence-root selection."

@@ -369,7 +369,13 @@ Wrong-slot reports include the expected final label for each mismatched slot:
 ```
 
 Open the repo in Android Studio, connect a Pixel 8a, and run the `app`
-configuration when device testing is needed.
+configuration when device testing is needed. From PowerShell, the repo helper
+also finds the Android SDK `adb.exe`, installs the debug APK, grants camera
+permission, and can launch the app:
+
+```powershell
+.\tools\install_debug_on_pixel.ps1 -Build -Launch
+```
 
 ## Offline Validation First
 

@@ -513,6 +513,9 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - The handoff command now writes `pixel_validation_handoff_manifest.json` with
   SHA-256 hashes for the plan, closeout summary, command list, and readable
   handoff so the next Pixel session can preserve artifact integrity.
+- Added `tools/install_debug_on_pixel.ps1` so connected-device tasks can build,
+  install, grant camera permission, and launch through the SDK `adb.exe` even
+  when `adb` is not on `PATH`.
 
 ## Remaining
 

@@ -88,8 +88,15 @@ For a broader phone-free tooling check, run:
 ```
 
 That suite runs live validation tooling tests, roadmap summarizer self-tests,
-GitHub workflow contract tests, Pixel validation plan and closeout tests, and
-the real roadmap status audit with `-FailOnMismatch`.
+GitHub workflow contract tests, debug-install helper tests, Pixel validation
+plan and closeout tests, and the real roadmap status audit with
+`-FailOnMismatch`.
+
+When a Pixel is connected, install and optionally launch the debug build with:
+
+```powershell
+.\tools\install_debug_on_pixel.ps1 -Build -Launch
+```
 
 Before the next connected Pixel session, print the ordered validation plan and
 command templates:
