@@ -128,7 +128,8 @@ an empty capture queue, or `-FailOnEmptyQueue` when automation should require
 at least one recommended capture. Add `-FailOnPendingReviewSheets` when a
 handoff should fail until every captured screenrecord has a matching review
 sheet. Add `-FailOnDirtySource` when a handoff should fail if the current
-worktree is not clean. Add `-OutputPath sample-videos\exports\live-validation\pixel_validation_plan.json`
+worktree is not clean, or `-FailOnUnpushedSource` when the source commit must
+already be reachable from `origin/main`. Add `-OutputPath sample-videos\exports\live-validation\pixel_validation_plan.json`
 to save the full machine-readable plan used for a device session. Generated
 capture commands default to `-DeviceSerial 47091JEKB05516`; pass
 `-DeviceSerial <serial>` to target a different connected device. Generated

@@ -133,6 +133,7 @@ foreach ($path in @($readme, $taskReadme)) {
     Assert-DocContains -Path $path -Expected "-FailOnEmptyQueue" -Message "Operator docs must document empty queue failure mode."
     Assert-DocContains -Path $path -Expected "-FailOnPendingReviewSheets" -Message "Operator docs must document pending review-sheet handoff failure mode."
     Assert-DocContains -Path $path -Expected "-FailOnDirtySource" -Message "Operator docs must document dirty-source handoff failure mode."
+    Assert-DocContains -Path $path -Expected "-FailOnUnpushedSource" -Message "Operator docs must document unpushed-source handoff failure mode."
     Assert-DocContains -Path $path -Expected "pixel_validation_plan.json" -Message "Operator docs must document the saved planner artifact name."
     Assert-DocContains -Path $path -Expected "pixel_validation_commands.txt" -Message "Operator docs must document the saved command-list artifact name."
     Assert-DocContains -Path $path -Expected "pixel_validation_handoff.md" -Message "Operator docs must document the readable handoff artifact name."

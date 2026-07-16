@@ -570,6 +570,8 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   full queue JSON.
 - Pixel validation handoff now supports `-FailOnDirtySource`, exiting nonzero
   when a handoff is prepared from a dirty worktree.
+- Pixel validation handoff now supports `-FailOnUnpushedSource`, exiting
+  nonzero when the source commit is not reachable from `origin/main`.
 
 ## Remaining
 

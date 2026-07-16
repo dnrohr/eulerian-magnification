@@ -1,6 +1,7 @@
 param(
     [string]$EvidenceRoot = "sample-videos\exports\live-validation",
     [string]$OutputRoot = "",
+    [string]$SourceRoot = "",
     [string]$DeviceSerial = "47091JEKB05516",
     [string]$FfmpegPath = "",
     [string[]]$Slot = @(),
@@ -10,6 +11,7 @@ param(
     [switch]$FailOnEmptyQueue,
     [switch]$FailOnPendingReviewSheets,
     [switch]$FailOnDirtySource,
+    [switch]$FailOnUnpushedSource,
     [switch]$Json
 )
 
@@ -17,6 +19,11 @@ $ErrorActionPreference = "Stop"
 
 if ([string]::IsNullOrWhiteSpace($OutputRoot)) {
     $OutputRoot = $EvidenceRoot
+}
+
+$defaultSourceRoot = Split-Path -Parent $PSScriptRoot
+if ([string]::IsNullOrWhiteSpace($SourceRoot)) {
+    $SourceRoot = $defaultSourceRoot
 }
 
 if (-not (Test-Path -LiteralPath $OutputRoot)) {
@@ -41,7 +48,7 @@ function Invoke-GitValue {
     param([string[]]$Arguments)
 
     try {
-        $output = & git @Arguments 2>$null
+        $output = & git -C $SourceRoot @Arguments 2>$null
         if ($LASTEXITCODE -ne 0) {
             return $null
         }
@@ -71,8 +78,12 @@ $sourceStatus = Invoke-GitValue -Arguments @("status", "--porcelain")
 $sourceClean = [string]::IsNullOrWhiteSpace($sourceStatus)
 $sourceCommitReachableFromOriginMain = $false
 if (-not [string]::IsNullOrWhiteSpace($sourceCommit)) {
-    & git merge-base --is-ancestor $sourceCommit origin/main 2>$null
-    $sourceCommitReachableFromOriginMain = ($LASTEXITCODE -eq 0)
+    try {
+        & git -C $SourceRoot merge-base --is-ancestor $sourceCommit origin/main *> $null
+        $sourceCommitReachableFromOriginMain = ($LASTEXITCODE -eq 0)
+    } catch {
+        $sourceCommitReachableFromOriginMain = $false
+    }
 }
 
 $plannerArgs = @{
@@ -327,4 +338,7 @@ if ($FailOnPendingReviewSheets -and $result.pendingReviewSheetCount -gt 0) {
 }
 if ($FailOnDirtySource -and -not $result.source.clean) {
     exit 24
+}
+if ($FailOnUnpushedSource -and -not $result.source.commitReachableFromOriginMain) {
+    exit 25
 }

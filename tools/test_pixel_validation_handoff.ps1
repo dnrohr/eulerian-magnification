@@ -31,13 +31,18 @@ function Invoke-HandoffExitCode {
         [switch]$FailOnInvalidSlot,
         [switch]$FailOnEmptyQueue,
         [switch]$FailOnPendingReviewSheets,
-        [switch]$FailOnDirtySource
+        [switch]$FailOnDirtySource,
+        [switch]$FailOnUnpushedSource,
+        [string]$SourceRoot = ""
     )
 
     $script = Join-Path $PSScriptRoot "prepare_pixel_validation_handoff.ps1"
     $powerShellExe = (Get-Process -Id $PID).Path
     $arguments = @("-NoProfile", "-File", $script, "-EvidenceRoot", $EvidenceRoot, "-OutputRoot", $OutputRoot)
     $arguments += @("-DeviceSerial", "PIXEL-HANDOFF-TEST")
+    if (-not [string]::IsNullOrWhiteSpace($SourceRoot)) {
+        $arguments += @("-SourceRoot", $SourceRoot)
+    }
     foreach ($slotId in $Slot) {
         $arguments += @("-Slot", $slotId)
     }
@@ -52,6 +57,9 @@ function Invoke-HandoffExitCode {
     }
     if ($FailOnDirtySource) {
         $arguments += "-FailOnDirtySource"
+    }
+    if ($FailOnUnpushedSource) {
+        $arguments += "-FailOnUnpushedSource"
     }
 
     & $powerShellExe @arguments *> $null
@@ -182,11 +190,32 @@ try {
         Remove-Item -LiteralPath $dirtyProbePath -Force
     }
 }
+$unpublishedRepoRoot = Join-Path ([System.IO.Path]::GetTempPath()) "eulerian-handoff-unpublished-repo-$([guid]::NewGuid().ToString('N'))"
+try {
+    New-Item -ItemType Directory -Path $unpublishedRepoRoot -Force | Out-Null
+    Push-Location -LiteralPath $unpublishedRepoRoot
+    try {
+        & git init *> $null
+        & git config user.email "test@example.invalid"
+        & git config user.name "Eulerian Test"
+        "unpublished source" | Set-Content -LiteralPath (Join-Path $unpublishedRepoRoot "source.txt") -Encoding utf8
+        & git add source.txt
+        & git commit -m "Unpublished source fixture" *> $null
+    } finally {
+        Pop-Location
+    }
+    $unpushedSourceExitCode = Invoke-HandoffExitCode -EvidenceRoot $evidenceRoot -OutputRoot $outputRoot -Slot pulseLinear -FailOnUnpushedSource -SourceRoot $unpublishedRepoRoot
+} finally {
+    if (Test-Path -LiteralPath $unpublishedRepoRoot) {
+        Remove-Item -LiteralPath $unpublishedRepoRoot -Recurse -Force
+    }
+}
 
 Assert-Equal -Actual $validExitCode -Expected 0 -Message "Handoff gates should allow valid non-empty filters."
 Assert-Equal -Actual $invalidExitCode -Expected 21 -Message "Handoff should fail invalid slot filters with exit code 21."
 Assert-Equal -Actual $emptyExitCode -Expected 22 -Message "Handoff should fail empty command queues with exit code 22."
 Assert-Equal -Actual $pendingReviewExitCode -Expected 23 -Message "Handoff should fail pending review-sheet issues with exit code 23."
 Assert-Equal -Actual $dirtySourceExitCode -Expected 24 -Message "Handoff should fail dirty source trees with exit code 24."
+Assert-Equal -Actual $unpushedSourceExitCode -Expected 25 -Message "Handoff should fail source commits that are not reachable from origin/main with exit code 25."
 
 Write-Output "Pixel validation handoff self-test passed."
