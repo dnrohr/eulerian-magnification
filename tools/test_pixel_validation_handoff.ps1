@@ -251,6 +251,12 @@ Assert-True -Condition ($roiRunbook.IndexOf("prepare_roi_final_capture_command.p
 Assert-True -Condition ($roiHandoff.Contains("ROI Final Command Helpers")) -Message "ROI Markdown handoff should include helper guidance."
 Assert-True -Condition ($roiHandoff.Contains("Paste the printed final capture command")) -Message "ROI Markdown handoff should explain how to use the helper."
 Assert-True -Condition ($roiHandoff.Contains("prepare_roi_final_capture_command.ps1")) -Message "ROI Markdown handoff should include the helper command."
+Assert-True -Condition ($roiHandoff.Contains("## Runnable Commands")) -Message "ROI Markdown handoff should split runnable commands from templates."
+Assert-True -Condition ($roiHandoff.Contains("## ROI Final Templates")) -Message "ROI Markdown handoff should include a final-template section."
+Assert-True -Condition ($roiHandoff.Contains("Reference only. Paste the matching helper output instead")) -Message "ROI Markdown handoff should mark final templates as reference-only."
+Assert-True -Condition ($roiHandoff.Contains("# TEMPLATE ONLY: .\tools\capture_live_validation_evidence.ps1")) -Message "ROI Markdown handoff should comment placeholder final templates."
+Assert-True -Condition ($roiHandoff.IndexOf("## ROI Final Command Helpers") -lt $roiHandoff.IndexOf("## Runnable Commands")) -Message "ROI Markdown handoff should show helper guidance before runnable commands."
+Assert-True -Condition ($roiHandoff.IndexOf("## Runnable Commands") -lt $roiHandoff.IndexOf("## ROI Final Templates")) -Message "ROI Markdown handoff should put template-only commands after runnable commands."
 Assert-Equal -Actual @($roiManifest.roiFinalHelperCommands).Count -Expected 1 -Message "ROI manifest should include the helper command."
 Assert-True -Condition ($roiManifest.roiFinalHelperCommands[0].Contains("-Slot manualRoi")) -Message "ROI manifest helper command should preserve the slot."
 

@@ -433,12 +433,25 @@ if (@($roiFinalHelperCommands).Count -gt 0) {
 
 $handoffLines += @(
     "",
-    "## Commands",
+    $(if (@($roiFinalHelperCommands).Count -gt 0) { "## Runnable Commands" } else { "## Commands" }),
     "",
     '```powershell'
 )
-$handoffLines += $commands
+$handoffLines += $(if (@($roiFinalHelperCommands).Count -gt 0) { $runnableCaptureCommands } else { $commands })
 $handoffLines += '```'
+
+if (@($roiFinalHelperCommands).Count -gt 0) {
+    $handoffLines += @(
+        "",
+        "## ROI Final Templates",
+        "",
+        "Reference only. Paste the matching helper output instead of these placeholder templates.",
+        "",
+        '```powershell'
+    )
+    $handoffLines += @($roiFinalTemplateCommands | ForEach-Object { "# TEMPLATE ONLY: $_" })
+    $handoffLines += '```'
+}
 
 $handoffLines += @(
     "",
