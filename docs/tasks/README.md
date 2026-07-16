@@ -115,7 +115,9 @@ paste-ready command list together:
 ```
 
 The plan includes the current closeout blocker count and next commands from
-missing evidence slots. Pass `-EvidenceRoot <path>` to review a specific
+missing evidence slots. Its JSON output also includes compact
+`recommendedCaptureCount`, `commandCount`, and `closeoutBlockerCount` fields for
+quick scripted handoff audits. Pass `-EvidenceRoot <path>` to review a specific
 live-validation export folder, or `-NextOnly` to print only the recommended captures
 needed by the current closeout blockers. Add `-Slot pulseLinear` or another
 closeout slot id to focus the recommended capture queue on one validation target;

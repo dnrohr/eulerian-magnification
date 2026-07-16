@@ -362,6 +362,9 @@ $result = [pscustomobject]@{
     captureStage = $requestedStage
     deviceSerial = $DeviceSerial
     thermalReadiness = $thermalReadiness
+    closeoutBlockerCount = @($closeout.closeoutBlockers).Count
+    recommendedCaptureCount = @($recommendedCaptures).Count
+    commandCount = @($recommendedCaptures | ForEach-Object { $_.commands } | Where-Object { -not [string]::IsNullOrWhiteSpace($_.command) }).Count
     recommendedCaptures = $recommendedCaptures
     validationGroups = $validationGroups
 }
@@ -406,7 +409,9 @@ Write-Output "Next Pixel validation plan"
 Write-Output "Roadmap: $($result.roadmap.complete)/$($result.roadmap.total) complete; $($result.roadmap.inProgress) in progress."
 Write-Output "Evidence root: $($result.currentCloseout.evidenceRoot)"
 Write-Output "Capture stage: $($result.captureStage)"
-Write-Output "Current closeout blockers: $($result.currentCloseout.blockerCount)"
+Write-Output "Current closeout blockers: $($result.closeoutBlockerCount)"
+Write-Output "Recommended captures: $($result.recommendedCaptureCount)"
+Write-Output "Command templates: $($result.commandCount)"
 Write-Output "Thermal readiness command: $($result.thermalReadiness.command)"
 if (@($result.availableSlots).Count -gt 0) {
     Write-Output "Available missing slots: $($result.availableSlots -join ', ')"

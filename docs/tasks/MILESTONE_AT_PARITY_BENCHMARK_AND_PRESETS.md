@@ -610,6 +610,10 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   can fail stale handoff bundles before install: it verifies manifest artifact
   hashes, source commit/clean/reachability state, and expected Pixel
   availability.
+- Pixel validation planner JSON now exposes compact
+  `recommendedCaptureCount`, `commandCount`, and `closeoutBlockerCount` fields
+  so phone-session handoff audits can check the queue size without recalculating
+  nested recommended-capture arrays.
 
 ## Remaining
 
