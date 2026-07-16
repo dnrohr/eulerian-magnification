@@ -3,6 +3,7 @@ param(
     [string]$OutputRoot = "",
     [string]$SourceRoot = "",
     [string]$DeviceSerial = "47091JEKB05516",
+    [string]$AdbPath = "",
     [string]$FfmpegPath = "",
     [string[]]$Slot = @(),
     [ValidateSet("All", "Setup", "Final")]
@@ -69,6 +70,97 @@ function New-ArtifactRecord {
         name = $Name
         path = $Path
         sha256 = $hash.Hash.ToLowerInvariant()
+    }
+}
+
+function Find-Adb {
+    param([string]$ExplicitPath)
+
+    if (-not [string]::IsNullOrWhiteSpace($ExplicitPath)) {
+        if (Test-Path -LiteralPath $ExplicitPath) {
+            return (Resolve-Path -LiteralPath $ExplicitPath).Path
+        }
+        throw "Requested adb path does not exist: $ExplicitPath"
+    }
+
+    $sdkAdb = Join-Path $env:LOCALAPPDATA "Android\Sdk\platform-tools\adb.exe"
+    if (Test-Path -LiteralPath $sdkAdb) {
+        return $sdkAdb
+    }
+
+    $pathAdb = Get-Command adb -ErrorAction SilentlyContinue
+    if ($pathAdb) {
+        return $pathAdb.Source
+    }
+
+    return $null
+}
+
+function Get-DeviceAvailability {
+    param(
+        [string]$ExpectedSerial,
+        [string]$ExplicitAdbPath
+    )
+
+    $adb = Find-Adb -ExplicitPath $ExplicitAdbPath
+    if ([string]::IsNullOrWhiteSpace($adb)) {
+        return [pscustomobject]@{
+            adbPath = $null
+            checked = $false
+            expectedSerial = $ExpectedSerial
+            connected = $false
+            connectedSerials = @()
+            note = "adb.exe was not found; device availability was not checked."
+        }
+    }
+
+    try {
+        $output = & $adb devices -l 2>&1
+        $exitCode = $LASTEXITCODE
+    } catch {
+        return [pscustomobject]@{
+            adbPath = $adb
+            checked = $false
+            expectedSerial = $ExpectedSerial
+            connected = $false
+            connectedSerials = @()
+            note = "adb devices failed: $($_.Exception.Message)"
+        }
+    }
+
+    if ($exitCode -ne 0) {
+        return [pscustomobject]@{
+            adbPath = $adb
+            checked = $false
+            expectedSerial = $ExpectedSerial
+            connected = $false
+            connectedSerials = @()
+            note = "adb devices failed with exit code ${exitCode}: $($output -join ' ')"
+        }
+    }
+
+    $connectedSerials = @()
+    foreach ($line in @($output)) {
+        if ($line -match '^(\S+)\s+device\b') {
+            $connectedSerials += $Matches[1]
+        }
+    }
+    $connected = -not [string]::IsNullOrWhiteSpace($ExpectedSerial) -and $ExpectedSerial -in $connectedSerials
+    $note = if ($connected) {
+        "Expected Pixel serial is connected."
+    } elseif ($connectedSerials.Count -gt 0) {
+        "ADB is available, but the expected Pixel serial is not connected."
+    } else {
+        "ADB is available, but no connected devices were reported."
+    }
+
+    return [pscustomobject]@{
+        adbPath = $adb
+        checked = $true
+        expectedSerial = $ExpectedSerial
+        connected = $connected
+        connectedSerials = $connectedSerials
+        note = $note
     }
 }
 
@@ -140,6 +232,7 @@ foreach ($entry in @($reviewQueue.pendingReviewSheets)) {
     }
     $reviewIssueCounts[$issue] += 1
 }
+$deviceAvailability = Get-DeviceAvailability -ExpectedSerial $DeviceSerial -ExplicitAdbPath $AdbPath
 
 $handoffLines = @(
     "# Pixel Validation Handoff",
@@ -159,6 +252,10 @@ $handoffLines = @(
     "- Source commit: $sourceCommit",
     "- Source clean: $sourceClean",
     "- Source commit reachable from origin/main: $sourceCommitReachableFromOriginMain",
+    "- Device availability checked: $($deviceAvailability.checked)",
+    "- Expected device connected: $($deviceAvailability.connected)",
+    "- Connected device serials: $(@($deviceAvailability.connectedSerials) -join ', ')",
+    "- Device availability note: $($deviceAvailability.note)",
     "",
     "## Artifacts",
     "",
@@ -282,6 +379,7 @@ $manifest = [pscustomobject]@{
         ffmpegPath = $FfmpegPath
     }
     thermalReadiness = $plan.thermalReadiness
+    deviceAvailability = $deviceAvailability
 }
 $manifest | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $manifestPath -Encoding utf8
 
@@ -309,6 +407,7 @@ $result = [pscustomobject]@{
     closeoutBlockerCount = @($closeout.closeoutBlockers).Count
     readyForPresetDocs = $closeout.readyForPresetDocs
     thermalReadiness = $plan.thermalReadiness
+    deviceAvailability = $deviceAvailability
     source = [pscustomobject]@{
         branch = $sourceBranch
         commit = $sourceCommit
@@ -334,6 +433,9 @@ if ($Json) {
     Write-Output "Source: $($result.source.branch) $($result.source.commit)"
     Write-Output "Source clean: $($result.source.clean)"
     Write-Output "Source reachable from origin/main: $($result.source.commitReachableFromOriginMain)"
+    Write-Output "Device availability checked: $($result.deviceAvailability.checked)"
+    Write-Output "Expected device connected: $($result.deviceAvailability.connected)"
+    Write-Output "Device availability note: $($result.deviceAvailability.note)"
     Write-Output "Plan: $($result.planPath)"
     Write-Output "Closeout: $($result.closeoutPath)"
     Write-Output "Commands: $($result.commandsPath)"

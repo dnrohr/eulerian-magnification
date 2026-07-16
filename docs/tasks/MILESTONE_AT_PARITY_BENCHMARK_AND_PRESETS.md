@@ -590,6 +590,9 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - Pixel validation plans and handoffs now include per-slot operator setup and
   acceptance checks, so watched captures carry the target setup and visual
   rejection criteria beside the commands that produce evidence.
+- Pixel validation handoffs now record ADB/device availability metadata,
+  including whether the expected Pixel serial is connected, so operators can
+  catch an unplugged or wrong device before starting watched captures.
 
 ## Remaining
 

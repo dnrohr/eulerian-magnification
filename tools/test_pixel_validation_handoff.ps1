@@ -69,12 +69,20 @@ function Invoke-HandoffExitCode {
 $evidenceRoot = Join-Path ([System.IO.Path]::GetTempPath()) "eulerian-handoff-evidence-$([guid]::NewGuid().ToString('N'))"
 $outputRoot = Join-Path ([System.IO.Path]::GetTempPath()) "eulerian-handoff-output-$([guid]::NewGuid().ToString('N'))"
 New-Item -ItemType Directory -Path (Join-Path $evidenceRoot "pending-review") -Force | Out-Null
+New-Item -ItemType Directory -Path $outputRoot -Force | Out-Null
 [System.IO.File]::WriteAllBytes((Join-Path $evidenceRoot "pending-review\screenrecord.mp4"), [byte[]](0, 0, 0, 24, 102, 116, 121, 112))
+$fakeAdb = Join-Path $outputRoot "fake-adb.cmd"
+Set-Content -LiteralPath $fakeAdb -Encoding ascii -Value @(
+    "@echo off",
+    "echo List of devices attached",
+    "echo PIXEL-HANDOFF-TEST device product:pixel model:Pixel_8a"
+)
 
 $result = & (Join-Path $PSScriptRoot "prepare_pixel_validation_handoff.ps1") `
     -EvidenceRoot $evidenceRoot `
     -OutputRoot $outputRoot `
     -DeviceSerial "PIXEL-HANDOFF-TEST" `
+    -AdbPath $fakeAdb `
     -FfmpegPath "C:\ffmpeg\bin\ffmpeg.exe" `
     -Slot pulseLinear `
     -CaptureStage Final `
@@ -87,6 +95,9 @@ Assert-Equal -Actual $result.captureStage -Expected "Final" -Message "Handoff sh
 Assert-True -Condition ($result.source.commit.Length -ge 7) -Message "Handoff source commit should look like a Git commit."
 Assert-True -Condition ($result.thermalReadiness.command.Contains("wait_for_device_thermal_ready.ps1")) -Message "Handoff should report a thermal readiness command."
 Assert-True -Condition ($result.thermalReadiness.command.Contains('-DeviceSerial "PIXEL-HANDOFF-TEST"')) -Message "Handoff thermal command should preserve device serial."
+Assert-Equal -Actual $result.deviceAvailability.checked -Expected $true -Message "Handoff should check device availability when adb is available."
+Assert-Equal -Actual $result.deviceAvailability.connected -Expected $true -Message "Handoff should report the expected Pixel serial as connected."
+Assert-True -Condition ("PIXEL-HANDOFF-TEST" -in @($result.deviceAvailability.connectedSerials)) -Message "Handoff should list connected device serials."
 Assert-Equal -Actual @($result.requestedSlots).Count -Expected 1 -Message "Handoff should preserve requested slot count."
 Assert-Equal -Actual $result.requestedSlots[0] -Expected "pulseLinear" -Message "Handoff should preserve requested slot id."
 Assert-Equal -Actual @($result.invalidRequestedSlots).Count -Expected 0 -Message "Known handoff slot should not be invalid."
@@ -141,6 +152,7 @@ Assert-True -Condition ($handoff.Contains("not an ROI-only tint")) -Message "Mar
 Assert-True -Condition ($handoff.Contains("Source branch:")) -Message "Markdown handoff should include source branch."
 Assert-True -Condition ($handoff.Contains("Source commit:")) -Message "Markdown handoff should include source commit."
 Assert-True -Condition ($handoff.Contains("Source commit reachable from origin/main:")) -Message "Markdown handoff should include source reachability."
+Assert-True -Condition ($handoff.Contains("Expected device connected: True")) -Message "Markdown handoff should include device availability."
 Assert-True -Condition ($handoff.Contains("Thermal Preflight")) -Message "Markdown handoff should include thermal preflight guidance."
 Assert-True -Condition ($handoff.Contains("wait_for_device_thermal_ready.ps1")) -Message "Markdown handoff should include the thermal readiness command."
 Assert-True -Condition ($handoff.Contains("Handoff manifest:")) -Message "Markdown handoff should include the manifest path."
@@ -159,6 +171,7 @@ Assert-Equal -Actual $manifest.deviceSerial -Expected "PIXEL-HANDOFF-TEST" -Mess
 Assert-Equal -Actual $manifest.review.pendingReviewSheetCount -Expected 1 -Message "Manifest should include review queue count."
 Assert-Equal -Actual $manifest.review.issueCounts.missingContactSheet -Expected 1 -Message "Manifest should include review issue counts."
 Assert-True -Condition ($manifest.thermalReadiness.command.Contains("wait_for_device_thermal_ready.ps1")) -Message "Manifest should include thermal readiness command metadata."
+Assert-Equal -Actual $manifest.deviceAvailability.connected -Expected $true -Message "Manifest should include device availability metadata."
 foreach ($artifactName in @("plan", "closeout", "commands", "reviewQueue", "reviewCommands", "reviewDashboard", "handoff")) {
     $artifact = @($manifest.artifacts | Where-Object { $_.name -eq $artifactName } | Select-Object -First 1)
     Assert-Equal -Actual @($artifact).Count -Expected 1 -Message "Manifest should include artifact '$artifactName'."
@@ -172,11 +185,13 @@ $textOutput = & (Join-Path $PSScriptRoot "prepare_pixel_validation_handoff.ps1")
     -EvidenceRoot $evidenceRoot `
     -OutputRoot $outputRoot `
     -DeviceSerial "PIXEL-HANDOFF-TEST" `
+    -AdbPath $fakeAdb `
     -Slot notARealSlot
 
 Assert-True -Condition (($textOutput -join "`n").Contains("Pixel validation handoff prepared")) -Message "Text handoff should print a heading."
 Assert-True -Condition (($textOutput -join "`n").Contains("Device serial: PIXEL-HANDOFF-TEST")) -Message "Text handoff should print the device serial."
 Assert-True -Condition (($textOutput -join "`n").Contains("Source:")) -Message "Text handoff should print source metadata."
+Assert-True -Condition (($textOutput -join "`n").Contains("Expected device connected: True")) -Message "Text handoff should print device availability."
 Assert-True -Condition (($textOutput -join "`n").Contains("Pending review-sheet issue types:")) -Message "Text handoff should print review issue type count."
 Assert-True -Condition (($textOutput -join "`n").Contains("Handoff:")) -Message "Text handoff should print the Markdown handoff path."
 Assert-True -Condition (($textOutput -join "`n").Contains("Review dashboard:")) -Message "Text handoff should print the review dashboard path."
