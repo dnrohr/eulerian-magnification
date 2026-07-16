@@ -35,6 +35,7 @@ if (-not (Test-Path -LiteralPath $OutputRoot)) {
 $planPath = Join-Path $OutputRoot "pixel_validation_plan.json"
 $closeoutPath = Join-Path $OutputRoot "pixel_closeout_summary.json"
 $commandsPath = Join-Path $OutputRoot "pixel_validation_commands.txt"
+$runbookPath = Join-Path $OutputRoot "pixel_validation_runbook.txt"
 $reviewQueuePath = Join-Path $OutputRoot "live_validation_review_queue.json"
 $reviewCommandsPath = Join-Path $OutputRoot "live_validation_review_commands.txt"
 $reviewDashboardPath = Join-Path $OutputRoot "live_validation_review_dashboard.html"
@@ -253,6 +254,21 @@ if (-not [string]::IsNullOrWhiteSpace($AdbPath)) {
     $installCommandParts = @($installCommandParts[0], "-AdbPath $(Format-CommandArgument $AdbPath)") + @($installCommandParts | Select-Object -Skip 1)
 }
 $installCommand = $installCommandParts -join " "
+$runbookLines = @(
+    "# Pixel validation runbook",
+    "# 1. Install and launch the current debug build.",
+    $installCommand,
+    "",
+    "# 2. Wait for a cool enough device before watched capture.",
+    $plan.thermalReadiness.command,
+    "",
+    "# 3. Capture the requested validation evidence.",
+    @($commands),
+    "",
+    "# 4. Generate or refresh screenrecord review sheets.",
+    @($reviewCommands)
+)
+Set-Content -LiteralPath $runbookPath -Value $runbookLines -Encoding utf8
 
 $handoffLines = @(
     "# Pixel Validation Handoff",
@@ -283,6 +299,7 @@ $handoffLines = @(
     ('- Plan JSON: `{0}`' -f $planPath),
     ('- Closeout JSON: `{0}`' -f $closeoutPath),
     ('- Command list: `{0}`' -f $commandsPath),
+    ('- Runbook: `{0}`' -f $runbookPath),
     ('- Review queue JSON: `{0}`' -f $reviewQueuePath),
     ('- Review command list: `{0}`' -f $reviewCommandsPath),
     ('- Review dashboard: `{0}`' -f $reviewDashboardPath),
@@ -383,6 +400,7 @@ $artifactRecords = @(
     New-ArtifactRecord -Name "plan" -Path $planPath
     New-ArtifactRecord -Name "closeout" -Path $closeoutPath
     New-ArtifactRecord -Name "commands" -Path $commandsPath
+    New-ArtifactRecord -Name "runbook" -Path $runbookPath
     New-ArtifactRecord -Name "reviewQueue" -Path $reviewQueuePath
     New-ArtifactRecord -Name "reviewCommands" -Path $reviewCommandsPath
     New-ArtifactRecord -Name "reviewDashboard" -Path $reviewDashboardPath
@@ -418,6 +436,7 @@ $result = [pscustomobject]@{
     planPath = $planPath
     closeoutPath = $closeoutPath
     commandsPath = $commandsPath
+    runbookPath = $runbookPath
     reviewQueuePath = $reviewQueuePath
     reviewCommandsPath = $reviewCommandsPath
     reviewDashboardPath = $reviewDashboardPath
@@ -469,6 +488,7 @@ if ($Json) {
     Write-Output "Plan: $($result.planPath)"
     Write-Output "Closeout: $($result.closeoutPath)"
     Write-Output "Commands: $($result.commandsPath)"
+    Write-Output "Runbook: $($result.runbookPath)"
     Write-Output "Review queue: $($result.reviewQueuePath)"
     Write-Output "Review commands: $($result.reviewCommandsPath)"
     Write-Output "Review dashboard: $($result.reviewDashboardPath)"

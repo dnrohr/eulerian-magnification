@@ -600,6 +600,9 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   `install_debug_on_pixel.ps1 -Build -Launch` command in Markdown and manifest
   output, so the connected-device session starts from the same target serial as
   the capture plan.
+- Pixel validation handoffs now write `pixel_validation_runbook.txt`, an
+  ordered paste-ready runbook with install/launch, thermal preflight, capture,
+  and review-sheet commands for the selected slots.
 
 ## Remaining
 
