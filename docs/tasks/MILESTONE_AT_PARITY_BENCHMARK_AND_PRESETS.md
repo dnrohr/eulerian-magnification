@@ -540,6 +540,10 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   live-validation bundles, identify `screenrecord.mp4` files that still lack
   `review_contact_sheet.jpg`, and emit paste-ready review-sheet export
   commands.
+- Pixel validation handoff bundles now include `live_validation_review_queue.json`
+  and `live_validation_review_commands.txt`, plus Markdown/manifest counts, so
+  a connected-device session carries both capture commands and follow-up review
+  sheet commands.
 
 ## Remaining
 

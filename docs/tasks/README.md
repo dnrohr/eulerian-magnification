@@ -132,7 +132,8 @@ capture commands default to `-DeviceSerial 47091JEKB05516`; pass
 commands also include `-RequireDeviceSerial` with the same value, so evidence
 summaries fail if the captured bundle came from another device or emulator.
 The handoff bundle writes `pixel_validation_plan.json`,
-`pixel_closeout_summary.json`, `pixel_validation_commands.txt`, the
+`pixel_closeout_summary.json`, `pixel_validation_commands.txt`,
+`live_validation_review_queue.json`, `live_validation_review_commands.txt`, the
 human-readable `pixel_validation_handoff.md`, and
 `pixel_validation_handoff_manifest.json` with SHA-256 hashes for those handoff
 artifacts. The handoff records the target device serial, source branch, commit,

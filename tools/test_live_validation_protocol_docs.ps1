@@ -135,6 +135,8 @@ foreach ($path in @($readme, $taskReadme)) {
     Assert-DocContains -Path $path -Expected "pixel_validation_commands.txt" -Message "Operator docs must document the saved command-list artifact name."
     Assert-DocContains -Path $path -Expected "pixel_validation_handoff.md" -Message "Operator docs must document the readable handoff artifact name."
     Assert-DocContains -Path $path -Expected "pixel_validation_handoff_manifest.json" -Message "Operator docs must document the handoff manifest artifact name."
+    Assert-DocContains -Path $path -Expected "live_validation_review_queue.json" -Message "Operator docs must document the review queue handoff artifact name."
+    Assert-DocContains -Path $path -Expected "live_validation_review_commands.txt" -Message "Operator docs must document the review command handoff artifact name."
     Assert-DocContains -Path $path -Expected "SHA-256" -Message "Operator docs must document handoff artifact hashes."
     Assert-DocContains -Path $path -Expected "source branch" -Message "Operator docs must document handoff source branch metadata."
     Assert-DocContains -Path $path -Expected "origin/main" -Message "Operator docs must document origin/main source reachability."

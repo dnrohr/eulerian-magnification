@@ -2,6 +2,7 @@ param(
     [string]$EvidenceRoot = "sample-videos\exports\live-validation",
     [string]$OutputRoot = "",
     [string]$DeviceSerial = "47091JEKB05516",
+    [string]$FfmpegPath = "",
     [string[]]$Slot = @(),
     [ValidateSet("All", "Setup", "Final")]
     [string]$CaptureStage = "All",
@@ -23,11 +24,14 @@ if (-not (Test-Path -LiteralPath $OutputRoot)) {
 $planPath = Join-Path $OutputRoot "pixel_validation_plan.json"
 $closeoutPath = Join-Path $OutputRoot "pixel_closeout_summary.json"
 $commandsPath = Join-Path $OutputRoot "pixel_validation_commands.txt"
+$reviewQueuePath = Join-Path $OutputRoot "live_validation_review_queue.json"
+$reviewCommandsPath = Join-Path $OutputRoot "live_validation_review_commands.txt"
 $handoffPath = Join-Path $OutputRoot "pixel_validation_handoff.md"
 $manifestPath = Join-Path $OutputRoot "pixel_validation_handoff_manifest.json"
 
 $planner = Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1"
 $closeoutSummary = Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1"
+$reviewQueueScript = Join-Path $PSScriptRoot "show_live_validation_review_queue.ps1"
 
 function Invoke-GitValue {
     param([string[]]$Arguments)
@@ -93,6 +97,24 @@ $commands = @(& $planner @commandsArgs)
 Set-Content -LiteralPath $commandsPath -Value ([string]::Join([Environment]::NewLine, $commands)) -Encoding utf8
 
 $closeout = & $closeoutSummary -EvidenceRoot $EvidenceRoot -OutputPath $closeoutPath -Json | ConvertFrom-Json
+$reviewQueueArgs = @{
+    EvidenceRoot = $EvidenceRoot
+    OutputPath = $reviewQueuePath
+    Json = $true
+}
+if (-not [string]::IsNullOrWhiteSpace($FfmpegPath)) {
+    $reviewQueueArgs.FfmpegPath = $FfmpegPath
+}
+$reviewQueue = & $reviewQueueScript @reviewQueueArgs | ConvertFrom-Json
+$reviewCommandArgs = @{
+    EvidenceRoot = $EvidenceRoot
+    CommandsOnly = $true
+}
+if (-not [string]::IsNullOrWhiteSpace($FfmpegPath)) {
+    $reviewCommandArgs.FfmpegPath = $FfmpegPath
+}
+$reviewCommands = @(& $reviewQueueScript @reviewCommandArgs)
+Set-Content -LiteralPath $reviewCommandsPath -Value ([string]::Join([Environment]::NewLine, $reviewCommands)) -Encoding utf8
 $requestedSlotLabel = if (@($plan.requestedSlots).Count -gt 0) { $plan.requestedSlots -join ", " } else { "All" }
 
 $handoffLines = @(
@@ -104,6 +126,7 @@ $handoffLines = @(
     ('- Capture stage: `{0}`' -f $plan.captureStage),
     ('- Requested slots: `{0}`' -f $requestedSlotLabel),
     "- Recommended captures: $(@($plan.recommendedCaptures).Count)",
+    "- Pending review sheets: $($reviewQueue.pendingReviewSheetCount)",
     "- Closeout blockers: $(@($closeout.closeoutBlockers).Count)",
     "- Ready for preset docs: $($closeout.readyForPresetDocs)",
     "- Source branch: $sourceBranch",
@@ -116,6 +139,8 @@ $handoffLines = @(
     ('- Plan JSON: `{0}`' -f $planPath),
     ('- Closeout JSON: `{0}`' -f $closeoutPath),
     ('- Command list: `{0}`' -f $commandsPath),
+    ('- Review queue JSON: `{0}`' -f $reviewQueuePath),
+    ('- Review command list: `{0}`' -f $reviewCommandsPath),
     ('- Handoff manifest: `{0}`' -f $manifestPath),
     "",
     "## Recommended Captures",
@@ -149,11 +174,34 @@ if (@($closeout.closeoutBlockers).Count -eq 0) {
 
 $handoffLines += @(
     "",
+    "## Review Sheet Queue",
+    ""
+)
+
+if (@($reviewQueue.pendingReviewSheets).Count -eq 0) {
+    $handoffLines += "- No captured screenrecords are missing review contact sheets."
+} else {
+    foreach ($entry in @($reviewQueue.pendingReviewSheets)) {
+        $handoffLines += "- $($entry.label): $($entry.bundle)"
+    }
+}
+
+$handoffLines += @(
+    "",
     "## Commands",
     "",
     '```powershell'
 )
 $handoffLines += $commands
+$handoffLines += '```'
+
+$handoffLines += @(
+    "",
+    "## Review Sheet Commands",
+    "",
+    '```powershell'
+)
+$handoffLines += $reviewCommands
 $handoffLines += '```'
 Set-Content -LiteralPath $handoffPath -Value $handoffLines -Encoding utf8
 
@@ -161,6 +209,8 @@ $artifactRecords = @(
     New-ArtifactRecord -Name "plan" -Path $planPath
     New-ArtifactRecord -Name "closeout" -Path $closeoutPath
     New-ArtifactRecord -Name "commands" -Path $commandsPath
+    New-ArtifactRecord -Name "reviewQueue" -Path $reviewQueuePath
+    New-ArtifactRecord -Name "reviewCommands" -Path $reviewCommandsPath
     New-ArtifactRecord -Name "handoff" -Path $handoffPath
 )
 $manifest = [pscustomobject]@{
@@ -174,6 +224,11 @@ $manifest = [pscustomobject]@{
         commitReachableFromOriginMain = $sourceCommitReachableFromOriginMain
     }
     artifacts = $artifactRecords
+    review = [pscustomobject]@{
+        pendingReviewSheetCount = $reviewQueue.pendingReviewSheetCount
+        screenrecordBundleCount = $reviewQueue.screenrecordBundleCount
+        ffmpegPath = $FfmpegPath
+    }
 }
 $manifest | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $manifestPath -Encoding utf8
 
@@ -184,6 +239,8 @@ $result = [pscustomobject]@{
     planPath = $planPath
     closeoutPath = $closeoutPath
     commandsPath = $commandsPath
+    reviewQueuePath = $reviewQueuePath
+    reviewCommandsPath = $reviewCommandsPath
     handoffPath = $handoffPath
     manifestPath = $manifestPath
     artifactHashes = $artifactRecords
@@ -192,6 +249,8 @@ $result = [pscustomobject]@{
     captureStage = $plan.captureStage
     recommendedCaptureCount = @($plan.recommendedCaptures).Count
     commandCount = @($commands).Count
+    pendingReviewSheetCount = $reviewQueue.pendingReviewSheetCount
+    reviewCommandCount = @($reviewCommands).Count
     closeoutBlockerCount = @($closeout.closeoutBlockers).Count
     readyForPresetDocs = $closeout.readyForPresetDocs
     source = [pscustomobject]@{
@@ -212,6 +271,8 @@ if ($Json) {
     Write-Output "Capture stage: $($result.captureStage)"
     Write-Output "Recommended captures: $($result.recommendedCaptureCount)"
     Write-Output "Command templates: $($result.commandCount)"
+    Write-Output "Pending review sheets: $($result.pendingReviewSheetCount)"
+    Write-Output "Review commands: $($result.reviewCommandCount)"
     Write-Output "Closeout blockers: $($result.closeoutBlockerCount)"
     Write-Output "Source: $($result.source.branch) $($result.source.commit)"
     Write-Output "Source clean: $($result.source.clean)"
@@ -219,6 +280,8 @@ if ($Json) {
     Write-Output "Plan: $($result.planPath)"
     Write-Output "Closeout: $($result.closeoutPath)"
     Write-Output "Commands: $($result.commandsPath)"
+    Write-Output "Review queue: $($result.reviewQueuePath)"
+    Write-Output "Review commands: $($result.reviewCommandsPath)"
     Write-Output "Handoff: $($result.handoffPath)"
     Write-Output "Manifest: $($result.manifestPath)"
     if (@($result.invalidRequestedSlots).Count -gt 0) {
