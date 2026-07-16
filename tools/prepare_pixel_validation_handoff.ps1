@@ -213,6 +213,14 @@ if (@($Slot).Count -gt 0) {
 
 $commands = @(& $planner @commandsArgs)
 Set-Content -LiteralPath $commandsPath -Value ([string]::Join([Environment]::NewLine, $commands)) -Encoding utf8
+$commandText = @($commands) -join "`n"
+$roiFinalHelperCommands = @()
+if ($commandText.Contains("<visible-target-bounds-in-screenshot-space>")) {
+    $roiFinalHelperCommands += ('.\tools\prepare_roi_final_capture_command.ps1 -Slot manualRoi -SetupBundle "<manual-roi-setup-bundle>" -PixelBounds "<left,top,right,bottom-from-setup-screenshot>" -DeviceSerial ' + (Format-CommandArgument $DeviceSerial) + ' -EvidenceRoot ' + (Format-CommandArgument $EvidenceRoot))
+}
+if ($commandText.Contains("<visible-face-or-skin-target-bounds-in-screenshot-space>")) {
+    $roiFinalHelperCommands += ('.\tools\prepare_roi_final_capture_command.ps1 -Slot autoRoi -SetupBundle "<auto-roi-setup-bundle>" -PixelBounds "<left,top,right,bottom-from-setup-screenshot>" -DeviceSerial ' + (Format-CommandArgument $DeviceSerial) + ' -EvidenceRoot ' + (Format-CommandArgument $EvidenceRoot))
+}
 
 $closeout = & $closeoutSummary -EvidenceRoot $EvidenceRoot -OutputPath $closeoutPath -Json | ConvertFrom-Json
 $reviewQueueArgs = @{
@@ -275,7 +283,17 @@ $runbookLines = @(
     $plan.thermalReadiness.command,
     "",
     "# 3. Capture the requested validation evidence.",
-    @($commands),
+    @($commands)
+)
+if (@($roiFinalHelperCommands).Count -gt 0) {
+    $runbookLines += @(
+        "",
+        "# 3a. Prepare ROI final commands after setup screenshots.",
+        "# Replace setup-bundle and PixelBounds placeholders after measuring the setup screenshot.",
+        @($roiFinalHelperCommands)
+    )
+}
+$runbookLines += @(
     "",
     "# 4. Generate or refresh screenrecord review sheets.",
     @($reviewCommands)
@@ -389,6 +407,19 @@ if (@($reviewQueue.pendingReviewSheets).Count -eq 0) {
     }
 }
 
+if (@($roiFinalHelperCommands).Count -gt 0) {
+    $handoffLines += @(
+        "",
+        "## ROI Final Command Helpers",
+        "",
+        "Run the matching helper after the setup capture, using pixel bounds measured from that setup `screenshot.png`. Paste the printed final capture command instead of the placeholder command.",
+        "",
+        '```powershell'
+    )
+    $handoffLines += $roiFinalHelperCommands
+    $handoffLines += '```'
+}
+
 $handoffLines += @(
     "",
     "## Commands",
@@ -438,6 +469,7 @@ $manifest = [pscustomobject]@{
     thermalReadiness = $plan.thermalReadiness
     deviceAvailability = $deviceAvailability
     installCommand = $installCommand
+    roiFinalHelperCommands = $roiFinalHelperCommands
 }
 $manifest | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $manifestPath -Encoding utf8
 
@@ -463,6 +495,7 @@ $result = [pscustomobject]@{
     pendingReviewSheetCount = $reviewQueue.pendingReviewSheetCount
     pendingReviewSheetIssueCounts = [pscustomobject]$reviewIssueCounts
     reviewCommandCount = @($reviewCommands).Count
+    roiFinalHelperCommandCount = @($roiFinalHelperCommands).Count
     closeoutBlockerCount = @($closeout.closeoutBlockers).Count
     readyForPresetDocs = $closeout.readyForPresetDocs
     thermalReadiness = $plan.thermalReadiness

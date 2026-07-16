@@ -273,6 +273,10 @@ Goal: prove that automatic and manual ROI coordinates align with the live previe
 - Added `tools/prepare_roi_final_capture_command.ps1` so watched setup bundles
   plus measured target pixel bounds can produce the final manual or automatic
   ROI capture command with `-MeasureRoiExpected` already filled in.
+- Pixel validation handoff runbooks now surface that final-command helper when
+  manual or automatic ROI final commands still contain setup-derived placeholder
+  bounds, reducing the chance of a watched session pasting an intentionally
+  invalid placeholder command.
 
 ## Done When
 

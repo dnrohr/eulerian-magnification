@@ -123,6 +123,7 @@ Assert-Equal -Actual $result.commandCount -Expected 1 -Message "Filtered handoff
 Assert-Equal -Actual $result.pendingReviewSheetCount -Expected 1 -Message "Handoff should report pending review sheets."
 Assert-Equal -Actual $result.pendingReviewSheetIssueCounts.missingContactSheet -Expected 1 -Message "Handoff should report pending review-sheet issue counts."
 Assert-Equal -Actual $result.reviewCommandCount -Expected 1 -Message "Handoff should report review command count."
+Assert-Equal -Actual $result.roiFinalHelperCommandCount -Expected 0 -Message "Non-ROI handoff should not report ROI final helper commands."
 Assert-True -Condition (-not [string]::IsNullOrWhiteSpace($result.source.branch)) -Message "Handoff should report the source branch."
 Assert-True -Condition (-not [string]::IsNullOrWhiteSpace($result.source.commit)) -Message "Handoff should report the source commit."
 Assert-True -Condition ($null -ne $result.source.clean) -Message "Handoff should report whether the source tree is clean."
@@ -171,6 +172,7 @@ Assert-True -Condition ($runbook.Contains("-FailOnDeviceUnavailable")) -Message 
 Assert-True -Condition ($runbook.Contains("status --short")) -Message "Runbook should include a clean-source recheck command."
 Assert-True -Condition ($runbook.Contains("rev-parse HEAD")) -Message "Runbook should include a source commit recheck command."
 Assert-True -Condition ($runbook.Contains("merge-base --is-ancestor")) -Message "Runbook should include an origin/main reachability recheck command."
+Assert-True -Condition (-not $runbook.Contains("prepare_roi_final_capture_command.ps1")) -Message "Non-ROI runbook should not include ROI helper noise."
 Assert-Equal -Actual $reviewQueue.pendingReviewSheetCount -Expected 1 -Message "Written review queue should preserve pending count."
 Assert-True -Condition ($reviewCommands.Contains("export_live_validation_review_sheet.ps1")) -Message "Review commands should include the export helper."
 Assert-True -Condition ($reviewCommands.Contains("-FfmpegPath")) -Message "Review commands should preserve the ffmpeg path."
@@ -210,6 +212,7 @@ Assert-Equal -Actual $manifest.review.issueCounts.missingContactSheet -Expected 
 Assert-True -Condition ($manifest.thermalReadiness.command.Contains("wait_for_device_thermal_ready.ps1")) -Message "Manifest should include thermal readiness command metadata."
 Assert-Equal -Actual $manifest.deviceAvailability.connected -Expected $true -Message "Manifest should include device availability metadata."
 Assert-True -Condition ($manifest.installCommand.Contains("install_debug_on_pixel.ps1")) -Message "Manifest should include the install command."
+Assert-Equal -Actual @($manifest.roiFinalHelperCommands).Count -Expected 0 -Message "Non-ROI manifest should not include ROI helper commands."
 foreach ($artifactName in @("plan", "closeout", "commands", "runbook", "reviewQueue", "reviewCommands", "reviewDashboard", "handoff")) {
     $artifact = @($manifest.artifacts | Where-Object { $_.name -eq $artifactName } | Select-Object -First 1)
     Assert-Equal -Actual @($artifact).Count -Expected 1 -Message "Manifest should include artifact '$artifactName'."
@@ -218,6 +221,31 @@ foreach ($artifactName in @("plan", "closeout", "commands", "runbook", "reviewQu
     $actualHash = (Get-FileHash -LiteralPath $artifact[0].path -Algorithm SHA256).Hash.ToLowerInvariant()
     Assert-Equal -Actual $artifact[0].sha256 -Expected $actualHash -Message "Manifest artifact '$artifactName' hash mismatch."
 }
+
+$roiOutputRoot = Join-Path ([System.IO.Path]::GetTempPath()) "eulerian-handoff-roi-output-$([guid]::NewGuid().ToString('N'))"
+$roiResult = & (Join-Path $PSScriptRoot "prepare_pixel_validation_handoff.ps1") `
+    -EvidenceRoot $evidenceRoot `
+    -OutputRoot $roiOutputRoot `
+    -DeviceSerial "PIXEL-HANDOFF-TEST" `
+    -AdbPath $fakeAdb `
+    -Slot manualRoi `
+    -CaptureStage All `
+    -Json | ConvertFrom-Json
+
+$roiRunbook = Get-Content -LiteralPath $roiResult.runbookPath -Raw
+$roiHandoff = Get-Content -LiteralPath $roiResult.handoffPath -Raw
+$roiManifest = Get-Content -LiteralPath $roiResult.manifestPath -Raw | ConvertFrom-Json
+Assert-Equal -Actual $roiResult.roiFinalHelperCommandCount -Expected 1 -Message "Manual ROI handoff should report one ROI final helper command."
+Assert-True -Condition ($roiRunbook.Contains("# 3a. Prepare ROI final commands after setup screenshots.")) -Message "ROI runbook should include the helper step."
+Assert-True -Condition ($roiRunbook.Contains("prepare_roi_final_capture_command.ps1")) -Message "ROI runbook should include the final-command helper."
+Assert-True -Condition ($roiRunbook.Contains("-Slot manualRoi")) -Message "ROI runbook helper should target manual ROI."
+Assert-True -Condition ($roiRunbook.Contains("<manual-roi-setup-bundle>")) -Message "ROI runbook helper should show the setup bundle placeholder."
+Assert-True -Condition ($roiRunbook.Contains("<left,top,right,bottom-from-setup-screenshot>")) -Message "ROI runbook helper should show the pixel-bounds placeholder."
+Assert-True -Condition ($roiHandoff.Contains("ROI Final Command Helpers")) -Message "ROI Markdown handoff should include helper guidance."
+Assert-True -Condition ($roiHandoff.Contains("Paste the printed final capture command")) -Message "ROI Markdown handoff should explain how to use the helper."
+Assert-True -Condition ($roiHandoff.Contains("prepare_roi_final_capture_command.ps1")) -Message "ROI Markdown handoff should include the helper command."
+Assert-Equal -Actual @($roiManifest.roiFinalHelperCommands).Count -Expected 1 -Message "ROI manifest should include the helper command."
+Assert-True -Condition ($roiManifest.roiFinalHelperCommands[0].Contains("-Slot manualRoi")) -Message "ROI manifest helper command should preserve the slot."
 
 $textOutput = & (Join-Path $PSScriptRoot "prepare_pixel_validation_handoff.ps1") `
     -EvidenceRoot $evidenceRoot `
