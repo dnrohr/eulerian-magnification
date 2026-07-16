@@ -528,6 +528,10 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   accepted evidence from any serial other than the expected Pixel 8a. This keeps
   remaining watched parity artifacts tied to `47091JEKB05516` instead of only
   recording the requested device after the fact.
+- Added `tools/export_live_validation_review_sheet.ps1` so captured
+  `screenrecord.mp4` files can produce a tiled `review_contact_sheet.jpg` plus
+  hash manifest for faster visual inspection before accepting or rejecting a
+  watched parity run.
 
 ## Remaining
 

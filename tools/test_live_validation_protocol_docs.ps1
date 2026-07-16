@@ -160,6 +160,7 @@ foreach ($path in @($readme, $taskReadme)) {
     Assert-DocContains -Path $path -Expected "closeoutBlockers" -Message "Operator docs must document closeout blocker summaries."
     Assert-DocContains -Path $path -Expected "expected final label" -Message "Operator docs must mention expected final labels in closeout output."
     Assert-DocContains -Path $path -Expected "Wrong-slot reports include the expected final label" -Message "Operator docs must mention expected labels in wrong-slot reports."
+    Assert-DocContains -Path $path -Expected "export_live_validation_review_sheet.ps1" -Message "Operator docs must document review sheet export."
 }
 
 Assert-DocContains -Path $roiDoc -Expected "-RequireRoiMeasurement" -Message "ROI protocol must require ROI measurement."
@@ -180,6 +181,7 @@ Assert-DocContains -Path $liveGuide -Expected "-RequireEvidenceVerdict" -Message
 Assert-DocContains -Path $liveGuide -Expected "OperatorNotes" -Message "Live guide must document final operator notes."
 Assert-DocContains -Path $liveGuide -Expected "TargetDescription" -Message "Live guide must document final target description."
 Assert-DocContains -Path $liveGuide -Expected "VisualClaim" -Message "Live guide must document final visual claim."
+Assert-DocContains -Path $liveGuide -Expected "review_contact_sheet.jpg" -Message "Live guide must document review contact sheets."
 
 Assert-DocContains -Path $parityDoc -Expected "summarize_pixel_validation_closeout.ps1" -Message "Parity targets must document closeout summary."
 Assert-DocContains -Path $parityDoc -Expected "-FailOnPresetDocsNotReady" -Message "Parity targets must document the preset docs readiness gate."

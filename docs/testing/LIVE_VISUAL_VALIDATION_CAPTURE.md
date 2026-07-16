@@ -209,6 +209,21 @@ count, whether it is non-empty, and whether the file has an MP4 `ftyp`
 signature near the start. Missing, empty, or invalid required recordings add a
 warning and make the summary command exit with code `11`.
 
+To make a captured screenrecord easier to inspect, generate a contact sheet
+beside the bundle:
+
+```powershell
+.\tools\export_live_validation_review_sheet.ps1 `
+  -BundlePath sample-videos\exports\live-validation\<bundle> `
+  -FfmpegPath <path-to-ffmpeg.exe>
+```
+
+The helper writes `review_contact_sheet.jpg` and
+`review_contact_sheet_manifest.json`. The manifest records the source
+screenrecord SHA-256, contact-sheet SHA-256, tile geometry, and ffmpeg filter.
+Use it as a review aid for motion/ROI changes; final roadmap closeout still
+requires the accepted visual-evidence gates.
+
 For final live-preview evidence, pass `-RequireCameraFps` so the summary fails
 unless scoped logcat contains camera HAL `FPS:` samples and the minimum sample
 is at least the configured warning threshold, `23.5 FPS` by default. This

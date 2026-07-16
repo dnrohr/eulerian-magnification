@@ -157,6 +157,19 @@ needed for release notes. The saved JSON includes `closeoutBlockers`, a compact
 operator checklist of missing slots and accepted-evidence issues that still
 block roadmap closeout.
 
+For quick visual review of a captured screenrecord, generate a contact sheet:
+
+```powershell
+.\tools\export_live_validation_review_sheet.ps1 `
+  -BundlePath sample-videos\exports\live-validation\<bundle> `
+  -FfmpegPath <path-to-ffmpeg.exe>
+```
+
+The helper writes `review_contact_sheet.jpg` and a
+`review_contact_sheet_manifest.json` hash manifest beside the bundle. It helps
+inspect motion/ROI evidence quickly, but it does not replace the strict final
+evidence gates.
+
 Use `-FailOnCloseoutNotReady` before closing roadmap items; it is equivalent to
 requiring no missing, unmatched, ambiguous, duplicate, non-`main`, or
 missing-artifact-hash accepted evidence, requiring accepted source commits to

@@ -362,6 +362,19 @@ needed for release notes. The closeout JSON also includes `closeoutBlockers`,
 a compact list of missing slots and accepted-evidence issues that still block
 roadmap closeout.
 
+For screenrecord review, generate a contact sheet beside a captured bundle:
+
+```powershell
+.\tools\export_live_validation_review_sheet.ps1 `
+  -BundlePath sample-videos\exports\live-validation\<bundle> `
+  -FfmpegPath <path-to-ffmpeg.exe>
+```
+
+The helper writes `review_contact_sheet.jpg` and
+`review_contact_sheet_manifest.json` with hashes for the source screenrecord and
+contact sheet. This is a review aid only; accepted final evidence still has to
+pass the strict summary and closeout gates.
+
 Use the closeout gates before editing visual-validation status in README or
 parity docs. `-FailOnPresetDocsNotReady` requires the four preset slots to be
 present and rejects unmatched, ambiguous, duplicate, non-`main`, unpushed, or
