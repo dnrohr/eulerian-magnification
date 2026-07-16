@@ -254,6 +254,17 @@ Goal: prove that automatic and manual ROI coordinates align with the live previe
   and automatic ROI validation, but does not close either target-alignment task
   without a visible known target.
 
+## Supporting Slice: Screenshot Bounds Converter
+
+- Added `tools/convert_roi_bounds_to_normalized.ps1` so watched ROI validation
+  can convert visible target pixel bounds from a screenshot into the normalized
+  `-MeasureRoiExpected` value used by the overlay analyzer.
+- Added `tools/test_roi_bounds_converter.ps1` and included it in the offline
+  project tooling suite so malformed, out-of-image, image-derived, and
+  paste-ready text outputs stay covered without a connected phone.
+- Updated `docs/testing/ROI_DEVICE_VALIDATION.md` to show where the converter
+  fits in the manual and automatic ROI evidence flow.
+
 ## Done When
 
 - Manual and automatic ROI overlays align with the visible target on device.

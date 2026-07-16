@@ -117,6 +117,10 @@ foreach ($path in @($roiDoc, $linearDoc, $phaseDoc)) {
     Assert-True -Condition ($captureBlockCount -gt 0) -Message "Protocol doc must include parseable capture command blocks: $path"
 }
 
+Assert-DocContains -Path $roiDoc -Expected "convert_roi_bounds_to_normalized.ps1" -Message "ROI protocol must document the screenshot-bounds converter."
+Assert-DocContains -Path $roiDoc -Expected "MeasureRoiExpected" -Message "ROI protocol must document the paste-ready normalized ROI value."
+Assert-DocContains -Path $roiDoc -Expected "visible target bounds in screenshot pixels" -Message "ROI protocol must document that converter input comes from visible target pixels."
+
 foreach ($path in @($readme, $taskReadme)) {
     Assert-DocContains -Path $path -Expected "show_next_pixel_validation_plan.ps1" -Message "Operator docs must document the Pixel validation planner."
     Assert-DocContains -Path $path -Expected "install_debug_on_pixel.ps1" -Message "Operator docs must document the debug install helper."

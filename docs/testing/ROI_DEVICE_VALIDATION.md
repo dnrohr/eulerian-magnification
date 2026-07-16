@@ -69,6 +69,18 @@ measurement proves the overlay landed where expected on screen; it only proves
 manual target alignment if that expected rectangle was derived from the visible
 target. The analyzer also requires a single connected ROI component by default,
 which catches duplicate visible ROI boxes in the search region.
+After identifying the visible target bounds in screenshot pixels, convert them
+to the paste-ready value with:
+
+```powershell
+.\tools\convert_roi_bounds_to_normalized.ps1 `
+  -ImagePath "sample-videos\exports\live-validation\<bundle>\screenshot.png" `
+  -PixelBounds "90,600,990,1800"
+```
+
+Use the printed `MeasureRoiExpected` value only when those pixel bounds came
+from the visible target in the captured app screenshot, not from the overlay
+box itself.
 
 For the final accepted manual ROI run, repeat the command from a clean committed
 source tree with `-VisualValidated $true`, keep `-RequireRoiMeasurement`, and
@@ -164,6 +176,9 @@ Planner command name: `auto-face-roi-setup`.
 For automatic face validation, `ExpectedRoi` must come from the visible face or
 skin target in the screenshot. Measuring the center fallback box is useful as an
 overlay smoke test, but it does not prove face tracking.
+Use `tools\convert_roi_bounds_to_normalized.ps1` the same way as the manual
+target flow after measuring the visible face or skin bounds in screenshot
+pixels.
 
 For the final accepted automatic ROI run, repeat the command from a clean
 committed source tree with `-VisualValidated $true`, keep
