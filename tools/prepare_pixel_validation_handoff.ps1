@@ -9,6 +9,7 @@ param(
     [switch]$FailOnInvalidSlot,
     [switch]$FailOnEmptyQueue,
     [switch]$FailOnPendingReviewSheets,
+    [switch]$FailOnDirtySource,
     [switch]$Json
 )
 
@@ -323,4 +324,7 @@ if ($FailOnEmptyQueue -and $result.recommendedCaptureCount -eq 0) {
 }
 if ($FailOnPendingReviewSheets -and $result.pendingReviewSheetCount -gt 0) {
     exit 23
+}
+if ($FailOnDirtySource -and -not $result.source.clean) {
+    exit 24
 }

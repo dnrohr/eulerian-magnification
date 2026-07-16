@@ -568,6 +568,8 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - Pixel validation handoff manifests now include compact pending review-sheet
   issue counts, so handoff consumers can see the issue mix without opening the
   full queue JSON.
+- Pixel validation handoff now supports `-FailOnDirtySource`, exiting nonzero
+  when a handoff is prepared from a dirty worktree.
 
 ## Remaining
 

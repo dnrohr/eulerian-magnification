@@ -30,7 +30,8 @@ function Invoke-HandoffExitCode {
         [string[]]$Slot = @(),
         [switch]$FailOnInvalidSlot,
         [switch]$FailOnEmptyQueue,
-        [switch]$FailOnPendingReviewSheets
+        [switch]$FailOnPendingReviewSheets,
+        [switch]$FailOnDirtySource
     )
 
     $script = Join-Path $PSScriptRoot "prepare_pixel_validation_handoff.ps1"
@@ -48,6 +49,9 @@ function Invoke-HandoffExitCode {
     }
     if ($FailOnPendingReviewSheets) {
         $arguments += "-FailOnPendingReviewSheets"
+    }
+    if ($FailOnDirtySource) {
+        $arguments += "-FailOnDirtySource"
     }
 
     & $powerShellExe @arguments *> $null
@@ -168,10 +172,21 @@ $validExitCode = Invoke-HandoffExitCode -EvidenceRoot $evidenceRoot -OutputRoot 
 $invalidExitCode = Invoke-HandoffExitCode -EvidenceRoot $evidenceRoot -OutputRoot $outputRoot -Slot notARealSlot -FailOnInvalidSlot
 $emptyExitCode = Invoke-HandoffExitCode -EvidenceRoot $evidenceRoot -OutputRoot $outputRoot -Slot notARealSlot -FailOnEmptyQueue
 $pendingReviewExitCode = Invoke-HandoffExitCode -EvidenceRoot $evidenceRoot -OutputRoot $outputRoot -Slot pulseLinear -FailOnPendingReviewSheets
+$repoRoot = Split-Path -Parent $PSScriptRoot
+$dirtyProbePath = Join-Path $repoRoot "handoff_dirty_source_probe.tmp"
+try {
+    "dirty source probe" | Set-Content -LiteralPath $dirtyProbePath -Encoding utf8
+    $dirtySourceExitCode = Invoke-HandoffExitCode -EvidenceRoot $evidenceRoot -OutputRoot $outputRoot -Slot pulseLinear -FailOnDirtySource
+} finally {
+    if (Test-Path -LiteralPath $dirtyProbePath) {
+        Remove-Item -LiteralPath $dirtyProbePath -Force
+    }
+}
 
 Assert-Equal -Actual $validExitCode -Expected 0 -Message "Handoff gates should allow valid non-empty filters."
 Assert-Equal -Actual $invalidExitCode -Expected 21 -Message "Handoff should fail invalid slot filters with exit code 21."
 Assert-Equal -Actual $emptyExitCode -Expected 22 -Message "Handoff should fail empty command queues with exit code 22."
 Assert-Equal -Actual $pendingReviewExitCode -Expected 23 -Message "Handoff should fail pending review-sheet issues with exit code 23."
+Assert-Equal -Actual $dirtySourceExitCode -Expected 24 -Message "Handoff should fail dirty source trees with exit code 24."
 
 Write-Output "Pixel validation handoff self-test passed."
