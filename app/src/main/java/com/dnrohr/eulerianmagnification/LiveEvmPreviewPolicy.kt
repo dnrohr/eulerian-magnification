@@ -33,7 +33,7 @@ object LiveEvmPreviewPolicy {
                 reason = "Full-frame live linear EVM is currently limited to Pulse and Breathing",
             )
         }
-        if (thermalStatus.isThermalCriticalOrWorse()) {
+        if (thermalStatus.isThermalSevereOrWorse()) {
             return LiveEvmPreviewDecision(
                 fullFrameColorPreview = false,
                 label = "ROI signal preview",
@@ -95,6 +95,6 @@ object LiveEvmPreviewPolicy {
     private const val THERMAL_STATUS_NONE = "none"
 }
 
-private fun String.isThermalCriticalOrWorse(): Boolean {
-    return lowercase() in setOf("critical", "emergency", "shutdown")
+private fun String.isThermalSevereOrWorse(): Boolean {
+    return lowercase() in setOf("severe", "critical", "emergency", "shutdown")
 }

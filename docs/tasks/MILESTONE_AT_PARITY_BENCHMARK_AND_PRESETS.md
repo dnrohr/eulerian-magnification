@@ -578,6 +578,9 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - Pixel validation planner and handoff now surface a thermal readiness preflight
   command so watched capture sessions can explicitly wait for a cool enough
   device before camera validation starts.
+- Live full-frame reconstruction and Full frame ROI fallback now treat Android
+  `severe` thermal state as too hot, not only `critical` or worse, so a hot
+  phone should recover to Auto ROI before the preview appears frozen.
 
 ## Remaining
 

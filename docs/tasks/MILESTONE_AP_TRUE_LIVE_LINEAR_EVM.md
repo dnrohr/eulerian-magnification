@@ -333,11 +333,11 @@ showing true pyramid reconstruction or a fallback bridge.
 ## Supporting Slice: Thermal Full-Frame Fallback
 
 - Live reconstruction policy now refuses full-frame GL reconstruction when
-  Android thermal state is `critical`, `emergency`, or `shutdown`.
+  Android thermal state is `severe`, `critical`, `emergency`, or `shutdown`.
 - Full-frame ROI policy now switches `ROI Source` back to `Auto ROI` immediately
   in the same thermal states, even if measured camera/analysis FPS has not yet
   dropped.
-- This targets the observed failure mode where a thermally critical phone can
+- This targets the observed failure mode where a thermally severe phone can
   make Full frame appear frozen or unusably slow. The app should now recover to
   the cheaper Auto ROI path instead of letting that state masquerade as a
   renderer-quality result.

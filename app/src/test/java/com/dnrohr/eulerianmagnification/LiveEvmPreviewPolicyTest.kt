@@ -138,6 +138,23 @@ class LiveEvmPreviewPolicyTest {
     }
 
     @Test
+    fun disablesFullFrameColorWhenThermalStateIsSevere() {
+        val decision = LiveEvmPreviewPolicy.decide(
+            settings = AnalysisSettings(
+                mode = MagnificationMode.Pulse,
+                viewMode = ViewMode.Amplified,
+            ),
+            usingGlPreview = true,
+            glFrameStats = healthyStats(),
+            analysisFps = 30.0,
+            thermalStatus = "severe",
+        )
+
+        assertFalse(decision.fullFrameColorPreview)
+        assertTrue(decision.reason.contains("thermal"))
+    }
+
+    @Test
     fun keepsFullFrameColorEnabledForModerateThermalState() {
         val decision = LiveEvmPreviewPolicy.decide(
             settings = AnalysisSettings(

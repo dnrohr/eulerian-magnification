@@ -72,6 +72,19 @@ class FullFrameRoiFallbackPolicyTest {
     }
 
     @Test
+    fun severeThermalFallsBackImmediately() {
+        val decision = FullFrameRoiFallbackPolicy.observe(
+            roiSource = RoiSource.FullFrame,
+            analysisFps = 30.0,
+            state = FullFrameRoiFallbackState(),
+            thermalStatus = "severe",
+        )
+
+        assertTrue(decision.shouldFallbackToAuto)
+        assertEquals("thermal", decision.reason)
+    }
+
+    @Test
     fun settledLowGlCameraFpsFallsBackImmediately() {
         val decision = FullFrameRoiFallbackPolicy.observe(
             roiSource = RoiSource.FullFrame,

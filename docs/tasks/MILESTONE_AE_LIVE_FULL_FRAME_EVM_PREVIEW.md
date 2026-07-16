@@ -176,12 +176,12 @@ Goal: integrate the full-frame EVM renderer into the live preview path.
 ## Supporting Slice: Thermal Full-Frame Fallback
 
 - Live full-frame preview now disables reconstruction when Android thermal
-  state reaches `critical`, `emergency`, or `shutdown`.
+  state reaches `severe`, `critical`, `emergency`, or `shutdown`.
 - If `ROI Source` is `Full frame` in that state, the app switches back to
   `Auto ROI` instead of continuing an expensive full-frame analysis path that
   can look frozen under thermal throttling.
-- Moderate/severe thermal state still appears as `Thermal high`; only critical
-  or worse forces the full-frame fallback.
+- Moderate thermal state still appears as `Thermal high`; severe or worse
+  forces the full-frame fallback.
 - This protects AE/AP smoke runs from hot-device false negatives, but known
   target visual validation remains open.
 

@@ -204,7 +204,7 @@ The default screen is intentionally compact so the preview remains visible.
   from low FPS, camera/ROI motion, lighting flicker, timestamp jumps, thermal
   state, or risky high-frequency/amplification combinations. The compact
   preview stays terse; expanded controls show a short action for each warning.
-  If the phone reaches `critical` thermal state or worse, live full-frame
+  If the phone reaches `severe` thermal state or worse, live full-frame
   reconstruction falls back to ROI signal preview and `ROI Source` is switched
   back to `Auto ROI`.
 - `Lighting`: expanded-controls diagnostic for lighting stability. It separates

@@ -27,7 +27,7 @@ object FullFrameRoiFallbackPolicy {
                 nextState = FullFrameRoiFallbackState(),
             )
         }
-        if (thermalStatus.isThermalCriticalOrWorse()) {
+        if (thermalStatus.isThermalSevereOrWorse()) {
             return FullFrameRoiFallbackDecision(
                 shouldFallbackToAuto = true,
                 nextState = FullFrameRoiFallbackState(),
@@ -72,6 +72,6 @@ object FullFrameRoiFallbackPolicy {
     private const val THERMAL_STATUS_NONE = "none"
 }
 
-private fun String.isThermalCriticalOrWorse(): Boolean {
-    return lowercase() in setOf("critical", "emergency", "shutdown")
+private fun String.isThermalSevereOrWorse(): Boolean {
+    return lowercase() in setOf("severe", "critical", "emergency", "shutdown")
 }
