@@ -215,7 +215,7 @@ $slotGuidance = @{
         operatorSetup = @(
             "Use a stable, high-contrast target with clear rectangular bounds.",
             "Place the manual ROI once, then keep the phone and target still for the capture.",
-            "Replace the MeasureRoiExpected placeholder with the visible target bounds in screenshot space."
+            "Use tools\convert_roi_bounds_to_normalized.ps1 to convert visible target pixel bounds from the setup screenshot into MeasureRoiExpected."
         )
         acceptanceChecks = @(
             "Exactly one manual ROI outline is visible.",
@@ -227,7 +227,7 @@ $slotGuidance = @{
         operatorSetup = @(
             "Use a visible face or skin target under steady lighting.",
             "Leave ROI Source on Auto ROI and avoid manually dragging the ROI.",
-            "Replace the MeasureRoiExpected placeholder with the visible face or skin bounds in screenshot space."
+            "Use tools\convert_roi_bounds_to_normalized.ps1 to convert visible face or skin pixel bounds from the setup screenshot into MeasureRoiExpected."
         )
         acceptanceChecks = @(
             "Exactly one automatic ROI outline is visible.",

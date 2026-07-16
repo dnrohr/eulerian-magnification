@@ -264,6 +264,8 @@ Goal: prove that automatic and manual ROI coordinates align with the live previe
   paste-ready text outputs stay covered without a connected phone.
 - Updated `docs/testing/ROI_DEVICE_VALIDATION.md` to show where the converter
   fits in the manual and automatic ROI evidence flow.
+- Updated the generated Pixel validation plan so manual and automatic ROI
+  operator setup guidance points to the converter before final evidence capture.
 
 ## Done When
 
