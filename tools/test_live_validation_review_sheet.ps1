@@ -27,7 +27,9 @@ function Invoke-ReviewSheet {
     param(
         [string]$BundlePath,
         [string]$FfmpegPath = "",
+        [string]$NpxPath = "",
         [string]$OutputPath = "",
+        [switch]$NoBrowserFallback,
         [switch]$Force
     )
 
@@ -39,8 +41,14 @@ function Invoke-ReviewSheet {
     if (-not [string]::IsNullOrWhiteSpace($FfmpegPath)) {
         $args.FfmpegPath = $FfmpegPath
     }
+    if (-not [string]::IsNullOrWhiteSpace($NpxPath)) {
+        $args.NpxPath = $NpxPath
+    }
     if (-not [string]::IsNullOrWhiteSpace($OutputPath)) {
         $args.OutputPath = $OutputPath
+    }
+    if ($NoBrowserFallback) {
+        $args.NoBrowserFallback = $true
     }
     if ($Force) {
         $args.Force = $true
@@ -84,6 +92,7 @@ exit 0
     Assert-True -Condition ($manifest.contactSheetBytes -gt 0) -Message "Manifest should record output bytes."
     Assert-True -Condition (-not [string]::IsNullOrWhiteSpace($manifest.screenrecordSha256)) -Message "Manifest should record screenrecord hash."
     Assert-True -Condition (-not [string]::IsNullOrWhiteSpace($manifest.contactSheetSha256)) -Message "Manifest should record contact sheet hash."
+    Assert-Equal -Actual $manifest.generator -Expected "ffmpeg" -Message "Manifest should record the ffmpeg generator."
 
     $fakeArgs = Get-Content -LiteralPath (Join-Path $bundle "fake_ffmpeg_args.txt") -Raw
     Assert-True -Condition ($fakeArgs.Contains("screenrecord.mp4")) -Message "ffmpeg args should include screenrecord input."
@@ -99,6 +108,42 @@ exit 0
     New-Item -ItemType Directory -Path $missingBundle -Force | Out-Null
     $missingExitCode = Invoke-ReviewSheet -BundlePath $missingBundle -FfmpegPath $fakeFfmpeg
     Assert-Equal -Actual $missingExitCode -Expected 3 -Message "Missing screenrecord should exit 3."
+
+    $browserBundle = Join-Path $root "browser-bundle"
+    New-Item -ItemType Directory -Path $browserBundle -Force | Out-Null
+    [System.IO.File]::WriteAllBytes((Join-Path $browserBundle "screenrecord.mp4"), [byte[]](0, 0, 0, 24, 102, 116, 121, 112, 109, 112, 52, 50))
+
+    $fakeNpx = Join-Path $root "fake-npx.ps1"
+    @'
+param(
+    [Parameter(ValueFromRemainingArguments = $true)]
+    [string[]]$Arguments
+)
+
+$destination = $Arguments[$Arguments.Count - 1]
+[System.IO.File]::WriteAllBytes($destination, [byte[]](255, 216, 255, 217))
+$Arguments | Out-File -LiteralPath (Join-Path (Split-Path -Parent $destination) "fake_npx_args.txt") -Encoding utf8
+exit 0
+'@ | Out-File -LiteralPath $fakeNpx -Encoding utf8
+
+    $browserExitCode = Invoke-ReviewSheet -BundlePath $browserBundle -NpxPath $fakeNpx
+    Assert-Equal -Actual $browserExitCode -Expected 0 -Message "Browser review sheet export exit code mismatch."
+    Assert-True -Condition (Test-Path -LiteralPath (Join-Path $browserBundle "review_contact_sheet.jpg")) -Message "Browser review sheet should be created."
+
+    $browserManifest = Get-Content -LiteralPath (Join-Path $browserBundle "review_contact_sheet_manifest.json") -Raw | ConvertFrom-Json
+    Assert-Equal -Actual $browserManifest.generator -Expected "browser" -Message "Manifest should record the browser generator."
+    Assert-Equal -Actual $browserManifest.browserChannel -Expected "chrome" -Message "Manifest should record the browser channel."
+    Assert-True -Condition (-not [string]::IsNullOrWhiteSpace($browserManifest.npx)) -Message "Manifest should record the npx path."
+
+    $fakeNpxArgs = Get-Content -LiteralPath (Join-Path $browserBundle "fake_npx_args.txt") -Raw
+    Assert-True -Condition ($fakeNpxArgs.Contains("playwright")) -Message "Browser fallback should invoke Playwright."
+    Assert-True -Condition ($fakeNpxArgs.Contains("screenshot")) -Message "Browser fallback should invoke Playwright screenshot."
+
+    $noGeneratorBundle = Join-Path $root "no-generator-bundle"
+    New-Item -ItemType Directory -Path $noGeneratorBundle -Force | Out-Null
+    [System.IO.File]::WriteAllBytes((Join-Path $noGeneratorBundle "screenrecord.mp4"), [byte[]](0, 0, 0, 24, 102, 116, 121, 112, 109, 112, 52, 50))
+    $noGeneratorExitCode = Invoke-ReviewSheet -BundlePath $noGeneratorBundle -NoBrowserFallback
+    Assert-Equal -Actual $noGeneratorExitCode -Expected 2 -Message "Missing ffmpeg with browser fallback disabled should exit 2."
 } finally {
     Remove-Item -LiteralPath $root -Recurse -Force
 }

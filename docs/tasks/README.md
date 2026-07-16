@@ -181,6 +181,12 @@ contact sheet hash. `-RequireReviewContactSheet` makes the summary fail unless
 the contact-sheet manifest exists and its screenrecord SHA-256 matches the
 current `screenrecord.mp4`. It does not replace the strict final evidence gates.
 
+If `ffmpeg` is not available, omit `-FfmpegPath` and the helper will try a
+browser fallback through `npx playwright screenshot` using local Chrome. Pass
+`-BrowserChannel <channel>` to select a different Playwright channel, or
+`-NoBrowserFallback` when automation should fail instead of using the browser
+sampler.
+
 To find captured bundles that still need a contact sheet or have a stale sheet
 manifest, run:
 

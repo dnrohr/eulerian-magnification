@@ -134,6 +134,8 @@ foreach ($path in @($readme, $taskReadme)) {
     Assert-DocContains -Path $path -Expected "-FailOnPendingReviewSheets" -Message "Operator docs must document pending review-sheet handoff failure mode."
     Assert-DocContains -Path $path -Expected "-FailOnDirtySource" -Message "Operator docs must document dirty-source handoff failure mode."
     Assert-DocContains -Path $path -Expected "-FailOnUnpushedSource" -Message "Operator docs must document unpushed-source handoff failure mode."
+    Assert-DocContains -Path $path -Expected "-BrowserChannel" -Message "Operator docs must document browser review-sheet fallback."
+    Assert-DocContains -Path $path -Expected "-NoBrowserFallback" -Message "Operator docs must document disabling browser review-sheet fallback."
     Assert-DocContains -Path $path -Expected "pixel_validation_plan.json" -Message "Operator docs must document the saved planner artifact name."
     Assert-DocContains -Path $path -Expected "pixel_validation_commands.txt" -Message "Operator docs must document the saved command-list artifact name."
     Assert-DocContains -Path $path -Expected "pixel_validation_handoff.md" -Message "Operator docs must document the readable handoff artifact name."

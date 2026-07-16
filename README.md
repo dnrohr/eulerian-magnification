@@ -387,6 +387,12 @@ contact-sheet manifest exists and its screenrecord SHA-256 matches the current
 `screenrecord.mp4`. This is a review aid only; accepted final evidence still
 has to pass the strict summary and closeout gates.
 
+If `ffmpeg` is not available, omit `-FfmpegPath` and the helper will try a
+browser fallback through `npx playwright screenshot` using local Chrome. Pass
+`-BrowserChannel <channel>` to select a different Playwright channel, or
+`-NoBrowserFallback` when automation should fail instead of using the browser
+sampler.
+
 To see which captured bundles still need review sheets, run:
 
 ```powershell

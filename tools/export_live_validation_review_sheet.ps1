@@ -7,6 +7,9 @@ param(
     [int]$Columns = 3,
     [int]$Rows = 3,
     [int]$FrameWidth = 360,
+    [string]$NpxPath = "",
+    [string]$BrowserChannel = "chrome",
+    [switch]$NoBrowserFallback,
     [switch]$Force
 )
 
@@ -30,6 +33,24 @@ function Find-Ffmpeg {
     return $null
 }
 
+function Find-Npx {
+    param([string]$ExplicitPath)
+
+    if (-not [string]::IsNullOrWhiteSpace($ExplicitPath)) {
+        if (Test-Path -LiteralPath $ExplicitPath) {
+            return (Resolve-Path -LiteralPath $ExplicitPath).Path
+        }
+        throw "Requested npx path does not exist: $ExplicitPath"
+    }
+
+    $command = Get-Command npx -ErrorAction SilentlyContinue
+    if ($command) {
+        return $command.Source
+    }
+
+    return $null
+}
+
 function Get-FileSha256IfExists {
     param([string]$Path)
 
@@ -38,6 +59,129 @@ function Get-FileSha256IfExists {
     }
 
     return (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash
+}
+
+function ConvertTo-FileUri {
+    param([string]$Path)
+
+    return ([System.Uri](Resolve-Path -LiteralPath $Path).Path).AbsoluteUri
+}
+
+function Write-BrowserContactSheet {
+    param(
+        [string]$ScreenrecordPath,
+        [string]$Destination,
+        [string]$Npx,
+        [int]$Columns,
+        [int]$Rows,
+        [int]$FrameWidth,
+        [string]$BrowserChannel
+    )
+
+    $tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) "eulerian-review-sheet-browser-$([guid]::NewGuid().ToString('N'))"
+    New-Item -ItemType Directory -Path $tempRoot -Force | Out-Null
+    try {
+        $pagePath = Join-Path $tempRoot "contact-sheet.html"
+        $videoUri = ConvertTo-FileUri -Path $ScreenrecordPath
+        $safeVideoUri = [System.Net.WebUtility]::HtmlEncode($videoUri)
+        $html = @"
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <style>
+    html, body { margin: 0; padding: 0; background: #111; }
+    canvas { display: block; background: #111; }
+    video { display: none; }
+    #ready { position: absolute; left: 0; top: 0; width: 1px; height: 1px; background: #111; }
+  </style>
+</head>
+<body>
+  <canvas id="sheet"></canvas>
+  <video id="source" src="$safeVideoUri" muted playsinline preload="auto"></video>
+  <script>
+    const columns = $Columns;
+    const rows = $Rows;
+    const frameWidth = $FrameWidth;
+    const totalFrames = columns * rows;
+    const video = document.getElementById('source');
+    const canvas = document.getElementById('sheet');
+    const ctx = canvas.getContext('2d');
+
+    function once(target, event) {
+      return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error('Timed out waiting for ' + event)), 10000);
+        target.addEventListener(event, () => {
+          clearTimeout(timer);
+          resolve();
+        }, { once: true });
+      });
+    }
+
+    async function seekVideo(timeSeconds) {
+      const clamped = Math.max(0, Math.min(timeSeconds, Math.max(0, video.duration - 0.05)));
+      const wait = once(video, 'seeked');
+      video.currentTime = clamped;
+      await wait;
+    }
+
+    async function render() {
+      await once(video, 'loadedmetadata');
+      const aspect = video.videoWidth > 0 ? video.videoHeight / video.videoWidth : 16 / 9;
+      const frameHeight = Math.max(1, Math.round(frameWidth * aspect));
+      canvas.width = columns * frameWidth;
+      canvas.height = rows * frameHeight;
+      ctx.fillStyle = '#111';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.font = '16px sans-serif';
+      ctx.textBaseline = 'top';
+
+      for (let index = 0; index < totalFrames; index += 1) {
+        const duration = Number.isFinite(video.duration) && video.duration > 0 ? video.duration : totalFrames;
+        const timestamp = ((index + 0.5) / totalFrames) * duration;
+        await seekVideo(timestamp);
+        const x = (index % columns) * frameWidth;
+        const y = Math.floor(index / columns) * frameHeight;
+        ctx.drawImage(video, x, y, frameWidth, frameHeight);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.58)';
+        ctx.fillRect(x, y, 74, 24);
+        ctx.fillStyle = '#fff';
+        ctx.fillText(timestamp.toFixed(1) + 's', x + 8, y + 4);
+      }
+
+      const ready = document.createElement('div');
+      ready.id = 'ready';
+      document.body.appendChild(ready);
+    }
+
+    render().catch((error) => {
+      document.body.textContent = error.stack || String(error);
+      document.body.style.color = 'white';
+      document.body.style.font = '16px sans-serif';
+    });
+  </script>
+</body>
+</html>
+"@
+        Set-Content -LiteralPath $pagePath -Value $html -Encoding utf8
+        $pageUri = ConvertTo-FileUri -Path $pagePath
+        $playwrightArgs = @(
+            "playwright",
+            "screenshot",
+            "--channel", $BrowserChannel,
+            "--wait-for-selector", "#ready",
+            "--timeout", "120000",
+            "--full-page",
+            $pageUri,
+            $Destination
+        )
+        & $Npx @playwrightArgs *> $null
+        return $LASTEXITCODE
+    } finally {
+        if (Test-Path -LiteralPath $tempRoot) {
+            Remove-Item -LiteralPath $tempRoot -Recurse -Force
+        }
+    }
 }
 
 if ($Columns -lt 1 -or $Columns -gt 8) {
@@ -58,8 +202,12 @@ if (-not (Test-Path -LiteralPath $screenrecordPath)) {
 }
 
 $ffmpeg = Find-Ffmpeg -ExplicitPath $FfmpegPath
-if ([string]::IsNullOrWhiteSpace($ffmpeg)) {
-    Write-Output "ffmpeg was not found. Install ffmpeg or pass -FfmpegPath to generate a review sheet."
+$npx = $null
+if ([string]::IsNullOrWhiteSpace($ffmpeg) -and -not $NoBrowserFallback) {
+    $npx = Find-Npx -ExplicitPath $NpxPath
+}
+if ([string]::IsNullOrWhiteSpace($ffmpeg) -and [string]::IsNullOrWhiteSpace($npx)) {
+    Write-Output "ffmpeg was not found, and browser fallback is unavailable. Install ffmpeg, pass -FfmpegPath, or install Node/npx with Playwright."
     exit 2
 }
 
@@ -77,23 +225,33 @@ if ((Test-Path -LiteralPath $destination) -and -not $Force) {
     exit 5
 }
 
+$generator = "ffmpeg"
 $filter = "fps=1,scale=$($FrameWidth):-1,tile=$($Columns)x$($Rows)"
-$ffmpegArgs = @(
-    "-y",
-    "-i", $screenrecordPath,
-    "-vf", $filter,
-    "-frames:v", "1",
-    $destination
-)
+if (-not [string]::IsNullOrWhiteSpace($ffmpeg)) {
+    $ffmpegArgs = @(
+        "-y",
+        "-i", $screenrecordPath,
+        "-vf", $filter,
+        "-frames:v", "1",
+        $destination
+    )
 
-& $ffmpeg @ffmpegArgs
-$ffmpegExitCode = $LASTEXITCODE
-if ($ffmpegExitCode -ne 0) {
-    Write-Output "ffmpeg failed with exit code $ffmpegExitCode."
-    exit 4
+    & $ffmpeg @ffmpegArgs
+    $ffmpegExitCode = $LASTEXITCODE
+    if ($ffmpegExitCode -ne 0) {
+        Write-Output "ffmpeg failed with exit code $ffmpegExitCode."
+        exit 4
+    }
+} else {
+    $generator = "browser"
+    $browserExitCode = Write-BrowserContactSheet -ScreenrecordPath $screenrecordPath -Destination $destination -Npx $npx -Columns $Columns -Rows $Rows -FrameWidth $FrameWidth -BrowserChannel $BrowserChannel
+    if ($browserExitCode -ne 0) {
+        Write-Output "Browser contact-sheet export failed with exit code $browserExitCode."
+        exit 4
+    }
 }
 if (-not (Test-Path -LiteralPath $destination)) {
-    Write-Output "ffmpeg completed but did not create the review sheet: $destination"
+    Write-Output "Contact-sheet export completed but did not create the review sheet: $destination"
     exit 4
 }
 
@@ -111,7 +269,10 @@ $manifest = [ordered]@{
     contactSheet = $outputItem.FullName
     contactSheetSha256 = Get-FileSha256IfExists -Path $outputItem.FullName
     contactSheetBytes = $outputItem.Length
+    generator = $generator
     ffmpeg = $ffmpeg
+    npx = $npx
+    browserChannel = if ($generator -eq "browser") { $BrowserChannel } else { $null }
     columns = $Columns
     rows = $Rows
     frameWidth = $FrameWidth
