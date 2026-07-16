@@ -408,7 +408,8 @@ gate status from `evidence_summary.json`:
 
 Pixel validation handoff bundles also include
 `live_validation_review_dashboard.html` for the current pending review-sheet
-queue.
+queue. The Markdown handoff lists each pending review-sheet issue reason and
+the exact regeneration command beside the bundle path.
 
 Use the closeout gates before editing visual-validation status in README or
 parity docs. `-FailOnPresetDocsNotReady` requires the four preset slots to be

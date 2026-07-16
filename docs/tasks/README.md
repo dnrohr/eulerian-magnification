@@ -202,7 +202,8 @@ target/claim/verdict/gate context from `evidence_summary.json`. It is a review
 aid only; final closeout still requires matching contact sheets and the strict
 evidence gates.
 Pixel validation handoff bundles write the same dashboard for the current
-pending review-sheet queue.
+pending review-sheet queue, and the Markdown handoff lists each pending
+`reviewSheetIssue` reason with the exact regeneration command.
 
 Use `-FailOnCloseoutNotReady` before closing roadmap items; it is equivalent to
 requiring no missing, unmatched, ambiguous, duplicate, non-`main`, unpushed, or

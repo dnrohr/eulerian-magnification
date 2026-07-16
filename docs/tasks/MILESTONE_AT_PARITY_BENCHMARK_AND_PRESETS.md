@@ -561,6 +561,8 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - The review dashboard now surfaces mode, ROI source, evidence verdict,
   target description, visual claim, operator notes, and key gate status from
   `evidence_summary.json`.
+- Pixel validation handoff Markdown now lists each pending `reviewSheetIssue`
+  reason and the per-bundle review-sheet regeneration command.
 
 ## Remaining
 

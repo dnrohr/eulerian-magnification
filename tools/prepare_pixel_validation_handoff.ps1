@@ -183,10 +183,13 @@ $handoffLines += @(
 )
 
 if (@($reviewQueue.pendingReviewSheets).Count -eq 0) {
-    $handoffLines += "- No captured screenrecords are missing review contact sheets."
+    $handoffLines += "- No captured screenrecords have pending review-sheet issues."
 } else {
     foreach ($entry in @($reviewQueue.pendingReviewSheets)) {
-        $handoffLines += "- $($entry.label): $($entry.bundle)"
+        $issue = if ([string]::IsNullOrWhiteSpace($entry.reviewSheetIssue)) { "pending" } else { $entry.reviewSheetIssue }
+        $handoffLines += "- $($entry.label): $issue"
+        $handoffLines += ('  - Bundle: `{0}`' -f $entry.bundle)
+        $handoffLines += ('  - Command: `{0}`' -f $entry.command)
     }
 }
 

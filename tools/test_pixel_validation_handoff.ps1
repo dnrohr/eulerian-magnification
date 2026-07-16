@@ -123,6 +123,8 @@ Assert-True -Condition ($handoff.Contains("Handoff manifest:")) -Message "Markdo
 Assert-True -Condition ($handoff.Contains("Review Sheet Queue")) -Message "Markdown handoff should include the review queue section."
 Assert-True -Condition ($handoff.Contains("Review Sheet Commands")) -Message "Markdown handoff should include review commands."
 Assert-True -Condition ($handoff.Contains("Review dashboard:")) -Message "Markdown handoff should include the review dashboard artifact."
+Assert-True -Condition ($handoff.Contains("missingContactSheet")) -Message "Markdown handoff should include review-sheet issue reasons."
+Assert-True -Condition ($handoff.Contains("Command:")) -Message "Markdown handoff should include per-bundle review-sheet commands."
 Assert-True -Condition ($handoff.Contains("Pending review sheets: 1")) -Message "Markdown handoff should include pending review sheet count."
 Assert-True -Condition ($handoff.Contains("```powershell")) -Message "Markdown handoff should include a PowerShell command block."
 Assert-True -Condition ($handoff.Contains("live-linear-pulse-final")) -Message "Markdown handoff should include the filtered command."
