@@ -221,7 +221,9 @@ beside the bundle:
 The helper writes `review_contact_sheet.jpg` and
 `review_contact_sheet_manifest.json`. The manifest records the source
 screenrecord SHA-256, contact-sheet SHA-256, tile geometry, and ffmpeg filter.
-Use it as a review aid for motion/ROI changes; final roadmap closeout still
+Rerun the evidence summary after creating it so `artifacts.reviewContactSheet`
+records the contact sheet path, byte count, SHA-256, and manifest fields. Use
+it as a review aid for motion/ROI changes; final roadmap closeout still
 requires the accepted visual-evidence gates.
 
 For final live-preview evidence, pass `-RequireCameraFps` so the summary fails

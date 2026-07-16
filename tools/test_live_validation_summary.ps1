@@ -296,6 +296,7 @@ Number Missed Vsync: 1
     $visualGateBundle = Join-Path $root "visual-gate"
     New-Item -ItemType Directory -Force -Path $visualGateBundle | Out-Null
     Write-TestScreenshot -Path (Join-Path $visualGateBundle "screenshot.png")
+    [System.IO.File]::WriteAllBytes((Join-Path $visualGateBundle "review_contact_sheet.jpg"), [byte[]](255, 216, 255, 217))
     @"
 Total frames rendered: 120
 Janky frames: 0 (0.00%)
@@ -330,11 +331,22 @@ Number Missed Vsync: 0
         }
         warnings = @()
     })
+    Write-JsonFile -Path (Join-Path $visualGateBundle "review_contact_sheet_manifest.json") -Value ([ordered]@{
+        screenrecordSha256 = "screenrecord-for-review-sheet-sha256"
+        contactSheetSha256 = "review-contact-sheet-sha256"
+        columns = 3
+        rows = 3
+        frameWidth = 360
+    })
 
     $visualGateExitCode = Invoke-Summary -BundlePath $visualGateBundle -RequireCleanSource -RequireVisualValidation
     $visualGateSummary = Get-Content -LiteralPath (Join-Path $visualGateBundle "evidence_summary.json") -Raw | ConvertFrom-Json
     Assert-Equal -Actual $visualGateExitCode -Expected 5 -Message "Visual gate exit code mismatch."
     Assert-Equal -Actual $visualGateSummary.passedRuntimeSmoke -Expected $true -Message "Visual gate should pass runtime smoke."
+    Assert-Equal -Actual $visualGateSummary.artifacts.reviewContactSheet.present -Expected $true -Message "Review contact sheet should be detected."
+    Assert-Equal -Actual $visualGateSummary.artifacts.reviewContactSheet.manifestPresent -Expected $true -Message "Review contact sheet manifest should be detected."
+    Assert-True -Condition (-not [string]::IsNullOrWhiteSpace($visualGateSummary.artifacts.reviewContactSheet.sha256)) -Message "Review contact sheet hash should be reported."
+    Assert-Equal -Actual $visualGateSummary.artifacts.reviewContactSheet.screenrecordSha256 -Expected "screenrecord-for-review-sheet-sha256" -Message "Review contact sheet should report manifest screenrecord hash."
     Assert-Equal -Actual $visualGateSummary.requiredGates.cleanSource.passed -Expected $true -Message "Clean source gate should pass."
     Assert-Equal -Actual $visualGateSummary.requiredGates.visualValidation.passed -Expected $false -Message "Visual validation gate should fail."
     Assert-True -Condition ("visual validation required but evidence verdict does not count as visual validation" -in @($visualGateSummary.warnings)) -Message "Visual gate warning missing."

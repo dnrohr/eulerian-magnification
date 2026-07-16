@@ -174,6 +174,9 @@ function Write-Summary {
             screenrecord = [ordered]@{
                 sha256 = "screenrecord-$Name-sha256"
             }
+            reviewContactSheet = [ordered]@{
+                sha256 = "review-contact-sheet-$Name-sha256"
+            }
         }
     }
 
@@ -229,13 +232,16 @@ try {
     Assert-Equal -Actual $result.slots[0].deviceSerial -Expected "47091JEKB05516" -Message "Satisfied closeout slots should expose device serial."
     Assert-Equal -Actual $result.slots[0].screenshotSha256 -Expected "screenshot-manual-sha256" -Message "Satisfied closeout slots should expose screenshot hashes."
     Assert-Equal -Actual $result.slots[0].screenrecordSha256 -Expected "screenrecord-manual-sha256" -Message "Satisfied closeout slots should expose screenrecord hashes."
+    Assert-Equal -Actual $result.slots[0].reviewContactSheetSha256 -Expected "review-contact-sheet-manual-sha256" -Message "Satisfied closeout slots should expose review contact sheet hashes."
     Assert-True -Condition ($result.slots[0].artifactNote.Contains("Manual ROI known-target alignment")) -Message "Satisfied closeout slots should expose docs-ready artifact notes."
     Assert-True -Condition ($result.slots[0].artifactNote.Contains("screenshot SHA-256 screenshot-manual-sha256")) -Message "Artifact notes should include screenshot hashes."
     Assert-True -Condition ($result.slots[0].artifactNote.Contains("screenrecord SHA-256 screenrecord-manual-sha256")) -Message "Artifact notes should include screenrecord hashes."
+    Assert-True -Condition ($result.slots[0].artifactNote.Contains("review contact sheet SHA-256 review-contact-sheet-manual-sha256")) -Message "Artifact notes should include review contact sheet hashes."
     Assert-True -Condition ($result.slots[0].artifactNote.Contains("device 47091JEKB05516")) -Message "Artifact notes should include device serial."
     Assert-Equal -Actual $result.unmatchedAcceptedFinalEvidence[0].sourceShortCommit -Expected $currentShortHead -Message "Unmatched closeout evidence should expose source short commit."
     Assert-Equal -Actual $result.unmatchedAcceptedFinalEvidence[0].screenshotSha256 -Expected "screenshot-accepted-unknown-sha256" -Message "Unmatched closeout evidence should expose screenshot hashes."
     Assert-Equal -Actual $result.unmatchedAcceptedFinalEvidence[0].screenrecordSha256 -Expected "screenrecord-accepted-unknown-sha256" -Message "Unmatched closeout evidence should expose screenrecord hashes."
+    Assert-Equal -Actual $result.unmatchedAcceptedFinalEvidence[0].reviewContactSheetSha256 -Expected "review-contact-sheet-accepted-unknown-sha256" -Message "Unmatched closeout evidence should expose review contact sheet hashes."
     Assert-True -Condition ($result.slots[0].nextCommand.Contains("manual-roi-known-target-setup")) -Message "Manual ROI slot should expose next command hint."
 
     $partialRoot = Join-Path $root "partial"

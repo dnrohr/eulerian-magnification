@@ -108,6 +108,7 @@ function New-EvidenceReport {
         sourceShortCommit = Get-SourceValue -Summary $Summary -Name "shortCommit"
         screenshotSha256 = Get-ArtifactSha256 -Summary $Summary -Name "screenshot"
         screenrecordSha256 = Get-ArtifactSha256 -Summary $Summary -Name "screenrecord"
+        reviewContactSheetSha256 = Get-ArtifactSha256 -Summary $Summary -Name "reviewContactSheet"
         targetDescription = $Summary.visualReview.targetDescription
         visualClaim = $Summary.visualReview.visualClaim
         operatorNotes = $Summary.visualReview.operatorNotes
@@ -250,6 +251,9 @@ function New-ArtifactNote {
     if (-not [string]::IsNullOrWhiteSpace($Slot.screenrecordSha256)) {
         $parts += "screenrecord SHA-256 $($Slot.screenrecordSha256)"
     }
+    if (-not [string]::IsNullOrWhiteSpace($Slot.reviewContactSheetSha256)) {
+        $parts += "review contact sheet SHA-256 $($Slot.reviewContactSheetSha256)"
+    }
 
     return ($parts -join "; ")
 }
@@ -282,6 +286,7 @@ function New-Slot {
         sourceShortCommit = $null
         screenshotSha256 = $null
         screenrecordSha256 = $null
+        reviewContactSheetSha256 = $null
         artifactNote = $null
         reason = "missing accepted evidence"
     }
@@ -418,6 +423,7 @@ foreach ($summary in $acceptedSummaries) {
             $slots[$slotId].sourceShortCommit = Get-SourceValue -Summary $summary -Name "shortCommit"
             $slots[$slotId].screenshotSha256 = Get-ArtifactSha256 -Summary $summary -Name "screenshot"
             $slots[$slotId].screenrecordSha256 = Get-ArtifactSha256 -Summary $summary -Name "screenrecord"
+            $slots[$slotId].reviewContactSheetSha256 = Get-ArtifactSha256 -Summary $summary -Name "reviewContactSheet"
             $slots[$slotId].reason = "accepted final evidence"
             $slots[$slotId].artifactNote = New-ArtifactNote -Slot $slots[$slotId]
         } else {
@@ -430,6 +436,7 @@ foreach ($summary in $acceptedSummaries) {
             $report.originalSourceShortCommit = $slots[$slotId].sourceShortCommit
             $report.originalScreenshotSha256 = $slots[$slotId].screenshotSha256
             $report.originalScreenrecordSha256 = $slots[$slotId].screenrecordSha256
+            $report.originalReviewContactSheetSha256 = $slots[$slotId].reviewContactSheetSha256
             $report.reason = "accepted final evidence matched an already satisfied closeout slot"
             $duplicateAcceptedFinalEvidence += [pscustomobject]$report
         }
@@ -593,6 +600,9 @@ if ($Json) {
             }
             if (-not [string]::IsNullOrWhiteSpace($slot.screenrecordSha256)) {
                 Write-Output "    Screenrecord SHA-256: $($slot.screenrecordSha256)"
+            }
+            if (-not [string]::IsNullOrWhiteSpace($slot.reviewContactSheetSha256)) {
+                Write-Output "    Review contact sheet SHA-256: $($slot.reviewContactSheetSha256)"
             }
             if (-not [string]::IsNullOrWhiteSpace($slot.artifactNote)) {
                 Write-Output "    Artifact note: $($slot.artifactNote)"

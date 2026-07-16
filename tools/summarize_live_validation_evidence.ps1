@@ -425,6 +425,8 @@ $gfxPath = Get-RequiredPath $bundle "gfxinfo.txt"
 $logcatPath = Get-RequiredPath $bundle "logcat_tail.txt"
 $screenshotPath = Get-RequiredPath $bundle "screenshot.png"
 $screenrecordPath = Get-RequiredPath $bundle "screenrecord.mp4"
+$reviewContactSheetPath = Get-RequiredPath $bundle "review_contact_sheet.jpg"
+$reviewContactSheetManifestPath = Get-RequiredPath $bundle "review_contact_sheet_manifest.json"
 $roiMeasurementPath = Get-RequiredPath $bundle "roi_overlay_measurement.json"
 $thermalPath = Get-RequiredPath $bundle "thermalservice.txt"
 $batteryPath = Get-RequiredPath $bundle "battery.txt"
@@ -696,6 +698,26 @@ if ($RequireScreenrecord -and $screenrecordInfo.present -and $screenrecordInfo.n
     $warnings += "screenrecord required but screenrecord.mp4 does not look like an MP4 file"
 }
 
+$reviewContactSheetManifest = if (Test-Path -LiteralPath $reviewContactSheetManifestPath) {
+    Get-Content -LiteralPath $reviewContactSheetManifestPath -Raw | ConvertFrom-Json
+} else {
+    $null
+}
+$reviewContactSheetInfo = [ordered]@{
+    path = $reviewContactSheetPath
+    manifestPath = $reviewContactSheetManifestPath
+    present = Test-Path -LiteralPath $reviewContactSheetPath
+    manifestPresent = $null -ne $reviewContactSheetManifest
+    bytes = $null
+    sha256 = $null
+    screenrecordSha256 = if ($null -ne $reviewContactSheetManifest -and $reviewContactSheetManifest.PSObject.Properties.Name -contains "screenrecordSha256") { $reviewContactSheetManifest.screenrecordSha256 } else { $null }
+    manifest = $reviewContactSheetManifest
+}
+if ($reviewContactSheetInfo.present) {
+    $reviewContactSheetInfo.bytes = (Get-Item -LiteralPath $reviewContactSheetPath).Length
+    $reviewContactSheetInfo.sha256 = Get-FileSha256IfExists $reviewContactSheetPath
+}
+
 $screenshotInfo = $null
 if (Test-Path -LiteralPath $screenshotPath) {
     Add-Type -AssemblyName System.Drawing
@@ -778,7 +800,9 @@ $result = [ordered]@{
         missingRequired = $missing
         screenshot = $screenshotInfo
         screenrecord = $screenrecordInfo
+        reviewContactSheet = $reviewContactSheetInfo
         screenrecordPresent = $screenrecordInfo.present
+        reviewContactSheetPresent = $reviewContactSheetInfo.present
         roiMeasurementPresent = $null -ne $roiMeasurement
         packageInfoPresent = Test-Path -LiteralPath (Join-Path $bundle "app_package.txt")
         windowFocusPresent = $focusedAppSummary.present

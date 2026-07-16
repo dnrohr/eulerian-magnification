@@ -532,6 +532,10 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   `screenrecord.mp4` files can produce a tiled `review_contact_sheet.jpg` plus
   hash manifest for faster visual inspection before accepting or rejecting a
   watched parity run.
+- Live validation summaries and Pixel closeout reports now surface optional
+  review contact sheet hashes, so final artifact notes can cite the sheet used
+  during visual inspection without making it a replacement for the raw
+  screenrecord.
 
 ## Remaining
 

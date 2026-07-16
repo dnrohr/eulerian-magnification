@@ -358,9 +358,9 @@ docs can cite the exact visual artifacts:
 Use `pixel_closeout_summary.json` as the saved closeout artifact when updating
 README or parity documentation after the gates pass. Satisfied slots include an
 `artifactNote` with the bundle, source, screenshot hash, and screenrecord hash
-needed for release notes. The closeout JSON also includes `closeoutBlockers`,
-a compact list of missing slots and accepted-evidence issues that still block
-roadmap closeout.
+needed for release notes, plus a review contact sheet hash when one exists.
+The closeout JSON also includes `closeoutBlockers`, a compact list of missing
+slots and accepted-evidence issues that still block roadmap closeout.
 
 For screenrecord review, generate a contact sheet beside a captured bundle:
 
@@ -372,7 +372,9 @@ For screenrecord review, generate a contact sheet beside a captured bundle:
 
 The helper writes `review_contact_sheet.jpg` and
 `review_contact_sheet_manifest.json` with hashes for the source screenrecord and
-contact sheet. This is a review aid only; accepted final evidence still has to
+contact sheet. The next `evidence_summary.json` records the contact sheet under
+`artifacts.reviewContactSheet`, and closeout includes its hash in `artifactNote`
+when present. This is a review aid only; accepted final evidence still has to
 pass the strict summary and closeout gates.
 
 Use the closeout gates before editing visual-validation status in README or

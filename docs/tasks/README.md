@@ -153,9 +153,9 @@ that closeout slot.
 Use `pixel_closeout_summary.json` as the saved closeout artifact for final
 README and parity-doc updates after the gates pass. Satisfied slots include an
 `artifactNote` with the bundle, source, screenshot hash, and screenrecord hash
-needed for release notes. The saved JSON includes `closeoutBlockers`, a compact
-operator checklist of missing slots and accepted-evidence issues that still
-block roadmap closeout.
+needed for release notes, plus a review contact sheet hash when one exists. The
+saved JSON includes `closeoutBlockers`, a compact operator checklist of missing
+slots and accepted-evidence issues that still block roadmap closeout.
 
 For quick visual review of a captured screenrecord, generate a contact sheet:
 
@@ -167,8 +167,9 @@ For quick visual review of a captured screenrecord, generate a contact sheet:
 
 The helper writes `review_contact_sheet.jpg` and a
 `review_contact_sheet_manifest.json` hash manifest beside the bundle. It helps
-inspect motion/ROI evidence quickly, but it does not replace the strict final
-evidence gates.
+inspect motion/ROI evidence quickly; rerun the evidence summary afterward so
+`artifacts.reviewContactSheet` and the closeout `artifactNote` can cite the
+contact sheet hash. It does not replace the strict final evidence gates.
 
 Use `-FailOnCloseoutNotReady` before closing roadmap items; it is equivalent to
 requiring no missing, unmatched, ambiguous, duplicate, non-`main`, or
