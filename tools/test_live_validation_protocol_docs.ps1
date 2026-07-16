@@ -198,6 +198,7 @@ Assert-DocContains -Path $roiDoc -Expected "-MeasureRoiKind Auto" -Message "ROI 
 Assert-DocContains -Path $roiDoc -Expected "manual-roi-known-target-final" -Message "ROI protocol must include explicit manual ROI final evidence."
 Assert-DocContains -Path $roiDoc -Expected "auto-face-roi-final" -Message "ROI protocol must include explicit automatic ROI final evidence."
 Assert-DocContains -Path $roiDoc -Expected "-RequireEvidenceVerdict target_visible_unvalidated" -Message "ROI setup evidence should stop at target-visible review."
+Assert-DocContains -Path $roiDoc -Expected 'setup `screenshot.png`' -Message "ROI setup evidence should create screenshot bounds before measurement."
 Assert-DocContains -Path $roiDoc -Expected "source.commitReachableFromOriginMain" -Message "ROI protocol must require final evidence from a pushed source commit."
 
 Assert-DocContains -Path $liveGuide -Expected "-RequireFinalVisualEvidence" -Message "Live guide must document the final visual evidence profile."

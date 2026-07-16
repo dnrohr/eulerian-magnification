@@ -231,6 +231,18 @@ Assert-True -Condition ($phaseCommandText.Contains("fast tremor target")) -Messa
 $roiCommandText = @($roi.commands | ForEach-Object { $_.command }) -join "`n"
 Assert-True -Condition ($roiCommandText.Contains("manual-roi-known-target-final")) -Message "ROI commands should include explicit manual final label."
 Assert-True -Condition ($roiCommandText.Contains("auto-face-roi-final")) -Message "ROI commands should include explicit automatic final label."
+$manualRoiSetupCommand = @($roi.commands | Where-Object { $_.name -eq "manual-roi-known-target-setup" } | Select-Object -First 1).command
+$autoRoiSetupCommand = @($roi.commands | Where-Object { $_.name -eq "auto-face-roi-setup" } | Select-Object -First 1).command
+$manualRoiFinalCommand = @($roi.commands | Where-Object { $_.name -eq "manual-roi-known-target-final" } | Select-Object -First 1).command
+$autoRoiFinalCommand = @($roi.commands | Where-Object { $_.name -eq "auto-face-roi-final" } | Select-Object -First 1).command
+foreach ($setupCommand in @($manualRoiSetupCommand, $autoRoiSetupCommand)) {
+    Assert-True -Condition (-not $setupCommand.Contains("-MeasureRoiExpected")) -Message "ROI setup commands should not require expected bounds before the setup screenshot exists."
+    Assert-True -Condition (-not $setupCommand.Contains("-RequireRoiMeasurement")) -Message "ROI setup commands should not require ROI measurement before expected bounds are derived."
+}
+Assert-True -Condition ($manualRoiFinalCommand.Contains('-MeasureRoiExpected "<visible-target-bounds-in-screenshot-space>"')) -Message "Manual ROI final command should retain the target-bounds placeholder for helper replacement."
+Assert-True -Condition ($manualRoiFinalCommand.Contains("-RequireRoiMeasurement")) -Message "Manual ROI final command should require ROI measurement."
+Assert-True -Condition ($autoRoiFinalCommand.Contains('-MeasureRoiExpected "<visible-face-or-skin-target-bounds-in-screenshot-space>"')) -Message "Auto ROI final command should retain the face/skin placeholder for helper replacement."
+Assert-True -Condition ($autoRoiFinalCommand.Contains("-RequireRoiMeasurement")) -Message "Auto ROI final command should require ROI measurement."
 $linearCommandText = @($linear.commands | ForEach-Object { $_.command }) -join "`n"
 Assert-True -Condition ($linearCommandText.Contains("live-linear-breathing-final")) -Message "Linear commands should include explicit Breathing final label."
 Assert-True -Condition ($linearCommandText.Contains("watched slow-motion edge or breathing target")) -Message "Breathing commands should carry a distinct target description."

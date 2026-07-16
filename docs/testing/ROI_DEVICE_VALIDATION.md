@@ -24,8 +24,9 @@ Use this procedure to verify that analysis ROI coordinates match the visible pre
 For repeatable evidence, capture a clean-preview bundle and measure the visible
 yellow manual ROI outline against the expected screenshot-space target
 rectangle. The first command is a pre-inspection capture: it should prove that
-the target is visible and the ROI measurement exists, but it should stop at
-`target_visible_unvalidated` until the operator accepts the alignment.
+the target is visible and produce the setup `screenshot.png` used to derive
+measurement bounds, but it should stop at `target_visible_unvalidated` until
+the operator accepts the alignment.
 
 Planner command name: `manual-roi-known-target-setup`.
 
@@ -46,9 +47,6 @@ Planner command name: `manual-roi-known-target-setup`.
   -GlPreview $true `
   -Controls $false `
   -Clean $true `
-  -MeasureRoiExpected "<visible-target-bounds-in-screenshot-space>" `
-  -MeasureRoiKind Manual `
-  -RequireRoiMeasurement `
   -ScreenRecordSeconds 10 `
   -RequireScreenrecord `
   -RequireThermalReady `
@@ -59,16 +57,17 @@ Planner command name: `manual-roi-known-target-setup`.
   -VisualClaim "Manual ROI outline overlaps the same visible target that was selected" `
   -TargetVisible $true `
   -VisualValidated $false `
-  -OperatorNotes "Set VisualValidated true only after inspecting the screenshot/recording and measurement JSON." `
+  -OperatorNotes "Set VisualValidated true only after inspecting the screenshot/recording and deriving target bounds for the final ROI measurement." `
   -Summarize
 ```
 
-`ExpectedRoi` is normalized screenshot space, not analysis-camera space. Derive
-it from the visible known target or fixture in the captured screenshot. The
-measurement proves the overlay landed where expected on screen; it only proves
-manual target alignment if that expected rectangle was derived from the visible
-target. The analyzer also requires a single connected ROI component by default,
-which catches duplicate visible ROI boxes in the search region.
+For the final command, `ExpectedRoi` is normalized screenshot space, not
+analysis-camera space. Derive it from the visible known target or fixture in the
+captured setup screenshot. The measurement proves the overlay landed where
+expected on screen; it only proves manual target alignment if that expected
+rectangle was derived from the visible target. The analyzer also requires a
+single connected ROI component by default, which catches duplicate visible ROI
+boxes in the search region.
 After identifying the visible target bounds in screenshot pixels, convert them
 to the paste-ready value with:
 
@@ -167,9 +166,6 @@ Planner command name: `auto-face-roi-setup`.
   -GlPreview $true `
   -Controls $false `
   -Clean $true `
-  -MeasureRoiExpected "<visible-face-or-skin-target-bounds-in-screenshot-space>" `
-  -MeasureRoiKind Auto `
-  -RequireRoiMeasurement `
   -ScreenRecordSeconds 10 `
   -RequireScreenrecord `
   -RequireThermalReady `
@@ -180,7 +176,7 @@ Planner command name: `auto-face-roi-setup`.
   -VisualClaim "Automatic ROI outline overlaps the visible face or skin region being tracked" `
   -TargetVisible $true `
   -VisualValidated $false `
-  -OperatorNotes "Set VisualValidated true only after the automatic ROI is inspected against the visible face/skin target." `
+  -OperatorNotes "Set VisualValidated true only after the automatic ROI is inspected and face/skin target bounds are derived for the final ROI measurement." `
   -Summarize
 ```
 

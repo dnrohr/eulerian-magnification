@@ -280,6 +280,10 @@ Goal: prove that automatic and manual ROI coordinates align with the live previe
 - `tools/verify_pixel_validation_handoff.ps1` now reports and can fail on
   handoff consistency mismatches when ROI placeholder final commands are not
   paired with the generated final-command helper guidance.
+- ROI setup capture templates no longer include `-MeasureRoiExpected` or
+  `-RequireRoiMeasurement`, because the expected bounds do not exist until the
+  setup `screenshot.png` has been captured and measured. Final ROI commands
+  still require measurement after helper replacement.
 
 ## Done When
 
