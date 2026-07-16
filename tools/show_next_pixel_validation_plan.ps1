@@ -62,7 +62,7 @@ $validationGroups = @(
         milestones = @("AE", "AP")
         protocol = "docs/experiments/pixel8a_live_linear_validation.md"
         setupEvidence = "Pulse and Breathing setup captures should show renderer diagnostics and stop at target_visible_unvalidated."
-        finalEvidence = "Final Pulse and Breathing runs require -RequireRendererDiagnostics plus -RequireFinalVisualEvidence from a clean source tree whose commit is reachable from origin/main."
+        finalEvidence = "Final Pulse and Breathing runs require -RequireRendererDiagnostics, explicit runtime gates, and -RequireFinalVisualEvidence from a clean source tree whose commit is reachable from origin/main."
         closes = @(
             "portrait full-frame live EVM preview validation",
             "live linear reconstruction visual evidence",
@@ -77,7 +77,7 @@ $validationGroups = @(
             [pscustomobject]@{
                 name = "live-linear-pulse-final"
                 purpose = "Closing Pulse full-frame live linear evidence after inspection."
-                command = ".\tools\capture_live_validation_evidence.ps1 -Label `"live-linear-pulse-final`" -WaitForThermalReady -ThermalReadyBelowStatus 4 -ThermalReadySamples 2 -ThermalReadyTimeoutSeconds 900 -ThermalReadyPollSeconds 30 -Mode Pulse -View Split -RoiSource FullFrame -GlPreview `$true -Controls `$false -ScreenRecordSeconds 15 -RequireRendererDiagnostics -RequireUiText `"Preview: Full-frame linear EVM preview`",`"Renderer: Live linear EVM reconstruction`",`"GL renderer: Live reconstruction`" -TargetDescription `"watched pulse target under steady lighting`" -VisualClaim `"Live Pulse Split view shows accepted full-frame linear reconstruction rather than ROI tint`" -TargetVisible `$true -VisualValidated `$true -OperatorNotes `"Accepted only if the recording shows target-visible magnification without ROI-only tint or full-frame flashing.`" -RequireFinalVisualEvidence -Summarize"
+                command = ".\tools\capture_live_validation_evidence.ps1 -Label `"live-linear-pulse-final`" -WaitForThermalReady -ThermalReadyBelowStatus 4 -ThermalReadySamples 2 -ThermalReadyTimeoutSeconds 900 -ThermalReadyPollSeconds 30 -Mode Pulse -View Split -RoiSource FullFrame -GlPreview `$true -Controls `$false -ScreenRecordSeconds 15 -RequireScreenrecord -RequireThermalReady -RequireCameraFps -RequireFocusedApp -RequireRendererDiagnostics -RequireUiText `"Preview: Full-frame linear EVM preview`",`"Renderer: Live linear EVM reconstruction`",`"GL renderer: Live reconstruction`" -TargetDescription `"watched pulse target under steady lighting`" -VisualClaim `"Live Pulse Split view shows accepted full-frame linear reconstruction rather than ROI tint`" -TargetVisible `$true -VisualValidated `$true -OperatorNotes `"Accepted only if the recording shows target-visible magnification without ROI-only tint or full-frame flashing.`" -RequireFinalVisualEvidence -Summarize"
             },
             [pscustomobject]@{
                 name = "live-linear-breathing-setup"
@@ -87,7 +87,7 @@ $validationGroups = @(
             [pscustomobject]@{
                 name = "live-linear-breathing-final"
                 purpose = "Closing Breathing full-frame live linear evidence after inspection."
-                command = ".\tools\capture_live_validation_evidence.ps1 -Label `"live-linear-breathing-final`" -WaitForThermalReady -ThermalReadyBelowStatus 4 -ThermalReadySamples 2 -ThermalReadyTimeoutSeconds 900 -ThermalReadyPollSeconds 30 -Mode Breathing -View Split -RoiSource FullFrame -GlPreview `$true -Controls `$false -ScreenRecordSeconds 15 -RequireRendererDiagnostics -RequireUiText `"Preview: Full-frame linear EVM preview`",`"Renderer: Live linear EVM reconstruction`",`"GL renderer: Live reconstruction`" -TargetDescription `"watched slow-motion edge or breathing target`" -VisualClaim `"Live Breathing Split view shows accepted full-frame reconstructed motion on the watched target rather than ROI tint`" -TargetVisible `$true -VisualValidated `$true -OperatorNotes `"Accepted only if the recording shows target-visible Breathing motion magnification without ROI-only tint, whole-frame flashing, or a frozen camera stream.`" -RequireFinalVisualEvidence -Summarize"
+                command = ".\tools\capture_live_validation_evidence.ps1 -Label `"live-linear-breathing-final`" -WaitForThermalReady -ThermalReadyBelowStatus 4 -ThermalReadySamples 2 -ThermalReadyTimeoutSeconds 900 -ThermalReadyPollSeconds 30 -Mode Breathing -View Split -RoiSource FullFrame -GlPreview `$true -Controls `$false -ScreenRecordSeconds 15 -RequireScreenrecord -RequireThermalReady -RequireCameraFps -RequireFocusedApp -RequireRendererDiagnostics -RequireUiText `"Preview: Full-frame linear EVM preview`",`"Renderer: Live linear EVM reconstruction`",`"GL renderer: Live reconstruction`" -TargetDescription `"watched slow-motion edge or breathing target`" -VisualClaim `"Live Breathing Split view shows accepted full-frame reconstructed motion on the watched target rather than ROI tint`" -TargetVisible `$true -VisualValidated `$true -OperatorNotes `"Accepted only if the recording shows target-visible Breathing motion magnification without ROI-only tint, whole-frame flashing, or a frozen camera stream.`" -RequireFinalVisualEvidence -Summarize"
             }
         )
     },
@@ -98,7 +98,7 @@ $validationGroups = @(
         milestones = @("AR")
         protocol = "docs/experiments/pixel8a_live_phase_validation.md"
         setupEvidence = "Controlled high-contrast moving-edge setup should stop at target_visible_unvalidated."
-        finalEvidence = "Final Motion/Fast tremor runs require -RequirePhaseDiagnostics plus -RequireFinalVisualEvidence from a clean source tree whose commit is reachable from origin/main."
+        finalEvidence = "Final Motion/Fast tremor runs require -RequirePhaseDiagnostics, explicit runtime gates, and -RequireFinalVisualEvidence from a clean source tree whose commit is reachable from origin/main."
         closes = @(
             "controlled object-motion live phase validation",
             "Object vibration and Fast tremor preset visual parity inputs"
@@ -112,7 +112,7 @@ $validationGroups = @(
             [pscustomobject]@{
                 name = "live-phase-object-final"
                 purpose = "Closing controlled motion phase evidence after inspection."
-                command = ".\tools\capture_live_validation_evidence.ps1 -Label `"live-phase-object-final`" -WaitForThermalReady -ThermalReadyBelowStatus 4 -ThermalReadySamples 2 -ThermalReadyTimeoutSeconds 900 -ThermalReadyPollSeconds 30 -Mode Tremor -View Split -RoiSource Manual -ManualRoi `"0.25,0.25,0.75,0.75`" -GlPreview `$true -Controls `$false -ScreenRecordSeconds 15 -RequirePhaseDiagnostics -RequireUiText `"Renderer: Live phase motion`",`"GL renderer: Live phase motion`",`"phase:`" -TargetDescription `"high-contrast edge or small object moving subtly inside manual ROI`" -VisualClaim `"Live phase Split view shows edge-localized amplified motion inside the manual ROI`" -TargetVisible `$true -VisualValidated `$true -OperatorNotes `"Accepted only if the recording shows edge-localized amplified motion, not uniform ROI flashing.`" -RequireFinalVisualEvidence -Summarize"
+                command = ".\tools\capture_live_validation_evidence.ps1 -Label `"live-phase-object-final`" -WaitForThermalReady -ThermalReadyBelowStatus 4 -ThermalReadySamples 2 -ThermalReadyTimeoutSeconds 900 -ThermalReadyPollSeconds 30 -Mode Tremor -View Split -RoiSource Manual -ManualRoi `"0.25,0.25,0.75,0.75`" -GlPreview `$true -Controls `$false -ScreenRecordSeconds 15 -RequireScreenrecord -RequireThermalReady -RequireCameraFps -RequireFocusedApp -RequirePhaseDiagnostics -RequireUiText `"Renderer: Live phase motion`",`"GL renderer: Live phase motion`",`"phase:`" -TargetDescription `"high-contrast edge or small object moving subtly inside manual ROI`" -VisualClaim `"Live phase Split view shows edge-localized amplified motion inside the manual ROI`" -TargetVisible `$true -VisualValidated `$true -OperatorNotes `"Accepted only if the recording shows edge-localized amplified motion, not uniform ROI flashing.`" -RequireFinalVisualEvidence -Summarize"
             },
             [pscustomobject]@{
                 name = "live-phase-fast-tremor-setup"
@@ -122,7 +122,7 @@ $validationGroups = @(
             [pscustomobject]@{
                 name = "live-phase-fast-tremor-final"
                 purpose = "Closing Fast tremor phase evidence after inspection."
-                command = ".\tools\capture_live_validation_evidence.ps1 -Label `"live-phase-fast-tremor-final`" -WaitForThermalReady -ThermalReadyBelowStatus 4 -ThermalReadySamples 2 -ThermalReadyTimeoutSeconds 900 -ThermalReadyPollSeconds 30 -Mode Tremor -View Split -RoiSource Manual -ManualRoi `"0.25,0.25,0.75,0.75`" -GlPreview `$true -Controls `$false -ScreenRecordSeconds 15 -RequirePhaseDiagnostics -RequireUiText `"Renderer: Live phase motion`",`"GL renderer: Live phase motion`",`"phase:`" -TargetDescription `"fast tremor target with a high-contrast edge inside manual ROI`" -VisualClaim `"Live phase Split view shows accepted edge-localized amplified fast tremor without uniform ROI flashing`" -TargetVisible `$true -VisualValidated `$true -OperatorNotes `"Accepted only if the recording shows edge-localized amplified fast tremor, not uniform ROI flashing or color-only change.`" -RequireFinalVisualEvidence -Summarize"
+                command = ".\tools\capture_live_validation_evidence.ps1 -Label `"live-phase-fast-tremor-final`" -WaitForThermalReady -ThermalReadyBelowStatus 4 -ThermalReadySamples 2 -ThermalReadyTimeoutSeconds 900 -ThermalReadyPollSeconds 30 -Mode Tremor -View Split -RoiSource Manual -ManualRoi `"0.25,0.25,0.75,0.75`" -GlPreview `$true -Controls `$false -ScreenRecordSeconds 15 -RequireScreenrecord -RequireThermalReady -RequireCameraFps -RequireFocusedApp -RequirePhaseDiagnostics -RequireUiText `"Renderer: Live phase motion`",`"GL renderer: Live phase motion`",`"phase:`" -TargetDescription `"fast tremor target with a high-contrast edge inside manual ROI`" -VisualClaim `"Live phase Split view shows accepted edge-localized amplified fast tremor without uniform ROI flashing`" -TargetVisible `$true -VisualValidated `$true -OperatorNotes `"Accepted only if the recording shows edge-localized amplified fast tremor, not uniform ROI flashing or color-only change.`" -RequireFinalVisualEvidence -Summarize"
             }
         )
     },

@@ -251,6 +251,9 @@ foreach ($command in $capturePlanCommands) {
         Assert-True -Condition ($command.command.Contains("-RequireFinalVisualEvidence")) -Message "Final command '$($command.name)' should use final visual evidence gates."
         Assert-True -Condition (-not $command.command.Contains("-RequireEvidenceVerdict target_visible_unvalidated")) -Message "Final command '$($command.name)' must not use the setup-only verdict gate."
         Assert-True -Condition ($command.command.Contains('-VisualValidated $true')) -Message "Final command '$($command.name)' should mark operator visual validation true."
+        foreach ($finalGate in @("-RequireScreenrecord", "-RequireThermalReady", "-RequireCameraFps", "-RequireFocusedApp")) {
+            Assert-True -Condition ($command.command.Contains($finalGate)) -Message "Final command '$($command.name)' should explicitly include $finalGate."
+        }
     }
 }
 
