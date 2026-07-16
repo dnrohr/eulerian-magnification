@@ -286,6 +286,9 @@ Goal: prove that automatic and manual ROI coordinates align with the live previe
   `-RequireRoiMeasurement`, because the expected bounds do not exist until the
   setup `screenshot.png` has been captured and measured. Final ROI commands
   still require measurement after helper replacement.
+- Pixel validation runbooks now split all-stage ROI handoffs so setup and
+  non-placeholder commands appear before helper generation, while placeholder
+  final ROI templates are commented as reference-only.
 
 ## Done When
 

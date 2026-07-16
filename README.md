@@ -369,7 +369,9 @@ When ROI final captures are included, the runbook and Markdown handoff add a
 `prepare_roi_final_capture_command.ps1` helper step after setup capture. Measure
 the visible target bounds from the setup `screenshot.png`, run the helper with
 those pixel bounds, then paste the printed final capture command instead of the
-placeholder command.
+placeholder command. In an all-stage ROI handoff, the runbook lists setup and
+non-placeholder commands first, then the helper, then comments the placeholder
+ROI final templates as reference-only so they are not pasted directly.
 The planner and handoff also include
 a `wait_for_device_thermal_ready.ps1` preflight command; run it before watched
 phone validation when the device is warm, FPS is low, or the preview looks

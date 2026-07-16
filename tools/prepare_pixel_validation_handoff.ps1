@@ -214,6 +214,14 @@ if (@($Slot).Count -gt 0) {
 $commands = @(& $planner @commandsArgs)
 Set-Content -LiteralPath $commandsPath -Value ([string]::Join([Environment]::NewLine, $commands)) -Encoding utf8
 $commandText = @($commands) -join "`n"
+$roiFinalTemplateCommands = @($commands | Where-Object {
+    $_.Contains("<visible-target-bounds-in-screenshot-space>") -or
+    $_.Contains("<visible-face-or-skin-target-bounds-in-screenshot-space>")
+})
+$runnableCaptureCommands = @($commands | Where-Object {
+    -not ($_.Contains("<visible-target-bounds-in-screenshot-space>") -or
+        $_.Contains("<visible-face-or-skin-target-bounds-in-screenshot-space>"))
+})
 $roiFinalHelperCommands = @()
 if ($commandText.Contains("<visible-target-bounds-in-screenshot-space>")) {
     $roiFinalHelperCommands += ('.\tools\prepare_roi_final_capture_command.ps1 -Slot manualRoi -SetupBundle "<manual-roi-setup-bundle>" -PixelBounds "<left,top,right,bottom-from-setup-screenshot>" -DeviceSerial ' + (Format-CommandArgument $DeviceSerial) + ' -EvidenceRoot ' + (Format-CommandArgument $EvidenceRoot))
@@ -282,15 +290,18 @@ $runbookLines = @(
     "# 2. Wait for a cool enough device before watched capture.",
     $plan.thermalReadiness.command,
     "",
-    "# 3. Capture the requested validation evidence.",
-    @($commands)
+    $(if (@($roiFinalHelperCommands).Count -gt 0) { "# 3. Capture setup and non-ROI-placeholder evidence." } else { "# 3. Capture the requested validation evidence." }),
+    @($(if (@($roiFinalHelperCommands).Count -gt 0) { $runnableCaptureCommands } else { $commands }))
 )
 if (@($roiFinalHelperCommands).Count -gt 0) {
     $runbookLines += @(
         "",
         "# 3a. Prepare ROI final commands after setup screenshots.",
         "# Replace setup-bundle and PixelBounds placeholders after measuring the setup screenshot.",
-        @($roiFinalHelperCommands)
+        @($roiFinalHelperCommands),
+        "",
+        "# 3b. ROI final templates below are reference only; paste the helper output instead.",
+        @($roiFinalTemplateCommands | ForEach-Object { "# TEMPLATE ONLY: $_" })
     )
 }
 $runbookLines += @(
