@@ -1,30 +1,43 @@
 # OpenGL Preview Path
 
-## Current Slice
+## Current State
 
-Milestone D now has the first GLES infrastructure pieces:
+The app now has an optional GLES preview path behind the `Use GL Preview`
+toggle. CameraX still supplies camera frames, but the display path can route
+CameraX `Preview` into a `SurfaceTexture` backed by an external OES texture and
+render that texture through GL while `ImageAnalysis` remains bound for CPU ROI
+analysis and overlays.
+
+The active GL preview pieces are:
 
 - `OesShaderSource` defines GLES 3.0 shaders for sampling a camera `samplerExternalOES` texture with a transform matrix.
+- The OES-to-RGB pass applies `SurfaceTexture.getTransformMatrix()` and uses an
+  aspect-fill viewport so portrait Pixel preview framing preserves camera aspect
+  and clips overflow similarly to CameraX `FILL_CENTER`.
+- RGB framebuffer display passes use regular GL texture coordinates, separate
+  from the external camera texture coordinate layout.
 - `GlProgram` compiles shaders, links programs, and throws `GlException` on shader, link, or GL errors.
 - `GlFrameTimer` tracks render-frame duration separately from camera frame
   arrival cadence. The debug overlay reports GL camera FPS from
   `SurfaceTexture` frame callbacks and render milliseconds from draw duration,
   so full-frame fallback decisions can catch a slow or stalled camera stream
   even when each rendered frame is cheap.
-
-This is infrastructure only. The app still uses CameraX `PreviewView` for the live camera image. The next Milestone D slice should attach a `GLSurfaceView` or equivalent EGL surface, create an OES texture, connect it to `SurfaceTexture`, and bind CameraX/Camera2 output to that surface.
-
-The app also includes an optional GL preview toggle. It creates a `GLSurfaceView`, allocates an OES external texture, connects it to `SurfaceTexture`, gives that surface to CameraX `Preview`, and renders the camera texture with GLES. CameraX `ImageAnalysis` stays bound beside the GL preview so the CPU ROI analysis and overlay controls continue to work during GL preview testing.
-
-The earlier animated debug renderer remains useful as a reference pattern, but the active toggle now targets the camera OES path.
+- The earlier animated debug renderer remains useful as a reference pattern, but
+  the user-facing toggle now targets the live camera OES path.
 
 ## Verification
 
 - JVM tests cover shader-source expectations and frame-timing math.
+- JVM tests cover the OES/RGB coordinate layouts and aspect-fill crop
+  calculations used to avoid upside-down or stretched portrait output.
 - Android build verifies GLES API usage compiles into the debug APK.
+- Pixel 8a smoke testing found and fixed the GLSL version-placement crash and
+  the portrait GL aspect/stretch issue. Remaining Pixel validation must still
+  prove watched target output is upright, nonblank, not stretched, and visibly
+  magnified for the active live EVM modes.
 
 ## Next Work
 
-- Run Pixel 8a device verification for the GL preview path.
-- Fix orientation/aspect handling once device screenshots show the exact framing.
+- Run the watched Pixel validation plans for full-frame linear and phase live
+  output. The GL path should not be marked complete from smoke screenshots alone.
 - Use the same GL output as the source for processed encoder rendering.

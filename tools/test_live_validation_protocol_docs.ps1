@@ -84,6 +84,7 @@ $roiDoc = Join-Path $repoRoot "docs\testing\ROI_DEVICE_VALIDATION.md"
 $liveGuide = Join-Path $repoRoot "docs\testing\LIVE_VISUAL_VALIDATION_CAPTURE.md"
 $parityDoc = Join-Path $repoRoot "docs\testing\MIT_PARITY_TARGETS.md"
 $milestoneUDoc = Join-Path $repoRoot "docs\tasks\MILESTONE_U_ROI_DEVICE_VALIDATION.md"
+$openGlPreviewDoc = Join-Path $repoRoot "docs\architecture\OPENGL_PREVIEW.md"
 $linearDoc = Join-Path $repoRoot "docs\experiments\pixel8a_live_linear_validation.md"
 $phaseDoc = Join-Path $repoRoot "docs\experiments\pixel8a_live_phase_validation.md"
 $captureScript = Join-Path $PSScriptRoot "capture_live_validation_evidence.ps1"
@@ -97,7 +98,7 @@ foreach ($match in [regex]::Matches($Matches[1], '\$(\w+)')) {
     [void]$captureParameters.Add($match.Groups[1].Value)
 }
 
-foreach ($path in @($readme, $taskReadme, $roiDoc, $liveGuide, $parityDoc, $linearDoc, $phaseDoc)) {
+foreach ($path in @($readme, $taskReadme, $roiDoc, $liveGuide, $parityDoc, $linearDoc, $phaseDoc, $openGlPreviewDoc)) {
     Assert-True -Condition (Test-Path -LiteralPath $path) -Message "Missing protocol doc: $path"
 }
 
@@ -202,6 +203,8 @@ Assert-DocContains -Path $roiDoc -Expected "-RequireEvidenceVerdict target_visib
 Assert-DocContains -Path $roiDoc -Expected 'setup `screenshot.png`' -Message "ROI setup evidence should create screenshot bounds before measurement."
 Assert-DocContains -Path $roiDoc -Expected "source.commitReachableFromOriginMain" -Message "ROI protocol must require final evidence from a pushed source commit."
 Assert-DocContains -Path $milestoneUDoc -Expected "intentionally do not require ROI" -Message "Milestone U notes must preserve setup-before-measurement flow."
+Assert-DocContains -Path $openGlPreviewDoc -Expected "aspect-fill viewport" -Message "OpenGL preview architecture must document the portrait aspect-fill fix."
+Assert-DocContains -Path $openGlPreviewDoc -Expected "watched target output is upright, nonblank, not stretched" -Message "OpenGL preview architecture must preserve remaining watched Pixel validation gate."
 
 Assert-DocContains -Path $liveGuide -Expected "-RequireFinalVisualEvidence" -Message "Live guide must document the final visual evidence profile."
 Assert-DocContains -Path $liveGuide -Expected "-RequireScreenrecord" -Message "Live guide must document screenrecord gating."
