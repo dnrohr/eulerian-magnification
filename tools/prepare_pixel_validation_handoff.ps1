@@ -165,6 +165,15 @@ function Get-DeviceAvailability {
     }
 }
 
+function Format-CommandArgument {
+    param([string]$Value)
+
+    if ([string]::IsNullOrWhiteSpace($Value)) {
+        return '""'
+    }
+    return '"' + ($Value -replace '"', '\"') + '"'
+}
+
 $sourceBranch = Invoke-GitValue -Arguments @("rev-parse", "--abbrev-ref", "HEAD")
 $sourceCommit = Invoke-GitValue -Arguments @("rev-parse", "HEAD")
 $sourceStatus = Invoke-GitValue -Arguments @("status", "--porcelain")
@@ -234,6 +243,16 @@ foreach ($entry in @($reviewQueue.pendingReviewSheets)) {
     $reviewIssueCounts[$issue] += 1
 }
 $deviceAvailability = Get-DeviceAvailability -ExpectedSerial $DeviceSerial -ExplicitAdbPath $AdbPath
+$installCommandParts = @(
+    ".\tools\install_debug_on_pixel.ps1",
+    "-DeviceSerial $(Format-CommandArgument $DeviceSerial)",
+    "-Build",
+    "-Launch"
+)
+if (-not [string]::IsNullOrWhiteSpace($AdbPath)) {
+    $installCommandParts = @($installCommandParts[0], "-AdbPath $(Format-CommandArgument $AdbPath)") + @($installCommandParts | Select-Object -Skip 1)
+}
+$installCommand = $installCommandParts -join " "
 
 $handoffLines = @(
     "# Pixel Validation Handoff",
@@ -257,6 +276,7 @@ $handoffLines = @(
     "- Expected device connected: $($deviceAvailability.connected)",
     "- Connected device serials: $(@($deviceAvailability.connectedSerials) -join ', ')",
     "- Device availability note: $($deviceAvailability.note)",
+    ('- Install command: `{0}`' -f $installCommand),
     "",
     "## Artifacts",
     "",
@@ -298,6 +318,12 @@ if (@($plan.recommendedCaptures).Count -eq 0) {
 $handoffLines += @(
     "",
     "## Thermal Preflight",
+    "",
+    "Install and launch the current debug build on the expected Pixel before watched capture:",
+    "",
+    '```powershell',
+    $installCommand,
+    '```',
     "",
     "Run this before a watched phone validation session if the device may be warm, the camera preview looks frozen, or FPS is low:",
     "",
@@ -381,6 +407,7 @@ $manifest = [pscustomobject]@{
     }
     thermalReadiness = $plan.thermalReadiness
     deviceAvailability = $deviceAvailability
+    installCommand = $installCommand
 }
 $manifest | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $manifestPath -Encoding utf8
 
@@ -409,6 +436,7 @@ $result = [pscustomobject]@{
     readyForPresetDocs = $closeout.readyForPresetDocs
     thermalReadiness = $plan.thermalReadiness
     deviceAvailability = $deviceAvailability
+    installCommand = $installCommand
     source = [pscustomobject]@{
         branch = $sourceBranch
         commit = $sourceCommit
@@ -437,6 +465,7 @@ if ($Json) {
     Write-Output "Device availability checked: $($result.deviceAvailability.checked)"
     Write-Output "Expected device connected: $($result.deviceAvailability.connected)"
     Write-Output "Device availability note: $($result.deviceAvailability.note)"
+    Write-Output "Install command: $($result.installCommand)"
     Write-Output "Plan: $($result.planPath)"
     Write-Output "Closeout: $($result.closeoutPath)"
     Write-Output "Commands: $($result.commandsPath)"

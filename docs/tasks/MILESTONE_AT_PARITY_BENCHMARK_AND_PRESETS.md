@@ -596,6 +596,10 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - Pixel validation handoffs now support `-FailOnDeviceUnavailable`, exiting
   nonzero when ADB cannot confirm the expected Pixel serial is connected for a
   watched validation handoff.
+- Pixel validation handoffs now include the matching
+  `install_debug_on_pixel.ps1 -Build -Launch` command in Markdown and manifest
+  output, so the connected-device session starts from the same target serial as
+  the capture plan.
 
 ## Remaining
 

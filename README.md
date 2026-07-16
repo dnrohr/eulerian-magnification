@@ -353,7 +353,9 @@ artifacts. The handoff records the target device serial, source branch, commit,
 clean-tree state, whether the commit is reachable from `origin/main`, and a
 compact pending review-sheet issue count. It also records ADB/device
 availability metadata, including whether the expected Pixel serial is connected
-at handoff time. The planner and handoff also include
+at handoff time. The Markdown handoff and manifest include a matching
+`install_debug_on_pixel.ps1 -Build -Launch` command for the same device serial.
+The planner and handoff also include
 a `wait_for_device_thermal_ready.ps1` preflight command; run it before watched
 phone validation when the device is warm, FPS is low, or the preview looks
 nearly frozen. Generated Pixel validation commands wait below thermal status
