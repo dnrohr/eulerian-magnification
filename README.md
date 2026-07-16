@@ -388,8 +388,10 @@ To see which captured bundles still need review sheets, run:
 .\tools\show_live_validation_review_queue.ps1 -CommandsOnly -FfmpegPath <path-to-ffmpeg.exe>
 ```
 
-The queue reports screenrecord bundles missing `review_contact_sheet.jpg` and
-can save JSON with `-OutputPath`.
+The queue reports screenrecord bundles with missing, manifest-less, or
+hash-mismatched review sheets and can save JSON with `-OutputPath`. Pending
+entries include a `reviewSheetIssue` reason such as `missingContactSheet`,
+`missingManifest`, or `screenrecordHashMismatch`.
 
 Use the closeout gates before editing visual-validation status in README or
 parity docs. `-FailOnPresetDocsNotReady` requires the four preset slots to be

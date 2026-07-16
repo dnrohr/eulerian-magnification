@@ -166,6 +166,7 @@ foreach ($path in @($readme, $taskReadme)) {
     Assert-DocContains -Path $path -Expected "Wrong-slot reports include the expected final label" -Message "Operator docs must mention expected labels in wrong-slot reports."
     Assert-DocContains -Path $path -Expected "export_live_validation_review_sheet.ps1" -Message "Operator docs must document review sheet export."
     Assert-DocContains -Path $path -Expected "show_live_validation_review_queue.ps1" -Message "Operator docs must document review sheet queue."
+    Assert-DocContains -Path $path -Expected "reviewSheetIssue" -Message "Operator docs must document review queue issue reasons."
 }
 
 Assert-DocContains -Path $roiDoc -Expected "-RequireRoiMeasurement" -Message "ROI protocol must require ROI measurement."

@@ -236,7 +236,8 @@ To list captured screenrecords that still need contact sheets, run:
 ```
 
 The queue emits paste-ready `export_live_validation_review_sheet.ps1` commands
-for bundles with `screenrecord.mp4` but no `review_contact_sheet.jpg`.
+for bundles with `screenrecord.mp4` and a missing, manifest-less, or
+hash-mismatched review sheet.
 
 For final live-preview evidence, pass `-RequireCameraFps` so the summary fails
 unless scoped logcat contains camera HAL `FPS:` samples and the minimum sample

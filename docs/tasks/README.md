@@ -175,7 +175,8 @@ contact sheet hash. `-RequireReviewContactSheet` makes the summary fail unless
 the contact-sheet manifest exists and its screenrecord SHA-256 matches the
 current `screenrecord.mp4`. It does not replace the strict final evidence gates.
 
-To find captured bundles that still need a contact sheet, run:
+To find captured bundles that still need a contact sheet or have a stale sheet
+manifest, run:
 
 ```powershell
 .\tools\show_live_validation_review_queue.ps1
@@ -183,7 +184,9 @@ To find captured bundles that still need a contact sheet, run:
 ```
 
 Use `-OutputPath sample-videos\exports\live-validation\review_queue.json` when
-you want to preserve the queue for a device-session handoff.
+you want to preserve the queue for a device-session handoff. Pending entries
+include a `reviewSheetIssue` reason such as `missingContactSheet`,
+`missingManifest`, or `screenrecordHashMismatch`.
 
 Use `-FailOnCloseoutNotReady` before closing roadmap items; it is equivalent to
 requiring no missing, unmatched, ambiguous, duplicate, non-`main`, unpushed, or

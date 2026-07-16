@@ -25,6 +25,16 @@ function Format-QuotedArgument {
     return '"' + ($Value -replace '"', '\"') + '"'
 }
 
+function Read-JsonIfExists {
+    param([string]$Path)
+
+    if (-not (Test-Path -LiteralPath $Path)) {
+        return $null
+    }
+
+    return Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json
+}
+
 $rootPath = Resolve-Path -LiteralPath $EvidenceRoot -ErrorAction SilentlyContinue
 $bundleDirectories = @()
 if ($rootPath) {
@@ -43,10 +53,34 @@ foreach ($directory in $bundleDirectories) {
     $screenrecordBytes = if ($screenrecordPresent) { (Get-Item -LiteralPath $screenrecordPath).Length } else { $null }
     $contactSheetPresent = Test-Path -LiteralPath $contactSheetPath
     $contactSheetManifestPresent = Test-Path -LiteralPath $contactSheetManifestPath
-    $summary = if (Test-Path -LiteralPath $summaryPath) {
-        Get-Content -LiteralPath $summaryPath -Raw | ConvertFrom-Json
+    $summary = Read-JsonIfExists -Path $summaryPath
+    $contactSheetManifest = Read-JsonIfExists -Path $contactSheetManifestPath
+    $screenrecordSha256 = Get-FileSha256IfExists -Path $screenrecordPath
+    $contactSheetSha256 = Get-FileSha256IfExists -Path $contactSheetPath
+    $manifestScreenrecordSha256 = if ($contactSheetManifest -and $contactSheetManifest.PSObject.Properties.Name -contains "screenrecordSha256") { $contactSheetManifest.screenrecordSha256 } else { $null }
+    $manifestContactSheetSha256 = if ($contactSheetManifest -and $contactSheetManifest.PSObject.Properties.Name -contains "contactSheetSha256") { $contactSheetManifest.contactSheetSha256 } else { $null }
+    $screenrecordSha256Matches = if ($screenrecordPresent -and $contactSheetManifestPresent -and -not [string]::IsNullOrWhiteSpace($manifestScreenrecordSha256) -and -not [string]::IsNullOrWhiteSpace($screenrecordSha256)) {
+        $manifestScreenrecordSha256 -eq $screenrecordSha256
     } else {
         $null
+    }
+    $contactSheetSha256Matches = if ($contactSheetPresent -and $contactSheetManifestPresent -and -not [string]::IsNullOrWhiteSpace($manifestContactSheetSha256) -and -not [string]::IsNullOrWhiteSpace($contactSheetSha256)) {
+        $manifestContactSheetSha256 -eq $contactSheetSha256
+    } else {
+        $null
+    }
+    $reviewSheetIssues = @()
+    if ($screenrecordPresent -and -not $contactSheetPresent) {
+        $reviewSheetIssues += "missingContactSheet"
+    }
+    if ($screenrecordPresent -and $contactSheetPresent -and -not $contactSheetManifestPresent) {
+        $reviewSheetIssues += "missingManifest"
+    }
+    if ($screenrecordPresent -and $contactSheetPresent -and $contactSheetManifestPresent -and $screenrecordSha256Matches -ne $true) {
+        $reviewSheetIssues += "screenrecordHashMismatch"
+    }
+    if ($screenrecordPresent -and $contactSheetPresent -and $contactSheetManifestPresent -and $contactSheetSha256Matches -ne $true) {
+        $reviewSheetIssues += "contactSheetHashMismatch"
     }
 
     $label = if ($summary -and $summary.PSObject.Properties.Name -contains "label") { $summary.label } else { $directory.Name }
@@ -60,11 +94,17 @@ foreach ($directory in $bundleDirectories) {
         label = $label
         screenrecordPresent = $screenrecordPresent
         screenrecordBytes = $screenrecordBytes
-        screenrecordSha256 = Get-FileSha256IfExists -Path $screenrecordPath
+        screenrecordSha256 = $screenrecordSha256
         reviewContactSheetPresent = $contactSheetPresent
         reviewContactSheetManifestPresent = $contactSheetManifestPresent
-        reviewContactSheetSha256 = Get-FileSha256IfExists -Path $contactSheetPath
-        pendingReviewSheet = $screenrecordPresent -and -not $contactSheetPresent
+        reviewContactSheetSha256 = $contactSheetSha256
+        manifestScreenrecordSha256 = $manifestScreenrecordSha256
+        manifestContactSheetSha256 = $manifestContactSheetSha256
+        screenrecordSha256Matches = $screenrecordSha256Matches
+        contactSheetSha256Matches = $contactSheetSha256Matches
+        reviewSheetIssues = $reviewSheetIssues
+        reviewSheetIssue = if ($reviewSheetIssues.Count -gt 0) { $reviewSheetIssues -join "," } else { "" }
+        pendingReviewSheet = $screenrecordPresent -and $reviewSheetIssues.Count -gt 0
         command = $command
     }
     $bundles += $entry
@@ -107,7 +147,8 @@ if ($CommandsOnly) {
     Write-Output "Screenrecord bundles: $($result.screenrecordBundleCount)"
     Write-Output "Pending review sheets: $($result.pendingReviewSheetCount)"
     foreach ($entry in @($pending)) {
-        Write-Output "- $($entry.label): $($entry.bundle)"
+        Write-Output "- $($entry.label): $($entry.reviewSheetIssue)"
+        Write-Output "    Bundle: $($entry.bundle)"
         Write-Output "    $($entry.command)"
     }
 }

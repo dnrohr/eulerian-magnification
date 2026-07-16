@@ -550,6 +550,9 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - Pixel validation closeout now reports accepted final evidence without a
   matching review contact sheet, adds `-FailOnReviewContactSheetIssues`, and
   includes that gate in the preset parity planner/docs path.
+- Live validation review queues now flag missing, manifest-less, and
+  hash-mismatched contact sheets with `reviewSheetIssue`, so stale sheets are
+  regenerated before closeout.
 
 ## Remaining
 

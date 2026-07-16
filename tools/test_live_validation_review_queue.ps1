@@ -70,25 +70,47 @@ New-Item -ItemType Directory -Path $root -Force | Out-Null
 try {
     $pending = Join-Path $root "pending"
     $complete = Join-Path $root "complete"
+    $missingManifest = Join-Path $root "missing-manifest"
+    $staleManifest = Join-Path $root "stale-manifest"
     $noVideo = Join-Path $root "no-video"
-    New-Item -ItemType Directory -Path $pending, $complete, $noVideo -Force | Out-Null
+    New-Item -ItemType Directory -Path $pending, $complete, $missingManifest, $staleManifest, $noVideo -Force | Out-Null
 
     [System.IO.File]::WriteAllBytes((Join-Path $pending "screenrecord.mp4"), [byte[]](0, 0, 0, 24, 102, 116, 121, 112))
     [System.IO.File]::WriteAllBytes((Join-Path $complete "screenrecord.mp4"), [byte[]](0, 0, 0, 24, 102, 116, 121, 112))
     [System.IO.File]::WriteAllBytes((Join-Path $complete "review_contact_sheet.jpg"), [byte[]](255, 216, 255, 217))
+    [System.IO.File]::WriteAllBytes((Join-Path $missingManifest "screenrecord.mp4"), [byte[]](0, 0, 0, 24, 102, 116, 121, 113))
+    [System.IO.File]::WriteAllBytes((Join-Path $missingManifest "review_contact_sheet.jpg"), [byte[]](255, 216, 255, 218))
+    [System.IO.File]::WriteAllBytes((Join-Path $staleManifest "screenrecord.mp4"), [byte[]](0, 0, 0, 24, 102, 116, 121, 114))
+    [System.IO.File]::WriteAllBytes((Join-Path $staleManifest "review_contact_sheet.jpg"), [byte[]](255, 216, 255, 219))
     Write-JsonFile -Path (Join-Path $pending "evidence_summary.json") -Value ([ordered]@{ label = "pending-review" })
     Write-JsonFile -Path (Join-Path $complete "evidence_summary.json") -Value ([ordered]@{ label = "complete-review" })
-    Write-JsonFile -Path (Join-Path $complete "review_contact_sheet_manifest.json") -Value ([ordered]@{ contactSheetSha256 = "sheet" })
+    Write-JsonFile -Path (Join-Path $missingManifest "evidence_summary.json") -Value ([ordered]@{ label = "missing-manifest-review" })
+    Write-JsonFile -Path (Join-Path $staleManifest "evidence_summary.json") -Value ([ordered]@{ label = "stale-manifest-review" })
+    Write-JsonFile -Path (Join-Path $complete "review_contact_sheet_manifest.json") -Value ([ordered]@{
+        screenrecordSha256 = (Get-FileHash -LiteralPath (Join-Path $complete "screenrecord.mp4") -Algorithm SHA256).Hash
+        contactSheetSha256 = (Get-FileHash -LiteralPath (Join-Path $complete "review_contact_sheet.jpg") -Algorithm SHA256).Hash
+    })
+    Write-JsonFile -Path (Join-Path $staleManifest "review_contact_sheet_manifest.json") -Value ([ordered]@{
+        screenrecordSha256 = "wrong-screenrecord-sha256"
+        contactSheetSha256 = "wrong-contact-sheet-sha256"
+    })
 
     $result = & (Join-Path $PSScriptRoot "show_live_validation_review_queue.ps1") -EvidenceRoot $root -Json | ConvertFrom-Json
-    Assert-Equal -Actual $result.bundleCount -Expected 3 -Message "Review queue bundle count mismatch."
-    Assert-Equal -Actual $result.screenrecordBundleCount -Expected 2 -Message "Review queue screenrecord count mismatch."
-    Assert-Equal -Actual $result.pendingReviewSheetCount -Expected 1 -Message "Review queue pending count mismatch."
-    Assert-Equal -Actual $result.pendingReviewSheets[0].label -Expected "pending-review" -Message "Pending queue should use summary label."
-    Assert-True -Condition ($result.pendingReviewSheets[0].command.Contains("export_live_validation_review_sheet.ps1")) -Message "Pending queue should include export command."
+    Assert-Equal -Actual $result.bundleCount -Expected 5 -Message "Review queue bundle count mismatch."
+    Assert-Equal -Actual $result.screenrecordBundleCount -Expected 4 -Message "Review queue screenrecord count mismatch."
+    Assert-Equal -Actual $result.pendingReviewSheetCount -Expected 3 -Message "Review queue pending count mismatch."
+    $pendingReview = @($result.pendingReviewSheets | Where-Object { $_.label -eq "pending-review" })[0]
+    Assert-Equal -Actual $pendingReview.label -Expected "pending-review" -Message "Pending queue should use summary label."
+    Assert-Equal -Actual $pendingReview.reviewSheetIssue -Expected "missingContactSheet" -Message "Missing contact sheet issue mismatch."
+    Assert-Equal -Actual (@($result.pendingReviewSheets | Where-Object { $_.label -eq "missing-manifest-review" })[0].reviewSheetIssue) -Expected "missingManifest" -Message "Missing manifest issue mismatch."
+    Assert-Equal -Actual (@($result.pendingReviewSheets | Where-Object { $_.label -eq "stale-manifest-review" })[0].reviewSheetIssue) -Expected "screenrecordHashMismatch,contactSheetHashMismatch" -Message "Stale manifest issue mismatch."
+    Assert-Equal -Actual (@($result.bundles | Where-Object { $_.label -eq "complete-review" })[0].pendingReviewSheet) -Expected $false -Message "Matching review sheet should not be pending."
+    Assert-Equal -Actual (@($result.bundles | Where-Object { $_.label -eq "complete-review" })[0].screenrecordSha256Matches) -Expected $true -Message "Matching screenrecord hash should be reported."
+    Assert-Equal -Actual (@($result.bundles | Where-Object { $_.label -eq "complete-review" })[0].contactSheetSha256Matches) -Expected $true -Message "Matching contact sheet hash should be reported."
+    Assert-True -Condition ($pendingReview.command.Contains("export_live_validation_review_sheet.ps1")) -Message "Pending queue should include export command."
 
     $commands = @(& (Join-Path $PSScriptRoot "show_live_validation_review_queue.ps1") -EvidenceRoot $root -CommandsOnly -FfmpegPath "C:\ffmpeg\bin\ffmpeg.exe")
-    Assert-Equal -Actual @($commands).Count -Expected 1 -Message "CommandsOnly should output one pending command."
+    Assert-Equal -Actual @($commands).Count -Expected 3 -Message "CommandsOnly should output one command per pending review sheet."
     Assert-True -Condition ($commands[0].Contains("-FfmpegPath")) -Message "CommandsOnly should include explicit ffmpeg path."
 
     $outputPath = Join-Path $root "review_queue.json"
