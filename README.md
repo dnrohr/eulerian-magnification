@@ -393,6 +393,16 @@ hash-mismatched review sheets and can save JSON with `-OutputPath`. Pending
 entries include a `reviewSheetIssue` reason such as `missingContactSheet`,
 `missingManifest`, or `screenrecordHashMismatch`.
 
+When `ffmpeg` is not installed, create a local review dashboard instead. It
+does not satisfy the review contact sheet gate, but it gives one browser page
+with playable recordings, existing sheets, hashes, issue reasons, and
+regeneration commands:
+
+```powershell
+.\tools\export_live_validation_review_dashboard.ps1
+.\tools\export_live_validation_review_dashboard.ps1 -PendingOnly -Open
+```
+
 Use the closeout gates before editing visual-validation status in README or
 parity docs. `-FailOnPresetDocsNotReady` requires the four preset slots to be
 present and rejects unmatched, ambiguous, duplicate, non-`main`, unpushed, or

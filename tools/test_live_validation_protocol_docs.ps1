@@ -167,6 +167,7 @@ foreach ($path in @($readme, $taskReadme)) {
     Assert-DocContains -Path $path -Expected "export_live_validation_review_sheet.ps1" -Message "Operator docs must document review sheet export."
     Assert-DocContains -Path $path -Expected "show_live_validation_review_queue.ps1" -Message "Operator docs must document review sheet queue."
     Assert-DocContains -Path $path -Expected "reviewSheetIssue" -Message "Operator docs must document review queue issue reasons."
+    Assert-DocContains -Path $path -Expected "export_live_validation_review_dashboard.ps1" -Message "Operator docs must document review dashboard export."
 }
 
 Assert-DocContains -Path $roiDoc -Expected "-RequireRoiMeasurement" -Message "ROI protocol must require ROI measurement."
@@ -190,6 +191,7 @@ Assert-DocContains -Path $liveGuide -Expected "VisualClaim" -Message "Live guide
 Assert-DocContains -Path $liveGuide -Expected "review_contact_sheet.jpg" -Message "Live guide must document review contact sheets."
 Assert-DocContains -Path $liveGuide -Expected "-RequireReviewContactSheet" -Message "Live guide must document required review contact sheet gating."
 Assert-DocContains -Path $liveGuide -Expected "show_live_validation_review_queue.ps1" -Message "Live guide must document review queue."
+Assert-DocContains -Path $liveGuide -Expected "export_live_validation_review_dashboard.ps1" -Message "Live guide must document review dashboard export."
 
 Assert-DocContains -Path $parityDoc -Expected "summarize_pixel_validation_closeout.ps1" -Message "Parity targets must document closeout summary."
 Assert-DocContains -Path $parityDoc -Expected "-FailOnPresetDocsNotReady" -Message "Parity targets must document the preset docs readiness gate."

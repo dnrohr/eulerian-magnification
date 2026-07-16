@@ -188,6 +188,18 @@ you want to preserve the queue for a device-session handoff. Pending entries
 include a `reviewSheetIssue` reason such as `missingContactSheet`,
 `missingManifest`, or `screenrecordHashMismatch`.
 
+If `ffmpeg` is not available yet, generate a local dashboard for manual review:
+
+```powershell
+.\tools\export_live_validation_review_dashboard.ps1
+.\tools\export_live_validation_review_dashboard.ps1 -PendingOnly -Open
+```
+
+The dashboard embeds playable `screenrecord.mp4` files, existing contact
+sheets, SHA-256 fields, queue issue reasons, and regeneration commands. It is a
+review aid only; final closeout still requires matching contact sheets and the
+strict evidence gates.
+
 Use `-FailOnCloseoutNotReady` before closing roadmap items; it is equivalent to
 requiring no missing, unmatched, ambiguous, duplicate, non-`main`, unpushed, or
 missing-artifact-hash accepted evidence

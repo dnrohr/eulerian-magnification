@@ -239,6 +239,18 @@ The queue emits paste-ready `export_live_validation_review_sheet.ps1` commands
 for bundles with `screenrecord.mp4` and a missing, manifest-less, or
 hash-mismatched review sheet.
 
+If `ffmpeg` is not installed, create a browser dashboard for inspection while
+you arrange contact-sheet generation:
+
+```powershell
+.\tools\export_live_validation_review_dashboard.ps1
+.\tools\export_live_validation_review_dashboard.ps1 -PendingOnly -Open
+```
+
+The dashboard embeds playable recordings, existing sheets, hashes, issue
+reasons, and the review-sheet export commands. It does not replace
+`review_contact_sheet.jpg` for final closeout.
+
 For final live-preview evidence, pass `-RequireCameraFps` so the summary fails
 unless scoped logcat contains camera HAL `FPS:` samples and the minimum sample
 is at least the configured warning threshold, `23.5 FPS` by default. This

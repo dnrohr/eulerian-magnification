@@ -553,6 +553,9 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - Live validation review queues now flag missing, manifest-less, and
   hash-mismatched contact sheets with `reviewSheetIssue`, so stale sheets are
   regenerated before closeout.
+- Added `tools/export_live_validation_review_dashboard.ps1` so screenrecord
+  bundles can be reviewed from a local HTML page even before `ffmpeg` is
+  available to generate contact sheets.
 
 ## Remaining
 
