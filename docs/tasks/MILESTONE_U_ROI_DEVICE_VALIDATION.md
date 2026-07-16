@@ -277,6 +277,9 @@ Goal: prove that automatic and manual ROI coordinates align with the live previe
   manual or automatic ROI final commands still contain setup-derived placeholder
   bounds, reducing the chance of a watched session pasting an intentionally
   invalid placeholder command.
+- `tools/verify_pixel_validation_handoff.ps1` now reports and can fail on
+  handoff consistency mismatches when ROI placeholder final commands are not
+  paired with the generated final-command helper guidance.
 
 ## Done When
 

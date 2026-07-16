@@ -271,7 +271,7 @@ $runbookLines = @(
     "# Source commit reachable from origin/main: $sourceCommitReachableFromOriginMain",
     "# Expected device connected at handoff time: $($deviceAvailability.connected)",
     "# Handoff manifest: $manifestPath",
-    ".\tools\verify_pixel_validation_handoff.ps1 -ManifestPath $(Format-CommandArgument $manifestPath) -SourceRoot $(Format-CommandArgument $SourceRoot) -FailOnArtifactMismatch -FailOnSourceMismatch -FailOnDeviceUnavailable",
+    ".\tools\verify_pixel_validation_handoff.ps1 -ManifestPath $(Format-CommandArgument $manifestPath) -SourceRoot $(Format-CommandArgument $SourceRoot) -FailOnArtifactMismatch -FailOnSourceMismatch -FailOnDeviceUnavailable -FailOnHandoffConsistencyMismatch",
     "git -C $(Format-CommandArgument $SourceRoot) status --short",
     "git -C $(Format-CommandArgument $SourceRoot) rev-parse HEAD",
     "git -C $(Format-CommandArgument $SourceRoot) merge-base --is-ancestor $(Format-CommandArgument $sourceCommit) origin/main",

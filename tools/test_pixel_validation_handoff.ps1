@@ -169,6 +169,7 @@ Assert-True -Condition ($runbook.Contains("verify_pixel_validation_handoff.ps1")
 Assert-True -Condition ($runbook.Contains("-FailOnArtifactMismatch")) -Message "Runbook verifier should fail on artifact mismatches."
 Assert-True -Condition ($runbook.Contains("-FailOnSourceMismatch")) -Message "Runbook verifier should fail on source mismatches."
 Assert-True -Condition ($runbook.Contains("-FailOnDeviceUnavailable")) -Message "Runbook verifier should fail on missing expected device."
+Assert-True -Condition ($runbook.Contains("-FailOnHandoffConsistencyMismatch")) -Message "Runbook verifier should fail on stale handoff helper consistency."
 Assert-True -Condition ($runbook.Contains("status --short")) -Message "Runbook should include a clean-source recheck command."
 Assert-True -Condition ($runbook.Contains("rev-parse HEAD")) -Message "Runbook should include a source commit recheck command."
 Assert-True -Condition ($runbook.Contains("merge-base --is-ancestor")) -Message "Runbook should include an origin/main reachability recheck command."

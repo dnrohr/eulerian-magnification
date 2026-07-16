@@ -5,6 +5,7 @@ param(
     [switch]$FailOnArtifactMismatch,
     [switch]$FailOnSourceMismatch,
     [switch]$FailOnDeviceUnavailable,
+    [switch]$FailOnHandoffConsistencyMismatch,
     [switch]$Json
 )
 
@@ -135,6 +136,42 @@ function New-Check {
     }
 }
 
+function Resolve-ManifestArtifactPath {
+    param(
+        $Manifest,
+        [string]$ManifestDirectory,
+        [string]$Name
+    )
+
+    $artifact = @($Manifest.artifacts | Where-Object { $_.name -eq $Name } | Select-Object -First 1)
+    if (@($artifact).Count -eq 0) {
+        return $null
+    }
+
+    $path = [string]$artifact[0].path
+    if ([string]::IsNullOrWhiteSpace($path)) {
+        return $null
+    }
+    if (-not [System.IO.Path]::IsPathRooted($path)) {
+        $path = Join-Path $ManifestDirectory $path
+    }
+    return $path
+}
+
+function Get-ArtifactText {
+    param(
+        $Manifest,
+        [string]$ManifestDirectory,
+        [string]$Name
+    )
+
+    $path = Resolve-ManifestArtifactPath -Manifest $Manifest -ManifestDirectory $ManifestDirectory -Name $Name
+    if ([string]::IsNullOrWhiteSpace($path) -or -not (Test-Path -LiteralPath $path)) {
+        return ""
+    }
+    return Get-Content -LiteralPath $path -Raw
+}
+
 $resolvedManifest = Resolve-Path -LiteralPath $ManifestPath -ErrorAction SilentlyContinue
 if (-not $resolvedManifest) {
     throw "Handoff manifest not found: $ManifestPath"
@@ -161,6 +198,18 @@ foreach ($artifact in @($manifest.artifacts)) {
     $artifactChecks += New-Check -Name $artifact.name -Passed ($actualHash -eq $expectedHash) -Message $(if ($actualHash -eq $expectedHash) { "hash ok" } else { "hash mismatch" }) -Details ([pscustomobject]@{ path = $path; expectedSha256 = $expectedHash; actualSha256 = $actualHash })
 }
 
+$commandText = Get-ArtifactText -Manifest $manifest -ManifestDirectory $manifestDirectory -Name "commands"
+$runbookText = Get-ArtifactText -Manifest $manifest -ManifestDirectory $manifestDirectory -Name "runbook"
+$handoffText = Get-ArtifactText -Manifest $manifest -ManifestDirectory $manifestDirectory -Name "handoff"
+$roiHelperText = @($manifest.roiFinalHelperCommands) -join "`n"
+$manualRoiPlaceholderPresent = $commandText.Contains("<visible-target-bounds-in-screenshot-space>")
+$autoRoiPlaceholderPresent = $commandText.Contains("<visible-face-or-skin-target-bounds-in-screenshot-space>")
+$helperTextPresent = $runbookText.Contains("prepare_roi_final_capture_command.ps1") -and $handoffText.Contains("prepare_roi_final_capture_command.ps1")
+$handoffConsistencyChecks = @(
+    New-Check -Name "manualRoiFinalHelper" -Passed (-not $manualRoiPlaceholderPresent -or ($roiHelperText.Contains("-Slot manualRoi") -and $helperTextPresent)) -Message $(if (-not $manualRoiPlaceholderPresent) { "manual ROI final command has no placeholder" } elseif ($roiHelperText.Contains("-Slot manualRoi") -and $helperTextPresent) { "manual ROI placeholder is paired with final-command helper guidance" } else { "manual ROI placeholder is missing final-command helper guidance" }) -Details ([pscustomobject]@{ placeholderPresent = $manualRoiPlaceholderPresent; helperCommandPresent = $roiHelperText.Contains("-Slot manualRoi"); helperTextPresent = $helperTextPresent })
+    New-Check -Name "autoRoiFinalHelper" -Passed (-not $autoRoiPlaceholderPresent -or ($roiHelperText.Contains("-Slot autoRoi") -and $helperTextPresent)) -Message $(if (-not $autoRoiPlaceholderPresent) { "automatic ROI final command has no placeholder" } elseif ($roiHelperText.Contains("-Slot autoRoi") -and $helperTextPresent) { "automatic ROI placeholder is paired with final-command helper guidance" } else { "automatic ROI placeholder is missing final-command helper guidance" }) -Details ([pscustomobject]@{ placeholderPresent = $autoRoiPlaceholderPresent; helperCommandPresent = $roiHelperText.Contains("-Slot autoRoi"); helperTextPresent = $helperTextPresent })
+)
+
 $currentBranch = Invoke-GitValue -Root $SourceRoot -Arguments @("rev-parse", "--abbrev-ref", "HEAD")
 $currentCommit = Invoke-GitValue -Root $SourceRoot -Arguments @("rev-parse", "HEAD")
 $currentStatus = Invoke-GitValue -Root $SourceRoot -Arguments @("status", "--porcelain")
@@ -184,6 +233,7 @@ $sourceChecks = @(
 $deviceAvailability = Get-DeviceAvailability -ExpectedSerial $manifest.deviceSerial -ExplicitAdbPath $AdbPath
 $artifactMismatchCount = @($artifactChecks | Where-Object { -not $_.passed }).Count
 $sourceMismatchCount = @($sourceChecks | Where-Object { -not $_.passed }).Count
+$handoffConsistencyMismatchCount = @($handoffConsistencyChecks | Where-Object { -not $_.passed }).Count
 
 $result = [pscustomobject]@{
     manifestPath = $resolvedManifest.Path
@@ -191,8 +241,10 @@ $result = [pscustomobject]@{
     deviceSerial = $manifest.deviceSerial
     artifactMismatchCount = $artifactMismatchCount
     sourceMismatchCount = $sourceMismatchCount
+    handoffConsistencyMismatchCount = $handoffConsistencyMismatchCount
     expectedDeviceConnected = $deviceAvailability.connected
     artifactChecks = $artifactChecks
+    handoffConsistencyChecks = $handoffConsistencyChecks
     source = [pscustomobject]@{
         manifestBranch = $manifest.source.branch
         manifestCommit = $manifest.source.commit
@@ -212,6 +264,7 @@ if ($Json) {
     Write-Output "Manifest: $($result.manifestPath)"
     Write-Output "Artifact mismatches: $($result.artifactMismatchCount)"
     Write-Output "Source mismatches: $($result.sourceMismatchCount)"
+    Write-Output "Handoff consistency mismatches: $($result.handoffConsistencyMismatchCount)"
     Write-Output "Expected device connected: $($result.expectedDeviceConnected)"
     foreach ($check in @($artifactChecks)) {
         $mark = if ($check.passed) { "[x]" } else { "[ ]" }
@@ -220,6 +273,10 @@ if ($Json) {
     foreach ($check in @($sourceChecks)) {
         $mark = if ($check.passed) { "[x]" } else { "[ ]" }
         Write-Output "$mark source $($check.name): $($check.message)"
+    }
+    foreach ($check in @($handoffConsistencyChecks)) {
+        $mark = if ($check.passed) { "[x]" } else { "[ ]" }
+        Write-Output "$mark handoff $($check.name): $($check.message)"
     }
     Write-Output "Device: $($deviceAvailability.note)"
 }
@@ -232,6 +289,9 @@ if ($FailOnSourceMismatch -and $sourceMismatchCount -gt 0) {
 }
 if ($FailOnDeviceUnavailable -and -not $deviceAvailability.connected) {
     exit 33
+}
+if ($FailOnHandoffConsistencyMismatch -and $handoffConsistencyMismatchCount -gt 0) {
+    exit 34
 }
 
 exit 0

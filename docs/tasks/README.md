@@ -155,7 +155,10 @@ install/launch, thermal preflight, capture commands, and review-sheet commands
 for a watched device session. The first runbook command calls
 `verify_pixel_validation_handoff.ps1` to confirm the manifest artifact hashes,
 source commit/clean state, `origin/main` reachability, and expected Pixel
-connection before installing the app.
+connection before installing the app. It also uses
+`-FailOnHandoffConsistencyMismatch` so ROI placeholder final commands must be
+paired with the generated ROI final-command helper guidance before the phone
+session starts.
 When ROI final captures are included, the runbook and Markdown handoff add a
 `prepare_roi_final_capture_command.ps1` helper step after setup capture. Measure
 the visible target bounds from the setup `screenshot.png`, run the helper with
