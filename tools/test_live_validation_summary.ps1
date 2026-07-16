@@ -41,6 +41,7 @@ function Invoke-Summary {
         [switch]$RequireFocusedApp,
         [switch]$RequireRendererDiagnostics,
         [switch]$RequirePhaseDiagnostics,
+        [switch]$RequireReviewContactSheet,
         [string]$RequireDeviceSerial = "",
         [string]$RequireEvidenceVerdict = ""
     )
@@ -61,6 +62,7 @@ function Invoke-Summary {
     if ($RequireFocusedApp) { $summaryArgs.RequireFocusedApp = $true }
     if ($RequireRendererDiagnostics) { $summaryArgs.RequireRendererDiagnostics = $true }
     if ($RequirePhaseDiagnostics) { $summaryArgs.RequirePhaseDiagnostics = $true }
+    if ($RequireReviewContactSheet) { $summaryArgs.RequireReviewContactSheet = $true }
     if (-not [string]::IsNullOrWhiteSpace($RequireDeviceSerial)) { $summaryArgs.RequireDeviceSerial = $RequireDeviceSerial }
     if (-not [string]::IsNullOrWhiteSpace($RequireEvidenceVerdict)) { $summaryArgs.RequireEvidenceVerdict = $RequireEvidenceVerdict }
     & $summaryScript @summaryArgs *> $stdoutPath
@@ -347,6 +349,7 @@ Number Missed Vsync: 0
     Assert-Equal -Actual $visualGateSummary.artifacts.reviewContactSheet.manifestPresent -Expected $true -Message "Review contact sheet manifest should be detected."
     Assert-True -Condition (-not [string]::IsNullOrWhiteSpace($visualGateSummary.artifacts.reviewContactSheet.sha256)) -Message "Review contact sheet hash should be reported."
     Assert-Equal -Actual $visualGateSummary.artifacts.reviewContactSheet.screenrecordSha256 -Expected "screenrecord-for-review-sheet-sha256" -Message "Review contact sheet should report manifest screenrecord hash."
+    Assert-Equal -Actual $visualGateSummary.artifacts.reviewContactSheet.screenrecordSha256Matches -Expected $null -Message "Review contact sheet match status should be unknown without screenrecord hash."
     Assert-Equal -Actual $visualGateSummary.requiredGates.cleanSource.passed -Expected $true -Message "Clean source gate should pass."
     Assert-Equal -Actual $visualGateSummary.requiredGates.visualValidation.passed -Expected $false -Message "Visual validation gate should fail."
     Assert-True -Condition ("visual validation required but evidence verdict does not count as visual validation" -in @($visualGateSummary.warnings)) -Message "Visual gate warning missing."
@@ -445,6 +448,14 @@ Number Missed Vsync: 0
         (Join-Path $passingFinalEvidenceBundle "screenrecord.mp4"),
         [byte[]](0, 0, 0, 24, 102, 116, 121, 112, 105, 115, 111, 109, 0, 0, 2, 0, 105, 115, 111, 109, 105, 115, 111, 50)
     )
+    $passingFinalScreenrecordHash = (Get-FileHash -LiteralPath (Join-Path $passingFinalEvidenceBundle "screenrecord.mp4") -Algorithm SHA256).Hash
+    Write-JsonFile -Path (Join-Path $passingFinalEvidenceBundle "review_contact_sheet_manifest.json") -Value ([ordered]@{
+        screenrecordSha256 = $passingFinalScreenrecordHash
+        contactSheetSha256 = "review-contact-sheet-sha256"
+        columns = 3
+        rows = 3
+        frameWidth = 360
+    })
     Write-JsonFile -Path (Join-Path $passingFinalEvidenceBundle "thermal_ready_wait.json") -Value ([ordered]@{
         ready = $true
         readyBelowThermalStatus = 4
@@ -506,6 +517,52 @@ Number Missed Vsync: 0
     Assert-Equal -Actual $missingPhaseDiagnosticsExitCode -Expected 10 -Message "Missing phase diagnostics gate exit code mismatch."
     Assert-Equal -Actual $missingPhaseDiagnosticsSummary.requiredGates.phaseDiagnostics.passed -Expected $false -Message "Missing phase diagnostics gate should fail."
     Assert-True -Condition ("phase diagnostics required but no phase labels were found in the UI dump" -in @($missingPhaseDiagnosticsSummary.warnings)) -Message "Missing phase diagnostics warning missing."
+
+    $missingReviewSheetExitCode = Invoke-Summary -BundlePath $visualGateBundle -RequireCleanSource -RequireReviewContactSheet
+    $missingReviewSheetSummary = Get-Content -LiteralPath (Join-Path $visualGateBundle "evidence_summary.json") -Raw | ConvertFrom-Json
+    Assert-Equal -Actual $missingReviewSheetExitCode -Expected 22 -Message "Review contact sheet gate should fail when screenrecord hash cannot be matched."
+    Assert-Equal -Actual $missingReviewSheetSummary.requiredGates.reviewContactSheet.required -Expected $true -Message "Review contact sheet gate should be required."
+    Assert-Equal -Actual $missingReviewSheetSummary.requiredGates.reviewContactSheet.present -Expected $true -Message "Review contact sheet should be present."
+    Assert-Equal -Actual $missingReviewSheetSummary.requiredGates.reviewContactSheet.manifestPresent -Expected $true -Message "Review contact sheet manifest should be present."
+    Assert-Equal -Actual $missingReviewSheetSummary.requiredGates.reviewContactSheet.screenrecordSha256Matches -Expected $null -Message "Review contact sheet match status should be unknown without screenrecord."
+    Assert-Equal -Actual $missingReviewSheetSummary.requiredGates.reviewContactSheet.passed -Expected $false -Message "Unmatched review contact sheet should fail the gate."
+    Assert-True -Condition ("review contact sheet required but manifest does not match screenrecord.mp4" -in @($missingReviewSheetSummary.warnings)) -Message "Missing review sheet match warning missing."
+
+    $passingReviewSheetBundle = Join-Path $root "passing-review-sheet"
+    Copy-Item -LiteralPath $visualGateBundle -Destination $passingReviewSheetBundle -Recurse
+    [System.IO.File]::WriteAllBytes(
+        (Join-Path $passingReviewSheetBundle "screenrecord.mp4"),
+        [byte[]](0, 0, 0, 24, 102, 116, 121, 112, 105, 115, 111, 109, 0, 0, 2, 0, 105, 115, 111, 109, 105, 115, 111, 50)
+    )
+    $passingScreenrecordHash = (Get-FileHash -LiteralPath (Join-Path $passingReviewSheetBundle "screenrecord.mp4") -Algorithm SHA256).Hash
+    Write-JsonFile -Path (Join-Path $passingReviewSheetBundle "review_contact_sheet_manifest.json") -Value ([ordered]@{
+        screenrecordSha256 = $passingScreenrecordHash
+        contactSheetSha256 = "review-contact-sheet-sha256"
+        columns = 3
+        rows = 3
+        frameWidth = 360
+    })
+    $passingReviewSheetExitCode = Invoke-Summary -BundlePath $passingReviewSheetBundle -RequireCleanSource -RequireReviewContactSheet
+    $passingReviewSheetSummary = Get-Content -LiteralPath (Join-Path $passingReviewSheetBundle "evidence_summary.json") -Raw | ConvertFrom-Json
+    Assert-Equal -Actual $passingReviewSheetExitCode -Expected 0 -Message "Matching review contact sheet gate should pass."
+    Assert-Equal -Actual $passingReviewSheetSummary.artifacts.reviewContactSheet.screenrecordSha256Matches -Expected $true -Message "Matching review contact sheet should report true."
+    Assert-Equal -Actual $passingReviewSheetSummary.requiredGates.reviewContactSheet.passed -Expected $true -Message "Matching review contact sheet should pass the required gate."
+
+    $mismatchedReviewSheetBundle = Join-Path $root "mismatched-review-sheet"
+    Copy-Item -LiteralPath $passingReviewSheetBundle -Destination $mismatchedReviewSheetBundle -Recurse
+    Write-JsonFile -Path (Join-Path $mismatchedReviewSheetBundle "review_contact_sheet_manifest.json") -Value ([ordered]@{
+        screenrecordSha256 = "wrong-screenrecord-sha256"
+        contactSheetSha256 = "review-contact-sheet-sha256"
+        columns = 3
+        rows = 3
+        frameWidth = 360
+    })
+    $mismatchedReviewSheetExitCode = Invoke-Summary -BundlePath $mismatchedReviewSheetBundle -RequireCleanSource -RequireReviewContactSheet
+    $mismatchedReviewSheetSummary = Get-Content -LiteralPath (Join-Path $mismatchedReviewSheetBundle "evidence_summary.json") -Raw | ConvertFrom-Json
+    Assert-Equal -Actual $mismatchedReviewSheetExitCode -Expected 22 -Message "Mismatched review contact sheet gate should fail."
+    Assert-Equal -Actual $mismatchedReviewSheetSummary.artifacts.reviewContactSheet.screenrecordSha256Matches -Expected $false -Message "Mismatched review contact sheet should report false."
+    Assert-Equal -Actual $mismatchedReviewSheetSummary.requiredGates.reviewContactSheet.passed -Expected $false -Message "Mismatched review contact sheet should fail the required gate."
+    Assert-True -Condition ("review contact sheet manifest screenrecord SHA-256 does not match screenrecord.mp4" -in @($mismatchedReviewSheetSummary.warnings)) -Message "Mismatched review sheet warning missing."
 
     $matchingVerdictExitCode = Invoke-Summary -BundlePath $visualGateBundle -RequireCleanSource -RequireEvidenceVerdict "target_visible_unvalidated"
     $matchingVerdictSummary = Get-Content -LiteralPath (Join-Path $visualGateBundle "evidence_summary.json") -Raw | ConvertFrom-Json

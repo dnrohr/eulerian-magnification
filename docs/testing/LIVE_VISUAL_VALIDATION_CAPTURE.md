@@ -223,8 +223,10 @@ The helper writes `review_contact_sheet.jpg` and
 screenrecord SHA-256, contact-sheet SHA-256, tile geometry, and ffmpeg filter.
 Rerun the evidence summary after creating it so `artifacts.reviewContactSheet`
 records the contact sheet path, byte count, SHA-256, and manifest fields. Use
-it as a review aid for motion/ROI changes; final roadmap closeout still
-requires the accepted visual-evidence gates.
+`-RequireReviewContactSheet` on the summary to fail with exit code `22` unless
+the contact-sheet manifest exists and its screenrecord SHA-256 matches the
+current `screenrecord.mp4`. Use it as a review aid for motion/ROI changes;
+final roadmap closeout still requires the accepted visual-evidence gates.
 
 To list captured screenrecords that still need contact sheets, run:
 
@@ -430,6 +432,9 @@ Available launch parameters:
   `uiDump.rendererLabels` contains at least one renderer diagnostic label.
 - `-RequirePhaseDiagnostics`: with `-Summarize`, fail the summary unless
   `uiDump.phaseLabels` contains at least one phase diagnostic label.
+- `-RequireReviewContactSheet`: with `-Summarize`, fail the summary unless
+  `review_contact_sheet.jpg` exists with a manifest whose screenrecord SHA-256
+  matches the current `screenrecord.mp4`.
 - `-TargetDescription`: short description of the visible target/setup.
 - `-VisualClaim`: short claim this evidence is intended to prove.
 - `-TargetVisible`: whether the target is visible in the screenshot/recording.

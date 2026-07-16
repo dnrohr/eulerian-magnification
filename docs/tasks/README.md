@@ -154,7 +154,8 @@ that closeout slot.
 Use `pixel_closeout_summary.json` as the saved closeout artifact for final
 README and parity-doc updates after the gates pass. Satisfied slots include an
 `artifactNote` with the bundle, source, screenshot hash, and screenrecord hash
-needed for release notes, plus a review contact sheet hash when one exists. The
+needed for release notes, plus a matching review contact sheet hash when one
+exists. The
 saved JSON includes `closeoutBlockers`, a compact operator checklist of missing
 slots and accepted-evidence issues that still block roadmap closeout.
 
@@ -170,7 +171,9 @@ The helper writes `review_contact_sheet.jpg` and a
 `review_contact_sheet_manifest.json` hash manifest beside the bundle. It helps
 inspect motion/ROI evidence quickly; rerun the evidence summary afterward so
 `artifacts.reviewContactSheet` and the closeout `artifactNote` can cite the
-contact sheet hash. It does not replace the strict final evidence gates.
+contact sheet hash. `-RequireReviewContactSheet` makes the summary fail unless
+the contact-sheet manifest exists and its screenrecord SHA-256 matches the
+current `screenrecord.mp4`. It does not replace the strict final evidence gates.
 
 To find captured bundles that still need a contact sheet, run:
 
@@ -183,16 +186,14 @@ Use `-OutputPath sample-videos\exports\live-validation\review_queue.json` when
 you want to preserve the queue for a device-session handoff.
 
 Use `-FailOnCloseoutNotReady` before closing roadmap items; it is equivalent to
-requiring no missing, unmatched, ambiguous, duplicate, non-`main`, or
-missing-artifact-hash accepted evidence, requiring accepted source commits to
-be reachable from
-`origin/main`
-(`-FailOnMissing -FailOnUnmatched -FailOnAmbiguous -FailOnDuplicate -FailOnNonMain -FailOnUnpushedSource -FailOnMissingArtifactHashes -FailOnNonFinalLabel -FailOnWrongSlotLabel -FailOnMissingOperatorNotes -FailOnMissingVisualReviewText -FailOnWrongDeviceSerial`), and rejecting accepted evidence without a final capture label, with a label that targets a different slot, without operator notes, without target description / visual claim text, or from a device serial other than the expected Pixel. Use
+requiring no missing, unmatched, ambiguous, duplicate, non-`main`, unpushed, or
+missing-artifact-hash accepted evidence
+(`-FailOnMissing -FailOnUnmatched -FailOnAmbiguous -FailOnDuplicate -FailOnNonMain -FailOnUnpushedSource -FailOnMissingArtifactHashes -FailOnNonFinalLabel -FailOnWrongSlotLabel -FailOnMissingOperatorNotes -FailOnMissingVisualReviewText -FailOnWrongDeviceSerial -FailOnReviewContactSheetIssues`), and rejecting accepted evidence without a final capture label, with a label that targets a different slot, without operator notes, without target description / visual claim text, from a device serial other than the expected Pixel, or without a matching review contact sheet. Use
 `-FailOnPresetDocsNotReady` before changing README or MIT parity visual status;
 it requires all four preset visual slots and rejects unmatched, ambiguous, or
 duplicate accepted evidence, plus accepted evidence captured outside `main` or
 from a commit that is not reachable from `origin/main`, or accepted evidence
 without screenshot/screenrecord SHA-256 values, a final capture label, the
 slot-specific final label, operator notes, or target description / visual claim
-text.
+text, or without a matching review contact sheet.
 Wrong-slot reports include the expected final label for each mismatched slot.

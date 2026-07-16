@@ -38,6 +38,7 @@ function Invoke-Closeout {
         [switch]$FailOnMissingOperatorNotes,
         [switch]$FailOnMissingVisualReviewText,
         [switch]$FailOnWrongDeviceSerial,
+        [switch]$FailOnReviewContactSheetIssues,
         [switch]$FailOnCloseoutNotReady,
         [switch]$FailOnPresetDocsNotReady
     )
@@ -84,6 +85,9 @@ function Invoke-Closeout {
     if ($FailOnWrongDeviceSerial) {
         $args.FailOnWrongDeviceSerial = $true
     }
+    if ($FailOnReviewContactSheetIssues) {
+        $args.FailOnReviewContactSheetIssues = $true
+    }
     if ($FailOnCloseoutNotReady) {
         $args.FailOnCloseoutNotReady = $true
     }
@@ -111,6 +115,8 @@ function Write-Summary {
         [string]$SourceCommit = "",
         [string]$DeviceSerial = "47091JEKB05516",
         [bool]$IncludeArtifactHashes = $true,
+        [bool]$IncludeReviewContactSheet = $true,
+        [bool]$ReviewContactSheetMatches = $true,
         [string]$OperatorNotes = "tool self-test accepted visual evidence",
         [string]$TargetDescription = $Claim,
         [string]$VisualClaim = $Claim
@@ -174,8 +180,14 @@ function Write-Summary {
             screenrecord = [ordered]@{
                 sha256 = "screenrecord-$Name-sha256"
             }
-            reviewContactSheet = [ordered]@{
+        }
+        if ($IncludeReviewContactSheet) {
+            $summary.artifacts.reviewContactSheet = [ordered]@{
+                present = $true
+                manifestPresent = $true
                 sha256 = "review-contact-sheet-$Name-sha256"
+                screenrecordSha256 = if ($ReviewContactSheetMatches) { "screenrecord-$Name-sha256" } else { "wrong-screenrecord-$Name-sha256" }
+                screenrecordSha256Matches = $ReviewContactSheetMatches
             }
         }
     }
@@ -215,6 +227,7 @@ try {
     Assert-Equal -Actual @($result.missingOperatorNotesAcceptedFinalEvidence).Count -Expected 0 -Message "Known closeout fixtures should include operator notes."
     Assert-Equal -Actual @($result.missingVisualReviewTextAcceptedFinalEvidence).Count -Expected 0 -Message "Known closeout fixtures should include visual-review text."
     Assert-Equal -Actual @($result.wrongDeviceSerialAcceptedFinalEvidence).Count -Expected 0 -Message "Known closeout fixtures should come from the expected Pixel serial."
+    Assert-Equal -Actual @($result.reviewContactSheetIssueAcceptedFinalEvidence).Count -Expected 0 -Message "Known closeout fixtures should include matching review contact sheets."
     Assert-Equal -Actual @($result.missing).Count -Expected 0 -Message "All slots should be satisfied."
     Assert-Equal -Actual $result.presetVisualSlotsPresent -Expected $true -Message "Preset visual slots should be present when four preset slots pass."
     Assert-Equal -Actual $result.presetDocsEvidenceClean -Expected $false -Message "Unmatched evidence should prevent preset docs closeout."
@@ -329,7 +342,7 @@ try {
     foreach ($name in @("manual", "auto", "pulse", "breathing", "object", "fast")) {
         Copy-Item -LiteralPath (Join-Path $root $name) -Destination (Join-Path $classifiedRoot $name) -Recurse
     }
-    $classifiedExitCode = Invoke-Closeout -EvidenceRoot $classifiedRoot -FailOnMissing -FailOnUnmatched -FailOnAmbiguous -FailOnDuplicate -FailOnNonMain -FailOnUnpushedSource -FailOnMissingArtifactHashes -FailOnNonFinalLabel -FailOnWrongSlotLabel -FailOnMissingOperatorNotes -FailOnMissingVisualReviewText -FailOnWrongDeviceSerial
+    $classifiedExitCode = Invoke-Closeout -EvidenceRoot $classifiedRoot -FailOnMissing -FailOnUnmatched -FailOnAmbiguous -FailOnDuplicate -FailOnNonMain -FailOnUnpushedSource -FailOnMissingArtifactHashes -FailOnNonFinalLabel -FailOnWrongSlotLabel -FailOnMissingOperatorNotes -FailOnMissingVisualReviewText -FailOnWrongDeviceSerial -FailOnReviewContactSheetIssues
     Assert-Equal -Actual $classifiedExitCode -Expected 0 -Message "Combined closeout gates should pass when all accepted evidence maps to slots on pushed main."
     $classified = & (Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1") -EvidenceRoot $classifiedRoot -Json | ConvertFrom-Json
     Assert-Equal -Actual $classified.readyForPresetDocs -Expected $true -Message "Preset docs should be ready when preset slots are satisfied and evidence is clean."
@@ -421,6 +434,18 @@ try {
     Assert-Equal -Actual $wrongDevice.closeoutBlockers[1].kind -Expected "wrongDeviceSerialAcceptedFinalEvidence" -Message "Wrong-device evidence should produce a closeout blocker."
     $wrongDeviceExitCode = Invoke-Closeout -EvidenceRoot $wrongDeviceRoot -FailOnWrongDeviceSerial
     Assert-Equal -Actual $wrongDeviceExitCode -Expected 21 -Message "FailOnWrongDeviceSerial should fail on accepted evidence from the wrong device."
+
+    $reviewSheetIssueRoot = Join-Path $root "review-sheet-issue"
+    New-Item -ItemType Directory -Path $reviewSheetIssueRoot -Force | Out-Null
+    Write-Summary -Root $reviewSheetIssueRoot -Name "pulse" -Label "live-linear-pulse-final" -Mode "Pulse" -RoiSource "FullFrame" -Claim "Pulse full-frame live linear visual parity" -Roi $false -Renderer $true -Phase $false -ReviewContactSheetMatches $false
+    $reviewSheetIssue = & (Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1") -EvidenceRoot $reviewSheetIssueRoot -Json | ConvertFrom-Json
+    Assert-Equal -Actual @($reviewSheetIssue.reviewContactSheetIssueAcceptedFinalEvidence).Count -Expected 1 -Message "Accepted final evidence without a matching review contact sheet should be reported."
+    Assert-Equal -Actual $reviewSheetIssue.reviewContactSheetIssueAcceptedFinalEvidence[0].label -Expected "live-linear-pulse-final" -Message "Review-sheet issue evidence label mismatch."
+    Assert-Equal -Actual $reviewSheetIssue.allCloseoutEvidenceClean -Expected $false -Message "Review-sheet issues should prevent clean roadmap closeout."
+    Assert-Equal -Actual $reviewSheetIssue.readyForPresetDocs -Expected $false -Message "Review-sheet issues should prevent preset docs readiness."
+    Assert-Equal -Actual $reviewSheetIssue.closeoutBlockers[1].kind -Expected "reviewContactSheetIssueAcceptedFinalEvidence" -Message "Review-sheet issues should produce a closeout blocker."
+    $reviewSheetIssueExitCode = Invoke-Closeout -EvidenceRoot $reviewSheetIssueRoot -FailOnReviewContactSheetIssues
+    Assert-Equal -Actual $reviewSheetIssueExitCode -Expected 22 -Message "FailOnReviewContactSheetIssues should fail on accepted evidence without a matching review contact sheet."
 
     $offMainRoot = Join-Path $root "off-main"
     New-Item -ItemType Directory -Path $offMainRoot -Force | Out-Null

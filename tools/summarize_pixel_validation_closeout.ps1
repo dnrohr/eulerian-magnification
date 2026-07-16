@@ -15,6 +15,7 @@ param(
     [switch]$FailOnMissingVisualReviewText,
     [string]$ExpectedDeviceSerial = "47091JEKB05516",
     [switch]$FailOnWrongDeviceSerial,
+    [switch]$FailOnReviewContactSheetIssues,
     [switch]$FailOnCloseoutNotReady,
     [switch]$FailOnPresetDocsNotReady
 )
@@ -212,6 +213,22 @@ function Test-VisualReviewTextPresent {
         -not [string]::IsNullOrWhiteSpace($Summary.visualReview.visualClaim)
 }
 
+function Test-ReviewContactSheetReady {
+    param($Summary)
+
+    if (-not $Summary.artifacts -or
+        -not ($Summary.artifacts.PSObject.Properties.Name -contains "reviewContactSheet") -or
+        -not $Summary.artifacts.reviewContactSheet) {
+        return $false
+    }
+
+    $sheet = $Summary.artifacts.reviewContactSheet
+    return ($sheet.present -eq $true) -and
+        ($sheet.manifestPresent -eq $true) -and
+        (-not [string]::IsNullOrWhiteSpace($sheet.sha256)) -and
+        ($sheet.screenrecordSha256Matches -eq $true)
+}
+
 function Get-ExpectedLabelsForSlots {
     param(
         [string[]]$SlotIds,
@@ -326,6 +343,7 @@ $wrongSlotLabelAcceptedFinalEvidence = @()
 $missingOperatorNotesAcceptedFinalEvidence = @()
 $missingVisualReviewTextAcceptedFinalEvidence = @()
 $wrongDeviceSerialAcceptedFinalEvidence = @()
+$reviewContactSheetIssueAcceptedFinalEvidence = @()
 foreach ($summary in $acceptedSummaries) {
     if (-not (Test-FinalVisualEvidence -Summary $summary)) {
         continue
@@ -368,6 +386,11 @@ foreach ($summary in $acceptedSummaries) {
         $report.expectedDeviceSerial = $ExpectedDeviceSerial
         $report.reason = "accepted final evidence device serial does not match the expected Pixel"
         $wrongDeviceSerialAcceptedFinalEvidence += [pscustomobject]$report
+    }
+    if (-not (Test-ReviewContactSheetReady -Summary $summary)) {
+        $report = New-EvidenceReport -Summary $summary
+        $report.reason = "accepted final evidence is missing a matching review contact sheet"
+        $reviewContactSheetIssueAcceptedFinalEvidence += [pscustomobject]$report
     }
 
     $text = Get-SummaryText -Summary $summary
@@ -458,7 +481,8 @@ $presetDocsEvidenceClean = (
     $wrongSlotLabelAcceptedFinalEvidence.Count -eq 0 -and
     $missingOperatorNotesAcceptedFinalEvidence.Count -eq 0 -and
     $missingVisualReviewTextAcceptedFinalEvidence.Count -eq 0 -and
-    $wrongDeviceSerialAcceptedFinalEvidence.Count -eq 0
+    $wrongDeviceSerialAcceptedFinalEvidence.Count -eq 0 -and
+    $reviewContactSheetIssueAcceptedFinalEvidence.Count -eq 0
 )
 $allCloseoutEvidencePresent = ($missing.Count -eq 0)
 $allCloseoutEvidenceClean = (
@@ -473,7 +497,8 @@ $allCloseoutEvidenceClean = (
     $wrongSlotLabelAcceptedFinalEvidence.Count -eq 0 -and
     $missingOperatorNotesAcceptedFinalEvidence.Count -eq 0 -and
     $missingVisualReviewTextAcceptedFinalEvidence.Count -eq 0 -and
-    $wrongDeviceSerialAcceptedFinalEvidence.Count -eq 0
+    $wrongDeviceSerialAcceptedFinalEvidence.Count -eq 0 -and
+    $reviewContactSheetIssueAcceptedFinalEvidence.Count -eq 0
 )
 $closeoutBlockers = @()
 if ($missing.Count -gt 0) {
@@ -524,6 +549,9 @@ if ($missingVisualReviewTextAcceptedFinalEvidence.Count -gt 0) {
 if ($wrongDeviceSerialAcceptedFinalEvidence.Count -gt 0) {
     $closeoutBlockers += New-CloseoutBlocker -Kind "wrongDeviceSerialAcceptedFinalEvidence" -Count $wrongDeviceSerialAcceptedFinalEvidence.Count -Message "$($wrongDeviceSerialAcceptedFinalEvidence.Count) accepted final evidence bundle(s) were not captured from expected device serial $ExpectedDeviceSerial." -Items $wrongDeviceSerialAcceptedFinalEvidence
 }
+if ($reviewContactSheetIssueAcceptedFinalEvidence.Count -gt 0) {
+    $closeoutBlockers += New-CloseoutBlocker -Kind "reviewContactSheetIssueAcceptedFinalEvidence" -Count $reviewContactSheetIssueAcceptedFinalEvidence.Count -Message "$($reviewContactSheetIssueAcceptedFinalEvidence.Count) accepted final evidence bundle(s) lack a matching review contact sheet." -Items $reviewContactSheetIssueAcceptedFinalEvidence
+}
 $result = [pscustomobject]@{
     evidenceRoot = if ($rootPath) { $rootPath.Path } else { $EvidenceRoot }
     expectedDeviceSerial = $ExpectedDeviceSerial
@@ -540,6 +568,7 @@ $result = [pscustomobject]@{
     missingOperatorNotesAcceptedFinalEvidence = $missingOperatorNotesAcceptedFinalEvidence
     missingVisualReviewTextAcceptedFinalEvidence = $missingVisualReviewTextAcceptedFinalEvidence
     wrongDeviceSerialAcceptedFinalEvidence = $wrongDeviceSerialAcceptedFinalEvidence
+    reviewContactSheetIssueAcceptedFinalEvidence = $reviewContactSheetIssueAcceptedFinalEvidence
     slots = $slotList
     missing = $missing
     presetVisualSlotsPresent = $presetVisualSlotsPresent
@@ -580,6 +609,7 @@ if ($Json) {
     Write-Output "Missing-operator-notes accepted final evidence: $(@($result.missingOperatorNotesAcceptedFinalEvidence).Count)"
     Write-Output "Missing-visual-review-text accepted final evidence: $(@($result.missingVisualReviewTextAcceptedFinalEvidence).Count)"
     Write-Output "Wrong-device-serial accepted final evidence: $(@($result.wrongDeviceSerialAcceptedFinalEvidence).Count)"
+    Write-Output "Review-contact-sheet issue accepted final evidence: $(@($result.reviewContactSheetIssueAcceptedFinalEvidence).Count)"
     Write-Output ""
     foreach ($slot in $slotList) {
         $mark = if ($slot.satisfied) { "[x]" } else { "[ ]" }
@@ -842,6 +872,9 @@ if ($FailOnMissingVisualReviewText -and $missingVisualReviewTextAcceptedFinalEvi
 }
 if ($FailOnWrongDeviceSerial -and $wrongDeviceSerialAcceptedFinalEvidence.Count -gt 0) {
     exit 21
+}
+if ($FailOnReviewContactSheetIssues -and $reviewContactSheetIssueAcceptedFinalEvidence.Count -gt 0) {
+    exit 22
 }
 if ($FailOnCloseoutNotReady -and -not $result.allCloseoutEvidenceClean) {
     exit 7

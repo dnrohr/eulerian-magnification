@@ -167,6 +167,8 @@ Assert-True -Condition ($preset.finalEvidence.Contains("Update README")) -Messag
 $presetCloseoutCommand = @($preset.commands | Where-Object { $_.name -eq "preset-parity-closeout" } | Select-Object -First 1).command
 Assert-True -Condition ($presetCloseoutCommand.Contains("-FailOnCloseoutNotReady")) -Message "Preset parity closeout should require the roadmap closeout readiness gate."
 Assert-True -Condition ($presetCloseoutCommand.Contains("-FailOnPresetDocsNotReady")) -Message "Preset parity closeout should require the preset docs readiness gate."
+Assert-True -Condition ($presetCloseoutCommand.Contains("-FailOnWrongDeviceSerial")) -Message "Preset parity closeout should reject accepted evidence from the wrong device."
+Assert-True -Condition ($presetCloseoutCommand.Contains("-FailOnReviewContactSheetIssues")) -Message "Preset parity closeout should reject accepted evidence without matching review contact sheets."
 Assert-True -Condition ($presetCloseoutCommand.Contains("-FailOnNonMain")) -Message "Preset parity closeout should require the non-main evidence gate."
 Assert-True -Condition ($presetCloseoutCommand.Contains("-FailOnUnpushedSource")) -Message "Preset parity closeout should require the source commit containment gate."
 Assert-True -Condition ($presetCloseoutCommand.Contains("-FailOnMissingArtifactHashes")) -Message "Preset parity closeout should require artifact hashes for accepted evidence."

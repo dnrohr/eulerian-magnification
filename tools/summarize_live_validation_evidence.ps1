@@ -20,6 +20,7 @@ param(
     [switch]$RequireFocusedApp,
     [switch]$RequireRendererDiagnostics,
     [switch]$RequirePhaseDiagnostics,
+    [switch]$RequireReviewContactSheet,
     [string]$RequireDeviceSerial = "",
     [ValidateSet("", "runtime_smoke_only", "visual_validated", "target_visible_unvalidated", "visual_claim_without_target", "ui_assertion_failed", "screenshot_blank", "wrong_orientation", "runtime_failed", "thermal_preflight_aborted")]
     [string]$RequireEvidenceVerdict = ""
@@ -711,11 +712,38 @@ $reviewContactSheetInfo = [ordered]@{
     bytes = $null
     sha256 = $null
     screenrecordSha256 = if ($null -ne $reviewContactSheetManifest -and $reviewContactSheetManifest.PSObject.Properties.Name -contains "screenrecordSha256") { $reviewContactSheetManifest.screenrecordSha256 } else { $null }
+    screenrecordSha256Matches = $null
     manifest = $reviewContactSheetManifest
 }
 if ($reviewContactSheetInfo.present) {
     $reviewContactSheetInfo.bytes = (Get-Item -LiteralPath $reviewContactSheetPath).Length
     $reviewContactSheetInfo.sha256 = Get-FileSha256IfExists $reviewContactSheetPath
+}
+if ($reviewContactSheetInfo.present -and $reviewContactSheetInfo.manifestPresent -and
+    -not [string]::IsNullOrWhiteSpace($reviewContactSheetInfo.screenrecordSha256) -and
+    -not [string]::IsNullOrWhiteSpace($screenrecordInfo.sha256)) {
+    $reviewContactSheetInfo.screenrecordSha256Matches = ($reviewContactSheetInfo.screenrecordSha256 -eq $screenrecordInfo.sha256)
+}
+$reviewContactSheetPassed = (-not [bool]$RequireReviewContactSheet) -or (
+    $reviewContactSheetInfo.present -and
+    $reviewContactSheetInfo.manifestPresent -and
+    -not [string]::IsNullOrWhiteSpace($reviewContactSheetInfo.sha256) -and
+    ($reviewContactSheetInfo.screenrecordSha256Matches -eq $true)
+)
+if ($reviewContactSheetInfo.present -and -not $reviewContactSheetInfo.manifestPresent) {
+    $warnings += "review contact sheet is present but review_contact_sheet_manifest.json is missing"
+}
+if ($reviewContactSheetInfo.present -and $reviewContactSheetInfo.manifestPresent -and $reviewContactSheetInfo.screenrecordSha256Matches -eq $false) {
+    $warnings += "review contact sheet manifest screenrecord SHA-256 does not match screenrecord.mp4"
+}
+if ($RequireReviewContactSheet -and -not $reviewContactSheetInfo.present) {
+    $warnings += "review contact sheet required but review_contact_sheet.jpg is missing"
+}
+if ($RequireReviewContactSheet -and $reviewContactSheetInfo.present -and -not $reviewContactSheetInfo.manifestPresent) {
+    $warnings += "review contact sheet required but review_contact_sheet_manifest.json is missing"
+}
+if ($RequireReviewContactSheet -and $reviewContactSheetInfo.present -and $reviewContactSheetInfo.manifestPresent -and $reviewContactSheetInfo.screenrecordSha256Matches -ne $true) {
+    $warnings += "review contact sheet required but manifest does not match screenrecord.mp4"
 }
 
 $screenshotInfo = $null
@@ -896,6 +924,13 @@ $result = [ordered]@{
             labelCount = @($uiDumpSummary.phaseLabels).Count
             passed = $phaseDiagnosticsPassed
         }
+        reviewContactSheet = [ordered]@{
+            required = [bool]$RequireReviewContactSheet
+            present = $reviewContactSheetInfo.present
+            manifestPresent = $reviewContactSheetInfo.manifestPresent
+            screenrecordSha256Matches = $reviewContactSheetInfo.screenrecordSha256Matches
+            passed = $reviewContactSheetPassed
+        }
         noWarnings = [ordered]@{
             required = [bool]$RequireNoWarnings
             warningCount = $warningCountBeforeNoWarningsGate
@@ -961,6 +996,9 @@ if ($result.requiredGates.evidenceVerdict.required -and -not $result.requiredGat
 if (($result.requiredGates.rendererDiagnostics.required -and -not $result.requiredGates.rendererDiagnostics.passed) -or
     ($result.requiredGates.phaseDiagnostics.required -and -not $result.requiredGates.phaseDiagnostics.passed)) {
     exit 10
+}
+if ($result.requiredGates.reviewContactSheet.required -and -not $result.requiredGates.reviewContactSheet.passed) {
+    exit 22
 }
 if ($result.requiredGates.noWarnings.required -and -not $result.requiredGates.noWarnings.passed) {
     exit 7

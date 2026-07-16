@@ -544,6 +544,12 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   and `live_validation_review_commands.txt`, plus Markdown/manifest counts, so
   a connected-device session carries both capture commands and follow-up review
   sheet commands.
+- Live validation summaries now support `-RequireReviewContactSheet`, requiring
+  `review_contact_sheet.jpg` plus a manifest whose screenrecord SHA-256 matches
+  the current `screenrecord.mp4`.
+- Pixel validation closeout now reports accepted final evidence without a
+  matching review contact sheet, adds `-FailOnReviewContactSheetIssues`, and
+  includes that gate in the preset parity planner/docs path.
 
 ## Remaining
 

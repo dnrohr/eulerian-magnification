@@ -359,7 +359,8 @@ docs can cite the exact visual artifacts:
 Use `pixel_closeout_summary.json` as the saved closeout artifact when updating
 README or parity documentation after the gates pass. Satisfied slots include an
 `artifactNote` with the bundle, source, screenshot hash, and screenrecord hash
-needed for release notes, plus a review contact sheet hash when one exists.
+needed for release notes, plus a matching review contact sheet hash when one
+exists.
 The closeout JSON also includes `closeoutBlockers`, a compact list of missing
 slots and accepted-evidence issues that still block roadmap closeout.
 
@@ -375,8 +376,10 @@ The helper writes `review_contact_sheet.jpg` and
 `review_contact_sheet_manifest.json` with hashes for the source screenrecord and
 contact sheet. The next `evidence_summary.json` records the contact sheet under
 `artifacts.reviewContactSheet`, and closeout includes its hash in `artifactNote`
-when present. This is a review aid only; accepted final evidence still has to
-pass the strict summary and closeout gates.
+when present. `-RequireReviewContactSheet` makes the summary fail unless the
+contact-sheet manifest exists and its screenrecord SHA-256 matches the current
+`screenrecord.mp4`. This is a review aid only; accepted final evidence still
+has to pass the strict summary and closeout gates.
 
 To see which captured bundles still need review sheets, run:
 
@@ -394,11 +397,12 @@ present and rejects unmatched, ambiguous, duplicate, non-`main`, unpushed, or
 missing-artifact-hash accepted evidence, plus accepted evidence whose label is
 not one of the final capture labels, does not match its closeout slot, lacks
 operator notes, lacks target description / visual claim text, or was captured
-from a device serial other than the expected Pixel.
+from a device serial other than the expected Pixel, and accepted final evidence
+without a matching review contact sheet.
 Wrong-slot reports include the expected final label for each mismatched slot:
 
 ```powershell
-.\tools\summarize_pixel_validation_closeout.ps1 -FailOnMissing -FailOnUnmatched -FailOnAmbiguous -FailOnDuplicate -FailOnNonMain -FailOnUnpushedSource -FailOnMissingArtifactHashes -FailOnNonFinalLabel -FailOnWrongSlotLabel -FailOnMissingOperatorNotes -FailOnMissingVisualReviewText -FailOnWrongDeviceSerial
+.\tools\summarize_pixel_validation_closeout.ps1 -FailOnMissing -FailOnUnmatched -FailOnAmbiguous -FailOnDuplicate -FailOnNonMain -FailOnUnpushedSource -FailOnMissingArtifactHashes -FailOnNonFinalLabel -FailOnWrongSlotLabel -FailOnMissingOperatorNotes -FailOnMissingVisualReviewText -FailOnWrongDeviceSerial -FailOnReviewContactSheetIssues
 .\tools\summarize_pixel_validation_closeout.ps1 -FailOnCloseoutNotReady
 .\tools\summarize_pixel_validation_closeout.ps1 -FailOnPresetDocsNotReady
 ```
