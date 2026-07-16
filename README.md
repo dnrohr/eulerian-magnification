@@ -346,7 +346,8 @@ The handoff bundle writes `pixel_validation_plan.json`,
 `pixel_validation_handoff.md`, and
 `pixel_validation_handoff_manifest.json` with SHA-256 hashes for those handoff
 artifacts. The handoff records the target device serial, source branch, commit,
-clean-tree state, and whether the commit is reachable from `origin/main`.
+clean-tree state, whether the commit is reachable from `origin/main`, and a
+compact pending review-sheet issue count.
 
 After a connected Pixel validation pass, summarize which accepted evidence
 bundles are ready to close the remaining roadmap items. The summary includes

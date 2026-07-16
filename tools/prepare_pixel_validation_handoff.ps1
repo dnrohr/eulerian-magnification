@@ -120,6 +120,14 @@ $reviewCommands = @(& $reviewQueueScript @reviewCommandArgs)
 Set-Content -LiteralPath $reviewCommandsPath -Value ([string]::Join([Environment]::NewLine, $reviewCommands)) -Encoding utf8
 & $reviewDashboardScript -EvidenceRoot $EvidenceRoot -OutputPath $reviewDashboardPath -PendingOnly *> $null
 $requestedSlotLabel = if (@($plan.requestedSlots).Count -gt 0) { $plan.requestedSlots -join ", " } else { "All" }
+$reviewIssueCounts = @{}
+foreach ($entry in @($reviewQueue.pendingReviewSheets)) {
+    $issue = if ([string]::IsNullOrWhiteSpace($entry.reviewSheetIssue)) { "pending" } else { $entry.reviewSheetIssue }
+    if (-not $reviewIssueCounts.ContainsKey($issue)) {
+        $reviewIssueCounts[$issue] = 0
+    }
+    $reviewIssueCounts[$issue] += 1
+}
 
 $handoffLines = @(
     "# Pixel Validation Handoff",
@@ -131,6 +139,7 @@ $handoffLines = @(
     ('- Requested slots: `{0}`' -f $requestedSlotLabel),
     "- Recommended captures: $(@($plan.recommendedCaptures).Count)",
     "- Pending review sheets: $($reviewQueue.pendingReviewSheetCount)",
+    "- Pending review-sheet issue types: $($reviewIssueCounts.Count)",
     "- Closeout blockers: $(@($closeout.closeoutBlockers).Count)",
     "- Ready for preset docs: $($closeout.readyForPresetDocs)",
     "- Source branch: $sourceBranch",
@@ -236,6 +245,7 @@ $manifest = [pscustomobject]@{
     review = [pscustomobject]@{
         pendingReviewSheetCount = $reviewQueue.pendingReviewSheetCount
         screenrecordBundleCount = $reviewQueue.screenrecordBundleCount
+        issueCounts = [pscustomobject]$reviewIssueCounts
         ffmpegPath = $FfmpegPath
     }
 }
@@ -260,6 +270,7 @@ $result = [pscustomobject]@{
     recommendedCaptureCount = @($plan.recommendedCaptures).Count
     commandCount = @($commands).Count
     pendingReviewSheetCount = $reviewQueue.pendingReviewSheetCount
+    pendingReviewSheetIssueCounts = [pscustomobject]$reviewIssueCounts
     reviewCommandCount = @($reviewCommands).Count
     closeoutBlockerCount = @($closeout.closeoutBlockers).Count
     readyForPresetDocs = $closeout.readyForPresetDocs
@@ -282,6 +293,7 @@ if ($Json) {
     Write-Output "Recommended captures: $($result.recommendedCaptureCount)"
     Write-Output "Command templates: $($result.commandCount)"
     Write-Output "Pending review sheets: $($result.pendingReviewSheetCount)"
+    Write-Output "Pending review-sheet issue types: $(@($result.pendingReviewSheetIssueCounts.PSObject.Properties).Count)"
     Write-Output "Review commands: $($result.reviewCommandCount)"
     Write-Output "Closeout blockers: $($result.closeoutBlockerCount)"
     Write-Output "Source: $($result.source.branch) $($result.source.commit)"
