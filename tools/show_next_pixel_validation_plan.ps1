@@ -210,6 +210,81 @@ foreach ($group in $validationGroups) {
     }
 }
 
+$slotGuidance = @{
+    manualRoi = [pscustomobject]@{
+        operatorSetup = @(
+            "Use a stable, high-contrast target with clear rectangular bounds.",
+            "Place the manual ROI once, then keep the phone and target still for the capture.",
+            "Replace the MeasureRoiExpected placeholder with the visible target bounds in screenshot space."
+        )
+        acceptanceChecks = @(
+            "Exactly one manual ROI outline is visible.",
+            "The ROI outline overlaps the selected target bounds.",
+            "The capture has valid screenrecord, thermal-ready, camera-FPS, focused-app, and ROI-measurement gates."
+        )
+    }
+    autoRoi = [pscustomobject]@{
+        operatorSetup = @(
+            "Use a visible face or skin target under steady lighting.",
+            "Leave ROI Source on Auto ROI and avoid manually dragging the ROI.",
+            "Replace the MeasureRoiExpected placeholder with the visible face or skin bounds in screenshot space."
+        )
+        acceptanceChecks = @(
+            "Exactly one automatic ROI outline is visible.",
+            "The ROI outline follows the visible face or skin target, not the center fallback.",
+            "The capture has valid screenrecord, thermal-ready, camera-FPS, focused-app, and ROI-measurement gates."
+        )
+    }
+    pulseLinear = [pscustomobject]@{
+        operatorSetup = @(
+            "Use a steady pulse/skin-color target with fixed lighting and minimal camera motion.",
+            "Run Pulse in Split view with Full frame ROI and GL preview.",
+            "Let the preview settle after thermal readiness before judging the effect."
+        )
+        acceptanceChecks = @(
+            "Split view shows full-frame live linear reconstruction, not an ROI-only tint.",
+            "The target-visible change is localized enough to read as magnification, not whole-frame flashing.",
+            "Renderer diagnostics, valid screenrecord, thermal-ready, camera-FPS, and focused-app gates are present."
+        )
+    }
+    breathingLinear = [pscustomobject]@{
+        operatorSetup = @(
+            "Use a slow moving edge, torso, or breathing target with the phone held still.",
+            "Run Breathing in Split view with Full frame ROI and GL preview.",
+            "Avoid judging while the preview is thermally throttled or visibly frozen."
+        )
+        acceptanceChecks = @(
+            "Split view shows reconstructed motion on the watched target rather than ROI-only tint.",
+            "The recording does not show whole-frame flashing or a frozen camera stream.",
+            "Renderer diagnostics, valid screenrecord, thermal-ready, camera-FPS, and focused-app gates are present."
+        )
+    }
+    objectPhase = [pscustomobject]@{
+        operatorSetup = @(
+            "Use a high-contrast edge or small object moving subtly inside the manual ROI.",
+            "Run Tremor in Split view with Manual ROI and GL preview.",
+            "Keep the manual ROI fixed around the moving edge for the full capture."
+        )
+        acceptanceChecks = @(
+            "Split view shows edge-localized amplified motion inside the ROI.",
+            "The result is not uniform ROI flashing or a color-only change.",
+            "Phase diagnostics, valid screenrecord, thermal-ready, camera-FPS, and focused-app gates are present."
+        )
+    }
+    fastTremorPhase = [pscustomobject]@{
+        operatorSetup = @(
+            "Use a fast tremor target with a high-contrast edge inside the manual ROI.",
+            "Run Tremor in Split view with Manual ROI and GL preview.",
+            "Keep lighting steady so fast motion is not confused with flicker."
+        )
+        acceptanceChecks = @(
+            "Split view shows edge-localized amplified fast tremor.",
+            "The result is not uniform ROI flashing, whole-frame flashing, or color-only change.",
+            "Phase diagnostics, valid screenrecord, thermal-ready, camera-FPS, and focused-app gates are present."
+        )
+    }
+}
+
 $recommendedCaptures = @()
 $missingSlotBlocker = @($closeout.closeoutBlockers | Where-Object { $_.kind -eq "missingSlots" } | Select-Object -First 1)
 $availableSlots = @($missingSlotBlocker.items | ForEach-Object { $_.id })
@@ -244,12 +319,22 @@ foreach ($missingSlot in @($missingSlotBlocker.items)) {
     if ($commands.Count -eq 0) {
         continue
     }
+    $guidance = if ($slotGuidance.ContainsKey($missingSlot.id)) {
+        $slotGuidance[$missingSlot.id]
+    } else {
+        [pscustomobject]@{
+            operatorSetup = @()
+            acceptanceChecks = @()
+        }
+    }
     $recommendedCaptures += [pscustomobject]@{
         slot = $missingSlot.id
         title = $missingSlot.title
         milestones = $missingSlot.milestones
         expectedFinalLabel = $missingSlot.expectedFinalLabel
         protocol = $missingSlot.protocol
+        operatorSetup = @($guidance.operatorSetup)
+        acceptanceChecks = @($guidance.acceptanceChecks)
         commands = $commands
     }
 }
@@ -344,6 +429,12 @@ if (@($result.recommendedCaptures).Count -gt 0) {
         Write-Output "- $($capture.title) [$($capture.milestones -join ', ')]"
         Write-Output "    Expected final label: $($capture.expectedFinalLabel)"
         Write-Output "    Protocol: $($capture.protocol)"
+        foreach ($setupStep in @($capture.operatorSetup)) {
+            Write-Output "    Setup: $setupStep"
+        }
+        foreach ($acceptanceCheck in @($capture.acceptanceChecks)) {
+            Write-Output "    Accept: $acceptanceCheck"
+        }
         foreach ($command in @($capture.commands)) {
             Write-Output "    $($command.name): $($command.purpose)"
             if (-not [string]::IsNullOrWhiteSpace($command.command)) {

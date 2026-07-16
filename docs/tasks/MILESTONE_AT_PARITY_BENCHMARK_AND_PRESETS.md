@@ -587,6 +587,9 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   screenrecord, thermal-readiness, camera-FPS, and focused-app gates alongside
   `-RequireFinalVisualEvidence`, so final bundles cannot be produced from a
   weakened runtime-evidence template.
+- Pixel validation plans and handoffs now include per-slot operator setup and
+  acceptance checks, so watched captures carry the target setup and visual
+  rejection criteria beside the commands that produce evidence.
 
 ## Remaining
 

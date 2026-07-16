@@ -182,6 +182,18 @@ if (@($plan.recommendedCaptures).Count -eq 0) {
         $handoffLines += ('  - Slot: `{0}`' -f $capture.slot)
         $handoffLines += ('  - Expected final label: `{0}`' -f $capture.expectedFinalLabel)
         $handoffLines += ('  - Protocol: `{0}`' -f $capture.protocol)
+        if (@($capture.operatorSetup).Count -gt 0) {
+            $handoffLines += '  - Operator setup:'
+            foreach ($setupStep in @($capture.operatorSetup)) {
+                $handoffLines += ('    - {0}' -f $setupStep)
+            }
+        }
+        if (@($capture.acceptanceChecks).Count -gt 0) {
+            $handoffLines += '  - Acceptance checks:'
+            foreach ($acceptanceCheck in @($capture.acceptanceChecks)) {
+                $handoffLines += ('    - {0}' -f $acceptanceCheck)
+            }
+        }
     }
 }
 
