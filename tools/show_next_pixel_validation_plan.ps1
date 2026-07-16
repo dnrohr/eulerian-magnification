@@ -16,6 +16,7 @@ $ErrorActionPreference = "Stop"
 
 $roadmap = (& (Join-Path $PSScriptRoot "summarize_roadmap_status.ps1") -Json | ConvertFrom-Json)
 $closeout = (& (Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1") -EvidenceRoot $EvidenceRoot -Json | ConvertFrom-Json)
+$validationThermalReadyBelowStatus = 3
 
 $validationGroups = @(
     [pscustomobject]@{
@@ -159,11 +160,18 @@ if (-not [string]::IsNullOrWhiteSpace($DeviceSerial)) {
         }
     }
 }
+foreach ($group in $validationGroups) {
+    foreach ($command in @($group.commands)) {
+        if ($command.command.StartsWith(".\tools\capture_live_validation_evidence.ps1")) {
+            $command.command = $command.command -replace "-ThermalReadyBelowStatus 4", "-ThermalReadyBelowStatus $validationThermalReadyBelowStatus"
+        }
+    }
+}
 
 $thermalReadinessOutputPath = Join-Path $EvidenceRoot "thermal_ready_wait_preflight.json"
 $thermalReadinessCommandParts = @(
     ".\tools\wait_for_device_thermal_ready.ps1",
-    "-ReadyBelowThermalStatus 4",
+    "-ReadyBelowThermalStatus $validationThermalReadyBelowStatus",
     "-RequiredReadySamples 2",
     "-TimeoutSeconds 900",
     "-PollSeconds 30",
@@ -174,13 +182,13 @@ if (-not [string]::IsNullOrWhiteSpace($DeviceSerial)) {
     $thermalReadinessCommandParts = @($thermalReadinessCommandParts[0], "-DeviceSerial `"$escapedDeviceSerial`"") + @($thermalReadinessCommandParts | Select-Object -Skip 1)
 }
 $thermalReadiness = [pscustomobject]@{
-    readyBelowThermalStatus = 4
+    readyBelowThermalStatus = $validationThermalReadyBelowStatus
     requiredReadySamples = 2
     timeoutSeconds = 900
     pollSeconds = 30
     outputPath = $thermalReadinessOutputPath
     command = ($thermalReadinessCommandParts -join " ")
-    note = "Run before a watched phone validation session when the device may be warm or the camera preview appears slow."
+    note = "Run before a watched phone validation session when the device may be warm or the camera preview appears slow; status must be below severe."
 }
 
 $inProgressMilestones = @($roadmap.inProgress | ForEach-Object { $_.milestone })

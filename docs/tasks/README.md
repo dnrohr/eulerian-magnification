@@ -146,7 +146,9 @@ clean-tree state, whether the commit is reachable from `origin/main`, and a
 compact pending review-sheet issue count. The planner and handoff also include
 a `wait_for_device_thermal_ready.ps1` preflight command; run it before watched
 phone validation when the device is warm, FPS is low, or the preview looks
-nearly frozen.
+nearly frozen. Generated Pixel validation commands wait below thermal status
+`3` (`severe`) so full-frame runs do not start in a state where the app will
+fall back to Auto ROI.
 
 After a connected Pixel session, summarize which accepted evidence bundles are
 ready to close roadmap items. The closeout summary includes the accepted
