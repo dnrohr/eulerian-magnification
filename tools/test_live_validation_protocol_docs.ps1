@@ -118,6 +118,7 @@ foreach ($path in @($roiDoc, $linearDoc, $phaseDoc)) {
 }
 
 Assert-DocContains -Path $roiDoc -Expected "convert_roi_bounds_to_normalized.ps1" -Message "ROI protocol must document the screenshot-bounds converter."
+Assert-DocContains -Path $roiDoc -Expected "prepare_roi_final_capture_command.ps1" -Message "ROI protocol must document the final command helper."
 Assert-DocContains -Path $roiDoc -Expected "MeasureRoiExpected" -Message "ROI protocol must document the paste-ready normalized ROI value."
 Assert-DocContains -Path $roiDoc -Expected "visible target bounds in screenshot pixels" -Message "ROI protocol must document that converter input comes from visible target pixels."
 

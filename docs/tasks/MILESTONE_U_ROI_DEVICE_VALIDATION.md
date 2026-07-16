@@ -270,6 +270,9 @@ Goal: prove that automatic and manual ROI coordinates align with the live previe
   `-MeasureRoiExpected` or `-ManualRoi` still contains a placeholder or an
   invalid normalized rectangle, preventing wasted Pixel captures from stale
   command templates.
+- Added `tools/prepare_roi_final_capture_command.ps1` so watched setup bundles
+  plus measured target pixel bounds can produce the final manual or automatic
+  ROI capture command with `-MeasureRoiExpected` already filled in.
 
 ## Done When
 

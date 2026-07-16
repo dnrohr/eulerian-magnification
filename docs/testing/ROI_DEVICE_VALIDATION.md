@@ -83,6 +83,15 @@ from the visible target in the captured app screenshot, not from the overlay
 box itself.
 The capture script fails before ADB launch if `-MeasureRoiExpected` still
 contains a placeholder or is not a normalized `left,top,right,bottom` rectangle.
+After a setup bundle has `screenshot.png`, prepare the final manual ROI command
+without hand-editing the placeholder:
+
+```powershell
+.\tools\prepare_roi_final_capture_command.ps1 `
+  -Slot manualRoi `
+  -SetupBundle "sample-videos\exports\live-validation\<setup-bundle>" `
+  -PixelBounds "90,600,990,1800"
+```
 
 For the final accepted manual ROI run, repeat the command from a clean committed
 source tree with `-VisualValidated $true`, keep `-RequireRoiMeasurement`, and
@@ -181,6 +190,9 @@ overlay smoke test, but it does not prove face tracking.
 Use `tools\convert_roi_bounds_to_normalized.ps1` the same way as the manual
 target flow after measuring the visible face or skin bounds in screenshot
 pixels.
+Use `tools\prepare_roi_final_capture_command.ps1 -Slot autoRoi` to produce the
+final automatic ROI command from the setup bundle and measured face/skin pixel
+bounds.
 
 For the final accepted automatic ROI run, repeat the command from a clean
 committed source tree with `-VisualValidated $true`, keep
