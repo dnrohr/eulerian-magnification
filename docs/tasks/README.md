@@ -109,7 +109,9 @@ For a connected-session handoff bundle, write the plan, closeout summary, and
 paste-ready command list together:
 
 ```powershell
-.\tools\prepare_pixel_validation_handoff.ps1 -OutputRoot sample-videos\exports\live-validation
+.\tools\prepare_pixel_validation_handoff.ps1 `
+  -OutputRoot sample-videos\exports\live-validation `
+  -DeviceSerial 47091JEKB05516
 ```
 
 The plan includes the current closeout blocker count and next commands from
@@ -131,8 +133,8 @@ The handoff bundle writes `pixel_validation_plan.json`,
 `pixel_closeout_summary.json`, `pixel_validation_commands.txt`, the
 human-readable `pixel_validation_handoff.md`, and
 `pixel_validation_handoff_manifest.json` with SHA-256 hashes for those handoff
-artifacts. The handoff records the source branch, commit, clean-tree state, and
-whether the commit is reachable from `origin/main`.
+artifacts. The handoff records the target device serial, source branch, commit,
+clean-tree state, and whether the commit is reachable from `origin/main`.
 
 After a connected Pixel session, summarize which accepted evidence bundles are
 ready to close roadmap items. The closeout summary includes the accepted

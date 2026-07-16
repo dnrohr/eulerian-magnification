@@ -520,6 +520,9 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   47091JEKB05516`, and the ROI, live-linear, and live-phase watched protocol
   snippets include the same serial so remaining evidence captures target the
   connected Pixel 8a explicitly.
+- Pixel validation handoff bundles now accept and record the target
+  `-DeviceSerial`, pass it into the saved planner and command list, and include
+  it in the Markdown handoff and manifest.
 
 ## Remaining
 

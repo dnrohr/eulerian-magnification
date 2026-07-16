@@ -35,6 +35,7 @@ function Invoke-HandoffExitCode {
     $script = Join-Path $PSScriptRoot "prepare_pixel_validation_handoff.ps1"
     $powerShellExe = (Get-Process -Id $PID).Path
     $arguments = @("-NoProfile", "-File", $script, "-EvidenceRoot", $EvidenceRoot, "-OutputRoot", $OutputRoot)
+    $arguments += @("-DeviceSerial", "PIXEL-HANDOFF-TEST")
     foreach ($slotId in $Slot) {
         $arguments += @("-Slot", $slotId)
     }
@@ -55,12 +56,14 @@ $outputRoot = Join-Path ([System.IO.Path]::GetTempPath()) "eulerian-handoff-outp
 $result = & (Join-Path $PSScriptRoot "prepare_pixel_validation_handoff.ps1") `
     -EvidenceRoot $evidenceRoot `
     -OutputRoot $outputRoot `
+    -DeviceSerial "PIXEL-HANDOFF-TEST" `
     -Slot pulseLinear `
     -CaptureStage Final `
     -Json | ConvertFrom-Json
 
 Assert-Equal -Actual $result.evidenceRoot -Expected $evidenceRoot -Message "Handoff should preserve evidence root."
 Assert-Equal -Actual $result.outputRoot -Expected $outputRoot -Message "Handoff should preserve output root."
+Assert-Equal -Actual $result.deviceSerial -Expected "PIXEL-HANDOFF-TEST" -Message "Handoff should preserve device serial."
 Assert-Equal -Actual $result.captureStage -Expected "Final" -Message "Handoff should preserve capture stage."
 Assert-Equal -Actual @($result.requestedSlots).Count -Expected 1 -Message "Handoff should preserve requested slot count."
 Assert-Equal -Actual $result.requestedSlots[0] -Expected "pulseLinear" -Message "Handoff should preserve requested slot id."
@@ -87,12 +90,15 @@ $handoff = Get-Content -LiteralPath $result.handoffPath -Raw
 $manifest = Get-Content -LiteralPath $result.manifestPath -Raw | ConvertFrom-Json
 
 Assert-Equal -Actual @($plan.recommendedCaptures).Count -Expected 1 -Message "Written plan should preserve filtered recommended captures."
+Assert-Equal -Actual $plan.deviceSerial -Expected "PIXEL-HANDOFF-TEST" -Message "Written plan should preserve the handoff device serial."
 Assert-Equal -Actual $plan.recommendedCaptures[0].slot -Expected "pulseLinear" -Message "Written plan should preserve filtered slot."
 Assert-True -Condition ($commands.Contains("live-linear-pulse-final")) -Message "Command handoff should include the filtered final command."
+Assert-True -Condition ($commands.Contains('-DeviceSerial "PIXEL-HANDOFF-TEST"')) -Message "Command handoff should include the requested device serial."
 Assert-True -Condition (-not $commands.Contains("live-linear-pulse-setup")) -Message "Final-only command handoff should omit setup command."
 Assert-Equal -Actual @($closeout.closeoutBlockers).Count -Expected 1 -Message "Missing evidence handoff should preserve closeout blockers."
 Assert-True -Condition ($handoff.Contains("# Pixel Validation Handoff")) -Message "Markdown handoff should include a title."
 Assert-True -Condition ($handoff.Contains('Requested slots: `pulseLinear`')) -Message "Markdown handoff should include requested slots."
+Assert-True -Condition ($handoff.Contains('Device serial: `PIXEL-HANDOFF-TEST`')) -Message "Markdown handoff should include the device serial."
 Assert-True -Condition ($handoff.Contains('Expected final label: `live-linear-pulse-final`')) -Message "Markdown handoff should include expected final labels."
 Assert-True -Condition ($handoff.Contains("Source branch:")) -Message "Markdown handoff should include source branch."
 Assert-True -Condition ($handoff.Contains("Source commit:")) -Message "Markdown handoff should include source commit."
@@ -102,6 +108,7 @@ Assert-True -Condition ($handoff.Contains("```powershell")) -Message "Markdown h
 Assert-True -Condition ($handoff.Contains("live-linear-pulse-final")) -Message "Markdown handoff should include the filtered command."
 Assert-True -Condition ($handoff.Contains("missingSlots")) -Message "Markdown handoff should summarize closeout blockers."
 Assert-Equal -Actual @($manifest.artifacts).Count -Expected 4 -Message "Manifest should include every handoff artifact except itself."
+Assert-Equal -Actual $manifest.deviceSerial -Expected "PIXEL-HANDOFF-TEST" -Message "Manifest should include the device serial."
 foreach ($artifactName in @("plan", "closeout", "commands", "handoff")) {
     $artifact = @($manifest.artifacts | Where-Object { $_.name -eq $artifactName } | Select-Object -First 1)
     Assert-Equal -Actual @($artifact).Count -Expected 1 -Message "Manifest should include artifact '$artifactName'."
@@ -114,9 +121,11 @@ foreach ($artifactName in @("plan", "closeout", "commands", "handoff")) {
 $textOutput = & (Join-Path $PSScriptRoot "prepare_pixel_validation_handoff.ps1") `
     -EvidenceRoot $evidenceRoot `
     -OutputRoot $outputRoot `
+    -DeviceSerial "PIXEL-HANDOFF-TEST" `
     -Slot notARealSlot
 
 Assert-True -Condition (($textOutput -join "`n").Contains("Pixel validation handoff prepared")) -Message "Text handoff should print a heading."
+Assert-True -Condition (($textOutput -join "`n").Contains("Device serial: PIXEL-HANDOFF-TEST")) -Message "Text handoff should print the device serial."
 Assert-True -Condition (($textOutput -join "`n").Contains("Source:")) -Message "Text handoff should print source metadata."
 Assert-True -Condition (($textOutput -join "`n").Contains("Handoff:")) -Message "Text handoff should print the Markdown handoff path."
 Assert-True -Condition (($textOutput -join "`n").Contains("Manifest:")) -Message "Text handoff should print the manifest path."

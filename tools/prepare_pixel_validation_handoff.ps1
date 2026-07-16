@@ -1,6 +1,7 @@
 param(
     [string]$EvidenceRoot = "sample-videos\exports\live-validation",
     [string]$OutputRoot = "",
+    [string]$DeviceSerial = "47091JEKB05516",
     [string[]]$Slot = @(),
     [ValidateSet("All", "Setup", "Final")]
     [string]$CaptureStage = "All",
@@ -70,6 +71,7 @@ $plannerArgs = @{
     EvidenceRoot = $EvidenceRoot
     OutputPath = $planPath
     CaptureStage = $CaptureStage
+    DeviceSerial = $DeviceSerial
     Json = $true
 }
 if (@($Slot).Count -gt 0) {
@@ -80,6 +82,7 @@ $plan = & $planner @plannerArgs | ConvertFrom-Json
 $commandsArgs = @{
     EvidenceRoot = $EvidenceRoot
     CaptureStage = $CaptureStage
+    DeviceSerial = $DeviceSerial
     CommandsOnly = $true
 }
 if (@($Slot).Count -gt 0) {
@@ -97,6 +100,7 @@ $handoffLines = @(
     "",
     ('- Evidence root: `{0}`' -f $EvidenceRoot),
     ('- Output root: `{0}`' -f $OutputRoot),
+    ('- Device serial: `{0}`' -f $DeviceSerial),
     ('- Capture stage: `{0}`' -f $plan.captureStage),
     ('- Requested slots: `{0}`' -f $requestedSlotLabel),
     "- Recommended captures: $(@($plan.recommendedCaptures).Count)",
@@ -162,6 +166,7 @@ $artifactRecords = @(
 $manifest = [pscustomobject]@{
     evidenceRoot = $EvidenceRoot
     outputRoot = $OutputRoot
+    deviceSerial = $DeviceSerial
     source = [pscustomobject]@{
         branch = $sourceBranch
         commit = $sourceCommit
@@ -175,6 +180,7 @@ $manifest | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $manifestPath -En
 $result = [pscustomobject]@{
     evidenceRoot = $EvidenceRoot
     outputRoot = $OutputRoot
+    deviceSerial = $DeviceSerial
     planPath = $planPath
     closeoutPath = $closeoutPath
     commandsPath = $commandsPath
@@ -202,6 +208,7 @@ if ($Json) {
     Write-Output "Pixel validation handoff prepared"
     Write-Output "Evidence root: $($result.evidenceRoot)"
     Write-Output "Output root: $($result.outputRoot)"
+    Write-Output "Device serial: $($result.deviceSerial)"
     Write-Output "Capture stage: $($result.captureStage)"
     Write-Output "Recommended captures: $($result.recommendedCaptureCount)"
     Write-Output "Command templates: $($result.commandCount)"
