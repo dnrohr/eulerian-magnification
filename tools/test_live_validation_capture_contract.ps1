@@ -72,8 +72,20 @@ function Assert-InvalidParameterValue {
 }
 
 $captureScript = Join-Path $PSScriptRoot "capture_live_validation_evidence.ps1"
+$thermalScript = Join-Path $PSScriptRoot "wait_for_device_thermal_ready.ps1"
 $command = Get-Command $captureScript
+$thermalCommand = Get-Command $thermalScript
 $captureScriptContent = Get-Content -LiteralPath $captureScript -Raw
+$thermalScriptContent = Get-Content -LiteralPath $thermalScript -Raw
+
+foreach ($expectedParameter in @("AdbPath", "DeviceSerial")) {
+    if (-not $command.Parameters.ContainsKey($expectedParameter)) {
+        throw "Capture script must expose -$expectedParameter."
+    }
+    if (-not $thermalCommand.Parameters.ContainsKey($expectedParameter)) {
+        throw "Thermal wait helper must expose -$expectedParameter."
+    }
+}
 
 Assert-SequenceEqual `
     -Actual (Get-ValidateSetValues -Command $command -ParameterName "Mode") `
@@ -127,10 +139,23 @@ foreach ($expectedSourceContract in @(
     "commitReachableFromOriginMain",
     "merge-base",
     "--is-ancestor",
-    "origin/main"
+    "origin/main",
+    "deviceSerial",
+    "adbDeviceArgs",
+    "-DeviceSerial"
 )) {
     if (-not $captureScriptContent.Contains($expectedSourceContract)) {
         throw "Capture script must preserve source reachability contract: missing '$expectedSourceContract'."
+    }
+}
+
+foreach ($expectedThermalContract in @(
+    "deviceSerial",
+    "adbDeviceArgs",
+    "@adbDeviceArgs shell dumpsys thermalservice"
+)) {
+    if (-not $thermalScriptContent.Contains($expectedThermalContract)) {
+        throw "Thermal wait helper must preserve device targeting contract: missing '$expectedThermalContract'."
     }
 }
 

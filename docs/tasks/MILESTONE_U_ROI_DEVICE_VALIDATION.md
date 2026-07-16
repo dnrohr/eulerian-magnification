@@ -234,6 +234,22 @@ Goal: prove that automatic and manual ROI coordinates align with the live previe
   script change itself, so it is tooling smoke evidence rather than release
   evidence.
 
+## Supporting Slice: Device-Targeted Evidence Capture
+
+- `tools/capture_live_validation_evidence.ps1` and
+  `tools/wait_for_device_thermal_ready.ps1` now accept `-AdbPath` and
+  `-DeviceSerial`.
+- Capture, launch, screenshot, screenrecord, logcat, UI dump, package dump,
+  focused-window, thermal, battery, and thermal-readiness commands all forward
+  the selected ADB serial.
+- Evidence manifests record the requested device serial and ADB arguments so
+  remaining Pixel 8a bundles can be traced to `47091JEKB05516` even if another
+  emulator/device is connected or ADB has recently recovered from an `offline`
+  state.
+- This improves repeatability and auditability for the remaining watched manual
+  and automatic ROI validation, but does not close either target-alignment task
+  without a visible known target.
+
 ## Done When
 
 - Manual and automatic ROI overlays align with the visible target on device.

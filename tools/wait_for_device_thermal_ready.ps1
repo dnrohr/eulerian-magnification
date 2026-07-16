@@ -3,12 +3,23 @@ param(
     [int]$RequiredReadySamples = 2,
     [int]$TimeoutSeconds = 900,
     [int]$PollSeconds = 30,
+    [string]$AdbPath = "",
+    [string]$DeviceSerial = "",
     [string]$OutputPath = ""
 )
 
 $ErrorActionPreference = "Stop"
 
 function Find-Adb {
+    param([string]$ExplicitPath)
+
+    if (-not [string]::IsNullOrWhiteSpace($ExplicitPath)) {
+        if (Test-Path -LiteralPath $ExplicitPath) {
+            return (Resolve-Path -LiteralPath $ExplicitPath).Path
+        }
+        throw "Requested adb path does not exist: $ExplicitPath"
+    }
+
     $sdkAdb = Join-Path $env:LOCALAPPDATA "Android\Sdk\platform-tools\adb.exe"
     if (Test-Path -LiteralPath $sdkAdb) {
         return $sdkAdb
@@ -113,7 +124,12 @@ if ($TimeoutSeconds -lt 0) {
     throw "TimeoutSeconds must be non-negative."
 }
 
-$adb = Find-Adb
+$adb = Find-Adb -ExplicitPath $AdbPath
+$adbDeviceArgs = if ([string]::IsNullOrWhiteSpace($DeviceSerial)) {
+    @()
+} else {
+    @("-s", $DeviceSerial)
+}
 $records = [System.Collections.ArrayList]::new()
 $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
 $lastSummary = $null
@@ -122,7 +138,7 @@ $consecutiveReadySamples = 0
 
 do {
     $elapsed = [Math]::Max(0, [int]($TimeoutSeconds - [Math]::Ceiling(($deadline - (Get-Date)).TotalSeconds)))
-    $thermalText = & $adb shell dumpsys thermalservice
+    $thermalText = & $adb @adbDeviceArgs shell dumpsys thermalservice
     if ($LASTEXITCODE -ne 0) {
         throw "adb thermalservice query failed with exit code $LASTEXITCODE."
     }
@@ -155,6 +171,9 @@ $result = [ordered]@{
     requiredReadySamples = $RequiredReadySamples
     timeoutSeconds = $TimeoutSeconds
     pollSeconds = $PollSeconds
+    adb = $adb
+    deviceSerial = $DeviceSerial
+    adbDeviceArgs = @($adbDeviceArgs)
     consecutiveReadySamples = $consecutiveReadySamples
     lastThermal = $lastSummary
     records = $records

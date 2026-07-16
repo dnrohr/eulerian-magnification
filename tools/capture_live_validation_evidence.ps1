@@ -2,6 +2,8 @@ param(
     [string]$OutputRoot = "sample-videos\exports\live-validation",
     [string]$Label = "",
     [string]$Package = "com.dnrohr.eulerianmagnification",
+    [string]$AdbPath = "",
+    [string]$DeviceSerial = "",
     [int]$ScreenRecordSeconds = 0,
     [switch]$SkipLaunch,
     [ValidateSet("", "Pulse", "Breathing", "Tremor", "ObjectVibration")]
@@ -63,6 +65,15 @@ $scriptParameters = $PSBoundParameters
 $script:LastEvidenceSummaryExitCode = 0
 
 function Find-Adb {
+    param([string]$ExplicitPath)
+
+    if (-not [string]::IsNullOrWhiteSpace($ExplicitPath)) {
+        if (Test-Path -LiteralPath $ExplicitPath) {
+            return (Resolve-Path -LiteralPath $ExplicitPath).Path
+        }
+        throw "Requested adb path does not exist: $ExplicitPath"
+    }
+
     $sdkAdb = Join-Path $env:LOCALAPPDATA "Android\Sdk\platform-tools\adb.exe"
     if (Test-Path -LiteralPath $sdkAdb) {
         return $sdkAdb
@@ -86,7 +97,8 @@ function Run-AdbText {
 
     $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
     $startInfo.FileName = $Adb
-    $startInfo.Arguments = ($Arguments | ForEach-Object {
+    $adbArguments = @($script:AdbDeviceArgs) + @($Arguments)
+    $startInfo.Arguments = ($adbArguments | ForEach-Object {
         if ($_ -match '[\s"]') {
             '"' + ($_ -replace '"', '\"') + '"'
         } else {
@@ -236,7 +248,13 @@ function Parse-ThermalSummary {
     }
 }
 
-$adb = Find-Adb
+$adb = Find-Adb -ExplicitPath $AdbPath
+$script:AdbDeviceArgs = if ([string]::IsNullOrWhiteSpace($DeviceSerial)) {
+    @()
+} else {
+    @("-s", $DeviceSerial)
+}
+$adbDeviceArgs = @($script:AdbDeviceArgs)
 $source = Get-GitMetadata
 $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
 $safeLabel = if ([string]::IsNullOrWhiteSpace($Label)) { "capture" } else { $Label -replace "[^A-Za-z0-9._-]", "-" }
@@ -263,6 +281,7 @@ function Write-AbortedBundle {
         createdAt = (Get-Date).ToString("o")
         label = $safeLabel
         package = $Package
+        deviceSerial = $DeviceSerial
         source = $source
         aborted = $true
         abortReason = $AbortReason
@@ -299,6 +318,7 @@ function Write-AbortedBundle {
             operatorNotes = $OperatorNotes
         }
         adb = $adb
+        adbDeviceArgs = @($script:AdbDeviceArgs)
         outputDir = (Resolve-Path -LiteralPath $outputDir).Path
         screenRecordSeconds = 0
         thermalPreflight = $ThermalPreflight
@@ -399,6 +419,8 @@ if ($WaitForThermalReady) {
         -RequiredReadySamples $ThermalReadySamples `
         -TimeoutSeconds $ThermalReadyTimeoutSeconds `
         -PollSeconds $ThermalReadyPollSeconds `
+        -AdbPath $adb `
+        -DeviceSerial $DeviceSerial `
         -OutputPath $thermalReadyPath *> $thermalReadyLogPath
     $thermalReadyExitCode = $LASTEXITCODE
     if ($thermalReadyExitCode -ne 0) {
@@ -447,14 +469,14 @@ if ($shouldAbortForThermal) {
 if (-not $PreserveLogcat) {
     $previousErrorActionPreference = $ErrorActionPreference
     $ErrorActionPreference = "Continue"
-    & $adb logcat -c *> $null
+    & $adb @adbDeviceArgs logcat -c *> $null
     $ErrorActionPreference = $previousErrorActionPreference
 }
 
 if (-not $SkipLaunch) {
     $previousErrorActionPreference = $ErrorActionPreference
     $ErrorActionPreference = "Continue"
-    & $adb shell am force-stop $Package *> $null
+    & $adb @adbDeviceArgs shell am force-stop $Package *> $null
     Start-Sleep -Milliseconds 500
     $launchArgs = @(
         "shell",
@@ -496,7 +518,7 @@ if (-not $SkipLaunch) {
     if ($PersistLaunchSettings) {
         $launchArgs += @("--ez", "validation.persist", "true")
     }
-    & $adb @launchArgs *> $null
+    & $adb @adbDeviceArgs @launchArgs *> $null
     $ErrorActionPreference = $previousErrorActionPreference
     Start-Sleep -Seconds 3
 }
@@ -552,9 +574,9 @@ for ($uiDumpAttempt = 1; $uiDumpAttempt -le $uiDumpAttemptCount -and -not $uiDum
     ) -OutputPath $uiDumpStdoutPath
     $previousErrorActionPreference = $ErrorActionPreference
     $ErrorActionPreference = "Continue"
-    & $adb pull $remoteUiDump $uiDumpPath *> $uiDumpPullPath
+    & $adb @adbDeviceArgs pull $remoteUiDump $uiDumpPath *> $uiDumpPullPath
     $uiDumpPullExitCode = $LASTEXITCODE
-    & $adb shell rm $remoteUiDump *> $null
+    & $adb @adbDeviceArgs shell rm $remoteUiDump *> $null
     $ErrorActionPreference = $previousErrorActionPreference
 
     if ($uiDumpPullExitCode -eq 0 -and
@@ -589,18 +611,18 @@ $artifacts.battery = $batteryPath
 
 $remoteScreenshot = "/sdcard/Download/eulerian-live-validation-$timestamp.png"
 $screenshotPath = Join-Path $outputDir "screenshot.png"
-& $adb shell screencap -p $remoteScreenshot | Out-Null
-& $adb pull $remoteScreenshot $screenshotPath | Out-Null
-& $adb shell rm $remoteScreenshot | Out-Null
+& $adb @adbDeviceArgs shell screencap -p $remoteScreenshot | Out-Null
+& $adb @adbDeviceArgs pull $remoteScreenshot $screenshotPath | Out-Null
+& $adb @adbDeviceArgs shell rm $remoteScreenshot | Out-Null
 $artifacts.screenshot = $screenshotPath
 
 if ($ScreenRecordSeconds -gt 0) {
     $duration = [Math]::Min($ScreenRecordSeconds, 180)
     $remoteVideo = "/sdcard/Download/eulerian-live-validation-$timestamp.mp4"
     $videoPath = Join-Path $outputDir "screenrecord.mp4"
-    & $adb shell screenrecord --time-limit $duration $remoteVideo
-    & $adb pull $remoteVideo $videoPath | Out-Null
-    & $adb shell rm $remoteVideo | Out-Null
+    & $adb @adbDeviceArgs shell screenrecord --time-limit $duration $remoteVideo
+    & $adb @adbDeviceArgs pull $remoteVideo $videoPath | Out-Null
+    & $adb @adbDeviceArgs shell rm $remoteVideo | Out-Null
     $artifacts.screenrecord = $videoPath
 }
 
@@ -665,6 +687,7 @@ $manifest = [ordered]@{
     createdAt = (Get-Date).ToString("o")
     label = $safeLabel
     package = $Package
+    deviceSerial = $DeviceSerial
     source = $source
     launch = [ordered]@{
         skipped = [bool]$SkipLaunch
@@ -698,6 +721,7 @@ $manifest = [ordered]@{
         operatorNotes = $OperatorNotes
     }
     adb = $adb
+    adbDeviceArgs = @($script:AdbDeviceArgs)
     outputDir = (Resolve-Path -LiteralPath $outputDir).Path
     screenRecordSeconds = $ScreenRecordSeconds
     thermalPreflight = $thermalPreflight

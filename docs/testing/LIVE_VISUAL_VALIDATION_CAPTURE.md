@@ -29,7 +29,10 @@ contains only the preflight artifacts, `manifest.json`, and optional
 ## Command
 
 ```powershell
-.\tools\capture_live_validation_evidence.ps1 -Label "manual-roi-target" -ScreenRecordSeconds 15
+.\tools\capture_live_validation_evidence.ps1 `
+  -Label "manual-roi-target" `
+  -DeviceSerial 47091JEKB05516 `
+  -ScreenRecordSeconds 15
 ```
 
 The script launches the app before capture by default, then waits briefly for
@@ -112,6 +115,7 @@ Use the thermal wait helper before watched validation runs:
 
 ```powershell
 .\tools\wait_for_device_thermal_ready.ps1 `
+  -DeviceSerial 47091JEKB05516 `
   -ReadyBelowThermalStatus 4 `
   -RequiredReadySamples 2 `
   -TimeoutSeconds 900 `
@@ -133,6 +137,7 @@ For a single capture command, pass `-WaitForThermalReady`. The capture writes
 ```powershell
 .\tools\capture_live_validation_evidence.ps1 `
   -Label "watched-target" `
+  -DeviceSerial 47091JEKB05516 `
   -WaitForThermalReady `
   -ThermalReadyBelowStatus 4 `
   -ThermalReadySamples 2 `
@@ -341,6 +346,12 @@ ADB extras:
 
 Available launch parameters:
 
+- `-AdbPath`: optional explicit `adb.exe` path. Omit it to use the Android SDK
+  under `LOCALAPPDATA` or `adb` from `PATH`.
+- `-DeviceSerial`: optional ADB serial forwarded to every capture and thermal
+  wait command. Use this when the Pixel is connected as
+  `47091JEKB05516`, when another emulator/device is present, or after ADB has
+  recovered from an `offline` state.
 - `-Mode`: `Pulse`, `Breathing`, `Tremor`, or `ObjectVibration`. Prefer
   `Tremor` for the public Fast Motion / Motion path; `ObjectVibration` remains
   accepted for internal compatibility and parity experiments.
