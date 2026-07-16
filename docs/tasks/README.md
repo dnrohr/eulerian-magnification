@@ -124,7 +124,9 @@ command templates without the surrounding checklist. Add `-FailOnInvalidSlot`
 in scripted runs so a mistyped slot filter exits nonzero instead of producing
 an empty capture queue, or `-FailOnEmptyQueue` when automation should require
 at least one recommended capture. Add `-OutputPath sample-videos\exports\live-validation\pixel_validation_plan.json`
-to save the full machine-readable plan used for a device session.
+to save the full machine-readable plan used for a device session. Generated
+capture commands default to `-DeviceSerial 47091JEKB05516`; pass
+`-DeviceSerial <serial>` to target a different connected device.
 The handoff bundle writes `pixel_validation_plan.json`,
 `pixel_closeout_summary.json`, `pixel_validation_commands.txt`, the
 human-readable `pixel_validation_handoff.md`, and

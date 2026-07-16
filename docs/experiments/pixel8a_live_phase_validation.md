@@ -86,6 +86,7 @@ Planner command name: `live-phase-object-setup`.
 
 ```powershell
 .\tools\capture_live_validation_evidence.ps1 `
+  -DeviceSerial 47091JEKB05516 `
   -Label "live-phase-object" `
   -WaitForThermalReady `
   -ThermalReadyBelowStatus 4 `
@@ -126,6 +127,7 @@ final profile:
 
 ```powershell
 .\tools\capture_live_validation_evidence.ps1 `
+  -DeviceSerial 47091JEKB05516 `
   -Label "live-phase-object-final" `
   -WaitForThermalReady `
   -ThermalReadyBelowStatus 4 `
@@ -164,6 +166,7 @@ vibration. The setup command is:
 
 ```powershell
 .\tools\capture_live_validation_evidence.ps1 `
+  -DeviceSerial 47091JEKB05516 `
   -Label "live-phase-fast-tremor-setup" `
   -WaitForThermalReady `
   -ThermalReadyBelowStatus 4 `
@@ -197,6 +200,7 @@ After inspection, close the Fast tremor slot with:
 
 ```powershell
 .\tools\capture_live_validation_evidence.ps1 `
+  -DeviceSerial 47091JEKB05516 `
   -Label "live-phase-fast-tremor-final" `
   -WaitForThermalReady `
   -ThermalReadyBelowStatus 4 `

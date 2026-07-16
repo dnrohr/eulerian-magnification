@@ -64,6 +64,7 @@ function Assert-CaptureCommandBlocksParse {
 
         $executable = @($tokens | Where-Object { $_.Type -eq "Command" } | Select-Object -First 1).Content
         Assert-Equal -Actual $executable -Expected ".\tools\capture_live_validation_evidence.ps1" -Message "Documented capture command should call the live validation capture script in $Path."
+        Assert-True -Condition ($block.Contains("-DeviceSerial 47091JEKB05516")) -Message "Documented capture command should target the Pixel 8a by serial in $Path."
 
         foreach ($token in @($tokens | Where-Object { $_.Type -eq "CommandParameter" })) {
             $parameterName = $token.Content.TrimStart("-")
@@ -125,6 +126,7 @@ foreach ($path in @($readme, $taskReadme)) {
     Assert-DocContains -Path $path -Expected "-Slot" -Message "Operator docs must document planner slot filtering."
     Assert-DocContains -Path $path -Expected "-CaptureStage" -Message "Operator docs must document planner capture-stage filtering."
     Assert-DocContains -Path $path -Expected "-CommandsOnly" -Message "Operator docs must document command-only planner output."
+    Assert-DocContains -Path $path -Expected "-DeviceSerial" -Message "Operator docs must document planner device serial selection."
     Assert-DocContains -Path $path -Expected "-FailOnInvalidSlot" -Message "Operator docs must document invalid slot failure mode."
     Assert-DocContains -Path $path -Expected "-FailOnEmptyQueue" -Message "Operator docs must document empty queue failure mode."
     Assert-DocContains -Path $path -Expected "pixel_validation_plan.json" -Message "Operator docs must document the saved planner artifact name."

@@ -82,6 +82,7 @@ stop at `target_visible_unvalidated` until the operator inspects the recording:
 
 ```powershell
 .\tools\capture_live_validation_evidence.ps1 `
+  -DeviceSerial 47091JEKB05516 `
   -Label "live-linear-pulse-setup" `
   -WaitForThermalReady `
   -ThermalReadyBelowStatus 4 `
@@ -116,6 +117,7 @@ and use the final evidence profile:
 
 ```powershell
 .\tools\capture_live_validation_evidence.ps1 `
+  -DeviceSerial 47091JEKB05516 `
   -Label "live-linear-pulse-final" `
   -WaitForThermalReady `
   -ThermalReadyBelowStatus 4 `
@@ -144,6 +146,7 @@ Pulse. The Breathing setup command is:
 
 ```powershell
 .\tools\capture_live_validation_evidence.ps1 `
+  -DeviceSerial 47091JEKB05516 `
   -Label "live-linear-breathing-setup" `
   -WaitForThermalReady `
   -ThermalReadyBelowStatus 4 `
@@ -176,6 +179,7 @@ After inspection, close the Breathing slot with:
 
 ```powershell
 .\tools\capture_live_validation_evidence.ps1 `
+  -DeviceSerial 47091JEKB05516 `
   -Label "live-linear-breathing-final" `
   -WaitForThermalReady `
   -ThermalReadyBelowStatus 4 `

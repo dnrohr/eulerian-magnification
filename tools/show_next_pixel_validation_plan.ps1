@@ -1,5 +1,6 @@
 param(
     [string]$EvidenceRoot = "sample-videos\exports\live-validation",
+    [string]$DeviceSerial = "47091JEKB05516",
     [string[]]$Slot = @(),
     [ValidateSet("All", "Setup", "Final")]
     [string]$CaptureStage = "All",
@@ -146,6 +147,18 @@ $validationGroups = @(
     }
 )
 
+if (-not [string]::IsNullOrWhiteSpace($DeviceSerial)) {
+    $escapedDeviceSerial = $DeviceSerial -replace '"', '\"'
+    $captureCommandPrefix = ".\tools\capture_live_validation_evidence.ps1"
+    foreach ($group in $validationGroups) {
+        foreach ($command in @($group.commands)) {
+            if ($command.command.StartsWith($captureCommandPrefix)) {
+                $command.command = "$captureCommandPrefix -DeviceSerial `"$escapedDeviceSerial`"$($command.command.Substring($captureCommandPrefix.Length))"
+            }
+        }
+    }
+}
+
 $inProgressMilestones = @($roadmap.inProgress | ForEach-Object { $_.milestone })
 $coveredMilestones = @($validationGroups | ForEach-Object { $_.milestones } | Select-Object -Unique)
 $missingMilestones = @($inProgressMilestones | Where-Object { $_ -notin $coveredMilestones })
@@ -230,6 +243,7 @@ $result = [pscustomobject]@{
     requestedSlots = $requestedSlots
     invalidRequestedSlots = $invalidRequestedSlots
     captureStage = $requestedStage
+    deviceSerial = $DeviceSerial
     recommendedCaptures = $recommendedCaptures
     validationGroups = $validationGroups
 }

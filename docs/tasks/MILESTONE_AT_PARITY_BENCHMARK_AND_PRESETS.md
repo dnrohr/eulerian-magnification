@@ -516,6 +516,10 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - Added `tools/install_debug_on_pixel.ps1` so connected-device tasks can build,
   install, grant camera permission, and launch through the SDK `adb.exe` even
   when `adb` is not on `PATH`.
+- Pixel validation planner commands now default to `-DeviceSerial
+  47091JEKB05516`, and the ROI, live-linear, and live-phase watched protocol
+  snippets include the same serial so remaining evidence captures target the
+  connected Pixel 8a explicitly.
 
 ## Remaining
 

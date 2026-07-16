@@ -72,6 +72,7 @@ $closeout = & (Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1"
 Assert-Equal -Actual $plan.roadmap.total -Expected 47 -Message "Roadmap total mismatch."
 Assert-Equal -Actual $plan.roadmap.complete -Expected 41 -Message "Complete milestone count mismatch."
 Assert-Equal -Actual $plan.roadmap.inProgress -Expected 6 -Message "In-progress milestone count mismatch."
+Assert-Equal -Actual $plan.deviceSerial -Expected "47091JEKB05516" -Message "Pixel validation plan should default to the connected Pixel 8a serial."
 Assert-Equal -Actual @($plan.missingMilestones).Count -Expected 0 -Message "Every in-progress milestone should have validation-plan coverage."
 Assert-Equal -Actual $plan.currentCloseout.evidenceRoot -Expected $missingCloseoutRoot -Message "Validation plan should pass through the evidence root used for closeout."
 Assert-Equal -Actual $plan.currentCloseout.acceptedFinalEvidenceCount -Expected 0 -Message "Missing evidence root should have no accepted final evidence."
@@ -118,6 +119,7 @@ Assert-True -Condition (-not (($finalOnlyText -join "`n").Contains("manual-roi-k
 Assert-True -Condition (($finalOnlyText -join "`n").Contains("manual-roi-known-target-final:")) -Message "Final-only text should include final commands."
 Assert-Equal -Actual @($pulseFinalCommandsOnly).Count -Expected 1 -Message "CommandsOnly should respect slot and stage filters."
 Assert-True -Condition ($pulseFinalCommandsOnly[0].StartsWith(".\tools\capture_live_validation_evidence.ps1")) -Message "CommandsOnly output should contain command templates only."
+Assert-True -Condition ($pulseFinalCommandsOnly[0].Contains('-DeviceSerial "47091JEKB05516"')) -Message "CommandsOnly output should target the Pixel 8a by serial."
 Assert-True -Condition ($pulseFinalCommandsOnly[0].Contains('live-linear-pulse-final')) -Message "CommandsOnly output should include the requested final command."
 Assert-True -Condition (-not ($pulseFinalCommandsOnly[0].Contains("Recommended captures"))) -Message "CommandsOnly output should omit headings."
 Assert-Equal -Actual @($invalidSlotPlan.recommendedCaptures).Count -Expected 0 -Message "Unknown slot filter should not recommend captures."
@@ -226,6 +228,7 @@ foreach ($slot in @($closeout.slots)) {
 
 $capturePlanCommands = @($groups | ForEach-Object { $_.commands } | Where-Object { $_.command.StartsWith(".\tools\capture_live_validation_evidence.ps1") })
 foreach ($command in $capturePlanCommands) {
+    Assert-True -Condition ($command.command.Contains('-DeviceSerial "47091JEKB05516"')) -Message "Capture command '$($command.name)' should target the Pixel 8a by serial."
     $isSetup = $command.name.EndsWith("-setup") -or $command.name.EndsWith("-target")
     $isFinal = $command.name.EndsWith("-final")
     if ($isSetup) {
