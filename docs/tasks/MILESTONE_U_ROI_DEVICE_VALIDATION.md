@@ -151,10 +151,12 @@ Goal: prove that automatic and manual ROI coordinates align with the live previe
 - Updated `docs/testing/ROI_DEVICE_VALIDATION.md` so manual and automatic ROI
   validation use the same two-step watched evidence flow as live renderer
   validation.
-- Setup captures require a visible target, a passing ROI overlay measurement,
-  valid screenrecord, thermal-readiness evidence, camera-FPS evidence,
-  focused-app evidence, and `target_visible_unvalidated`.
-- Final accepted manual and automatic ROI runs must keep
+- Setup captures require a visible target, valid screenrecord,
+  thermal-readiness evidence, camera-FPS evidence, focused-app evidence, and
+  `target_visible_unvalidated`; they intentionally do not require ROI
+  measurement because the expected screenshot bounds are derived from the setup
+  `screenshot.png`.
+- Final accepted manual and automatic ROI runs add
   `-RequireRoiMeasurement` and add `-RequireFinalVisualEvidence`, so overlay
   alignment cannot close from a dirty source tree, missing video, low/missing
   camera cadence, unfocused app, failed ROI measurement, or unaccepted visual
