@@ -171,6 +171,16 @@ inspect motion/ROI evidence quickly; rerun the evidence summary afterward so
 `artifacts.reviewContactSheet` and the closeout `artifactNote` can cite the
 contact sheet hash. It does not replace the strict final evidence gates.
 
+To find captured bundles that still need a contact sheet, run:
+
+```powershell
+.\tools\show_live_validation_review_queue.ps1
+.\tools\show_live_validation_review_queue.ps1 -CommandsOnly -FfmpegPath <path-to-ffmpeg.exe>
+```
+
+Use `-OutputPath sample-videos\exports\live-validation\review_queue.json` when
+you want to preserve the queue for a device-session handoff.
+
 Use `-FailOnCloseoutNotReady` before closing roadmap items; it is equivalent to
 requiring no missing, unmatched, ambiguous, duplicate, non-`main`, or
 missing-artifact-hash accepted evidence, requiring accepted source commits to

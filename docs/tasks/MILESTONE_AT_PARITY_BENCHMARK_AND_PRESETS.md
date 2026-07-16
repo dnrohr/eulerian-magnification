@@ -536,6 +536,10 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   review contact sheet hashes, so final artifact notes can cite the sheet used
   during visual inspection without making it a replacement for the raw
   screenrecord.
+- Added `tools/show_live_validation_review_queue.ps1` to scan captured
+  live-validation bundles, identify `screenrecord.mp4` files that still lack
+  `review_contact_sheet.jpg`, and emit paste-ready review-sheet export
+  commands.
 
 ## Remaining
 

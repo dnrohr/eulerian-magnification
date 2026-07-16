@@ -226,6 +226,16 @@ records the contact sheet path, byte count, SHA-256, and manifest fields. Use
 it as a review aid for motion/ROI changes; final roadmap closeout still
 requires the accepted visual-evidence gates.
 
+To list captured screenrecords that still need contact sheets, run:
+
+```powershell
+.\tools\show_live_validation_review_queue.ps1
+.\tools\show_live_validation_review_queue.ps1 -CommandsOnly -FfmpegPath <path-to-ffmpeg.exe>
+```
+
+The queue emits paste-ready `export_live_validation_review_sheet.ps1` commands
+for bundles with `screenrecord.mp4` but no `review_contact_sheet.jpg`.
+
 For final live-preview evidence, pass `-RequireCameraFps` so the summary fails
 unless scoped logcat contains camera HAL `FPS:` samples and the minimum sample
 is at least the configured warning threshold, `23.5 FPS` by default. This

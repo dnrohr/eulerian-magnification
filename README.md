@@ -377,6 +377,16 @@ contact sheet. The next `evidence_summary.json` records the contact sheet under
 when present. This is a review aid only; accepted final evidence still has to
 pass the strict summary and closeout gates.
 
+To see which captured bundles still need review sheets, run:
+
+```powershell
+.\tools\show_live_validation_review_queue.ps1
+.\tools\show_live_validation_review_queue.ps1 -CommandsOnly -FfmpegPath <path-to-ffmpeg.exe>
+```
+
+The queue reports screenrecord bundles missing `review_contact_sheet.jpg` and
+can save JSON with `-OutputPath`.
+
 Use the closeout gates before editing visual-validation status in README or
 parity docs. `-FailOnPresetDocsNotReady` requires the four preset slots to be
 present and rejects unmatched, ambiguous, duplicate, non-`main`, unpushed, or
