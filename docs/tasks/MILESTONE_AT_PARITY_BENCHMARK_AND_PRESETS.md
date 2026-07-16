@@ -563,6 +563,8 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   `evidence_summary.json`.
 - Pixel validation handoff Markdown now lists each pending `reviewSheetIssue`
   reason and the per-bundle review-sheet regeneration command.
+- Pixel validation handoff now supports `-FailOnPendingReviewSheets`, exiting
+  nonzero when captured screenrecords still need matching review sheets.
 
 ## Remaining
 

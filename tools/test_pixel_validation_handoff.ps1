@@ -29,7 +29,8 @@ function Invoke-HandoffExitCode {
         [string]$OutputRoot,
         [string[]]$Slot = @(),
         [switch]$FailOnInvalidSlot,
-        [switch]$FailOnEmptyQueue
+        [switch]$FailOnEmptyQueue,
+        [switch]$FailOnPendingReviewSheets
     )
 
     $script = Join-Path $PSScriptRoot "prepare_pixel_validation_handoff.ps1"
@@ -44,6 +45,9 @@ function Invoke-HandoffExitCode {
     }
     if ($FailOnEmptyQueue) {
         $arguments += "-FailOnEmptyQueue"
+    }
+    if ($FailOnPendingReviewSheets) {
+        $arguments += "-FailOnPendingReviewSheets"
     }
 
     & $powerShellExe @arguments *> $null
@@ -159,9 +163,11 @@ Assert-True -Condition (($textOutput -join "`n").Contains("Warning: no recommend
 $validExitCode = Invoke-HandoffExitCode -EvidenceRoot $evidenceRoot -OutputRoot $outputRoot -Slot pulseLinear -FailOnInvalidSlot -FailOnEmptyQueue
 $invalidExitCode = Invoke-HandoffExitCode -EvidenceRoot $evidenceRoot -OutputRoot $outputRoot -Slot notARealSlot -FailOnInvalidSlot
 $emptyExitCode = Invoke-HandoffExitCode -EvidenceRoot $evidenceRoot -OutputRoot $outputRoot -Slot notARealSlot -FailOnEmptyQueue
+$pendingReviewExitCode = Invoke-HandoffExitCode -EvidenceRoot $evidenceRoot -OutputRoot $outputRoot -Slot pulseLinear -FailOnPendingReviewSheets
 
 Assert-Equal -Actual $validExitCode -Expected 0 -Message "Handoff gates should allow valid non-empty filters."
 Assert-Equal -Actual $invalidExitCode -Expected 21 -Message "Handoff should fail invalid slot filters with exit code 21."
 Assert-Equal -Actual $emptyExitCode -Expected 22 -Message "Handoff should fail empty command queues with exit code 22."
+Assert-Equal -Actual $pendingReviewExitCode -Expected 23 -Message "Handoff should fail pending review-sheet issues with exit code 23."
 
 Write-Output "Pixel validation handoff self-test passed."

@@ -331,7 +331,9 @@ closing evidence commands, and add `-CommandsOnly` when you want paste-ready
 command templates without the surrounding checklist. Add `-FailOnInvalidSlot`
 in scripted runs so a mistyped slot filter exits nonzero instead of producing
 an empty capture queue, or `-FailOnEmptyQueue` when automation should require
-at least one recommended capture. Add `-OutputPath sample-videos\exports\live-validation\pixel_validation_plan.json`
+at least one recommended capture. Add `-FailOnPendingReviewSheets` when a
+handoff should fail until every captured screenrecord has a matching review
+sheet. Add `-OutputPath sample-videos\exports\live-validation\pixel_validation_plan.json`
 to save the full machine-readable plan used for a device session. Generated
 capture commands default to `-DeviceSerial 47091JEKB05516`; pass
 `-DeviceSerial <serial>` to target a different connected device. Generated

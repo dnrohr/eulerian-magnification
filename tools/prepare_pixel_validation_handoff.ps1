@@ -8,6 +8,7 @@ param(
     [string]$CaptureStage = "All",
     [switch]$FailOnInvalidSlot,
     [switch]$FailOnEmptyQueue,
+    [switch]$FailOnPendingReviewSheets,
     [switch]$Json
 )
 
@@ -307,4 +308,7 @@ if ($FailOnInvalidSlot -and @($result.invalidRequestedSlots).Count -gt 0) {
 }
 if ($FailOnEmptyQueue -and $result.recommendedCaptureCount -eq 0) {
     exit 22
+}
+if ($FailOnPendingReviewSheets -and $result.pendingReviewSheetCount -gt 0) {
+    exit 23
 }
