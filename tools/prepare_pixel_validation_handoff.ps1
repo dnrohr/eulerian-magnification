@@ -26,12 +26,14 @@ $closeoutPath = Join-Path $OutputRoot "pixel_closeout_summary.json"
 $commandsPath = Join-Path $OutputRoot "pixel_validation_commands.txt"
 $reviewQueuePath = Join-Path $OutputRoot "live_validation_review_queue.json"
 $reviewCommandsPath = Join-Path $OutputRoot "live_validation_review_commands.txt"
+$reviewDashboardPath = Join-Path $OutputRoot "live_validation_review_dashboard.html"
 $handoffPath = Join-Path $OutputRoot "pixel_validation_handoff.md"
 $manifestPath = Join-Path $OutputRoot "pixel_validation_handoff_manifest.json"
 
 $planner = Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1"
 $closeoutSummary = Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1"
 $reviewQueueScript = Join-Path $PSScriptRoot "show_live_validation_review_queue.ps1"
+$reviewDashboardScript = Join-Path $PSScriptRoot "export_live_validation_review_dashboard.ps1"
 
 function Invoke-GitValue {
     param([string[]]$Arguments)
@@ -115,6 +117,7 @@ if (-not [string]::IsNullOrWhiteSpace($FfmpegPath)) {
 }
 $reviewCommands = @(& $reviewQueueScript @reviewCommandArgs)
 Set-Content -LiteralPath $reviewCommandsPath -Value ([string]::Join([Environment]::NewLine, $reviewCommands)) -Encoding utf8
+& $reviewDashboardScript -EvidenceRoot $EvidenceRoot -OutputPath $reviewDashboardPath -PendingOnly *> $null
 $requestedSlotLabel = if (@($plan.requestedSlots).Count -gt 0) { $plan.requestedSlots -join ", " } else { "All" }
 
 $handoffLines = @(
@@ -141,6 +144,7 @@ $handoffLines = @(
     ('- Command list: `{0}`' -f $commandsPath),
     ('- Review queue JSON: `{0}`' -f $reviewQueuePath),
     ('- Review command list: `{0}`' -f $reviewCommandsPath),
+    ('- Review dashboard: `{0}`' -f $reviewDashboardPath),
     ('- Handoff manifest: `{0}`' -f $manifestPath),
     "",
     "## Recommended Captures",
@@ -211,6 +215,7 @@ $artifactRecords = @(
     New-ArtifactRecord -Name "commands" -Path $commandsPath
     New-ArtifactRecord -Name "reviewQueue" -Path $reviewQueuePath
     New-ArtifactRecord -Name "reviewCommands" -Path $reviewCommandsPath
+    New-ArtifactRecord -Name "reviewDashboard" -Path $reviewDashboardPath
     New-ArtifactRecord -Name "handoff" -Path $handoffPath
 )
 $manifest = [pscustomobject]@{
@@ -241,6 +246,7 @@ $result = [pscustomobject]@{
     commandsPath = $commandsPath
     reviewQueuePath = $reviewQueuePath
     reviewCommandsPath = $reviewCommandsPath
+    reviewDashboardPath = $reviewDashboardPath
     handoffPath = $handoffPath
     manifestPath = $manifestPath
     artifactHashes = $artifactRecords
@@ -282,6 +288,7 @@ if ($Json) {
     Write-Output "Commands: $($result.commandsPath)"
     Write-Output "Review queue: $($result.reviewQueuePath)"
     Write-Output "Review commands: $($result.reviewCommandsPath)"
+    Write-Output "Review dashboard: $($result.reviewDashboardPath)"
     Write-Output "Handoff: $($result.handoffPath)"
     Write-Output "Manifest: $($result.manifestPath)"
     if (@($result.invalidRequestedSlots).Count -gt 0) {

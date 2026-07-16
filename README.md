@@ -339,8 +339,9 @@ commands also add `-RequireDeviceSerial` with the same value, so summaries fail
 when a final bundle was not captured from the intended Pixel.
 The handoff bundle writes `pixel_validation_plan.json`,
 `pixel_closeout_summary.json`, `pixel_validation_commands.txt`,
-`live_validation_review_queue.json`, `live_validation_review_commands.txt`, the
-human-readable `pixel_validation_handoff.md`, and
+`live_validation_review_queue.json`, `live_validation_review_commands.txt`,
+`live_validation_review_dashboard.html`, the human-readable
+`pixel_validation_handoff.md`, and
 `pixel_validation_handoff_manifest.json` with SHA-256 hashes for those handoff
 artifacts. The handoff records the target device serial, source branch, commit,
 clean-tree state, and whether the commit is reachable from `origin/main`.
@@ -402,6 +403,10 @@ regeneration commands:
 .\tools\export_live_validation_review_dashboard.ps1
 .\tools\export_live_validation_review_dashboard.ps1 -PendingOnly -Open
 ```
+
+Pixel validation handoff bundles also include
+`live_validation_review_dashboard.html` for the current pending review-sheet
+queue.
 
 Use the closeout gates before editing visual-validation status in README or
 parity docs. `-FailOnPresetDocsNotReady` requires the four preset slots to be

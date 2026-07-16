@@ -133,8 +133,9 @@ commands also include `-RequireDeviceSerial` with the same value, so evidence
 summaries fail if the captured bundle came from another device or emulator.
 The handoff bundle writes `pixel_validation_plan.json`,
 `pixel_closeout_summary.json`, `pixel_validation_commands.txt`,
-`live_validation_review_queue.json`, `live_validation_review_commands.txt`, the
-human-readable `pixel_validation_handoff.md`, and
+`live_validation_review_queue.json`, `live_validation_review_commands.txt`,
+`live_validation_review_dashboard.html`, the human-readable
+`pixel_validation_handoff.md`, and
 `pixel_validation_handoff_manifest.json` with SHA-256 hashes for those handoff
 artifacts. The handoff records the target device serial, source branch, commit,
 clean-tree state, and whether the commit is reachable from `origin/main`.
@@ -199,6 +200,8 @@ The dashboard embeds playable `screenrecord.mp4` files, existing contact
 sheets, SHA-256 fields, queue issue reasons, and regeneration commands. It is a
 review aid only; final closeout still requires matching contact sheets and the
 strict evidence gates.
+Pixel validation handoff bundles write the same dashboard for the current
+pending review-sheet queue.
 
 Use `-FailOnCloseoutNotReady` before closing roadmap items; it is equivalent to
 requiring no missing, unmatched, ambiguous, duplicate, non-`main`, unpushed, or

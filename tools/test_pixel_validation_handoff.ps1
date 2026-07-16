@@ -81,12 +81,13 @@ Assert-True -Condition ($result.source.commit.Length -ge 7) -Message "Handoff so
 Assert-True -Condition ($null -ne $result.source.clean) -Message "Handoff should report whether the source tree is clean."
 Assert-True -Condition ($null -ne $result.source.commitReachableFromOriginMain) -Message "Handoff should report whether the source commit is reachable from origin/main."
 Assert-True -Condition (-not [string]::IsNullOrWhiteSpace($result.manifestPath)) -Message "Handoff should report the manifest path."
-Assert-Equal -Actual @($result.artifactHashes).Count -Expected 6 -Message "Handoff result should report hashes for every handoff artifact."
+Assert-Equal -Actual @($result.artifactHashes).Count -Expected 7 -Message "Handoff result should report hashes for every handoff artifact."
 Assert-True -Condition (Test-Path -LiteralPath $result.planPath) -Message "Handoff should write plan JSON."
 Assert-True -Condition (Test-Path -LiteralPath $result.closeoutPath) -Message "Handoff should write closeout JSON."
 Assert-True -Condition (Test-Path -LiteralPath $result.commandsPath) -Message "Handoff should write command templates."
 Assert-True -Condition (Test-Path -LiteralPath $result.reviewQueuePath) -Message "Handoff should write review queue JSON."
 Assert-True -Condition (Test-Path -LiteralPath $result.reviewCommandsPath) -Message "Handoff should write review command templates."
+Assert-True -Condition (Test-Path -LiteralPath $result.reviewDashboardPath) -Message "Handoff should write review dashboard HTML."
 Assert-True -Condition (Test-Path -LiteralPath $result.handoffPath) -Message "Handoff should write a readable Markdown summary."
 Assert-True -Condition (Test-Path -LiteralPath $result.manifestPath) -Message "Handoff should write a manifest JSON."
 
@@ -95,6 +96,7 @@ $closeout = Get-Content -LiteralPath $result.closeoutPath -Raw | ConvertFrom-Jso
 $commands = Get-Content -LiteralPath $result.commandsPath -Raw
 $reviewQueue = Get-Content -LiteralPath $result.reviewQueuePath -Raw | ConvertFrom-Json
 $reviewCommands = Get-Content -LiteralPath $result.reviewCommandsPath -Raw
+$reviewDashboard = Get-Content -LiteralPath $result.reviewDashboardPath -Raw
 $handoff = Get-Content -LiteralPath $result.handoffPath -Raw
 $manifest = Get-Content -LiteralPath $result.manifestPath -Raw | ConvertFrom-Json
 
@@ -107,6 +109,8 @@ Assert-True -Condition (-not $commands.Contains("live-linear-pulse-setup")) -Mes
 Assert-Equal -Actual $reviewQueue.pendingReviewSheetCount -Expected 1 -Message "Written review queue should preserve pending count."
 Assert-True -Condition ($reviewCommands.Contains("export_live_validation_review_sheet.ps1")) -Message "Review commands should include the export helper."
 Assert-True -Condition ($reviewCommands.Contains("-FfmpegPath")) -Message "Review commands should preserve the ffmpeg path."
+Assert-True -Condition ($reviewDashboard.Contains("pending-review")) -Message "Review dashboard should include pending screenrecord labels."
+Assert-True -Condition ($reviewDashboard.Contains("<video controls")) -Message "Review dashboard should include playable video elements."
 Assert-Equal -Actual @($closeout.closeoutBlockers).Count -Expected 1 -Message "Missing evidence handoff should preserve closeout blockers."
 Assert-True -Condition ($handoff.Contains("# Pixel Validation Handoff")) -Message "Markdown handoff should include a title."
 Assert-True -Condition ($handoff.Contains('Requested slots: `pulseLinear`')) -Message "Markdown handoff should include requested slots."
@@ -118,14 +122,15 @@ Assert-True -Condition ($handoff.Contains("Source commit reachable from origin/m
 Assert-True -Condition ($handoff.Contains("Handoff manifest:")) -Message "Markdown handoff should include the manifest path."
 Assert-True -Condition ($handoff.Contains("Review Sheet Queue")) -Message "Markdown handoff should include the review queue section."
 Assert-True -Condition ($handoff.Contains("Review Sheet Commands")) -Message "Markdown handoff should include review commands."
+Assert-True -Condition ($handoff.Contains("Review dashboard:")) -Message "Markdown handoff should include the review dashboard artifact."
 Assert-True -Condition ($handoff.Contains("Pending review sheets: 1")) -Message "Markdown handoff should include pending review sheet count."
 Assert-True -Condition ($handoff.Contains("```powershell")) -Message "Markdown handoff should include a PowerShell command block."
 Assert-True -Condition ($handoff.Contains("live-linear-pulse-final")) -Message "Markdown handoff should include the filtered command."
 Assert-True -Condition ($handoff.Contains("missingSlots")) -Message "Markdown handoff should summarize closeout blockers."
-Assert-Equal -Actual @($manifest.artifacts).Count -Expected 6 -Message "Manifest should include every handoff artifact except itself."
+Assert-Equal -Actual @($manifest.artifacts).Count -Expected 7 -Message "Manifest should include every handoff artifact except itself."
 Assert-Equal -Actual $manifest.deviceSerial -Expected "PIXEL-HANDOFF-TEST" -Message "Manifest should include the device serial."
 Assert-Equal -Actual $manifest.review.pendingReviewSheetCount -Expected 1 -Message "Manifest should include review queue count."
-foreach ($artifactName in @("plan", "closeout", "commands", "reviewQueue", "reviewCommands", "handoff")) {
+foreach ($artifactName in @("plan", "closeout", "commands", "reviewQueue", "reviewCommands", "reviewDashboard", "handoff")) {
     $artifact = @($manifest.artifacts | Where-Object { $_.name -eq $artifactName } | Select-Object -First 1)
     Assert-Equal -Actual @($artifact).Count -Expected 1 -Message "Manifest should include artifact '$artifactName'."
     Assert-True -Condition (Test-Path -LiteralPath $artifact[0].path) -Message "Manifest artifact '$artifactName' path should exist."
@@ -144,6 +149,7 @@ Assert-True -Condition (($textOutput -join "`n").Contains("Pixel validation hand
 Assert-True -Condition (($textOutput -join "`n").Contains("Device serial: PIXEL-HANDOFF-TEST")) -Message "Text handoff should print the device serial."
 Assert-True -Condition (($textOutput -join "`n").Contains("Source:")) -Message "Text handoff should print source metadata."
 Assert-True -Condition (($textOutput -join "`n").Contains("Handoff:")) -Message "Text handoff should print the Markdown handoff path."
+Assert-True -Condition (($textOutput -join "`n").Contains("Review dashboard:")) -Message "Text handoff should print the review dashboard path."
 Assert-True -Condition (($textOutput -join "`n").Contains("Manifest:")) -Message "Text handoff should print the manifest path."
 Assert-True -Condition (($textOutput -join "`n").Contains("Warning: requested slot(s) not currently missing or unknown: notARealSlot")) -Message "Text handoff should warn about invalid slots."
 Assert-True -Condition (($textOutput -join "`n").Contains("Warning: no recommended captures match the current filters.")) -Message "Text handoff should warn about empty queues."
