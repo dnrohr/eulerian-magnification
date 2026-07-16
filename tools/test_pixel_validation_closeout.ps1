@@ -37,6 +37,7 @@ function Invoke-Closeout {
         [switch]$FailOnWrongSlotLabel,
         [switch]$FailOnMissingOperatorNotes,
         [switch]$FailOnMissingVisualReviewText,
+        [switch]$FailOnWrongDeviceSerial,
         [switch]$FailOnCloseoutNotReady,
         [switch]$FailOnPresetDocsNotReady
     )
@@ -80,6 +81,9 @@ function Invoke-Closeout {
     if ($FailOnMissingVisualReviewText) {
         $args.FailOnMissingVisualReviewText = $true
     }
+    if ($FailOnWrongDeviceSerial) {
+        $args.FailOnWrongDeviceSerial = $true
+    }
     if ($FailOnCloseoutNotReady) {
         $args.FailOnCloseoutNotReady = $true
     }
@@ -105,6 +109,7 @@ function Write-Summary {
         [bool]$Final = $true,
         [string]$SourceBranch = "main",
         [string]$SourceCommit = "",
+        [string]$DeviceSerial = "47091JEKB05516",
         [bool]$IncludeArtifactHashes = $true,
         [string]$OperatorNotes = "tool self-test accepted visual evidence",
         [string]$TargetDescription = $Claim,
@@ -124,6 +129,7 @@ function Write-Summary {
 
     $summary = [ordered]@{
         label = $Label
+        deviceSerial = $DeviceSerial
         launch = [ordered]@{
             mode = $Mode
             roiSource = $RoiSource
@@ -205,6 +211,7 @@ try {
     Assert-Equal -Actual @($result.wrongSlotLabelAcceptedFinalEvidence).Count -Expected 0 -Message "Known closeout fixtures should use slot-specific final labels."
     Assert-Equal -Actual @($result.missingOperatorNotesAcceptedFinalEvidence).Count -Expected 0 -Message "Known closeout fixtures should include operator notes."
     Assert-Equal -Actual @($result.missingVisualReviewTextAcceptedFinalEvidence).Count -Expected 0 -Message "Known closeout fixtures should include visual-review text."
+    Assert-Equal -Actual @($result.wrongDeviceSerialAcceptedFinalEvidence).Count -Expected 0 -Message "Known closeout fixtures should come from the expected Pixel serial."
     Assert-Equal -Actual @($result.missing).Count -Expected 0 -Message "All slots should be satisfied."
     Assert-Equal -Actual $result.presetVisualSlotsPresent -Expected $true -Message "Preset visual slots should be present when four preset slots pass."
     Assert-Equal -Actual $result.presetDocsEvidenceClean -Expected $false -Message "Unmatched evidence should prevent preset docs closeout."
@@ -219,11 +226,13 @@ try {
     Assert-Equal -Actual $result.slots[0].expectedFinalLabel -Expected "manual-roi-known-target-final" -Message "Closeout slots should expose expected final labels."
     Assert-Equal -Actual $result.slots[0].sourceBranch -Expected "main" -Message "Satisfied closeout slots should expose source branch."
     Assert-Equal -Actual $result.slots[0].sourceShortCommit -Expected $currentShortHead -Message "Satisfied closeout slots should expose source short commit."
+    Assert-Equal -Actual $result.slots[0].deviceSerial -Expected "47091JEKB05516" -Message "Satisfied closeout slots should expose device serial."
     Assert-Equal -Actual $result.slots[0].screenshotSha256 -Expected "screenshot-manual-sha256" -Message "Satisfied closeout slots should expose screenshot hashes."
     Assert-Equal -Actual $result.slots[0].screenrecordSha256 -Expected "screenrecord-manual-sha256" -Message "Satisfied closeout slots should expose screenrecord hashes."
     Assert-True -Condition ($result.slots[0].artifactNote.Contains("Manual ROI known-target alignment")) -Message "Satisfied closeout slots should expose docs-ready artifact notes."
     Assert-True -Condition ($result.slots[0].artifactNote.Contains("screenshot SHA-256 screenshot-manual-sha256")) -Message "Artifact notes should include screenshot hashes."
     Assert-True -Condition ($result.slots[0].artifactNote.Contains("screenrecord SHA-256 screenrecord-manual-sha256")) -Message "Artifact notes should include screenrecord hashes."
+    Assert-True -Condition ($result.slots[0].artifactNote.Contains("device 47091JEKB05516")) -Message "Artifact notes should include device serial."
     Assert-Equal -Actual $result.unmatchedAcceptedFinalEvidence[0].sourceShortCommit -Expected $currentShortHead -Message "Unmatched closeout evidence should expose source short commit."
     Assert-Equal -Actual $result.unmatchedAcceptedFinalEvidence[0].screenshotSha256 -Expected "screenshot-accepted-unknown-sha256" -Message "Unmatched closeout evidence should expose screenshot hashes."
     Assert-Equal -Actual $result.unmatchedAcceptedFinalEvidence[0].screenrecordSha256 -Expected "screenrecord-accepted-unknown-sha256" -Message "Unmatched closeout evidence should expose screenrecord hashes."
@@ -314,7 +323,7 @@ try {
     foreach ($name in @("manual", "auto", "pulse", "breathing", "object", "fast")) {
         Copy-Item -LiteralPath (Join-Path $root $name) -Destination (Join-Path $classifiedRoot $name) -Recurse
     }
-    $classifiedExitCode = Invoke-Closeout -EvidenceRoot $classifiedRoot -FailOnMissing -FailOnUnmatched -FailOnAmbiguous -FailOnDuplicate -FailOnNonMain -FailOnUnpushedSource -FailOnMissingArtifactHashes -FailOnNonFinalLabel -FailOnWrongSlotLabel -FailOnMissingOperatorNotes -FailOnMissingVisualReviewText
+    $classifiedExitCode = Invoke-Closeout -EvidenceRoot $classifiedRoot -FailOnMissing -FailOnUnmatched -FailOnAmbiguous -FailOnDuplicate -FailOnNonMain -FailOnUnpushedSource -FailOnMissingArtifactHashes -FailOnNonFinalLabel -FailOnWrongSlotLabel -FailOnMissingOperatorNotes -FailOnMissingVisualReviewText -FailOnWrongDeviceSerial
     Assert-Equal -Actual $classifiedExitCode -Expected 0 -Message "Combined closeout gates should pass when all accepted evidence maps to slots on pushed main."
     $classified = & (Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1") -EvidenceRoot $classifiedRoot -Json | ConvertFrom-Json
     Assert-Equal -Actual $classified.readyForPresetDocs -Expected $true -Message "Preset docs should be ready when preset slots are satisfied and evidence is clean."
@@ -393,6 +402,19 @@ try {
     Assert-Equal -Actual $missingVisualReviewText.readyForPresetDocs -Expected $false -Message "Missing visual-review text should prevent preset docs readiness."
     $missingVisualReviewTextExitCode = Invoke-Closeout -EvidenceRoot $missingVisualReviewTextRoot -FailOnMissingVisualReviewText
     Assert-Equal -Actual $missingVisualReviewTextExitCode -Expected 20 -Message "FailOnMissingVisualReviewText should fail on accepted evidence without target description or visual claim."
+
+    $wrongDeviceRoot = Join-Path $root "wrong-device"
+    New-Item -ItemType Directory -Path $wrongDeviceRoot -Force | Out-Null
+    Write-Summary -Root $wrongDeviceRoot -Name "pulse" -Label "live-linear-pulse-final" -Mode "Pulse" -RoiSource "FullFrame" -Claim "Pulse full-frame live linear visual parity" -Roi $false -Renderer $true -Phase $false -DeviceSerial "OTHER-SERIAL"
+    $wrongDevice = & (Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1") -EvidenceRoot $wrongDeviceRoot -Json | ConvertFrom-Json
+    Assert-Equal -Actual @($wrongDevice.wrongDeviceSerialAcceptedFinalEvidence).Count -Expected 1 -Message "Accepted final evidence from the wrong device should be reported."
+    Assert-Equal -Actual $wrongDevice.wrongDeviceSerialAcceptedFinalEvidence[0].deviceSerial -Expected "OTHER-SERIAL" -Message "Wrong-device evidence should report the actual serial."
+    Assert-Equal -Actual $wrongDevice.wrongDeviceSerialAcceptedFinalEvidence[0].expectedDeviceSerial -Expected "47091JEKB05516" -Message "Wrong-device evidence should report the expected serial."
+    Assert-Equal -Actual $wrongDevice.allCloseoutEvidenceClean -Expected $false -Message "Wrong-device evidence should prevent clean roadmap closeout."
+    Assert-Equal -Actual $wrongDevice.readyForPresetDocs -Expected $false -Message "Wrong-device evidence should prevent preset docs readiness."
+    Assert-Equal -Actual $wrongDevice.closeoutBlockers[1].kind -Expected "wrongDeviceSerialAcceptedFinalEvidence" -Message "Wrong-device evidence should produce a closeout blocker."
+    $wrongDeviceExitCode = Invoke-Closeout -EvidenceRoot $wrongDeviceRoot -FailOnWrongDeviceSerial
+    Assert-Equal -Actual $wrongDeviceExitCode -Expected 21 -Message "FailOnWrongDeviceSerial should fail on accepted evidence from the wrong device."
 
     $offMainRoot = Join-Path $root "off-main"
     New-Item -ItemType Directory -Path $offMainRoot -Force | Out-Null

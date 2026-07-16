@@ -128,7 +128,9 @@ an empty capture queue, or `-FailOnEmptyQueue` when automation should require
 at least one recommended capture. Add `-OutputPath sample-videos\exports\live-validation\pixel_validation_plan.json`
 to save the full machine-readable plan used for a device session. Generated
 capture commands default to `-DeviceSerial 47091JEKB05516`; pass
-`-DeviceSerial <serial>` to target a different connected device.
+`-DeviceSerial <serial>` to target a different connected device. Generated
+commands also include `-RequireDeviceSerial` with the same value, so evidence
+summaries fail if the captured bundle came from another device or emulator.
 The handoff bundle writes `pixel_validation_plan.json`,
 `pixel_closeout_summary.json`, `pixel_validation_commands.txt`, the
 human-readable `pixel_validation_handoff.md`, and
@@ -160,7 +162,7 @@ requiring no missing, unmatched, ambiguous, duplicate, non-`main`, or
 missing-artifact-hash accepted evidence, requiring accepted source commits to
 be reachable from
 `origin/main`
-(`-FailOnMissing -FailOnUnmatched -FailOnAmbiguous -FailOnDuplicate -FailOnNonMain -FailOnUnpushedSource -FailOnMissingArtifactHashes -FailOnNonFinalLabel -FailOnWrongSlotLabel -FailOnMissingOperatorNotes -FailOnMissingVisualReviewText`), and rejecting accepted evidence without a final capture label, with a label that targets a different slot, without operator notes, or without target description / visual claim text. Use
+(`-FailOnMissing -FailOnUnmatched -FailOnAmbiguous -FailOnDuplicate -FailOnNonMain -FailOnUnpushedSource -FailOnMissingArtifactHashes -FailOnNonFinalLabel -FailOnWrongSlotLabel -FailOnMissingOperatorNotes -FailOnMissingVisualReviewText -FailOnWrongDeviceSerial`), and rejecting accepted evidence without a final capture label, with a label that targets a different slot, without operator notes, without target description / visual claim text, or from a device serial other than the expected Pixel. Use
 `-FailOnPresetDocsNotReady` before changing README or MIT parity visual status;
 it requires all four preset visual slots and rejects unmatched, ambiguous, or
 duplicate accepted evidence, plus accepted evidence captured outside `main` or

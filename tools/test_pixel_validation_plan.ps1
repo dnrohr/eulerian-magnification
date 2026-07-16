@@ -120,6 +120,7 @@ Assert-True -Condition (($finalOnlyText -join "`n").Contains("manual-roi-known-t
 Assert-Equal -Actual @($pulseFinalCommandsOnly).Count -Expected 1 -Message "CommandsOnly should respect slot and stage filters."
 Assert-True -Condition ($pulseFinalCommandsOnly[0].StartsWith(".\tools\capture_live_validation_evidence.ps1")) -Message "CommandsOnly output should contain command templates only."
 Assert-True -Condition ($pulseFinalCommandsOnly[0].Contains('-DeviceSerial "47091JEKB05516"')) -Message "CommandsOnly output should target the Pixel 8a by serial."
+Assert-True -Condition ($pulseFinalCommandsOnly[0].Contains('-RequireDeviceSerial "47091JEKB05516"')) -Message "CommandsOnly output should require evidence from the Pixel 8a serial."
 Assert-True -Condition ($pulseFinalCommandsOnly[0].Contains('live-linear-pulse-final')) -Message "CommandsOnly output should include the requested final command."
 Assert-True -Condition (-not ($pulseFinalCommandsOnly[0].Contains("Recommended captures"))) -Message "CommandsOnly output should omit headings."
 Assert-Equal -Actual @($invalidSlotPlan.recommendedCaptures).Count -Expected 0 -Message "Unknown slot filter should not recommend captures."
@@ -229,6 +230,7 @@ foreach ($slot in @($closeout.slots)) {
 $capturePlanCommands = @($groups | ForEach-Object { $_.commands } | Where-Object { $_.command.StartsWith(".\tools\capture_live_validation_evidence.ps1") })
 foreach ($command in $capturePlanCommands) {
     Assert-True -Condition ($command.command.Contains('-DeviceSerial "47091JEKB05516"')) -Message "Capture command '$($command.name)' should target the Pixel 8a by serial."
+    Assert-True -Condition ($command.command.Contains('-RequireDeviceSerial "47091JEKB05516"')) -Message "Capture command '$($command.name)' should require summaries from the Pixel 8a serial."
     $isSetup = $command.name.EndsWith("-setup") -or $command.name.EndsWith("-target")
     $isFinal = $command.name.EndsWith("-final")
     if ($isSetup) {

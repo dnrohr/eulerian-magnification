@@ -65,6 +65,7 @@ function Assert-CaptureCommandBlocksParse {
         $executable = @($tokens | Where-Object { $_.Type -eq "Command" } | Select-Object -First 1).Content
         Assert-Equal -Actual $executable -Expected ".\tools\capture_live_validation_evidence.ps1" -Message "Documented capture command should call the live validation capture script in $Path."
         Assert-True -Condition ($block.Contains("-DeviceSerial 47091JEKB05516")) -Message "Documented capture command should target the Pixel 8a by serial in $Path."
+        Assert-True -Condition ($block.Contains("-RequireDeviceSerial 47091JEKB05516")) -Message "Documented capture command should require evidence from the Pixel 8a serial in $Path."
 
         foreach ($token in @($tokens | Where-Object { $_.Type -eq "CommandParameter" })) {
             $parameterName = $token.Content.TrimStart("-")
@@ -127,6 +128,7 @@ foreach ($path in @($readme, $taskReadme)) {
     Assert-DocContains -Path $path -Expected "-CaptureStage" -Message "Operator docs must document planner capture-stage filtering."
     Assert-DocContains -Path $path -Expected "-CommandsOnly" -Message "Operator docs must document command-only planner output."
     Assert-DocContains -Path $path -Expected "-DeviceSerial" -Message "Operator docs must document planner device serial selection."
+    Assert-DocContains -Path $path -Expected "-RequireDeviceSerial" -Message "Operator docs must document serial-gated evidence capture."
     Assert-DocContains -Path $path -Expected "-FailOnInvalidSlot" -Message "Operator docs must document invalid slot failure mode."
     Assert-DocContains -Path $path -Expected "-FailOnEmptyQueue" -Message "Operator docs must document empty queue failure mode."
     Assert-DocContains -Path $path -Expected "pixel_validation_plan.json" -Message "Operator docs must document the saved planner artifact name."
@@ -190,6 +192,7 @@ Assert-DocContains -Path $parityDoc -Expected "-FailOnNonFinalLabel" -Message "P
 Assert-DocContains -Path $parityDoc -Expected "-FailOnWrongSlotLabel" -Message "Parity targets must document slot-label accepted evidence gate."
 Assert-DocContains -Path $parityDoc -Expected "-FailOnMissingOperatorNotes" -Message "Parity targets must document operator-notes accepted evidence gate."
 Assert-DocContains -Path $parityDoc -Expected "-FailOnMissingVisualReviewText" -Message "Parity targets must document visual-review text accepted evidence gate."
+Assert-DocContains -Path $parityDoc -Expected "-FailOnWrongDeviceSerial" -Message "Parity targets must document device-serial accepted evidence gate."
 Assert-DocContains -Path $parityDoc -Expected "-FailOnCloseoutNotReady" -Message "Parity targets must document one-shot closeout readiness gate."
 Assert-DocContains -Path $parityDoc -Expected "-OutputPath" -Message "Parity targets must document closeout summary output path."
 Assert-DocContains -Path $parityDoc -Expected "pixel_closeout_summary.json" -Message "Parity targets must document the saved closeout artifact name."

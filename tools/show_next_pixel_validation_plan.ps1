@@ -150,10 +150,11 @@ $validationGroups = @(
 if (-not [string]::IsNullOrWhiteSpace($DeviceSerial)) {
     $escapedDeviceSerial = $DeviceSerial -replace '"', '\"'
     $captureCommandPrefix = ".\tools\capture_live_validation_evidence.ps1"
+    $deviceSerialArguments = " -DeviceSerial `"$escapedDeviceSerial`" -RequireDeviceSerial `"$escapedDeviceSerial`""
     foreach ($group in $validationGroups) {
         foreach ($command in @($group.commands)) {
             if ($command.command.StartsWith($captureCommandPrefix)) {
-                $command.command = "$captureCommandPrefix -DeviceSerial `"$escapedDeviceSerial`"$($command.command.Substring($captureCommandPrefix.Length))"
+                $command.command = "$captureCommandPrefix$deviceSerialArguments$($command.command.Substring($captureCommandPrefix.Length))"
             }
         }
     }

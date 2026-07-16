@@ -86,6 +86,9 @@ foreach ($expectedParameter in @("AdbPath", "DeviceSerial")) {
         throw "Thermal wait helper must expose -$expectedParameter."
     }
 }
+if (-not $command.Parameters.ContainsKey("RequireDeviceSerial")) {
+    throw "Capture script must expose -RequireDeviceSerial."
+}
 
 Assert-SequenceEqual `
     -Actual (Get-ValidateSetValues -Command $command -ParameterName "Mode") `
@@ -142,7 +145,8 @@ foreach ($expectedSourceContract in @(
     "origin/main",
     "deviceSerial",
     "adbDeviceArgs",
-    "-DeviceSerial"
+    "-DeviceSerial",
+    "RequireDeviceSerial"
 )) {
     if (-not $captureScriptContent.Contains($expectedSourceContract)) {
         throw "Capture script must preserve source reachability contract: missing '$expectedSourceContract'."

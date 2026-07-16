@@ -20,6 +20,7 @@ param(
     [switch]$RequireFocusedApp,
     [switch]$RequireRendererDiagnostics,
     [switch]$RequirePhaseDiagnostics,
+    [string]$RequireDeviceSerial = "",
     [ValidateSet("", "runtime_smoke_only", "visual_validated", "target_visible_unvalidated", "visual_claim_without_target", "ui_assertion_failed", "screenshot_blank", "wrong_orientation", "runtime_failed", "thermal_preflight_aborted")]
     [string]$RequireEvidenceVerdict = ""
 )
@@ -448,6 +449,12 @@ $expectedPackage = if ($manifest -and $manifest.PSObject.Properties.Name -contai
 } else {
     "com.dnrohr.eulerianmagnification"
 }
+$deviceSerial = if ($manifest -and $manifest.PSObject.Properties.Name -contains "deviceSerial" -and -not [string]::IsNullOrWhiteSpace($manifest.deviceSerial)) {
+    [string]$manifest.deviceSerial
+} else {
+    $null
+}
+$deviceSerialRequirementPassed = [string]::IsNullOrWhiteSpace($RequireDeviceSerial) -or ($deviceSerial -eq $RequireDeviceSerial)
 
 $missing = @()
 $requiredArtifactPaths = if ($aborted) {
@@ -609,6 +616,10 @@ if ($RequireFocusedApp -and -not $focusedAppSummary.present) {
 if ($RequireFocusedApp -and $focusedAppSummary.present -and -not $focusedAppSummary.packageVisible) {
     $warnings += "focused app required but $expectedPackage was not found in window_focus.txt"
 }
+if (-not $deviceSerialRequirementPassed) {
+    $actualDeviceSerial = if ([string]::IsNullOrWhiteSpace($deviceSerial)) { "<missing>" } else { $deviceSerial }
+    $warnings += "device serial required $RequireDeviceSerial but was $actualDeviceSerial"
+}
 if ($batterySummary.powered) {
     $warnings += "device is externally powered during capture"
 }
@@ -758,6 +769,7 @@ $result = [ordered]@{
     bundle = $bundle
     createdAt = if ($manifest) { $manifest.createdAt } else { $null }
     label = if ($manifest) { $manifest.label } else { $null }
+    deviceSerial = $deviceSerial
     source = if ($manifest -and $manifest.PSObject.Properties.Name -contains "source") { $manifest.source } else { $null }
     aborted = $aborted
     abortReason = $abortReason
@@ -838,6 +850,12 @@ $result = [ordered]@{
             packageVisible = $focusedAppSummary.packageVisible
             passed = $focusedAppPassed
         }
+        deviceSerial = [ordered]@{
+            required = -not [string]::IsNullOrWhiteSpace($RequireDeviceSerial)
+            expected = if ([string]::IsNullOrWhiteSpace($RequireDeviceSerial)) { $null } else { $RequireDeviceSerial }
+            actual = $deviceSerial
+            passed = $deviceSerialRequirementPassed
+        }
         evidenceVerdict = [ordered]@{
             required = -not [string]::IsNullOrWhiteSpace($RequireEvidenceVerdict)
             expected = if ([string]::IsNullOrWhiteSpace($RequireEvidenceVerdict)) { $null } else { $RequireEvidenceVerdict }
@@ -909,6 +927,9 @@ if ($result.requiredGates.cameraFps.required -and -not $result.requiredGates.cam
 }
 if ($result.requiredGates.focusedApp.required -and -not $result.requiredGates.focusedApp.passed) {
     exit 14
+}
+if ($result.requiredGates.deviceSerial.required -and -not $result.requiredGates.deviceSerial.passed) {
+    exit 21
 }
 if ($result.requiredGates.evidenceVerdict.required -and -not $result.requiredGates.evidenceVerdict.passed) {
     exit 9

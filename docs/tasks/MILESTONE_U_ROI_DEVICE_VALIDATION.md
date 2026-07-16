@@ -246,6 +246,10 @@ Goal: prove that automatic and manual ROI coordinates align with the live previe
   remaining Pixel 8a bundles can be traced to `47091JEKB05516` even if another
   emulator/device is connected or ADB has recently recovered from an `offline`
   state.
+- Live evidence summaries now expose and can require the manifest device
+  serial, and ROI planner commands add `-RequireDeviceSerial 47091JEKB05516` so
+  final manual/automatic ROI evidence fails if it was not captured from the
+  intended Pixel 8a.
 - This improves repeatability and auditability for the remaining watched manual
   and automatic ROI validation, but does not close either target-alignment task
   without a visible known target.

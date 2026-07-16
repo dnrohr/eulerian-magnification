@@ -237,11 +237,12 @@ description / visual claim text:
 Before closing roadmap items, also reject missing, unmatched, ambiguous,
 duplicate, non-`main`, unpushed, missing-artifact-hash, or non-final-label
 accepted evidence, plus wrong-slot final labels, missing operator notes, or
-missing target description / visual claim text.
+missing target description / visual claim text, and reject accepted evidence
+captured from a device serial other than the expected Pixel.
 Wrong-slot reports include the expected final label for each mismatched slot:
 
 ```powershell
-.\tools\summarize_pixel_validation_closeout.ps1 -FailOnMissing -FailOnUnmatched -FailOnAmbiguous -FailOnDuplicate -FailOnNonMain -FailOnUnpushedSource -FailOnMissingArtifactHashes -FailOnNonFinalLabel -FailOnWrongSlotLabel -FailOnMissingOperatorNotes -FailOnMissingVisualReviewText
+.\tools\summarize_pixel_validation_closeout.ps1 -FailOnMissing -FailOnUnmatched -FailOnAmbiguous -FailOnDuplicate -FailOnNonMain -FailOnUnpushedSource -FailOnMissingArtifactHashes -FailOnNonFinalLabel -FailOnWrongSlotLabel -FailOnMissingOperatorNotes -FailOnMissingVisualReviewText -FailOnWrongDeviceSerial
 .\tools\summarize_pixel_validation_closeout.ps1 -FailOnCloseoutNotReady
 ```
 

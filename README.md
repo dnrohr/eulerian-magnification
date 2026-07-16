@@ -269,7 +269,9 @@ Object setups use `docs/experiments/pixel8a_live_phase_validation.md`; ROI
 alignment uses `docs/testing/ROI_DEVICE_VALIDATION.md`. Final accepted evidence
 should use `-RequireFinalVisualEvidence` and any domain-specific gate such as
 `-RequireRendererDiagnostics`, `-RequirePhaseDiagnostics`, or
-`-RequireRoiMeasurement`.
+`-RequireRoiMeasurement`. Connected Pixel evidence should also use
+`-RequireDeviceSerial 47091JEKB05516` so accepted bundles cannot be confused
+with emulator or alternate-device captures.
 
 ## Requirements
 
@@ -332,7 +334,9 @@ an empty capture queue, or `-FailOnEmptyQueue` when automation should require
 at least one recommended capture. Add `-OutputPath sample-videos\exports\live-validation\pixel_validation_plan.json`
 to save the full machine-readable plan used for a device session. Generated
 capture commands default to `-DeviceSerial 47091JEKB05516`; pass
-`-DeviceSerial <serial>` to target a different connected device.
+`-DeviceSerial <serial>` to target a different connected device. Generated
+commands also add `-RequireDeviceSerial` with the same value, so summaries fail
+when a final bundle was not captured from the intended Pixel.
 The handoff bundle writes `pixel_validation_plan.json`,
 `pixel_closeout_summary.json`, `pixel_validation_commands.txt`, the
 human-readable `pixel_validation_handoff.md`, and
@@ -363,11 +367,12 @@ parity docs. `-FailOnPresetDocsNotReady` requires the four preset slots to be
 present and rejects unmatched, ambiguous, duplicate, non-`main`, unpushed, or
 missing-artifact-hash accepted evidence, plus accepted evidence whose label is
 not one of the final capture labels, does not match its closeout slot, lacks
-operator notes, or lacks target description / visual claim text.
+operator notes, lacks target description / visual claim text, or was captured
+from a device serial other than the expected Pixel.
 Wrong-slot reports include the expected final label for each mismatched slot:
 
 ```powershell
-.\tools\summarize_pixel_validation_closeout.ps1 -FailOnMissing -FailOnUnmatched -FailOnAmbiguous -FailOnDuplicate -FailOnNonMain -FailOnUnpushedSource -FailOnMissingArtifactHashes -FailOnNonFinalLabel -FailOnWrongSlotLabel -FailOnMissingOperatorNotes -FailOnMissingVisualReviewText
+.\tools\summarize_pixel_validation_closeout.ps1 -FailOnMissing -FailOnUnmatched -FailOnAmbiguous -FailOnDuplicate -FailOnNonMain -FailOnUnpushedSource -FailOnMissingArtifactHashes -FailOnNonFinalLabel -FailOnWrongSlotLabel -FailOnMissingOperatorNotes -FailOnMissingVisualReviewText -FailOnWrongDeviceSerial
 .\tools\summarize_pixel_validation_closeout.ps1 -FailOnCloseoutNotReady
 .\tools\summarize_pixel_validation_closeout.ps1 -FailOnPresetDocsNotReady
 ```

@@ -352,6 +352,8 @@ Available launch parameters:
   wait command. Use this when the Pixel is connected as
   `47091JEKB05516`, when another emulator/device is present, or after ADB has
   recovered from an `offline` state.
+- `-RequireDeviceSerial`: with `-Summarize`, fail the evidence summary unless
+  the capture manifest's `deviceSerial` exactly matches this value.
 - `-Mode`: `Pulse`, `Breathing`, `Tremor`, or `ObjectVibration`. Prefer
   `Tremor` for the public Fast Motion / Motion path; `ObjectVibration` remains
   accepted for internal compatibility and parity experiments.

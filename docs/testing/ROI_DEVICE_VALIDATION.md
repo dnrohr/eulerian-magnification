@@ -32,6 +32,7 @@ Planner command name: `manual-roi-known-target-setup`.
 ```powershell
 .\tools\capture_live_validation_evidence.ps1 `
   -DeviceSerial 47091JEKB05516 `
+  -RequireDeviceSerial 47091JEKB05516 `
   -Label "manual-roi-known-target" `
   -WaitForThermalReady `
   -ThermalReadyBelowStatus 4 `
@@ -83,6 +84,7 @@ manual ROI task.
 ```powershell
 .\tools\capture_live_validation_evidence.ps1 `
   -DeviceSerial 47091JEKB05516 `
+  -RequireDeviceSerial 47091JEKB05516 `
   -Label "manual-roi-known-target-final" `
   -WaitForThermalReady `
   -ThermalReadyBelowStatus 4 `
@@ -130,6 +132,7 @@ Planner command name: `auto-face-roi-setup`.
 ```powershell
 .\tools\capture_live_validation_evidence.ps1 `
   -DeviceSerial 47091JEKB05516 `
+  -RequireDeviceSerial 47091JEKB05516 `
   -Label "auto-face-roi" `
   -WaitForThermalReady `
   -ThermalReadyBelowStatus 4 `
@@ -175,6 +178,7 @@ automatic ROI task.
 ```powershell
 .\tools\capture_live_validation_evidence.ps1 `
   -DeviceSerial 47091JEKB05516 `
+  -RequireDeviceSerial 47091JEKB05516 `
   -Label "auto-face-roi-final" `
   -WaitForThermalReady `
   -ThermalReadyBelowStatus 4 `

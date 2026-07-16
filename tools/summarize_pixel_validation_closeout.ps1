@@ -13,6 +13,8 @@ param(
     [switch]$FailOnWrongSlotLabel,
     [switch]$FailOnMissingOperatorNotes,
     [switch]$FailOnMissingVisualReviewText,
+    [string]$ExpectedDeviceSerial = "47091JEKB05516",
+    [switch]$FailOnWrongDeviceSerial,
     [switch]$FailOnCloseoutNotReady,
     [switch]$FailOnPresetDocsNotReady
 )
@@ -100,6 +102,7 @@ function New-EvidenceReport {
     return [ordered]@{
         bundle = Split-Path -Parent $Summary.summaryPath
         label = $Summary.label
+        deviceSerial = $Summary.deviceSerial
         sourceBranch = Get-SourceValue -Summary $Summary -Name "branch"
         sourceCommit = Get-SourceValue -Summary $Summary -Name "commit"
         sourceShortCommit = Get-SourceValue -Summary $Summary -Name "shortCommit"
@@ -238,6 +241,9 @@ function New-ArtifactNote {
     if (-not [string]::IsNullOrWhiteSpace($Slot.sourceShortCommit) -or -not [string]::IsNullOrWhiteSpace($Slot.sourceBranch)) {
         $parts += "source $($Slot.sourceShortCommit) on $($Slot.sourceBranch)"
     }
+    if (-not [string]::IsNullOrWhiteSpace($Slot.deviceSerial)) {
+        $parts += "device $($Slot.deviceSerial)"
+    }
     if (-not [string]::IsNullOrWhiteSpace($Slot.screenshotSha256)) {
         $parts += "screenshot SHA-256 $($Slot.screenshotSha256)"
     }
@@ -270,6 +276,7 @@ function New-Slot {
         satisfied = $false
         bundle = $null
         label = $null
+        deviceSerial = $null
         sourceBranch = $null
         sourceCommit = $null
         sourceShortCommit = $null
@@ -313,6 +320,7 @@ $nonFinalLabelAcceptedFinalEvidence = @()
 $wrongSlotLabelAcceptedFinalEvidence = @()
 $missingOperatorNotesAcceptedFinalEvidence = @()
 $missingVisualReviewTextAcceptedFinalEvidence = @()
+$wrongDeviceSerialAcceptedFinalEvidence = @()
 foreach ($summary in $acceptedSummaries) {
     if (-not (Test-FinalVisualEvidence -Summary $summary)) {
         continue
@@ -349,6 +357,12 @@ foreach ($summary in $acceptedSummaries) {
         $report = New-EvidenceReport -Summary $summary
         $report.reason = "accepted final evidence is missing target description or visual claim"
         $missingVisualReviewTextAcceptedFinalEvidence += [pscustomobject]$report
+    }
+    if (-not [string]::IsNullOrWhiteSpace($ExpectedDeviceSerial) -and $summary.deviceSerial -ne $ExpectedDeviceSerial) {
+        $report = New-EvidenceReport -Summary $summary
+        $report.expectedDeviceSerial = $ExpectedDeviceSerial
+        $report.reason = "accepted final evidence device serial does not match the expected Pixel"
+        $wrongDeviceSerialAcceptedFinalEvidence += [pscustomobject]$report
     }
 
     $text = Get-SummaryText -Summary $summary
@@ -398,6 +412,7 @@ foreach ($summary in $acceptedSummaries) {
             $slots[$slotId].satisfied = $true
             $slots[$slotId].bundle = Split-Path -Parent $summary.summaryPath
             $slots[$slotId].label = $summary.label
+            $slots[$slotId].deviceSerial = $summary.deviceSerial
             $slots[$slotId].sourceBranch = Get-SourceValue -Summary $summary -Name "branch"
             $slots[$slotId].sourceCommit = Get-SourceValue -Summary $summary -Name "commit"
             $slots[$slotId].sourceShortCommit = Get-SourceValue -Summary $summary -Name "shortCommit"
@@ -435,7 +450,8 @@ $presetDocsEvidenceClean = (
     $nonFinalLabelAcceptedFinalEvidence.Count -eq 0 -and
     $wrongSlotLabelAcceptedFinalEvidence.Count -eq 0 -and
     $missingOperatorNotesAcceptedFinalEvidence.Count -eq 0 -and
-    $missingVisualReviewTextAcceptedFinalEvidence.Count -eq 0
+    $missingVisualReviewTextAcceptedFinalEvidence.Count -eq 0 -and
+    $wrongDeviceSerialAcceptedFinalEvidence.Count -eq 0
 )
 $allCloseoutEvidencePresent = ($missing.Count -eq 0)
 $allCloseoutEvidenceClean = (
@@ -449,7 +465,8 @@ $allCloseoutEvidenceClean = (
     $nonFinalLabelAcceptedFinalEvidence.Count -eq 0 -and
     $wrongSlotLabelAcceptedFinalEvidence.Count -eq 0 -and
     $missingOperatorNotesAcceptedFinalEvidence.Count -eq 0 -and
-    $missingVisualReviewTextAcceptedFinalEvidence.Count -eq 0
+    $missingVisualReviewTextAcceptedFinalEvidence.Count -eq 0 -and
+    $wrongDeviceSerialAcceptedFinalEvidence.Count -eq 0
 )
 $closeoutBlockers = @()
 if ($missing.Count -gt 0) {
@@ -497,8 +514,12 @@ if ($missingOperatorNotesAcceptedFinalEvidence.Count -gt 0) {
 if ($missingVisualReviewTextAcceptedFinalEvidence.Count -gt 0) {
     $closeoutBlockers += New-CloseoutBlocker -Kind "missingVisualReviewTextAcceptedFinalEvidence" -Count $missingVisualReviewTextAcceptedFinalEvidence.Count -Message "$($missingVisualReviewTextAcceptedFinalEvidence.Count) accepted final evidence bundle(s) lack target description or visual claim text." -Items $missingVisualReviewTextAcceptedFinalEvidence
 }
+if ($wrongDeviceSerialAcceptedFinalEvidence.Count -gt 0) {
+    $closeoutBlockers += New-CloseoutBlocker -Kind "wrongDeviceSerialAcceptedFinalEvidence" -Count $wrongDeviceSerialAcceptedFinalEvidence.Count -Message "$($wrongDeviceSerialAcceptedFinalEvidence.Count) accepted final evidence bundle(s) were not captured from expected device serial $ExpectedDeviceSerial." -Items $wrongDeviceSerialAcceptedFinalEvidence
+}
 $result = [pscustomobject]@{
     evidenceRoot = if ($rootPath) { $rootPath.Path } else { $EvidenceRoot }
+    expectedDeviceSerial = $ExpectedDeviceSerial
     summaryCount = $summaryFiles.Count
     acceptedFinalEvidenceCount = $acceptedFinalSummaries.Count
     unmatchedAcceptedFinalEvidence = $unmatchedAcceptedFinalEvidence
@@ -511,6 +532,7 @@ $result = [pscustomobject]@{
     wrongSlotLabelAcceptedFinalEvidence = $wrongSlotLabelAcceptedFinalEvidence
     missingOperatorNotesAcceptedFinalEvidence = $missingOperatorNotesAcceptedFinalEvidence
     missingVisualReviewTextAcceptedFinalEvidence = $missingVisualReviewTextAcceptedFinalEvidence
+    wrongDeviceSerialAcceptedFinalEvidence = $wrongDeviceSerialAcceptedFinalEvidence
     slots = $slotList
     missing = $missing
     presetVisualSlotsPresent = $presetVisualSlotsPresent
@@ -550,6 +572,7 @@ if ($Json) {
     Write-Output "Wrong-slot-label accepted final evidence: $(@($result.wrongSlotLabelAcceptedFinalEvidence).Count)"
     Write-Output "Missing-operator-notes accepted final evidence: $(@($result.missingOperatorNotesAcceptedFinalEvidence).Count)"
     Write-Output "Missing-visual-review-text accepted final evidence: $(@($result.missingVisualReviewTextAcceptedFinalEvidence).Count)"
+    Write-Output "Wrong-device-serial accepted final evidence: $(@($result.wrongDeviceSerialAcceptedFinalEvidence).Count)"
     Write-Output ""
     foreach ($slot in $slotList) {
         $mark = if ($slot.satisfied) { "[x]" } else { "[ ]" }
@@ -561,6 +584,9 @@ if ($Json) {
             Write-Output "    Evidence: $($slot.bundle)"
             if (-not [string]::IsNullOrWhiteSpace($slot.sourceShortCommit) -or -not [string]::IsNullOrWhiteSpace($slot.sourceBranch)) {
                 Write-Output "    Source: $($slot.sourceShortCommit) on $($slot.sourceBranch)"
+            }
+            if (-not [string]::IsNullOrWhiteSpace($slot.deviceSerial)) {
+                Write-Output "    Device serial: $($slot.deviceSerial)"
             }
             if (-not [string]::IsNullOrWhiteSpace($slot.screenshotSha256)) {
                 Write-Output "    Screenshot SHA-256: $($slot.screenshotSha256)"
@@ -803,6 +829,9 @@ if ($FailOnMissingOperatorNotes -and $missingOperatorNotesAcceptedFinalEvidence.
 }
 if ($FailOnMissingVisualReviewText -and $missingVisualReviewTextAcceptedFinalEvidence.Count -gt 0) {
     exit 20
+}
+if ($FailOnWrongDeviceSerial -and $wrongDeviceSerialAcceptedFinalEvidence.Count -gt 0) {
+    exit 21
 }
 if ($FailOnCloseoutNotReady -and -not $result.allCloseoutEvidenceClean) {
     exit 7

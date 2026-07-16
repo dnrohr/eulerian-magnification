@@ -523,6 +523,11 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - Pixel validation handoff bundles now accept and record the target
   `-DeviceSerial`, pass it into the saved planner and command list, and include
   it in the Markdown handoff and manifest.
+- Live validation summaries now accept `-RequireDeviceSerial`, generated Pixel
+  planner commands include it beside `-DeviceSerial`, and closeout can fail
+  accepted evidence from any serial other than the expected Pixel 8a. This keeps
+  remaining watched parity artifacts tied to `47091JEKB05516` instead of only
+  recording the requested device after the fact.
 
 ## Remaining
 

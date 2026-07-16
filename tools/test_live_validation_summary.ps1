@@ -41,6 +41,7 @@ function Invoke-Summary {
         [switch]$RequireFocusedApp,
         [switch]$RequireRendererDiagnostics,
         [switch]$RequirePhaseDiagnostics,
+        [string]$RequireDeviceSerial = "",
         [string]$RequireEvidenceVerdict = ""
     )
 
@@ -60,6 +61,7 @@ function Invoke-Summary {
     if ($RequireFocusedApp) { $summaryArgs.RequireFocusedApp = $true }
     if ($RequireRendererDiagnostics) { $summaryArgs.RequireRendererDiagnostics = $true }
     if ($RequirePhaseDiagnostics) { $summaryArgs.RequirePhaseDiagnostics = $true }
+    if (-not [string]::IsNullOrWhiteSpace($RequireDeviceSerial)) { $summaryArgs.RequireDeviceSerial = $RequireDeviceSerial }
     if (-not [string]::IsNullOrWhiteSpace($RequireEvidenceVerdict)) { $summaryArgs.RequireEvidenceVerdict = $RequireEvidenceVerdict }
     & $summaryScript @summaryArgs *> $stdoutPath
     return $LASTEXITCODE
@@ -307,6 +309,7 @@ Number Missed Vsync: 0
     Write-JsonFile -Path (Join-Path $visualGateBundle "manifest.json") -Value ([ordered]@{
         createdAt = "2026-07-12T00:00:00.0000000-04:00"
         label = "visual-gate"
+        deviceSerial = "47091JEKB05516"
         source = [ordered]@{
             commit = "def456"
             shortCommit = "def456"
@@ -342,6 +345,21 @@ Number Missed Vsync: 0
     Assert-Equal -Actual $cameraFpsSummary.requiredGates.cameraFps.required -Expected $true -Message "Camera FPS gate should be required."
     Assert-Equal -Actual $cameraFpsSummary.requiredGates.cameraFps.sampleCount -Expected 1 -Message "Camera FPS sample count mismatch."
     Assert-Equal -Actual $cameraFpsSummary.requiredGates.cameraFps.passed -Expected $true -Message "Camera FPS gate should pass."
+
+    $deviceSerialExitCode = Invoke-Summary -BundlePath $visualGateBundle -RequireCleanSource -RequireDeviceSerial "47091JEKB05516"
+    $deviceSerialSummary = Get-Content -LiteralPath (Join-Path $visualGateBundle "evidence_summary.json") -Raw | ConvertFrom-Json
+    Assert-Equal -Actual $deviceSerialExitCode -Expected 0 -Message "Device serial gate exit code mismatch."
+    Assert-Equal -Actual $deviceSerialSummary.deviceSerial -Expected "47091JEKB05516" -Message "Summary should expose the capture device serial."
+    Assert-Equal -Actual $deviceSerialSummary.requiredGates.deviceSerial.required -Expected $true -Message "Device serial gate should be required."
+    Assert-Equal -Actual $deviceSerialSummary.requiredGates.deviceSerial.expected -Expected "47091JEKB05516" -Message "Device serial expected value mismatch."
+    Assert-Equal -Actual $deviceSerialSummary.requiredGates.deviceSerial.actual -Expected "47091JEKB05516" -Message "Device serial actual value mismatch."
+    Assert-Equal -Actual $deviceSerialSummary.requiredGates.deviceSerial.passed -Expected $true -Message "Device serial gate should pass."
+
+    $wrongDeviceSerialExitCode = Invoke-Summary -BundlePath $visualGateBundle -RequireCleanSource -RequireDeviceSerial "WRONG-SERIAL"
+    $wrongDeviceSerialSummary = Get-Content -LiteralPath (Join-Path $visualGateBundle "evidence_summary.json") -Raw | ConvertFrom-Json
+    Assert-Equal -Actual $wrongDeviceSerialExitCode -Expected 21 -Message "Wrong device serial gate exit code mismatch."
+    Assert-Equal -Actual $wrongDeviceSerialSummary.requiredGates.deviceSerial.passed -Expected $false -Message "Wrong device serial gate should fail."
+    Assert-True -Condition ("device serial required WRONG-SERIAL but was 47091JEKB05516" -in @($wrongDeviceSerialSummary.warnings)) -Message "Wrong device serial warning missing."
 
     $missingCameraFpsBundle = Join-Path $root "missing-camera-fps"
     Copy-Item -LiteralPath $visualGateBundle -Destination $missingCameraFpsBundle -Recurse

@@ -56,6 +56,7 @@ param(
     [switch]$RequireFocusedApp,
     [switch]$RequireRendererDiagnostics,
     [switch]$RequirePhaseDiagnostics,
+    [string]$RequireDeviceSerial = "",
     [ValidateSet("", "runtime_smoke_only", "visual_validated", "target_visible_unvalidated", "visual_claim_without_target", "ui_assertion_failed", "screenshot_blank", "wrong_orientation", "runtime_failed", "thermal_preflight_aborted")]
     [string]$RequireEvidenceVerdict = ""
 )
@@ -301,6 +302,7 @@ function Write-AbortedBundle {
             measureRoiExpected = $MeasureRoiExpected
             measureRoiKind = $MeasureRoiKind
             requireUiText = @($RequireUiText)
+            requireDeviceSerial = $RequireDeviceSerial
             persistSettings = [bool]$PersistLaunchSettings
             thermalWait = [ordered]@{
                 requested = [bool]$WaitForThermalReady
@@ -391,6 +393,9 @@ function Invoke-EvidenceSummary {
     }
     if ($RequirePhaseDiagnostics) {
         $summaryArgs.RequirePhaseDiagnostics = $true
+    }
+    if (-not [string]::IsNullOrWhiteSpace($RequireDeviceSerial)) {
+        $summaryArgs.RequireDeviceSerial = $RequireDeviceSerial
     }
     if (-not [string]::IsNullOrWhiteSpace($RequireEvidenceVerdict)) {
         $summaryArgs.RequireEvidenceVerdict = $RequireEvidenceVerdict
@@ -704,6 +709,7 @@ $manifest = [ordered]@{
         measureRoiExpected = $MeasureRoiExpected
         measureRoiKind = $MeasureRoiKind
         requireUiText = @($RequireUiText)
+        requireDeviceSerial = $RequireDeviceSerial
         persistSettings = [bool]$PersistLaunchSettings
         thermalWait = [ordered]@{
             requested = [bool]$WaitForThermalReady
