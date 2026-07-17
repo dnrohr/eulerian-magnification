@@ -470,11 +470,12 @@ missing-artifact-hash accepted evidence, plus accepted evidence whose label is
 not one of the final capture labels, does not match its closeout slot, lacks
 operator notes, lacks target description / visual claim text, or was captured
 from a device serial other than the expected Pixel, and accepted final evidence
-without a matching review contact sheet.
+without a matching review contact sheet or required slot-specific domain gate
+such as ROI measurement, renderer diagnostics, or phase diagnostics.
 Wrong-slot reports include the expected final label for each mismatched slot:
 
 ```powershell
-.\tools\summarize_pixel_validation_closeout.ps1 -FailOnMissing -FailOnUnmatched -FailOnAmbiguous -FailOnDuplicate -FailOnNonMain -FailOnUnpushedSource -FailOnMissingArtifactHashes -FailOnNonFinalLabel -FailOnWrongSlotLabel -FailOnMissingOperatorNotes -FailOnMissingVisualReviewText -FailOnWrongDeviceSerial -FailOnReviewContactSheetIssues
+.\tools\summarize_pixel_validation_closeout.ps1 -FailOnMissing -FailOnUnmatched -FailOnAmbiguous -FailOnDuplicate -FailOnNonMain -FailOnUnpushedSource -FailOnMissingArtifactHashes -FailOnNonFinalLabel -FailOnWrongSlotLabel -FailOnMissingOperatorNotes -FailOnMissingVisualReviewText -FailOnWrongDeviceSerial -FailOnReviewContactSheetIssues -FailOnDomainGateMismatch
 .\tools\summarize_pixel_validation_closeout.ps1 -FailOnCloseoutNotReady
 .\tools\summarize_pixel_validation_closeout.ps1 -FailOnPresetDocsNotReady
 ```

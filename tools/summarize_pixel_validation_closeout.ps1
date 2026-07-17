@@ -16,6 +16,7 @@ param(
     [string]$ExpectedDeviceSerial = "47091JEKB05516",
     [switch]$FailOnWrongDeviceSerial,
     [switch]$FailOnReviewContactSheetIssues,
+    [switch]$FailOnDomainGateMismatch,
     [switch]$FailOnCloseoutNotReady,
     [switch]$FailOnPresetDocsNotReady
 )
@@ -248,6 +249,39 @@ function Get-ExpectedLabelsForSlots {
     return $labels
 }
 
+function Get-RequiredDomainGatesForSlot {
+    param([string]$SlotId)
+
+    switch ($SlotId) {
+        "manualRoi" { return @("roiMeasurement") }
+        "autoRoi" { return @("roiMeasurement") }
+        "pulseLinear" { return @("rendererDiagnostics") }
+        "breathingLinear" { return @("rendererDiagnostics") }
+        "objectPhase" { return @("phaseDiagnostics") }
+        "fastTremorPhase" { return @("phaseDiagnostics") }
+        default { return @() }
+    }
+}
+
+function Get-SlotByExpectedFinalLabel {
+    param(
+        $Slots,
+        [string]$Label
+    )
+
+    if ([string]::IsNullOrWhiteSpace($Label)) {
+        return $null
+    }
+
+    foreach ($slot in @($Slots.Values)) {
+        if (([string]$slot.expectedFinalLabel).ToLowerInvariant() -eq $Label.ToLowerInvariant()) {
+            return $slot
+        }
+    }
+
+    return $null
+}
+
 function New-ArtifactNote {
     param($Slot)
 
@@ -344,6 +378,7 @@ $missingOperatorNotesAcceptedFinalEvidence = @()
 $missingVisualReviewTextAcceptedFinalEvidence = @()
 $wrongDeviceSerialAcceptedFinalEvidence = @()
 $reviewContactSheetIssueAcceptedFinalEvidence = @()
+$domainGateMismatchAcceptedFinalEvidence = @()
 foreach ($summary in $acceptedSummaries) {
     if (-not (Test-FinalVisualEvidence -Summary $summary)) {
         continue
@@ -391,6 +426,22 @@ foreach ($summary in $acceptedSummaries) {
         $report = New-EvidenceReport -Summary $summary
         $report.reason = "accepted final evidence is missing a matching review contact sheet"
         $reviewContactSheetIssueAcceptedFinalEvidence += [pscustomobject]$report
+    }
+
+    $slotByExactLabel = Get-SlotByExpectedFinalLabel -Slots $slots -Label $summary.label
+    if ($slotByExactLabel) {
+        $requiredDomainGates = @(Get-RequiredDomainGatesForSlot -SlotId $slotByExactLabel.id)
+        $missingDomainGates = @($requiredDomainGates | Where-Object { -not (Test-GatePassed -Summary $summary -Gate $_) })
+        if ($missingDomainGates.Count -gt 0) {
+            $report = New-EvidenceReport -Summary $summary
+            $report.slot = $slotByExactLabel.id
+            $report.expectedFinalLabel = $slotByExactLabel.expectedFinalLabel
+            $report.requiredDomainGates = $requiredDomainGates
+            $report.missingDomainGates = $missingDomainGates
+            $report.reason = "accepted final evidence is missing required slot-specific domain gate(s)"
+            $domainGateMismatchAcceptedFinalEvidence += [pscustomobject]$report
+            continue
+        }
     }
 
     $text = Get-SummaryText -Summary $summary
@@ -482,7 +533,8 @@ $presetDocsEvidenceClean = (
     $missingOperatorNotesAcceptedFinalEvidence.Count -eq 0 -and
     $missingVisualReviewTextAcceptedFinalEvidence.Count -eq 0 -and
     $wrongDeviceSerialAcceptedFinalEvidence.Count -eq 0 -and
-    $reviewContactSheetIssueAcceptedFinalEvidence.Count -eq 0
+    $reviewContactSheetIssueAcceptedFinalEvidence.Count -eq 0 -and
+    $domainGateMismatchAcceptedFinalEvidence.Count -eq 0
 )
 $allCloseoutEvidencePresent = ($missing.Count -eq 0)
 $allCloseoutEvidenceClean = (
@@ -498,7 +550,8 @@ $allCloseoutEvidenceClean = (
     $missingOperatorNotesAcceptedFinalEvidence.Count -eq 0 -and
     $missingVisualReviewTextAcceptedFinalEvidence.Count -eq 0 -and
     $wrongDeviceSerialAcceptedFinalEvidence.Count -eq 0 -and
-    $reviewContactSheetIssueAcceptedFinalEvidence.Count -eq 0
+    $reviewContactSheetIssueAcceptedFinalEvidence.Count -eq 0 -and
+    $domainGateMismatchAcceptedFinalEvidence.Count -eq 0
 )
 $closeoutBlockers = @()
 if ($missing.Count -gt 0) {
@@ -552,6 +605,9 @@ if ($wrongDeviceSerialAcceptedFinalEvidence.Count -gt 0) {
 if ($reviewContactSheetIssueAcceptedFinalEvidence.Count -gt 0) {
     $closeoutBlockers += New-CloseoutBlocker -Kind "reviewContactSheetIssueAcceptedFinalEvidence" -Count $reviewContactSheetIssueAcceptedFinalEvidence.Count -Message "$($reviewContactSheetIssueAcceptedFinalEvidence.Count) accepted final evidence bundle(s) lack a matching review contact sheet." -Items $reviewContactSheetIssueAcceptedFinalEvidence
 }
+if ($domainGateMismatchAcceptedFinalEvidence.Count -gt 0) {
+    $closeoutBlockers += New-CloseoutBlocker -Kind "domainGateMismatchAcceptedFinalEvidence" -Count $domainGateMismatchAcceptedFinalEvidence.Count -Message "$($domainGateMismatchAcceptedFinalEvidence.Count) accepted final evidence bundle(s) use a closeout final label but lack the required slot-specific gate." -Items $domainGateMismatchAcceptedFinalEvidence
+}
 $result = [pscustomobject]@{
     evidenceRoot = if ($rootPath) { $rootPath.Path } else { $EvidenceRoot }
     expectedDeviceSerial = $ExpectedDeviceSerial
@@ -569,6 +625,7 @@ $result = [pscustomobject]@{
     missingVisualReviewTextAcceptedFinalEvidence = $missingVisualReviewTextAcceptedFinalEvidence
     wrongDeviceSerialAcceptedFinalEvidence = $wrongDeviceSerialAcceptedFinalEvidence
     reviewContactSheetIssueAcceptedFinalEvidence = $reviewContactSheetIssueAcceptedFinalEvidence
+    domainGateMismatchAcceptedFinalEvidence = $domainGateMismatchAcceptedFinalEvidence
     slots = $slotList
     missing = $missing
     presetVisualSlotsPresent = $presetVisualSlotsPresent
@@ -610,6 +667,7 @@ if ($Json) {
     Write-Output "Missing-visual-review-text accepted final evidence: $(@($result.missingVisualReviewTextAcceptedFinalEvidence).Count)"
     Write-Output "Wrong-device-serial accepted final evidence: $(@($result.wrongDeviceSerialAcceptedFinalEvidence).Count)"
     Write-Output "Review-contact-sheet issue accepted final evidence: $(@($result.reviewContactSheetIssueAcceptedFinalEvidence).Count)"
+    Write-Output "Domain-gate mismatch accepted final evidence: $(@($result.domainGateMismatchAcceptedFinalEvidence).Count)"
     Write-Output ""
     foreach ($slot in $slotList) {
         $mark = if ($slot.satisfied) { "[x]" } else { "[ ]" }
@@ -835,6 +893,26 @@ if ($Json) {
             Write-Output "    $($evidence.reason)"
         }
     }
+    if (@($result.domainGateMismatchAcceptedFinalEvidence).Count -gt 0) {
+        Write-Output ""
+        Write-Output "Domain-gate mismatch accepted final evidence:"
+        foreach ($evidence in @($result.domainGateMismatchAcceptedFinalEvidence)) {
+            Write-Output "- $($evidence.label): $($evidence.bundle)"
+            if (-not [string]::IsNullOrWhiteSpace($evidence.sourceShortCommit) -or -not [string]::IsNullOrWhiteSpace($evidence.sourceBranch)) {
+                Write-Output "    Source: $($evidence.sourceShortCommit) on $($evidence.sourceBranch)"
+            }
+            if (-not [string]::IsNullOrWhiteSpace($evidence.screenshotSha256)) {
+                Write-Output "    Screenshot SHA-256: $($evidence.screenshotSha256)"
+            }
+            if (-not [string]::IsNullOrWhiteSpace($evidence.screenrecordSha256)) {
+                Write-Output "    Screenrecord SHA-256: $($evidence.screenrecordSha256)"
+            }
+            Write-Output "    Slot: $($evidence.slot)"
+            Write-Output "    Required gates: $($evidence.requiredDomainGates -join ', ')"
+            Write-Output "    Missing gates: $($evidence.missingDomainGates -join ', ')"
+            Write-Output "    $($evidence.reason)"
+        }
+    }
 }
 
 if ($FailOnMissing -and $missing.Count -gt 0) {
@@ -875,6 +953,9 @@ if ($FailOnWrongDeviceSerial -and $wrongDeviceSerialAcceptedFinalEvidence.Count 
 }
 if ($FailOnReviewContactSheetIssues -and $reviewContactSheetIssueAcceptedFinalEvidence.Count -gt 0) {
     exit 22
+}
+if ($FailOnDomainGateMismatch -and $domainGateMismatchAcceptedFinalEvidence.Count -gt 0) {
+    exit 23
 }
 if ($FailOnCloseoutNotReady -and -not $result.allCloseoutEvidenceClean) {
     exit 7

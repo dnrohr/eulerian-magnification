@@ -261,12 +261,12 @@ pending review-sheet queue, and the Markdown handoff lists each pending
 Use `-FailOnCloseoutNotReady` before closing roadmap items; it is equivalent to
 requiring no missing, unmatched, ambiguous, duplicate, non-`main`, unpushed, or
 missing-artifact-hash accepted evidence
-(`-FailOnMissing -FailOnUnmatched -FailOnAmbiguous -FailOnDuplicate -FailOnNonMain -FailOnUnpushedSource -FailOnMissingArtifactHashes -FailOnNonFinalLabel -FailOnWrongSlotLabel -FailOnMissingOperatorNotes -FailOnMissingVisualReviewText -FailOnWrongDeviceSerial -FailOnReviewContactSheetIssues`), and rejecting accepted evidence without a final capture label, with a label that targets a different slot, without operator notes, without target description / visual claim text, from a device serial other than the expected Pixel, or without a matching review contact sheet. Use
+(`-FailOnMissing -FailOnUnmatched -FailOnAmbiguous -FailOnDuplicate -FailOnNonMain -FailOnUnpushedSource -FailOnMissingArtifactHashes -FailOnNonFinalLabel -FailOnWrongSlotLabel -FailOnMissingOperatorNotes -FailOnMissingVisualReviewText -FailOnWrongDeviceSerial -FailOnReviewContactSheetIssues -FailOnDomainGateMismatch`), and rejecting accepted evidence without a final capture label, with a label that targets a different slot, without operator notes, without target description / visual claim text, from a device serial other than the expected Pixel, without a matching review contact sheet, or without the slot-specific domain gate such as ROI measurement, renderer diagnostics, or phase diagnostics. Use
 `-FailOnPresetDocsNotReady` before changing README or MIT parity visual status;
 it requires all four preset visual slots and rejects unmatched, ambiguous, or
 duplicate accepted evidence, plus accepted evidence captured outside `main` or
 from a commit that is not reachable from `origin/main`, or accepted evidence
 without screenshot/screenrecord SHA-256 values, a final capture label, the
 slot-specific final label, operator notes, or target description / visual claim
-text, or without a matching review contact sheet.
+text, or without a matching review contact sheet or required domain gate.
 Wrong-slot reports include the expected final label for each mismatched slot.

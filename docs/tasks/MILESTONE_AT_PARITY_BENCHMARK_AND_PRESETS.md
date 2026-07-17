@@ -633,6 +633,11 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - The object-vibration setup command now labels its bundle
   `live-phase-object-setup`, matching the closeout slot handoff sequence before
   the corresponding `live-phase-object-final` accepted evidence.
+- Closeout now reports and can fail exact final-label evidence that lacks the
+  slot-specific domain gate: ROI measurement for ROI slots, renderer diagnostics
+  for live linear slots, and phase diagnostics for live phase slots. This keeps
+  a correctly named watched bundle from closing the roadmap if the required
+  diagnostic gate was omitted.
 - Pixel validation planner JSON now exposes compact
   `recommendedCaptureCount`, `commandCount`, and `closeoutBlockerCount` fields
   so phone-session handoff audits can check the queue size without recalculating

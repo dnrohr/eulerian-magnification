@@ -39,6 +39,7 @@ function Invoke-Closeout {
         [switch]$FailOnMissingVisualReviewText,
         [switch]$FailOnWrongDeviceSerial,
         [switch]$FailOnReviewContactSheetIssues,
+        [switch]$FailOnDomainGateMismatch,
         [switch]$FailOnCloseoutNotReady,
         [switch]$FailOnPresetDocsNotReady
     )
@@ -87,6 +88,9 @@ function Invoke-Closeout {
     }
     if ($FailOnReviewContactSheetIssues) {
         $args.FailOnReviewContactSheetIssues = $true
+    }
+    if ($FailOnDomainGateMismatch) {
+        $args.FailOnDomainGateMismatch = $true
     }
     if ($FailOnCloseoutNotReady) {
         $args.FailOnCloseoutNotReady = $true
@@ -228,6 +232,7 @@ try {
     Assert-Equal -Actual @($result.missingVisualReviewTextAcceptedFinalEvidence).Count -Expected 0 -Message "Known closeout fixtures should include visual-review text."
     Assert-Equal -Actual @($result.wrongDeviceSerialAcceptedFinalEvidence).Count -Expected 0 -Message "Known closeout fixtures should come from the expected Pixel serial."
     Assert-Equal -Actual @($result.reviewContactSheetIssueAcceptedFinalEvidence).Count -Expected 0 -Message "Known closeout fixtures should include matching review contact sheets."
+    Assert-Equal -Actual @($result.domainGateMismatchAcceptedFinalEvidence).Count -Expected 0 -Message "Known closeout fixtures should include slot-specific domain gates."
     Assert-Equal -Actual @($result.missing).Count -Expected 0 -Message "All slots should be satisfied."
     Assert-Equal -Actual $result.presetVisualSlotsPresent -Expected $true -Message "Preset visual slots should be present when four preset slots pass."
     Assert-Equal -Actual $result.presetDocsEvidenceClean -Expected $false -Message "Unmatched evidence should prevent preset docs closeout."
@@ -342,7 +347,7 @@ try {
     foreach ($name in @("manual", "auto", "pulse", "breathing", "object", "fast")) {
         Copy-Item -LiteralPath (Join-Path $root $name) -Destination (Join-Path $classifiedRoot $name) -Recurse
     }
-    $classifiedExitCode = Invoke-Closeout -EvidenceRoot $classifiedRoot -FailOnMissing -FailOnUnmatched -FailOnAmbiguous -FailOnDuplicate -FailOnNonMain -FailOnUnpushedSource -FailOnMissingArtifactHashes -FailOnNonFinalLabel -FailOnWrongSlotLabel -FailOnMissingOperatorNotes -FailOnMissingVisualReviewText -FailOnWrongDeviceSerial -FailOnReviewContactSheetIssues
+    $classifiedExitCode = Invoke-Closeout -EvidenceRoot $classifiedRoot -FailOnMissing -FailOnUnmatched -FailOnAmbiguous -FailOnDuplicate -FailOnNonMain -FailOnUnpushedSource -FailOnMissingArtifactHashes -FailOnNonFinalLabel -FailOnWrongSlotLabel -FailOnMissingOperatorNotes -FailOnMissingVisualReviewText -FailOnWrongDeviceSerial -FailOnReviewContactSheetIssues -FailOnDomainGateMismatch
     Assert-Equal -Actual $classifiedExitCode -Expected 0 -Message "Combined closeout gates should pass when all accepted evidence maps to slots on pushed main."
     $classified = & (Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1") -EvidenceRoot $classifiedRoot -Json | ConvertFrom-Json
     Assert-Equal -Actual $classified.readyForPresetDocs -Expected $true -Message "Preset docs should be ready when preset slots are satisfied and evidence is clean."
@@ -446,6 +451,20 @@ try {
     Assert-Equal -Actual $reviewSheetIssue.closeoutBlockers[1].kind -Expected "reviewContactSheetIssueAcceptedFinalEvidence" -Message "Review-sheet issues should produce a closeout blocker."
     $reviewSheetIssueExitCode = Invoke-Closeout -EvidenceRoot $reviewSheetIssueRoot -FailOnReviewContactSheetIssues
     Assert-Equal -Actual $reviewSheetIssueExitCode -Expected 22 -Message "FailOnReviewContactSheetIssues should fail on accepted evidence without a matching review contact sheet."
+
+    $domainGateMismatchRoot = Join-Path $root "domain-gate-mismatch"
+    New-Item -ItemType Directory -Path $domainGateMismatchRoot -Force | Out-Null
+    Write-Summary -Root $domainGateMismatchRoot -Name "pulse" -Label "live-linear-pulse-final" -Mode "Pulse" -RoiSource "FullFrame" -Claim "Pulse full-frame live linear visual parity" -Roi $false -Renderer $false -Phase $false
+    $domainGateMismatch = & (Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1") -EvidenceRoot $domainGateMismatchRoot -Json | ConvertFrom-Json
+    Assert-Equal -Actual @($domainGateMismatch.domainGateMismatchAcceptedFinalEvidence).Count -Expected 1 -Message "Accepted final evidence with a matching final label but missing domain gate should be reported."
+    Assert-Equal -Actual $domainGateMismatch.domainGateMismatchAcceptedFinalEvidence[0].slot -Expected "pulseLinear" -Message "Domain-gate mismatch should report the slot."
+    Assert-Equal -Actual $domainGateMismatch.domainGateMismatchAcceptedFinalEvidence[0].missingDomainGates[0] -Expected "rendererDiagnostics" -Message "Pulse domain-gate mismatch should report missing renderer diagnostics."
+    Assert-Equal -Actual @($domainGateMismatch.slots | Where-Object { $_.satisfied }).Count -Expected 0 -Message "Domain-gate mismatch evidence must not satisfy closeout slots."
+    Assert-Equal -Actual $domainGateMismatch.allCloseoutEvidenceClean -Expected $false -Message "Domain-gate mismatches should prevent clean roadmap closeout."
+    Assert-Equal -Actual $domainGateMismatch.readyForPresetDocs -Expected $false -Message "Domain-gate mismatches should prevent preset docs readiness."
+    Assert-Equal -Actual $domainGateMismatch.closeoutBlockers[1].kind -Expected "domainGateMismatchAcceptedFinalEvidence" -Message "Domain-gate mismatch should produce a closeout blocker."
+    $domainGateMismatchExitCode = Invoke-Closeout -EvidenceRoot $domainGateMismatchRoot -FailOnDomainGateMismatch
+    Assert-Equal -Actual $domainGateMismatchExitCode -Expected 23 -Message "FailOnDomainGateMismatch should fail on accepted evidence missing a slot-specific domain gate."
 
     $offMainRoot = Join-Path $root "off-main"
     New-Item -ItemType Directory -Path $offMainRoot -Force | Out-Null
