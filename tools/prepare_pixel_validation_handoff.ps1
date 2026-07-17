@@ -41,6 +41,7 @@ $runbookPath = Join-Path $OutputRoot "pixel_validation_runbook.txt"
 $reviewQueuePath = Join-Path $OutputRoot "live_validation_review_queue.json"
 $reviewCommandsPath = Join-Path $OutputRoot "live_validation_review_commands.txt"
 $reviewDashboardPath = Join-Path $OutputRoot "live_validation_review_dashboard.html"
+$sessionReadinessPath = Join-Path $OutputRoot "pixel_session_readiness_preflight.json"
 $handoffPath = Join-Path $OutputRoot "pixel_validation_handoff.md"
 $manifestPath = Join-Path $OutputRoot "pixel_validation_handoff_manifest.json"
 
@@ -295,6 +296,16 @@ if (-not [string]::IsNullOrWhiteSpace($AdbPath)) {
     $installCommandParts = @($installCommandParts[0], "-AdbPath $(Format-CommandArgument $AdbPath)") + @($installCommandParts | Select-Object -Skip 1)
 }
 $installCommand = $installCommandParts -join " "
+$sessionReadinessCommandParts = @(
+    ".\tools\export_pixel_session_readiness.ps1",
+    "-DeviceSerial $(Format-CommandArgument $DeviceSerial)",
+    "-OutputPath $(Format-CommandArgument $sessionReadinessPath)",
+    "-FailOnNotReady"
+)
+if (-not [string]::IsNullOrWhiteSpace($AdbPath)) {
+    $sessionReadinessCommandParts = @($sessionReadinessCommandParts[0], "-AdbPath $(Format-CommandArgument $AdbPath)") + @($sessionReadinessCommandParts | Select-Object -Skip 1)
+}
+$sessionReadinessCommand = $sessionReadinessCommandParts -join " "
 $captureCommandSectionTitle = if ($AllowOperatorCommands) { "Runnable Commands" } else { "Guarded Commands" }
 $captureCommandSectionNote = if ($AllowOperatorCommands) {
     "# Operator commands were explicitly allowed when this handoff was generated."
@@ -318,7 +329,10 @@ $runbookLines = @(
     "# 1. Install and launch the current debug build.",
     $installCommand,
     "",
-    "# 2. Wait for a cool enough device before watched capture.",
+    "# 2. Snapshot session readiness before watched capture.",
+    $sessionReadinessCommand,
+    "",
+    "# 2a. Wait for a cool enough device before watched capture.",
     $plan.thermalReadiness.command,
     "",
     $(if (@($roiFinalHelperCommands).Count -gt 0) { "# 3. ${captureCommandSectionTitle}: setup and non-ROI-placeholder evidence." } else { "# 3. ${captureCommandSectionTitle}: requested validation evidence." }),
@@ -368,6 +382,7 @@ $handoffLines = @(
     "- Connected device serials: $(@($deviceAvailability.connectedSerials) -join ', ')",
     "- Device availability note: $($deviceAvailability.note)",
     ('- Install command: `{0}`' -f $installCommand),
+    ('- Session readiness command: `{0}`' -f $sessionReadinessCommand),
     "",
     "## Artifacts",
     "",
@@ -415,6 +430,12 @@ $handoffLines += @(
     "",
     '```powershell',
     $installCommand,
+    '```',
+    "",
+    "Snapshot device readiness after install and before watched capture. This records thermal status, focus, battery temperature, and graphics frame stats so a hot or nearly frozen preview is caught before visual judgment:",
+    "",
+    '```powershell',
+    $sessionReadinessCommand,
     '```',
     "",
     "Run this before a watched phone validation session if the device may be warm, the camera preview looks frozen, or FPS is low:",
@@ -527,6 +548,11 @@ $manifest = [pscustomobject]@{
         ffmpegPath = $FfmpegPath
     }
     thermalReadiness = $plan.thermalReadiness
+    sessionReadiness = [pscustomobject]@{
+        command = $sessionReadinessCommand
+        outputPath = $sessionReadinessPath
+        note = "Run after install and before watched capture to snapshot thermal, focused-app, battery, and gfxinfo jank state."
+    }
     deviceAvailability = $deviceAvailability
     installCommand = $installCommand
     allowOperatorCommands = [bool]$AllowOperatorCommands
@@ -563,6 +589,11 @@ $result = [pscustomobject]@{
     allowOperatorCommands = [bool]$AllowOperatorCommands
     allowFinalCommands = [bool]$AllowFinalCommands
     thermalReadiness = $plan.thermalReadiness
+    sessionReadiness = [pscustomobject]@{
+        command = $sessionReadinessCommand
+        outputPath = $sessionReadinessPath
+        note = "Run after install and before watched capture to snapshot thermal, focused-app, battery, and gfxinfo jank state."
+    }
     deviceAvailability = $deviceAvailability
     installCommand = $installCommand
     source = [pscustomobject]@{
@@ -596,6 +627,7 @@ if ($Json) {
     Write-Output "Expected device connected: $($result.deviceAvailability.connected)"
     Write-Output "Device availability note: $($result.deviceAvailability.note)"
     Write-Output "Install command: $($result.installCommand)"
+    Write-Output "Session readiness command: $($result.sessionReadiness.command)"
     Write-Output "Plan: $($result.planPath)"
     Write-Output "Closeout: $($result.closeoutPath)"
     Write-Output "Commands: $($result.commandsPath)"

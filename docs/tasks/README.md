@@ -158,8 +158,9 @@ availability metadata, including whether the expected Pixel serial is connected
 at handoff time. The Markdown handoff and manifest include a matching
 `install_debug_on_pixel.ps1 -Build -Launch` command for the same device serial.
 The runbook file starts with source/device preflight checks, then orders
-install/launch, thermal preflight, capture commands, and review-sheet commands
-for a watched device session. The first runbook command calls
+install/launch, a session readiness snapshot, thermal preflight, capture
+commands, and review-sheet commands for a watched device session. The first
+runbook command calls
 `verify_pixel_validation_handoff.ps1` to confirm the manifest artifact hashes,
 source commit/clean state, `origin/main` reachability, and expected Pixel
 connection before installing the app. It also uses
@@ -186,6 +187,11 @@ below thermal status `2` (`moderate`) so final no-warning evidence is not
 blocked by thermal warnings; setup captures wait below status `3` (`severe`) so
 exploratory captures do not start in a state where the app will fall back to
 Auto ROI.
+The handoff also includes `export_pixel_session_readiness.ps1`, which writes
+`pixel_session_readiness_preflight.json` with thermal status, focused-app
+state, battery temperature, and `gfxinfo` jank/frame-time signals. Run it after
+install/launch and before watched capture to catch a hot or nearly frozen
+preview before spending operator attention on visual acceptance.
 
 After a connected Pixel session, summarize which accepted evidence bundles are
 ready to close roadmap items. The closeout summary includes the accepted

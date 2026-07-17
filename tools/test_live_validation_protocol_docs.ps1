@@ -153,6 +153,8 @@ foreach ($path in @($readme, $taskReadme)) {
     Assert-DocContains -Path $path -Expected "pixel_validation_runbook.txt" -Message "Operator docs must document the ordered validation runbook artifact name."
     Assert-DocContains -Path $path -Expected "source/device preflight checks" -Message "Operator docs must document the runbook source/device preflight section."
     Assert-DocContains -Path $path -Expected "verify_pixel_validation_handoff.ps1" -Message "Operator docs must document the handoff verifier helper."
+    Assert-DocContains -Path $path -Expected "export_pixel_session_readiness.ps1" -Message "Operator docs must document the session readiness snapshot."
+    Assert-DocContains -Path $path -Expected "pixel_session_readiness_preflight.json" -Message "Operator docs must document the session readiness output artifact."
     Assert-DocContains -Path $path -Expected "manifest artifact hashes" -Message "Operator docs must document handoff verifier hash checks."
     Assert-DocContains -Path $path -Expected "-FailOnHandoffConsistencyMismatch" -Message "Operator docs must document stale handoff consistency checks."
     Assert-DocContains -Path $path -Expected "reference-only" -Message "Operator docs must document reference-only ROI final templates in handoffs."
