@@ -14,6 +14,8 @@ param(
     [switch]$FailOnDirtySource,
     [switch]$FailOnUnpushedSource,
     [switch]$FailOnDeviceUnavailable,
+    [switch]$AllowOperatorCommands,
+    [switch]$AllowFinalCommands,
     [switch]$Json
 )
 
@@ -199,6 +201,12 @@ $plannerArgs = @{
 if (@($Slot).Count -gt 0) {
     $plannerArgs.Slot = $Slot
 }
+if ($AllowOperatorCommands) {
+    $plannerArgs.AllowOperatorCommands = $true
+}
+if ($AllowFinalCommands) {
+    $plannerArgs.AllowFinalCommands = $true
+}
 
 $plan = & $planner @plannerArgs | ConvertFrom-Json
 $commandsArgs = @{
@@ -209,6 +217,12 @@ $commandsArgs = @{
 }
 if (@($Slot).Count -gt 0) {
     $commandsArgs.Slot = $Slot
+}
+if ($AllowOperatorCommands) {
+    $commandsArgs.AllowOperatorCommands = $true
+}
+if ($AllowFinalCommands) {
+    $commandsArgs.AllowFinalCommands = $true
 }
 
 $commands = @(& $planner @commandsArgs)
@@ -281,6 +295,12 @@ if (-not [string]::IsNullOrWhiteSpace($AdbPath)) {
     $installCommandParts = @($installCommandParts[0], "-AdbPath $(Format-CommandArgument $AdbPath)") + @($installCommandParts | Select-Object -Skip 1)
 }
 $installCommand = $installCommandParts -join " "
+$captureCommandSectionTitle = if ($AllowOperatorCommands) { "Runnable Commands" } else { "Guarded Commands" }
+$captureCommandSectionNote = if ($AllowOperatorCommands) {
+    "# Operator commands were explicitly allowed when this handoff was generated."
+} else {
+    "# Capture commands are commented until a watched target is physically set up. Regenerate with -AllowOperatorCommands, and add -AllowFinalCommands for final accepted visual evidence."
+}
 $runbookLines = @(
     "# Pixel validation runbook",
     "# 0. Confirm this handoff still matches the intended source and device state.",
@@ -301,7 +321,8 @@ $runbookLines = @(
     "# 2. Wait for a cool enough device before watched capture.",
     $plan.thermalReadiness.command,
     "",
-    $(if (@($roiFinalHelperCommands).Count -gt 0) { "# 3. Capture setup and non-ROI-placeholder evidence." } else { "# 3. Capture the requested validation evidence." }),
+    $(if (@($roiFinalHelperCommands).Count -gt 0) { "# 3. ${captureCommandSectionTitle}: setup and non-ROI-placeholder evidence." } else { "# 3. ${captureCommandSectionTitle}: requested validation evidence." }),
+    $captureCommandSectionNote,
     @($(if (@($roiFinalHelperCommands).Count -gt 0) { $runnableCaptureCommands } else { $commands }))
 )
 if (@($roiFinalHelperCommands).Count -gt 0) {
@@ -340,6 +361,8 @@ $handoffLines = @(
     "- Source commit: $sourceCommit",
     "- Source clean: $sourceClean",
     "- Source commit reachable from origin/main: $sourceCommitReachableFromOriginMain",
+    "- Operator commands allowed: $([bool]$AllowOperatorCommands)",
+    "- Final commands allowed: $([bool]$AllowFinalCommands)",
     "- Device availability checked: $($deviceAvailability.checked)",
     "- Expected device connected: $($deviceAvailability.connected)",
     "- Connected device serials: $(@($deviceAvailability.connectedSerials) -join ', ')",
@@ -444,7 +467,9 @@ if (@($roiFinalHelperCommands).Count -gt 0) {
 
 $handoffLines += @(
     "",
-    $(if (@($roiFinalHelperCommands).Count -gt 0) { "## Runnable Commands" } else { "## Commands" }),
+    $(if (@($roiFinalHelperCommands).Count -gt 0) { "## $captureCommandSectionTitle" } else { "## $captureCommandSectionTitle" }),
+    "",
+    $(if ($AllowOperatorCommands) { "Operator capture commands were explicitly allowed for this handoff." } else { 'Capture commands are guarded by default. Regenerate with `-AllowOperatorCommands` only when the target is physically set up; final accepted visual evidence also requires `-AllowFinalCommands`.' }),
     "",
     '```powershell'
 )
@@ -504,6 +529,8 @@ $manifest = [pscustomobject]@{
     thermalReadiness = $plan.thermalReadiness
     deviceAvailability = $deviceAvailability
     installCommand = $installCommand
+    allowOperatorCommands = [bool]$AllowOperatorCommands
+    allowFinalCommands = [bool]$AllowFinalCommands
     roiFinalHelperCommands = $roiFinalHelperCommands
 }
 $manifest | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $manifestPath -Encoding utf8
@@ -533,6 +560,8 @@ $result = [pscustomobject]@{
     roiFinalHelperCommandCount = @($roiFinalHelperCommands).Count
     closeoutBlockerCount = @($closeout.closeoutBlockers).Count
     readyForPresetDocs = $closeout.readyForPresetDocs
+    allowOperatorCommands = [bool]$AllowOperatorCommands
+    allowFinalCommands = [bool]$AllowFinalCommands
     thermalReadiness = $plan.thermalReadiness
     deviceAvailability = $deviceAvailability
     installCommand = $installCommand
@@ -558,6 +587,8 @@ if ($Json) {
     Write-Output "Pending review-sheet issue types: $(@($result.pendingReviewSheetIssueCounts.PSObject.Properties).Count)"
     Write-Output "Review commands: $($result.reviewCommandCount)"
     Write-Output "Closeout blockers: $($result.closeoutBlockerCount)"
+    Write-Output "Operator commands allowed: $($result.allowOperatorCommands)"
+    Write-Output "Final commands allowed: $($result.allowFinalCommands)"
     Write-Output "Source: $($result.source.branch) $($result.source.commit)"
     Write-Output "Source clean: $($result.source.clean)"
     Write-Output "Source reachable from origin/main: $($result.source.commitReachableFromOriginMain)"

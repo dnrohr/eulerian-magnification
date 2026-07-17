@@ -498,7 +498,9 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   so connected-device sessions can run pre-inspection captures separately from
   closing evidence captures.
 - Added `-CommandsOnly` to the Pixel validation planner so a filtered queue can
-  emit paste-ready capture command templates without checklist text.
+  emit capture command templates without checklist text. Target-visible capture
+  commands are guarded by default unless the operator explicitly allows them
+  for a watched session.
 - Added `-FailOnInvalidSlot` to the Pixel validation planner so scripted
   connected-device runs fail fast when a mistyped slot filter would otherwise
   emit an empty capture queue.
@@ -512,7 +514,7 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   `pixel_validation_commands.txt` for the next connected-device session.
 - The handoff command now also writes `pixel_validation_handoff.md`, a
   human-readable summary of recommended captures, closeout blockers, artifacts,
-  and paste-ready commands.
+  and guarded commands.
 - Pixel validation handoffs now include source branch, commit, clean-tree state,
   and origin/main reachability so later accepted evidence can be compared
   against the command bundle that produced it.
@@ -611,11 +613,11 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   output, so the connected-device session starts from the same target serial as
   the capture plan.
 - Pixel validation handoffs now write `pixel_validation_runbook.txt`, an
-  ordered paste-ready runbook with install/launch, thermal preflight, capture,
-  and review-sheet commands for the selected slots.
+  ordered runbook with install/launch, thermal preflight, guarded capture
+  commands, and review-sheet commands for the selected slots.
 - The runbook now begins with source/device preflight checks, including the
   handoff source commit, clean-tree state, origin/main reachability, expected
-  device availability, manifest path, and paste-ready Git recheck commands.
+  device availability, manifest path, and Git recheck commands.
 - Added `tools/verify_pixel_validation_handoff.ps1` so the first runbook command
   can fail stale handoff bundles before install: it verifies manifest artifact
   hashes, source commit/clean/reachability state, and expected Pixel

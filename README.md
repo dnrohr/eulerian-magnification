@@ -312,7 +312,7 @@ checklist and command templates:
 ```
 
 For a device-session handoff bundle, write the plan, closeout summary, and
-paste-ready command list together:
+guarded command list together:
 
 ```powershell
 .\tools\prepare_pixel_validation_handoff.ps1 `
@@ -329,8 +329,12 @@ needed by the current closeout blockers. Add `-Slot pulseLinear` or another
 closeout slot id to focus the recommended capture queue on one validation target;
 the plan prints available missing slots when a slot filter does not match. Use
 `-CaptureStage Setup` or `-CaptureStage Final` to print only pre-inspection or
-closing evidence commands, and add `-CommandsOnly` when you want paste-ready
-command templates without the surrounding checklist. Add `-FailOnInvalidSlot`
+closing evidence commands, and add `-CommandsOnly` when you want command
+templates without the surrounding checklist. Target-visible capture commands
+are commented by default because they must not be run unattended; pass
+`-AllowOperatorCommands` only when the target is physically set up and the
+operator is ready to inspect the result. Final accepted visual evidence also
+requires `-AllowFinalCommands`. Add `-FailOnInvalidSlot`
 in scripted runs so a mistyped slot filter exits nonzero instead of producing
 an empty capture queue, or `-FailOnEmptyQueue` when automation should require
 at least one recommended capture. Add `-FailOnPendingReviewSheets` when a

@@ -124,6 +124,8 @@ Assert-Equal -Actual $result.pendingReviewSheetCount -Expected 1 -Message "Hando
 Assert-Equal -Actual $result.pendingReviewSheetIssueCounts.missingContactSheet -Expected 1 -Message "Handoff should report pending review-sheet issue counts."
 Assert-Equal -Actual $result.reviewCommandCount -Expected 1 -Message "Handoff should report review command count."
 Assert-Equal -Actual $result.roiFinalHelperCommandCount -Expected 0 -Message "Non-ROI handoff should not report ROI final helper commands."
+Assert-Equal -Actual $result.allowOperatorCommands -Expected $false -Message "Handoff should guard operator capture commands by default."
+Assert-Equal -Actual $result.allowFinalCommands -Expected $false -Message "Handoff should guard final capture commands by default."
 Assert-True -Condition (-not [string]::IsNullOrWhiteSpace($result.source.branch)) -Message "Handoff should report the source branch."
 Assert-True -Condition (-not [string]::IsNullOrWhiteSpace($result.source.commit)) -Message "Handoff should report the source commit."
 Assert-True -Condition ($null -ne $result.source.clean) -Message "Handoff should report whether the source tree is clean."
@@ -155,10 +157,13 @@ Assert-Equal -Actual $plan.deviceSerial -Expected "PIXEL-HANDOFF-TEST" -Message 
 Assert-Equal -Actual $plan.recommendedCaptures[0].slot -Expected "pulseLinear" -Message "Written plan should preserve filtered slot."
 Assert-True -Condition ($commands.Contains("live-linear-pulse-final")) -Message "Command handoff should include the filtered final command."
 Assert-True -Condition ($commands.Contains('-DeviceSerial "PIXEL-HANDOFF-TEST"')) -Message "Command handoff should include the requested device serial."
+Assert-True -Condition ($commands.Contains("# OPERATOR REQUIRED: .\tools\capture_live_validation_evidence.ps1")) -Message "Default command handoff should guard target-visible captures."
 Assert-True -Condition (-not $commands.Contains("live-linear-pulse-setup")) -Message "Final-only command handoff should omit setup command."
 Assert-True -Condition ($runbook.Contains("install_debug_on_pixel.ps1")) -Message "Runbook should include the install command."
 Assert-True -Condition ($runbook.Contains("wait_for_device_thermal_ready.ps1")) -Message "Runbook should include the thermal readiness command."
 Assert-True -Condition ($runbook.Contains("live-linear-pulse-final")) -Message "Runbook should include filtered capture commands."
+Assert-True -Condition ($runbook.Contains("# 3. Guarded Commands: requested validation evidence.")) -Message "Runbook should label default capture commands as guarded."
+Assert-True -Condition ($runbook.Contains("Capture commands are commented until a watched target is physically set up.")) -Message "Runbook should explain the guarded command default."
 Assert-True -Condition ($runbook.Contains("export_live_validation_review_sheet.ps1")) -Message "Runbook should include review sheet commands."
 Assert-True -Condition ($runbook.Contains("# 0. Confirm this handoff still matches the intended source and device state.")) -Message "Runbook should include source/device preflight guidance."
 Assert-True -Condition ($runbook.Contains("Source commit:")) -Message "Runbook should include the handoff source commit."
@@ -190,6 +195,8 @@ Assert-True -Condition ($handoff.Contains("not an ROI-only tint")) -Message "Mar
 Assert-True -Condition ($handoff.Contains("Source branch:")) -Message "Markdown handoff should include source branch."
 Assert-True -Condition ($handoff.Contains("Source commit:")) -Message "Markdown handoff should include source commit."
 Assert-True -Condition ($handoff.Contains("Source commit reachable from origin/main:")) -Message "Markdown handoff should include source reachability."
+Assert-True -Condition ($handoff.Contains("Operator commands allowed: False")) -Message "Markdown handoff should include operator command guard state."
+Assert-True -Condition ($handoff.Contains("Final commands allowed: False")) -Message "Markdown handoff should include final command guard state."
 Assert-True -Condition ($handoff.Contains("Expected device connected: True")) -Message "Markdown handoff should include device availability."
 Assert-True -Condition ($handoff.Contains("Install command:")) -Message "Markdown handoff should include the install command summary."
 Assert-True -Condition ($handoff.Contains("install_debug_on_pixel.ps1")) -Message "Markdown handoff should include the debug install helper."
@@ -204,6 +211,8 @@ Assert-True -Condition ($handoff.Contains("Command:")) -Message "Markdown handof
 Assert-True -Condition ($handoff.Contains("Pending review sheets: 1")) -Message "Markdown handoff should include pending review sheet count."
 Assert-True -Condition ($handoff.Contains("Pending review-sheet issue types: 1")) -Message "Markdown handoff should include review issue type count."
 Assert-True -Condition ($handoff.Contains("```powershell")) -Message "Markdown handoff should include a PowerShell command block."
+Assert-True -Condition ($handoff.Contains("## Guarded Commands")) -Message "Markdown handoff should label default capture commands as guarded."
+Assert-True -Condition ($handoff.Contains('Regenerate with `-AllowOperatorCommands`')) -Message "Markdown handoff should explain how to intentionally emit runnable capture commands."
 Assert-True -Condition ($handoff.Contains("live-linear-pulse-final")) -Message "Markdown handoff should include the filtered command."
 Assert-True -Condition ($handoff.Contains("missingSlots")) -Message "Markdown handoff should summarize closeout blockers."
 Assert-Equal -Actual @($manifest.artifacts).Count -Expected 8 -Message "Manifest should include every handoff artifact except itself."
@@ -213,6 +222,8 @@ Assert-Equal -Actual $manifest.review.issueCounts.missingContactSheet -Expected 
 Assert-True -Condition ($manifest.thermalReadiness.command.Contains("wait_for_device_thermal_ready.ps1")) -Message "Manifest should include thermal readiness command metadata."
 Assert-Equal -Actual $manifest.deviceAvailability.connected -Expected $true -Message "Manifest should include device availability metadata."
 Assert-True -Condition ($manifest.installCommand.Contains("install_debug_on_pixel.ps1")) -Message "Manifest should include the install command."
+Assert-Equal -Actual $manifest.allowOperatorCommands -Expected $false -Message "Manifest should record default operator command guard state."
+Assert-Equal -Actual $manifest.allowFinalCommands -Expected $false -Message "Manifest should record default final command guard state."
 Assert-Equal -Actual @($manifest.roiFinalHelperCommands).Count -Expected 0 -Message "Non-ROI manifest should not include ROI helper commands."
 foreach ($artifactName in @("plan", "closeout", "commands", "runbook", "reviewQueue", "reviewCommands", "reviewDashboard", "handoff")) {
     $artifact = @($manifest.artifacts | Where-Object { $_.name -eq $artifactName } | Select-Object -First 1)
@@ -238,7 +249,7 @@ $roiHandoff = Get-Content -LiteralPath $roiResult.handoffPath -Raw
 $roiManifest = Get-Content -LiteralPath $roiResult.manifestPath -Raw | ConvertFrom-Json
 Assert-Equal -Actual $roiResult.roiFinalHelperCommandCount -Expected 1 -Message "Manual ROI handoff should report one ROI final helper command."
 Assert-True -Condition ($roiRunbook.Contains("# 3a. Prepare ROI final commands after setup screenshots.")) -Message "ROI runbook should include the helper step."
-Assert-True -Condition ($roiRunbook.Contains("# 3. Capture setup and non-ROI-placeholder evidence.")) -Message "ROI runbook should split setup captures from placeholder finals."
+Assert-True -Condition ($roiRunbook.Contains("# 3. Guarded Commands: setup and non-ROI-placeholder evidence.")) -Message "ROI runbook should split guarded setup captures from placeholder finals."
 Assert-True -Condition ($roiRunbook.Contains("prepare_roi_final_capture_command.ps1")) -Message "ROI runbook should include the final-command helper."
 Assert-True -Condition ($roiRunbook.Contains("-Slot manualRoi")) -Message "ROI runbook helper should target manual ROI."
 Assert-True -Condition ($roiRunbook.Contains("<manual-roi-setup-bundle>")) -Message "ROI runbook helper should show the setup bundle placeholder."
@@ -251,14 +262,41 @@ Assert-True -Condition ($roiRunbook.IndexOf("prepare_roi_final_capture_command.p
 Assert-True -Condition ($roiHandoff.Contains("ROI Final Command Helpers")) -Message "ROI Markdown handoff should include helper guidance."
 Assert-True -Condition ($roiHandoff.Contains("Paste the printed final capture command")) -Message "ROI Markdown handoff should explain how to use the helper."
 Assert-True -Condition ($roiHandoff.Contains("prepare_roi_final_capture_command.ps1")) -Message "ROI Markdown handoff should include the helper command."
-Assert-True -Condition ($roiHandoff.Contains("## Runnable Commands")) -Message "ROI Markdown handoff should split runnable commands from templates."
+Assert-True -Condition ($roiHandoff.Contains("## Guarded Commands")) -Message "ROI Markdown handoff should split guarded commands from templates."
 Assert-True -Condition ($roiHandoff.Contains("## ROI Final Templates")) -Message "ROI Markdown handoff should include a final-template section."
 Assert-True -Condition ($roiHandoff.Contains("Reference only. Paste the matching helper output instead")) -Message "ROI Markdown handoff should mark final templates as reference-only."
 Assert-True -Condition ($roiHandoff.Contains("# TEMPLATE ONLY: .\tools\capture_live_validation_evidence.ps1")) -Message "ROI Markdown handoff should comment placeholder final templates."
-Assert-True -Condition ($roiHandoff.IndexOf("## ROI Final Command Helpers") -lt $roiHandoff.IndexOf("## Runnable Commands")) -Message "ROI Markdown handoff should show helper guidance before runnable commands."
-Assert-True -Condition ($roiHandoff.IndexOf("## Runnable Commands") -lt $roiHandoff.IndexOf("## ROI Final Templates")) -Message "ROI Markdown handoff should put template-only commands after runnable commands."
+Assert-True -Condition ($roiHandoff.IndexOf("## ROI Final Command Helpers") -lt $roiHandoff.IndexOf("## Guarded Commands")) -Message "ROI Markdown handoff should show helper guidance before guarded commands."
+Assert-True -Condition ($roiHandoff.IndexOf("## Guarded Commands") -lt $roiHandoff.IndexOf("## ROI Final Templates")) -Message "ROI Markdown handoff should put template-only commands after guarded commands."
 Assert-Equal -Actual @($roiManifest.roiFinalHelperCommands).Count -Expected 1 -Message "ROI manifest should include the helper command."
 Assert-True -Condition ($roiManifest.roiFinalHelperCommands[0].Contains("-Slot manualRoi")) -Message "ROI manifest helper command should preserve the slot."
+
+$allowedOutputRoot = Join-Path ([System.IO.Path]::GetTempPath()) "eulerian-handoff-allowed-output-$([guid]::NewGuid().ToString('N'))"
+$allowedResult = & (Join-Path $PSScriptRoot "prepare_pixel_validation_handoff.ps1") `
+    -EvidenceRoot $evidenceRoot `
+    -OutputRoot $allowedOutputRoot `
+    -DeviceSerial "PIXEL-HANDOFF-TEST" `
+    -AdbPath $fakeAdb `
+    -Slot pulseLinear `
+    -CaptureStage Final `
+    -AllowOperatorCommands `
+    -AllowFinalCommands `
+    -Json | ConvertFrom-Json
+
+$allowedCommands = Get-Content -LiteralPath $allowedResult.commandsPath -Raw
+$allowedRunbook = Get-Content -LiteralPath $allowedResult.runbookPath -Raw
+$allowedHandoff = Get-Content -LiteralPath $allowedResult.handoffPath -Raw
+$allowedManifest = Get-Content -LiteralPath $allowedResult.manifestPath -Raw | ConvertFrom-Json
+Assert-Equal -Actual $allowedResult.allowOperatorCommands -Expected $true -Message "Allowed handoff should report operator commands enabled."
+Assert-Equal -Actual $allowedResult.allowFinalCommands -Expected $true -Message "Allowed handoff should report final commands enabled."
+Assert-True -Condition ($allowedCommands.StartsWith(".\tools\capture_live_validation_evidence.ps1")) -Message "Allowed handoff should emit runnable capture commands."
+Assert-True -Condition (-not $allowedCommands.Contains("# OPERATOR REQUIRED")) -Message "Allowed handoff should not keep operator guards in command list."
+Assert-True -Condition ($allowedRunbook.Contains("# 3. Runnable Commands: requested validation evidence.")) -Message "Allowed runbook should label capture commands as runnable."
+Assert-True -Condition ($allowedRunbook.Contains("Operator commands were explicitly allowed")) -Message "Allowed runbook should record the explicit operator override."
+Assert-True -Condition ($allowedHandoff.Contains("## Runnable Commands")) -Message "Allowed Markdown handoff should label capture commands as runnable."
+Assert-True -Condition ($allowedHandoff.Contains("Operator capture commands were explicitly allowed")) -Message "Allowed Markdown handoff should explain the override."
+Assert-Equal -Actual $allowedManifest.allowOperatorCommands -Expected $true -Message "Allowed manifest should record operator command override."
+Assert-Equal -Actual $allowedManifest.allowFinalCommands -Expected $true -Message "Allowed manifest should record final command override."
 
 $textOutput = & (Join-Path $PSScriptRoot "prepare_pixel_validation_handoff.ps1") `
     -EvidenceRoot $evidenceRoot `
@@ -273,6 +311,8 @@ Assert-True -Condition (($textOutput -join "`n").Contains("Source:")) -Message "
 Assert-True -Condition (($textOutput -join "`n").Contains("Expected device connected: True")) -Message "Text handoff should print device availability."
 Assert-True -Condition (($textOutput -join "`n").Contains("Install command:")) -Message "Text handoff should print the install command."
 Assert-True -Condition (($textOutput -join "`n").Contains("Pending review-sheet issue types:")) -Message "Text handoff should print review issue type count."
+Assert-True -Condition (($textOutput -join "`n").Contains("Operator commands allowed: False")) -Message "Text handoff should print operator command guard state."
+Assert-True -Condition (($textOutput -join "`n").Contains("Final commands allowed: False")) -Message "Text handoff should print final command guard state."
 Assert-True -Condition (($textOutput -join "`n").Contains("Handoff:")) -Message "Text handoff should print the Markdown handoff path."
 Assert-True -Condition (($textOutput -join "`n").Contains("Runbook:")) -Message "Text handoff should print the validation runbook path."
 Assert-True -Condition (($textOutput -join "`n").Contains("Review dashboard:")) -Message "Text handoff should print the review dashboard path."
