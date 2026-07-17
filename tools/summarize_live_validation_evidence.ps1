@@ -623,9 +623,6 @@ if (-not $deviceSerialRequirementPassed) {
     $actualDeviceSerial = if ([string]::IsNullOrWhiteSpace($deviceSerial)) { "<missing>" } else { $deviceSerial }
     $warnings += "device serial required $RequireDeviceSerial but was $actualDeviceSerial"
 }
-if ($batterySummary.powered) {
-    $warnings += "device is externally powered during capture"
-}
 if ($null -ne $batterySummary.temperatureC -and $batterySummary.temperatureC -ge $WarnBatteryTemperatureC) {
     $warnings += "battery temperature $($batterySummary.temperatureC) C at or above warning threshold $WarnBatteryTemperatureC C"
 }

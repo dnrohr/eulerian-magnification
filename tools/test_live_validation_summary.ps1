@@ -462,6 +462,17 @@ Number Missed Vsync: 0
         requiredReadySamples = 2
         consecutiveReadySamples = 2
     })
+    @"
+Current Battery Service state:
+  AC powered: false
+  USB powered: true
+  Wireless powered: false
+  Dock powered: false
+  status: 2
+  level: 21
+  temperature: 273
+  Charging state: 1
+"@ | Out-File -LiteralPath (Join-Path $passingFinalEvidenceBundle "battery.txt") -Encoding utf8
     "mCurrentFocus=Window{456 u0 com.dnrohr.eulerianmagnification/.MainActivity}" |
         Out-File -LiteralPath (Join-Path $passingFinalEvidenceBundle "window_focus.txt") -Encoding utf8
 
@@ -474,6 +485,8 @@ Number Missed Vsync: 0
     Assert-Equal -Actual $passingFinalEvidenceSummary.requiredGates.cameraFps.passed -Expected $true -Message "Final evidence camera FPS gate should pass."
     Assert-Equal -Actual $passingFinalEvidenceSummary.requiredGates.focusedApp.passed -Expected $true -Message "Final evidence focused-app gate should pass."
     Assert-Equal -Actual $passingFinalEvidenceSummary.requiredGates.noWarnings.passed -Expected $true -Message "Final evidence no-warnings gate should pass."
+    Assert-Equal -Actual $passingFinalEvidenceSummary.battery.powered -Expected $true -Message "Final evidence should retain USB power context."
+    Assert-True -Condition (-not ("device is externally powered during capture" -in @($passingFinalEvidenceSummary.warnings))) -Message "USB power context should not block final evidence."
     Assert-Equal -Actual $passingFinalEvidenceSummary.artifacts.screenshot.sha256 -Expected (Get-FileHash -LiteralPath (Join-Path $passingFinalEvidenceBundle "screenshot.png") -Algorithm SHA256).Hash -Message "Final evidence screenshot hash mismatch."
     Assert-Equal -Actual $passingFinalEvidenceSummary.artifacts.screenrecord.sha256 -Expected (Get-FileHash -LiteralPath (Join-Path $passingFinalEvidenceBundle "screenrecord.mp4") -Algorithm SHA256).Hash -Message "Final evidence screenrecord hash mismatch."
 

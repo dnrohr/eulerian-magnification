@@ -79,11 +79,13 @@ The script also records `thermalservice_preflight.txt` before clearing logcat or
 launching the app. The manifest and summary expose this as `thermalPreflight`,
 so a capture can show that the device was already throttled before the app was
 started.
-Thermal, external-power, high-battery-temperature, and low camera-cadence
-warnings are advisory by default: they flag conditions that may affect a visual
-or benchmark run, but they do not make runtime smoke fail unless a crash, ANR,
-or GL error is also present. A passing runtime smoke summary still does not
-prove visual validation unless the target is visible and inspected.
+Thermal, high-battery-temperature, and low camera-cadence warnings are advisory
+by default: they flag conditions that may affect a visual or benchmark run, but
+they do not make runtime smoke fail unless a crash, ANR, or GL error is also
+present. USB or external power source is still reported in the battery summary
+for audit context, but it is not itself a warning because ADB capture commonly
+requires the device to be connected. A passing runtime smoke summary still does
+not prove visual validation unless the target is visible and inspected.
 When `-Summarize` is used, the capture script exits with the summary result:
 `0` for a passing runtime/evidence gate, `2` for runtime smoke failure, `3` for
 missing required UI text, `4` for a thermal/preflight abort, `5` when visual
@@ -277,7 +279,8 @@ Pass `-RequireVisualValidation` when a command is meant to close a roadmap
 visual gate, pass `-RequireCleanSource` when the evidence must come from a
 clean committed source tree, and pass `-RequireNoWarnings` when final evidence
 must be free of advisory warnings such as thermal, low-FPS, dirty-source, or
-debug-overlay warnings. For normal watched final evidence, prefer
+debug-overlay warnings. USB power source is recorded as context rather than a
+warning. For normal watched final evidence, prefer
 `-RequireFinalVisualEvidence`, which turns on the standard final gates for
 clean source, visual validation, screenrecord, thermal readiness, camera FPS,
 focused app, and no warnings:

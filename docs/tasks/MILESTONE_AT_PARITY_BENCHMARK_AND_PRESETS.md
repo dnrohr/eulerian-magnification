@@ -80,11 +80,11 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 
 - Live validation summaries now parse `battery.txt` and report battery level,
   battery temperature, charging state, and external power source.
-- Summaries warn when the device is externally powered or battery temperature is
-  at least `40 C`. This makes USB charging and warm-battery conditions explicit
-  when reviewing Pixel performance and visual-validation artifacts.
-- These warnings are advisory and do not replace known-target visual parity
-  artifacts.
+- Summaries warn when battery temperature is at least `40 C`; USB/external
+  power source remains explicit battery context but is no longer a warning by
+  itself because ADB evidence capture normally keeps the phone connected.
+- These battery fields are advisory context and do not replace known-target
+  visual parity artifacts.
 
 ## Supporting Slice: Live Thermal Quality Warning
 
