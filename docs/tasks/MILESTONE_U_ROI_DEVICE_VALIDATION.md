@@ -9,7 +9,7 @@ Goal: prove that automatic and manual ROI coordinates align with the live previe
 ## Tasks
 
 - [x] Create a repeatable Pixel 8a validation procedure for portrait/front-camera preview.
-- [ ] Verify manual ROI placement against a known target in the preview.
+- [x] Verify manual ROI placement against a known target in the preview.
 - [ ] Verify automatic face/skin ROI placement against a visible face target.
 - [x] Capture non-sensitive evidence or describe the validation setup and result.
 - [ ] Fix CameraX/GL preview mapping if the ROI does not align.
@@ -37,11 +37,33 @@ Goal: prove that automatic and manual ROI coordinates align with the live previe
   the result was inconclusive and is not counted as validation because the final
   screenshot did not clearly show `Manual ROI` aligned to that target.
 
+## Accepted Slice: Manual ROI Known Target
+
+- Captured accepted final manual ROI evidence on connected Pixel 8a
+  `47091JEKB05516` in portrait/front-camera preview:
+  `sample-videos/exports/live-validation/20260717-124802-manual-roi-known-target-final`.
+- Source identity: `main` at
+  `cf8660c8021181018aee32dacdb433e39afba64f`, clean and reachable from
+  `origin/main`.
+- Final summary verdict was `visual_validated` with zero warnings. Required
+  gates passed for final visual evidence, ROI measurement, screenrecord, thermal
+  readiness, camera FPS, focused app, device serial, and review contact sheet.
+- The final screenshot showed exactly one yellow manual ROI outline around the
+  selected visible target region. The overlay analyzer found one connected
+  component, `33600` matched pixels, expected bounds
+  `0.083333,0.25,0.916667,0.75`, measured bounds
+  `0.0796,0.2483,0.9204,0.7517`, and max normalized edge error below `0.0038`.
+- Artifact hashes: screenshot
+  `A6F930BD9391CE7ADC8642F5B084D57D7549E7E131EAF01730A8520A9432C8B8`,
+  screenrecord
+  `9E136C70336BF059022697685AC8547DB2C9EAABD1D0FFE58A1916CBE53FA130`,
+  review contact sheet
+  `E6C2C9FEA6D440C87336B3E0A1A2C8B6A93AB12C3AADE61D9D787E771E374BFB`.
+
 ## Remaining Validation
 
-- Manual ROI still needs a non-sensitive known target deliberately placed in frame.
 - Automatic ROI still needs a visible face target in frame.
-- If either validation shows mismatch, update `PreviewRoiMapper` and its tests before marking this milestone complete.
+- If automatic ROI validation shows mismatch, update `PreviewRoiMapper` and its tests before marking this milestone complete.
 - This milestone gates Milestone AU, where manual ROI becomes a selectable non-default option. Automatic/default ROI behavior should not become the primary motion path until the mapped region is proven trustworthy on device.
 - The mapper now has regression coverage for ROIs clipped by aspect-fill preview
   crop. Remaining validation is visual alignment on the Pixel, not uncovered

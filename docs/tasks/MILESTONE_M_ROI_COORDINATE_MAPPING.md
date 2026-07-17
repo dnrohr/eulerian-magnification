@@ -7,7 +7,7 @@ Goal: fix the trust-breaking mismatch where automatic ROI can be drawn away from
 - [x] Identify the coordinate spaces for analysis frames, CameraX preview, GL preview, rotation, mirroring, and aspect-fill crop.
 - [x] Add a tested mapper from analysis-normalized ROI to preview-normalized ROI.
 - [x] Use the mapper for both automatic ROI drawing and manual ROI input.
-- [ ] Verify portrait/front-camera behavior on device.
+- [x] Verify portrait/front-camera behavior on device.
 - [x] Document the coordinate-space assumptions and any remaining limitations.
 
 ## Completed Slice: Preview Mapper Foundation
@@ -20,22 +20,38 @@ Goal: fix the trust-breaking mismatch where automatic ROI can be drawn away from
 
 ## Current Status
 
-Status: In progress
+Status: Complete
 
-Device validation is underway on the Pixel 8a, but the milestone is not complete
-until a deliberate known target or visible face proves portrait/front-camera
-alignment.
+Manual ROI portrait/front-camera mapping is accepted on the Pixel 8a. Automatic
+face/skin ROI validation continues in Milestone U.
 
 ## Remaining Work
 
-- Verify the front-camera mirror assumption on the Pixel 8a with a face or known target in frame.
-- Decide whether GL preview and CameraX preview need separate mapping flags.
-  Current implementation uses a shared front-camera mapping policy for both
-  paths; device validation should only split them if evidence shows a mismatch.
-- Use the final ROI evidence flow in `docs/testing/ROI_DEVICE_VALIDATION.md`:
-  setup captures should stop at `target_visible_unvalidated`, and closing
-  manual/automatic alignment evidence must combine a passing ROI measurement
-  with `-RequireFinalVisualEvidence`.
+- Automatic face/skin ROI alignment remains open in Milestone U.
+- GL preview and CameraX preview continue to share mapping flags until
+  automatic ROI evidence proves they need to split.
+
+## Completed Slice: Pixel 8a Manual ROI Known Target
+
+- Captured accepted final manual ROI evidence on connected Pixel 8a
+  `47091JEKB05516` in portrait/front-camera preview:
+  `sample-videos/exports/live-validation/20260717-124802-manual-roi-known-target-final`.
+- Source identity: `main` at
+  `cf8660c8021181018aee32dacdb433e39afba64f`, clean and reachable from
+  `origin/main`.
+- Final gates passed with `visual_validated`, zero warnings, required
+  screenrecord, thermal readiness, camera FPS, focused-app, device-serial,
+  review contact sheet, and ROI measurement checks.
+- The yellow manual ROI outline had one connected component and matched the
+  expected screenshot-space target bounds. Measurement expected
+  `0.083333,0.25,0.916667,0.75`; measured
+  `0.0796,0.2483,0.9204,0.7517`; max normalized edge error was below `0.0038`.
+- Artifact hashes: screenshot
+  `A6F930BD9391CE7ADC8642F5B084D57D7549E7E131EAF01730A8520A9432C8B8`,
+  screenrecord
+  `9E136C70336BF059022697685AC8547DB2C9EAABD1D0FFE58A1916CBE53FA130`,
+  review contact sheet
+  `E6C2C9FEA6D440C87336B3E0A1A2C8B6A93AB12C3AADE61D9D787E771E374BFB`.
 
 ## Completed Slice: Manual ROI Reverse Mapping
 

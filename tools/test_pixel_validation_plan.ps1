@@ -70,8 +70,8 @@ $savedPlan = Get-Content -LiteralPath $savedPlanPath -Raw | ConvertFrom-Json
 $closeout = & (Join-Path $PSScriptRoot "summarize_pixel_validation_closeout.ps1") -EvidenceRoot $missingCloseoutRoot -Json | ConvertFrom-Json
 
 Assert-Equal -Actual $plan.roadmap.total -Expected 47 -Message "Roadmap total mismatch."
-Assert-Equal -Actual $plan.roadmap.complete -Expected 41 -Message "Complete milestone count mismatch."
-Assert-Equal -Actual $plan.roadmap.inProgress -Expected 6 -Message "In-progress milestone count mismatch."
+Assert-Equal -Actual $plan.roadmap.complete -Expected 42 -Message "Complete milestone count mismatch."
+Assert-Equal -Actual $plan.roadmap.inProgress -Expected 5 -Message "In-progress milestone count mismatch."
 Assert-Equal -Actual $plan.deviceSerial -Expected "47091JEKB05516" -Message "Pixel validation plan should default to the connected Pixel 8a serial."
 Assert-Equal -Actual $plan.thermalReadiness.readyBelowThermalStatus -Expected 2 -Message "Thermal preflight should wait below moderate thermal status for final evidence."
 Assert-Equal -Actual $plan.thermalReadiness.requiredReadySamples -Expected 2 -Message "Thermal preflight should require consecutive ready samples."
