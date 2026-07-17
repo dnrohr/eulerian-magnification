@@ -67,12 +67,13 @@ function Invoke-VerifierExitCode {
 function New-ArtifactRecord {
     param(
         [string]$Name,
-        [string]$Path
+        [string]$Path,
+        [string]$ManifestPath = ""
     )
 
     return [ordered]@{
         name = $Name
-        path = $Path
+        path = $(if ([string]::IsNullOrWhiteSpace($ManifestPath)) { $Path } else { $ManifestPath })
         sha256 = (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToLowerInvariant()
     }
 }
@@ -153,6 +154,40 @@ try {
 
     $validExitCode = Invoke-VerifierExitCode -ManifestPath $manifestPath -SourceRoot $repoRoot -AdbPath $fakeAdb -FailOnArtifactMismatch -FailOnSourceMismatch -FailOnDeviceUnavailable -FailOnHandoffConsistencyMismatch
     Assert-Equal -Actual $validExitCode -Expected 0 -Message "Verifier gates should pass for a valid handoff."
+
+    $sourceRelativeBundleRoot = Join-Path $repoRoot "sample-videos\exports\live-validation"
+    New-Item -ItemType Directory -Path $sourceRelativeBundleRoot -Force | Out-Null
+    $sourceRelativeCommands = Join-Path $sourceRelativeBundleRoot "pixel_validation_commands.txt"
+    $sourceRelativeRunbook = Join-Path $sourceRelativeBundleRoot "pixel_validation_runbook.txt"
+    $sourceRelativeHandoff = Join-Path $sourceRelativeBundleRoot "pixel_validation_handoff.md"
+    "# OPERATOR REQUIRED: .\tools\capture_live_validation_evidence.ps1 -Label ""live-linear-pulse-final"" -RequireFinalVisualEvidence" | Set-Content -LiteralPath $sourceRelativeCommands -Encoding utf8
+    "# 3. Guarded Commands: requested validation evidence." | Set-Content -LiteralPath $sourceRelativeRunbook -Encoding utf8
+    "## Guarded Commands" | Set-Content -LiteralPath $sourceRelativeHandoff -Encoding utf8
+    $sourceRelativeManifestPath = Join-Path $sourceRelativeBundleRoot "pixel_validation_handoff_manifest.json"
+    $sourceRelativeManifest = [ordered]@{
+        deviceSerial = "PIXEL-VERIFY-TEST"
+        source = [ordered]@{
+            branch = "main"
+            commit = $sourceCommit
+            clean = $false
+            commitReachableFromOriginMain = $true
+        }
+        artifacts = @(
+            New-ArtifactRecord -Name "commands" -Path $sourceRelativeCommands -ManifestPath "sample-videos\exports\live-validation\pixel_validation_commands.txt"
+            New-ArtifactRecord -Name "runbook" -Path $sourceRelativeRunbook -ManifestPath "sample-videos\exports\live-validation\pixel_validation_runbook.txt"
+            New-ArtifactRecord -Name "handoff" -Path $sourceRelativeHandoff -ManifestPath "sample-videos\exports\live-validation\pixel_validation_handoff.md"
+        )
+        allowOperatorCommands = $false
+        allowFinalCommands = $false
+    }
+    $sourceRelativeManifest | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $sourceRelativeManifestPath -Encoding utf8
+    $sourceRelativeResult = & (Join-Path $PSScriptRoot "verify_pixel_validation_handoff.ps1") `
+        -ManifestPath $sourceRelativeManifestPath `
+        -SourceRoot $repoRoot `
+        -AdbPath $fakeAdb `
+        -Json | ConvertFrom-Json
+    Assert-Equal -Actual $sourceRelativeResult.artifactMismatchCount -Expected 0 -Message "Verifier should resolve generated source-root-relative artifact paths."
+    Assert-Equal -Actual $sourceRelativeResult.handoffConsistencyMismatchCount -Expected 0 -Message "Source-root-relative guarded handoff should pass consistency checks."
 
     "edited after manifest" | Set-Content -LiteralPath $artifactA -Encoding utf8
     $artifactMismatch = & (Join-Path $PSScriptRoot "verify_pixel_validation_handoff.ps1") `

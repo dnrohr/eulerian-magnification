@@ -140,6 +140,7 @@ function Resolve-ManifestArtifactPath {
     param(
         $Manifest,
         [string]$ManifestDirectory,
+        [string]$SourceRoot,
         [string]$Name
     )
 
@@ -152,10 +153,23 @@ function Resolve-ManifestArtifactPath {
     if ([string]::IsNullOrWhiteSpace($path)) {
         return $null
     }
-    if (-not [System.IO.Path]::IsPathRooted($path)) {
-        $path = Join-Path $ManifestDirectory $path
+    if ([System.IO.Path]::IsPathRooted($path)) {
+        return $path
     }
-    return $path
+
+    $manifestRelativePath = Join-Path $ManifestDirectory $path
+    if (Test-Path -LiteralPath $manifestRelativePath) {
+        return $manifestRelativePath
+    }
+
+    if (-not [string]::IsNullOrWhiteSpace($SourceRoot)) {
+        $sourceRelativePath = Join-Path $SourceRoot $path
+        if (Test-Path -LiteralPath $sourceRelativePath) {
+            return $sourceRelativePath
+        }
+    }
+
+    return $manifestRelativePath
 }
 
 function Get-ArtifactText {
@@ -165,7 +179,7 @@ function Get-ArtifactText {
         [string]$Name
     )
 
-    $path = Resolve-ManifestArtifactPath -Manifest $Manifest -ManifestDirectory $ManifestDirectory -Name $Name
+    $path = Resolve-ManifestArtifactPath -Manifest $Manifest -ManifestDirectory $ManifestDirectory -SourceRoot $SourceRoot -Name $Name
     if ([string]::IsNullOrWhiteSpace($path) -or -not (Test-Path -LiteralPath $path)) {
         return ""
     }
@@ -212,12 +226,21 @@ $manifestDirectory = Split-Path -Parent $resolvedManifest.Path
 if ([string]::IsNullOrWhiteSpace($SourceRoot)) {
     $SourceRoot = Split-Path -Parent $PSScriptRoot
 }
+$SourceRoot = (Resolve-Path -LiteralPath $SourceRoot).Path
 
 $artifactChecks = @()
 foreach ($artifact in @($manifest.artifacts)) {
     $path = [string]$artifact.path
     if (-not [System.IO.Path]::IsPathRooted($path)) {
-        $path = Join-Path $manifestDirectory $path
+        $manifestRelativePath = Join-Path $manifestDirectory $path
+        $sourceRelativePath = Join-Path $SourceRoot $path
+        $path = if (Test-Path -LiteralPath $manifestRelativePath) {
+            $manifestRelativePath
+        } elseif (Test-Path -LiteralPath $sourceRelativePath) {
+            $sourceRelativePath
+        } else {
+            $manifestRelativePath
+        }
     }
     if (-not (Test-Path -LiteralPath $path)) {
         $artifactChecks += New-Check -Name $artifact.name -Passed $false -Message "artifact missing" -Details ([pscustomobject]@{ path = $path; expectedSha256 = $artifact.sha256; actualSha256 = $null })

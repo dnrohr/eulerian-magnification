@@ -627,6 +627,9 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   that final visual commands stay guarded unless `-AllowFinalCommands` is
   recorded. This prevents edited handoffs from bypassing watched-target
   safeguards.
+- Handoff verification now resolves generated repo-relative artifact paths
+  against the source root, so refreshed bundles can be checked before a watched
+  phone session without hand-editing manifest paths.
 - Pixel validation planner JSON now exposes compact
   `recommendedCaptureCount`, `commandCount`, and `closeoutBlockerCount` fields
   so phone-session handoff audits can check the queue size without recalculating
