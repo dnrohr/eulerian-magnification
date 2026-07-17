@@ -237,11 +237,35 @@ $autoRoiPlaceholderPresent = $commandText.Contains("<visible-face-or-skin-target
 $helperTextPresent = $runbookText.Contains("prepare_roi_final_capture_command.ps1") -and $handoffText.Contains("prepare_roi_final_capture_command.ps1")
 $runbookUncommentedRoiFinalTemplateLines = @(Get-UncommentedRoiFinalTemplateLines -Text $runbookText)
 $handoffUncommentedRoiFinalTemplateLines = @(Get-UncommentedRoiFinalTemplateLines -Text $handoffText)
+$allowOperatorCommands = [bool]$manifest.allowOperatorCommands
+$allowFinalCommands = [bool]$manifest.allowFinalCommands
+$commandLines = @($commandText -split "`r?`n" | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+$captureCommandLines = @($commandLines | Where-Object { $_.Contains("capture_live_validation_evidence.ps1") })
+$guardedCommandLines = @($captureCommandLines | Where-Object { $_.TrimStart().StartsWith("# OPERATOR REQUIRED") })
+$unguardedCommandLines = @($captureCommandLines | Where-Object { -not $_.TrimStart().StartsWith("#") })
+$finalCommandLines = @($captureCommandLines | Where-Object { $_.Contains("-RequireFinalVisualEvidence") })
+$guardedFinalCommandLines = @($finalCommandLines | Where-Object { $_.TrimStart().StartsWith("# OPERATOR REQUIRED") })
+$unguardedFinalCommandLines = @($finalCommandLines | Where-Object { -not $_.TrimStart().StartsWith("#") })
+$operatorCommandGuardPassed = if ($allowOperatorCommands) {
+    @($guardedCommandLines).Count -eq 0
+} else {
+    @($captureCommandLines).Count -eq 0 -or @($unguardedCommandLines).Count -eq 0
+}
+$finalCommandGuardPassed = if ($allowFinalCommands) {
+    $allowOperatorCommands -and @($guardedFinalCommandLines).Count -eq 0
+} else {
+    @($finalCommandLines).Count -eq 0 -or @($unguardedFinalCommandLines).Count -eq 0
+}
+$guardedLabelPresent = $runbookText.Contains("Guarded Commands") -and $handoffText.Contains("Guarded Commands")
+$runnableLabelPresent = $runbookText.Contains("Runnable Commands") -and $handoffText.Contains("Runnable Commands")
 $handoffConsistencyChecks = @(
     New-Check -Name "manualRoiFinalHelper" -Passed (-not $manualRoiPlaceholderPresent -or ($roiHelperText.Contains("-Slot manualRoi") -and $helperTextPresent)) -Message $(if (-not $manualRoiPlaceholderPresent) { "manual ROI final command has no placeholder" } elseif ($roiHelperText.Contains("-Slot manualRoi") -and $helperTextPresent) { "manual ROI placeholder is paired with final-command helper guidance" } else { "manual ROI placeholder is missing final-command helper guidance" }) -Details ([pscustomobject]@{ placeholderPresent = $manualRoiPlaceholderPresent; helperCommandPresent = $roiHelperText.Contains("-Slot manualRoi"); helperTextPresent = $helperTextPresent })
     New-Check -Name "autoRoiFinalHelper" -Passed (-not $autoRoiPlaceholderPresent -or ($roiHelperText.Contains("-Slot autoRoi") -and $helperTextPresent)) -Message $(if (-not $autoRoiPlaceholderPresent) { "automatic ROI final command has no placeholder" } elseif ($roiHelperText.Contains("-Slot autoRoi") -and $helperTextPresent) { "automatic ROI placeholder is paired with final-command helper guidance" } else { "automatic ROI placeholder is missing final-command helper guidance" }) -Details ([pscustomobject]@{ placeholderPresent = $autoRoiPlaceholderPresent; helperCommandPresent = $roiHelperText.Contains("-Slot autoRoi"); helperTextPresent = $helperTextPresent })
     New-Check -Name "runbookRoiFinalTemplatesReferenceOnly" -Passed (@($runbookUncommentedRoiFinalTemplateLines).Count -eq 0) -Message $(if (@($runbookUncommentedRoiFinalTemplateLines).Count -eq 0) { "runbook ROI final templates are reference-only" } else { "runbook has pasteable ROI final placeholder commands" }) -Details ([pscustomobject]@{ uncommentedLineCount = @($runbookUncommentedRoiFinalTemplateLines).Count; uncommentedLines = $runbookUncommentedRoiFinalTemplateLines })
     New-Check -Name "handoffRoiFinalTemplatesReferenceOnly" -Passed (@($handoffUncommentedRoiFinalTemplateLines).Count -eq 0) -Message $(if (@($handoffUncommentedRoiFinalTemplateLines).Count -eq 0) { "Markdown handoff ROI final templates are reference-only" } else { "Markdown handoff has pasteable ROI final placeholder commands" }) -Details ([pscustomobject]@{ uncommentedLineCount = @($handoffUncommentedRoiFinalTemplateLines).Count; uncommentedLines = $handoffUncommentedRoiFinalTemplateLines })
+    New-Check -Name "operatorCommandGuardMatchesManifest" -Passed $operatorCommandGuardPassed -Message $(if ($operatorCommandGuardPassed) { "operator command guard matches manifest" } else { "operator command guard does not match manifest" }) -Details ([pscustomobject]@{ allowOperatorCommands = $allowOperatorCommands; captureCommandCount = @($captureCommandLines).Count; guardedCommandCount = @($guardedCommandLines).Count; unguardedCommandCount = @($unguardedCommandLines).Count })
+    New-Check -Name "finalCommandGuardMatchesManifest" -Passed $finalCommandGuardPassed -Message $(if ($finalCommandGuardPassed) { "final command guard matches manifest" } else { "final command guard does not match manifest" }) -Details ([pscustomobject]@{ allowOperatorCommands = $allowOperatorCommands; allowFinalCommands = $allowFinalCommands; finalCommandCount = @($finalCommandLines).Count; guardedFinalCommandCount = @($guardedFinalCommandLines).Count; unguardedFinalCommandCount = @($unguardedFinalCommandLines).Count })
+    New-Check -Name "commandSectionLabelMatchesManifest" -Passed $(if ($allowOperatorCommands) { $runnableLabelPresent } else { $guardedLabelPresent }) -Message $(if ($allowOperatorCommands) { if ($runnableLabelPresent) { "runbook and handoff label commands runnable" } else { "runbook or handoff missing runnable command label" } } else { if ($guardedLabelPresent) { "runbook and handoff label commands guarded" } else { "runbook or handoff missing guarded command label" } }) -Details ([pscustomobject]@{ allowOperatorCommands = $allowOperatorCommands; guardedLabelPresent = $guardedLabelPresent; runnableLabelPresent = $runnableLabelPresent })
 )
 
 $currentBranch = Invoke-GitValue -Root $SourceRoot -Arguments @("rev-parse", "--abbrev-ref", "HEAD")

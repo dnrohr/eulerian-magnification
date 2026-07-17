@@ -100,8 +100,10 @@ try {
 
     $artifactA = Join-Path $bundleRoot "pixel_validation_runbook.txt"
     $artifactB = Join-Path $bundleRoot "pixel_validation_handoff.md"
-    "runbook artifact" | Set-Content -LiteralPath $artifactA -Encoding utf8
-    "handoff artifact" | Set-Content -LiteralPath $artifactB -Encoding utf8
+    $commandsBaseArtifact = Join-Path $bundleRoot "pixel_validation_commands_base.txt"
+    "# 3. Guarded Commands: requested validation evidence." | Set-Content -LiteralPath $artifactA -Encoding utf8
+    "## Guarded Commands" | Set-Content -LiteralPath $artifactB -Encoding utf8
+    "# OPERATOR REQUIRED: .\tools\capture_live_validation_evidence.ps1 -Label ""live-linear-pulse-final"" -RequireFinalVisualEvidence" | Set-Content -LiteralPath $commandsBaseArtifact -Encoding utf8
 
     $fakeAdb = Join-Path $root "fake-adb.cmd"
     Set-Content -LiteralPath $fakeAdb -Encoding ascii -Value @(
@@ -125,9 +127,12 @@ try {
             commitReachableFromOriginMain = $true
         }
         artifacts = @(
+            New-ArtifactRecord -Name "commands" -Path $commandsBaseArtifact
             New-ArtifactRecord -Name "runbook" -Path $artifactA
             New-ArtifactRecord -Name "handoff" -Path $artifactB
         )
+        allowOperatorCommands = $false
+        allowFinalCommands = $false
     }
     $manifest | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $manifestPath -Encoding utf8
 
@@ -141,9 +146,9 @@ try {
     Assert-Equal -Actual $result.sourceMismatchCount -Expected 0 -Message "Valid handoff should have no source mismatches."
     Assert-Equal -Actual $result.handoffConsistencyMismatchCount -Expected 0 -Message "Valid handoff should have no consistency mismatches."
     Assert-Equal -Actual $result.expectedDeviceConnected -Expected $true -Message "Valid handoff should find the expected device serial."
-    Assert-Equal -Actual @($result.artifactChecks).Count -Expected 2 -Message "Verifier should report every manifest artifact."
+    Assert-Equal -Actual @($result.artifactChecks).Count -Expected 3 -Message "Verifier should report every manifest artifact."
     Assert-Equal -Actual @($result.source.checks).Count -Expected 3 -Message "Verifier should report source checks."
-    Assert-Equal -Actual @($result.handoffConsistencyChecks).Count -Expected 4 -Message "Verifier should report ROI helper and reference-only template consistency checks."
+    Assert-Equal -Actual @($result.handoffConsistencyChecks).Count -Expected 7 -Message "Verifier should report ROI helper, command guard, and section label consistency checks."
     Assert-True -Condition (($result.artifactChecks | Where-Object { $_.name -eq "runbook" }).passed -eq $true) -Message "Runbook artifact should pass hash verification."
 
     $validExitCode = Invoke-VerifierExitCode -ManifestPath $manifestPath -SourceRoot $repoRoot -AdbPath $fakeAdb -FailOnArtifactMismatch -FailOnSourceMismatch -FailOnDeviceUnavailable -FailOnHandoffConsistencyMismatch
@@ -159,7 +164,7 @@ try {
     $artifactMismatchExitCode = Invoke-VerifierExitCode -ManifestPath $manifestPath -SourceRoot $repoRoot -AdbPath $fakeAdb -FailOnArtifactMismatch
     Assert-Equal -Actual $artifactMismatchExitCode -Expected 31 -Message "Artifact mismatch gate should exit 31."
 
-    "runbook artifact" | Set-Content -LiteralPath $artifactA -Encoding utf8
+    "# 3. Guarded Commands: requested validation evidence." | Set-Content -LiteralPath $artifactA -Encoding utf8
     Push-Location -LiteralPath $repoRoot
     try {
         "dirty" | Set-Content -LiteralPath (Join-Path $repoRoot "dirty.txt") -Encoding utf8
@@ -179,10 +184,71 @@ try {
     $deviceUnavailableExitCode = Invoke-VerifierExitCode -ManifestPath $manifestPath -SourceRoot $repoRoot -AdbPath $fakeNoDeviceAdb -FailOnDeviceUnavailable
     Assert-Equal -Actual $deviceUnavailableExitCode -Expected 33 -Message "Device availability gate should exit 33."
 
+    $unguardedCommandsArtifact = Join-Path $bundleRoot "unguarded_commands.txt"
+    '.\tools\capture_live_validation_evidence.ps1 -Label "live-linear-pulse-final" -RequireFinalVisualEvidence' | Set-Content -LiteralPath $unguardedCommandsArtifact -Encoding utf8
+    $unguardedManifestPath = Join-Path $bundleRoot "unguarded_commands_manifest.json"
+    $unguardedManifest = [ordered]@{
+        deviceSerial = "PIXEL-VERIFY-TEST"
+        source = [ordered]@{
+            branch = "main"
+            commit = $sourceCommit
+            clean = $true
+            commitReachableFromOriginMain = $true
+        }
+        artifacts = @(
+            New-ArtifactRecord -Name "commands" -Path $unguardedCommandsArtifact
+            New-ArtifactRecord -Name "runbook" -Path $artifactA
+            New-ArtifactRecord -Name "handoff" -Path $artifactB
+        )
+        allowOperatorCommands = $false
+        allowFinalCommands = $false
+    }
+    $unguardedManifest | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $unguardedManifestPath -Encoding utf8
+    $unguardedResult = & (Join-Path $PSScriptRoot "verify_pixel_validation_handoff.ps1") `
+        -ManifestPath $unguardedManifestPath `
+        -SourceRoot $repoRoot `
+        -AdbPath $fakeAdb `
+        -Json | ConvertFrom-Json
+    Assert-Equal -Actual $unguardedResult.handoffConsistencyMismatchCount -Expected 2 -Message "Unguarded capture commands should fail operator and final guard checks when manifest disallows them."
+    Assert-True -Condition (($unguardedResult.handoffConsistencyChecks | Where-Object { $_.name -eq "operatorCommandGuardMatchesManifest" }).passed -eq $false) -Message "Operator guard check should fail for unguarded commands."
+    Assert-True -Condition (($unguardedResult.handoffConsistencyChecks | Where-Object { $_.name -eq "finalCommandGuardMatchesManifest" }).passed -eq $false) -Message "Final guard check should fail for unguarded final commands."
+    $unguardedExitCode = Invoke-VerifierExitCode -ManifestPath $unguardedManifestPath -SourceRoot $repoRoot -AdbPath $fakeAdb -FailOnHandoffConsistencyMismatch
+    Assert-Equal -Actual $unguardedExitCode -Expected 34 -Message "Unguarded command mismatch should exit 34."
+
+    "# 3. Runnable Commands: requested validation evidence." | Set-Content -LiteralPath $artifactA -Encoding utf8
+    "## Runnable Commands" | Set-Content -LiteralPath $artifactB -Encoding utf8
+    $allowedManifestPath = Join-Path $bundleRoot "allowed_commands_manifest.json"
+    $allowedManifest = [ordered]@{
+        deviceSerial = "PIXEL-VERIFY-TEST"
+        source = [ordered]@{
+            branch = "main"
+            commit = $sourceCommit
+            clean = $true
+            commitReachableFromOriginMain = $true
+        }
+        artifacts = @(
+            New-ArtifactRecord -Name "commands" -Path $unguardedCommandsArtifact
+            New-ArtifactRecord -Name "runbook" -Path $artifactA
+            New-ArtifactRecord -Name "handoff" -Path $artifactB
+        )
+        allowOperatorCommands = $true
+        allowFinalCommands = $true
+    }
+    $allowedManifest | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $allowedManifestPath -Encoding utf8
+    $allowedResult = & (Join-Path $PSScriptRoot "verify_pixel_validation_handoff.ps1") `
+        -ManifestPath $allowedManifestPath `
+        -SourceRoot $repoRoot `
+        -AdbPath $fakeAdb `
+        -Json | ConvertFrom-Json
+    Assert-Equal -Actual $allowedResult.handoffConsistencyMismatchCount -Expected 0 -Message "Allowed runnable commands should pass guard consistency checks."
+
+    "# 3. Guarded Commands: requested validation evidence." | Set-Content -LiteralPath $artifactA -Encoding utf8
+    "## Guarded Commands" | Set-Content -LiteralPath $artifactB -Encoding utf8
+
     $commandsArtifact = Join-Path $bundleRoot "pixel_validation_commands.txt"
     '.\tools\capture_live_validation_evidence.ps1 -Label "manual-roi-known-target-final" -MeasureRoiExpected "<visible-target-bounds-in-screenshot-space>"' | Set-Content -LiteralPath $commandsArtifact -Encoding utf8
-    "runbook without roi helper" | Set-Content -LiteralPath $artifactA -Encoding utf8
-    "handoff without roi helper" | Set-Content -LiteralPath $artifactB -Encoding utf8
+    "# 3. Runnable Commands: requested validation evidence." | Set-Content -LiteralPath $artifactA -Encoding utf8
+    "## Runnable Commands" | Set-Content -LiteralPath $artifactB -Encoding utf8
     $staleRoiManifestPath = Join-Path $bundleRoot "stale_roi_placeholder_manifest.json"
     $staleRoiManifest = [ordered]@{
         deviceSerial = "PIXEL-VERIFY-TEST"
@@ -197,6 +263,8 @@ try {
             New-ArtifactRecord -Name "runbook" -Path $artifactA
             New-ArtifactRecord -Name "handoff" -Path $artifactB
         )
+        allowOperatorCommands = $true
+        allowFinalCommands = $true
         roiFinalHelperCommands = @()
     }
     $staleRoiManifest | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $staleRoiManifestPath -Encoding utf8
@@ -210,8 +278,14 @@ try {
     $staleRoiExitCode = Invoke-VerifierExitCode -ManifestPath $staleRoiManifestPath -SourceRoot $repoRoot -AdbPath $fakeAdb -FailOnHandoffConsistencyMismatch
     Assert-Equal -Actual $staleRoiExitCode -Expected 34 -Message "Handoff consistency gate should exit 34."
 
-    ".\tools\prepare_roi_final_capture_command.ps1 -Slot manualRoi -SetupBundle ""<manual-roi-setup-bundle>"" -PixelBounds ""<left,top,right,bottom-from-setup-screenshot>""" | Set-Content -LiteralPath $artifactA -Encoding utf8
-    ".\tools\prepare_roi_final_capture_command.ps1 -Slot manualRoi -SetupBundle ""<manual-roi-setup-bundle>"" -PixelBounds ""<left,top,right,bottom-from-setup-screenshot>""" | Set-Content -LiteralPath $artifactB -Encoding utf8
+    @(
+        "# 3. Runnable Commands: requested validation evidence.",
+        ".\tools\prepare_roi_final_capture_command.ps1 -Slot manualRoi -SetupBundle ""<manual-roi-setup-bundle>"" -PixelBounds ""<left,top,right,bottom-from-setup-screenshot>"""
+    ) | Set-Content -LiteralPath $artifactA -Encoding utf8
+    @(
+        "## Runnable Commands",
+        ".\tools\prepare_roi_final_capture_command.ps1 -Slot manualRoi -SetupBundle ""<manual-roi-setup-bundle>"" -PixelBounds ""<left,top,right,bottom-from-setup-screenshot>"""
+    ) | Set-Content -LiteralPath $artifactB -Encoding utf8
     $pairedRoiManifestPath = Join-Path $bundleRoot "paired_roi_placeholder_manifest.json"
     $pairedRoiManifest = [ordered]@{
         deviceSerial = "PIXEL-VERIFY-TEST"
@@ -226,6 +300,8 @@ try {
             New-ArtifactRecord -Name "runbook" -Path $artifactA
             New-ArtifactRecord -Name "handoff" -Path $artifactB
         )
+        allowOperatorCommands = $true
+        allowFinalCommands = $true
         roiFinalHelperCommands = @(
             '.\tools\prepare_roi_final_capture_command.ps1 -Slot manualRoi -SetupBundle "<manual-roi-setup-bundle>" -PixelBounds "<left,top,right,bottom-from-setup-screenshot>"'
         )
@@ -239,10 +315,12 @@ try {
     Assert-Equal -Actual $pairedRoiResult.handoffConsistencyMismatchCount -Expected 0 -Message "ROI placeholder paired with helper guidance should pass consistency checks."
 
     $rawTemplateRunbook = @(
+        "# 3. Runnable Commands: requested validation evidence.",
         ".\tools\prepare_roi_final_capture_command.ps1 -Slot manualRoi -SetupBundle ""<manual-roi-setup-bundle>"" -PixelBounds ""<left,top,right,bottom-from-setup-screenshot>""",
         ".\tools\capture_live_validation_evidence.ps1 -Label ""manual-roi-known-target-final"" -MeasureRoiExpected ""<visible-target-bounds-in-screenshot-space>"""
     )
     $rawTemplateHandoff = @(
+        "## Runnable Commands",
         ".\tools\prepare_roi_final_capture_command.ps1 -Slot manualRoi -SetupBundle ""<manual-roi-setup-bundle>"" -PixelBounds ""<left,top,right,bottom-from-setup-screenshot>""",
         ".\tools\capture_live_validation_evidence.ps1 -Label ""manual-roi-known-target-final"" -MeasureRoiExpected ""<visible-target-bounds-in-screenshot-space>"""
     )
@@ -262,6 +340,8 @@ try {
             New-ArtifactRecord -Name "runbook" -Path $artifactA
             New-ArtifactRecord -Name "handoff" -Path $artifactB
         )
+        allowOperatorCommands = $true
+        allowFinalCommands = $true
         roiFinalHelperCommands = @(
             '.\tools\prepare_roi_final_capture_command.ps1 -Slot manualRoi -SetupBundle "<manual-roi-setup-bundle>" -PixelBounds "<left,top,right,bottom-from-setup-screenshot>"'
         )
@@ -278,8 +358,8 @@ try {
     $rawTemplateExitCode = Invoke-VerifierExitCode -ManifestPath $rawTemplateManifestPath -SourceRoot $repoRoot -AdbPath $fakeAdb -FailOnHandoffConsistencyMismatch
     Assert-Equal -Actual $rawTemplateExitCode -Expected 34 -Message "Runnable ROI final template gate should exit 34."
 
-    "runbook artifact" | Set-Content -LiteralPath $artifactA -Encoding utf8
-    "handoff artifact" | Set-Content -LiteralPath $artifactB -Encoding utf8
+    "# 3. Guarded Commands: requested validation evidence." | Set-Content -LiteralPath $artifactA -Encoding utf8
+    "## Guarded Commands" | Set-Content -LiteralPath $artifactB -Encoding utf8
 
     $text = & (Join-Path $PSScriptRoot "verify_pixel_validation_handoff.ps1") `
         -ManifestPath $manifestPath `
