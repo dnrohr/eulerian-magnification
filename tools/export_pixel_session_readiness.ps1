@@ -5,6 +5,7 @@ param(
     [string]$OutputPath = "",
     [string]$FixtureRoot = "",
     [int]$ReadyBelowThermalStatus = 2,
+    [int]$SetupReadyBelowThermalStatus = 3,
     [int]$WarnThermalStatus = 2,
     [double]$WarnBatteryTemperatureC = 38.0,
     [double]$WarnFrameP95Ms = 45.0,
@@ -201,33 +202,55 @@ $maxThermalStatus = Get-MaxThermalStatus $thermal
 
 $issues = @()
 $warnings = @()
+$recommendedActions = @()
+$setupIssues = @()
 if ($null -eq $maxThermalStatus) {
     $issues += "thermal status unavailable"
+    $setupIssues += "thermal status unavailable"
+    $recommendedActions += "Check ADB thermalservice output before capture."
 } elseif ($maxThermalStatus -ge $ReadyBelowThermalStatus) {
     $issues += "thermal status $maxThermalStatus ($((Thermal-StatusLabel $maxThermalStatus))) is not below readiness threshold $ReadyBelowThermalStatus"
+    if ($maxThermalStatus -ge $SetupReadyBelowThermalStatus) {
+        $setupIssues += "thermal status $maxThermalStatus ($((Thermal-StatusLabel $maxThermalStatus))) is not below setup threshold $SetupReadyBelowThermalStatus"
+    }
+    $recommendedActions += "Let the phone cool before final visual acceptance."
+    if ($maxThermalStatus -ge 3) {
+        $recommendedActions += "Stop live preview or lock the screen while cooling; severe thermal state can make preview FPS misleading."
+    }
 } elseif ($maxThermalStatus -ge $WarnThermalStatus) {
     $warnings += "thermal status $maxThermalStatus ($((Thermal-StatusLabel $maxThermalStatus))) is at or above warning threshold $WarnThermalStatus"
 }
 
 if (-not $focusedApp.present) {
     $issues += "focused-app state unavailable"
+    $setupIssues += "focused-app state unavailable"
+    $recommendedActions += "Launch the app before capture."
 } elseif (-not $focusedApp.packageVisible) {
     $issues += "focused app is not $Package"
+    $setupIssues += "focused app is not $Package"
+    $recommendedActions += "Bring $Package to the foreground before capture."
 }
 
 if ($null -ne $battery.temperatureC -and $battery.temperatureC -ge $WarnBatteryTemperatureC) {
     $warnings += "battery temperature $($battery.temperatureC) C is at or above warning threshold $WarnBatteryTemperatureC C"
+    $recommendedActions += "Unplug the phone or reduce charging heat while it cools, if that is practical for the session."
 }
 
 if ($gfxinfo.present) {
     if ($null -ne $gfxinfo.frameP95Ms -and $gfxinfo.frameP95Ms -ge $WarnFrameP95Ms) {
         $warnings += "gfxinfo 95th percentile frame time $($gfxinfo.frameP95Ms) ms is at or above warning threshold $WarnFrameP95Ms ms"
+        $recommendedActions += "If preview looks slow, wait for stable frame timing before judging visual magnification."
     }
     if ($null -ne $gfxinfo.jankyPercent -and $gfxinfo.jankyPercent -ge $WarnJankyPercent) {
         $warnings += "gfxinfo janky frames $($gfxinfo.jankyPercent)% is at or above warning threshold $WarnJankyPercent%"
+        $recommendedActions += "If preview looks janky, restart the app after the device cools before recording evidence."
     }
 } else {
     $warnings += "gfxinfo output unavailable; frame jank could not be checked"
+}
+
+if (@($recommendedActions).Count -eq 0) {
+    $recommendedActions += "Device looks ready; proceed only when the watched target is physically set up."
 }
 
 $result = [ordered]@{
@@ -237,14 +260,18 @@ $result = [ordered]@{
     fixtureRoot = $FixtureRoot
     thresholds = [ordered]@{
         readyBelowThermalStatus = $ReadyBelowThermalStatus
+        setupReadyBelowThermalStatus = $SetupReadyBelowThermalStatus
         warnThermalStatus = $WarnThermalStatus
         warnBatteryTemperatureC = $WarnBatteryTemperatureC
         warnFrameP95Ms = $WarnFrameP95Ms
         warnJankyPercent = $WarnJankyPercent
     }
     readyForWatchedCapture = (@($issues).Count -eq 0)
+    readyForSetupCapture = (@($setupIssues).Count -eq 0)
     issues = @($issues)
+    setupIssues = @($setupIssues)
     warnings = @($warnings)
+    recommendedActions = @($recommendedActions | Select-Object -Unique)
     thermal = $thermal
     battery = $battery
     focusedApp = $focusedApp
@@ -261,8 +288,12 @@ if (-not [string]::IsNullOrWhiteSpace($OutputPath)) {
 
 $statusText = if ($result.readyForWatchedCapture) { "ready" } else { "not ready" }
 Write-Output "Pixel session readiness: $statusText"
+Write-Output "Setup readiness: $(if ($result.readyForSetupCapture) { 'ready' } else { 'not ready' })"
 Write-Output "Issues: $(@($issues).Count)"
 Write-Output "Warnings: $(@($warnings).Count)"
+foreach ($action in @($result.recommendedActions)) {
+    Write-Output "Action: $action"
+}
 if (-not [string]::IsNullOrWhiteSpace($OutputPath)) {
     Write-Output "Output: $OutputPath"
 }

@@ -657,6 +657,9 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - `verify_pixel_validation_handoff.ps1 -FailOnHandoffConsistencyMismatch` now
   fails stale handoffs when the runbook or Markdown handoff no longer contains
   the manifest's session readiness command/output path.
+- Session readiness now distinguishes final watched-capture readiness from
+  non-final setup readiness and emits recommended actions for thermal, focus,
+  charging-heat, and graphics-jank conditions.
 - Pixel validation planner JSON now exposes compact
   `recommendedCaptureCount`, `commandCount`, and `closeoutBlockerCount` fields
   so phone-session handoff audits can check the queue size without recalculating

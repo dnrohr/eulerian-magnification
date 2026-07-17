@@ -398,7 +398,10 @@ The handoff also includes `export_pixel_session_readiness.ps1`, which writes
 `pixel_session_readiness_preflight.json` with thermal status, focused-app
 state, battery temperature, and `gfxinfo` jank/frame-time signals. Run it after
 install/launch and before watched capture to catch a hot or nearly frozen
-preview before spending operator attention on visual acceptance.
+preview before spending operator attention on visual acceptance. Its JSON
+separates stricter `readyForWatchedCapture` final-readiness from
+`readyForSetupCapture`, and includes `recommendedActions` such as cooling,
+focusing the app, or reducing charging heat.
 
 After a connected Pixel validation pass, summarize which accepted evidence
 bundles are ready to close the remaining roadmap items. The summary includes
