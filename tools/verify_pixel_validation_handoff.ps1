@@ -295,6 +295,32 @@ $sessionReadinessOutputPath = if ($manifest.PSObject.Properties.Name -contains "
 } else {
     ""
 }
+$setupReadinessCommand = if ($manifest.PSObject.Properties.Name -contains "setupReadiness" -and
+    $manifest.setupReadiness -and
+    $manifest.setupReadiness.PSObject.Properties.Name -contains "command") {
+    [string]$manifest.setupReadiness.command
+} else {
+    ""
+}
+$setupReadinessOutputPath = if ($manifest.PSObject.Properties.Name -contains "setupReadiness" -and
+    $manifest.setupReadiness -and
+    $manifest.setupReadiness.PSObject.Properties.Name -contains "outputPath") {
+    [string]$manifest.setupReadiness.outputPath
+} else {
+    ""
+}
+$setupReadinessExpected = -not [string]::IsNullOrWhiteSpace($setupReadinessCommand)
+$setupReadinessRunbookPresent = (-not $setupReadinessExpected) -or (
+    $runbookText.Contains($setupReadinessCommand) -and
+    $runbookText.Contains("Snapshot setup readiness")
+)
+$setupReadinessHandoffPresent = (-not $setupReadinessExpected) -or (
+    $handoffText.Contains($setupReadinessCommand) -and
+    $handoffText.Contains("Setup readiness command")
+)
+$setupReadinessOutputPresent = (-not $setupReadinessExpected) -or
+    [string]::IsNullOrWhiteSpace($setupReadinessOutputPath) -or
+    ($runbookText.Contains($setupReadinessOutputPath) -and $handoffText.Contains($setupReadinessOutputPath))
 $sessionReadinessExpected = -not [string]::IsNullOrWhiteSpace($sessionReadinessCommand)
 $sessionReadinessRunbookPresent = (-not $sessionReadinessExpected) -or (
     $runbookText.Contains($sessionReadinessCommand) -and
@@ -315,6 +341,7 @@ $handoffConsistencyChecks = @(
     New-Check -Name "operatorCommandGuardMatchesManifest" -Passed $operatorCommandGuardPassed -Message $(if ($operatorCommandGuardPassed) { "operator command guard matches manifest" } else { "operator command guard does not match manifest" }) -Details ([pscustomobject]@{ allowOperatorCommands = $allowOperatorCommands; captureCommandCount = @($captureCommandLines).Count; guardedCommandCount = @($guardedCommandLines).Count; unguardedCommandCount = @($unguardedCommandLines).Count })
     New-Check -Name "finalCommandGuardMatchesManifest" -Passed $finalCommandGuardPassed -Message $(if ($finalCommandGuardPassed) { "final command guard matches manifest" } else { "final command guard does not match manifest" }) -Details ([pscustomobject]@{ allowOperatorCommands = $allowOperatorCommands; allowFinalCommands = $allowFinalCommands; finalCommandCount = @($finalCommandLines).Count; guardedFinalCommandCount = @($guardedFinalCommandLines).Count; unguardedFinalCommandCount = @($unguardedFinalCommandLines).Count })
     New-Check -Name "commandSectionLabelMatchesManifest" -Passed $(if ($allowOperatorCommands) { $runnableLabelPresent } else { $guardedLabelPresent }) -Message $(if ($allowOperatorCommands) { if ($runnableLabelPresent) { "runbook and handoff label commands runnable" } else { "runbook or handoff missing runnable command label" } } else { if ($guardedLabelPresent) { "runbook and handoff label commands guarded" } else { "runbook or handoff missing guarded command label" } }) -Details ([pscustomobject]@{ allowOperatorCommands = $allowOperatorCommands; guardedLabelPresent = $guardedLabelPresent; runnableLabelPresent = $runnableLabelPresent })
+    New-Check -Name "setupReadinessCommandMatchesManifest" -Passed ($setupReadinessRunbookPresent -and $setupReadinessHandoffPresent -and $setupReadinessOutputPresent) -Message $(if (-not $setupReadinessExpected) { "setup readiness command is not recorded in manifest" } elseif ($setupReadinessRunbookPresent -and $setupReadinessHandoffPresent -and $setupReadinessOutputPresent) { "setup readiness command matches manifest" } else { "setup readiness command does not match manifest" }) -Details ([pscustomobject]@{ expected = $setupReadinessExpected; command = $setupReadinessCommand; outputPath = $setupReadinessOutputPath; runbookPresent = $setupReadinessRunbookPresent; handoffPresent = $setupReadinessHandoffPresent; outputPathPresent = $setupReadinessOutputPresent })
     New-Check -Name "sessionReadinessCommandMatchesManifest" -Passed ($sessionReadinessRunbookPresent -and $sessionReadinessHandoffPresent -and $sessionReadinessOutputPresent) -Message $(if (-not $sessionReadinessExpected) { "session readiness command is not recorded in manifest" } elseif ($sessionReadinessRunbookPresent -and $sessionReadinessHandoffPresent -and $sessionReadinessOutputPresent) { "session readiness command matches manifest" } else { "session readiness command does not match manifest" }) -Details ([pscustomobject]@{ expected = $sessionReadinessExpected; command = $sessionReadinessCommand; outputPath = $sessionReadinessOutputPath; runbookPresent = $sessionReadinessRunbookPresent; handoffPresent = $sessionReadinessHandoffPresent; outputPathPresent = $sessionReadinessOutputPresent })
 )
 

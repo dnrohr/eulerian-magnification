@@ -158,8 +158,9 @@ availability metadata, including whether the expected Pixel serial is connected
 at handoff time. The Markdown handoff and manifest include a matching
 `install_debug_on_pixel.ps1 -Build -Launch` command for the same device serial.
 The runbook file starts with source/device preflight checks, then orders
-install/launch, a session readiness snapshot, thermal preflight, capture
-commands, and review-sheet commands for a watched device session. The first
+install/launch, a setup readiness snapshot, a session readiness snapshot,
+thermal preflight, capture commands, and review-sheet commands for a watched
+device session. The first
 runbook command calls
 `verify_pixel_validation_handoff.ps1` to confirm the manifest artifact hashes,
 source commit/clean state, `origin/main` reachability, and expected Pixel
@@ -170,8 +171,8 @@ placeholder in the runbook or Markdown handoff must be commented
 `# TEMPLATE ONLY:` instead of pasteable. The same consistency check verifies
 that guarded handoffs keep target-visible capture commands commented unless the
 manifest explicitly records `-AllowOperatorCommands` / `-AllowFinalCommands`,
-and that the session readiness command in the runbook/Markdown handoff matches
-the manifest.
+and that the setup and session readiness commands in the runbook/Markdown
+handoff match the manifest.
 Run it before the phone session starts.
 When ROI final captures are included, the runbook and Markdown handoff add a
 `prepare_roi_final_capture_command.ps1` helper step after setup capture. Measure
@@ -189,16 +190,19 @@ below thermal status `2` (`moderate`) so final no-warning evidence is not
 blocked by thermal warnings; setup captures wait below status `3` (`severe`) so
 exploratory captures do not start in a state where the app will fall back to
 Auto ROI.
-The handoff also includes `export_pixel_session_readiness.ps1`, which writes
-`pixel_session_readiness_preflight.json` with thermal status, focused-app
-state, battery temperature, and `gfxinfo` jank/frame-time signals. Run it after
-install/launch and before watched capture to catch a hot or nearly frozen
-preview before spending operator attention on visual acceptance. Its JSON
-separates stricter `readyForWatchedCapture` final-readiness from
-`readyForSetupCapture`, and includes `recommendedActions` such as cooling,
-focusing the app, or reducing charging heat. Treat `setupIssues` as blockers
-for non-final setup captures too; if only `issues` are present, setup may still
-be possible while final visual acceptance waits.
+The handoff also includes `export_pixel_session_readiness.ps1`. The setup
+command writes `pixel_setup_readiness_preflight.json` and uses
+`-FailOnSetupNotReady`; the final session command writes
+`pixel_session_readiness_preflight.json` and uses `-FailOnNotReady`. Both
+record thermal status, focused-app state, battery temperature, and `gfxinfo`
+jank/frame-time signals. Run setup readiness before non-final setup captures,
+then run session readiness after install/launch and before watched capture to
+catch a hot or nearly frozen preview before spending operator attention on
+visual acceptance. Its JSON separates stricter `readyForWatchedCapture`
+final-readiness from `readyForSetupCapture`, and includes `recommendedActions`
+such as cooling, focusing the app, or reducing charging heat. Treat
+`setupIssues` as blockers for non-final setup captures too; if only `issues`
+are present, setup may still be possible while final visual acceptance waits.
 
 After a connected Pixel session, summarize which accepted evidence bundles are
 ready to close roadmap items. The closeout summary includes the accepted

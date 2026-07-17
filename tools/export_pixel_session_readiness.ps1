@@ -10,7 +10,8 @@ param(
     [double]$WarnBatteryTemperatureC = 38.0,
     [double]$WarnFrameP95Ms = 45.0,
     [double]$WarnJankyPercent = 10.0,
-    [switch]$FailOnNotReady
+    [switch]$FailOnNotReady,
+    [switch]$FailOnSetupNotReady
 )
 
 $ErrorActionPreference = "Stop"
@@ -300,4 +301,7 @@ if (-not [string]::IsNullOrWhiteSpace($OutputPath)) {
 
 if ($FailOnNotReady -and -not $result.readyForWatchedCapture) {
     exit 31
+}
+if ($FailOnSetupNotReady -and -not $result.readyForSetupCapture) {
+    exit 32
 }

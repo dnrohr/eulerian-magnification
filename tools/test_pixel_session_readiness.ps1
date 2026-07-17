@@ -26,12 +26,19 @@ function Assert-Equal {
 function Invoke-ReadinessExitCode {
     param(
         [string]$FixtureRoot,
-        [string]$OutputPath
+        [string]$OutputPath,
+        [switch]$FailOnSetupNotReady
     )
 
     $script = Join-Path $PSScriptRoot "export_pixel_session_readiness.ps1"
     $powerShellExe = (Get-Process -Id $PID).Path
-    & $powerShellExe -NoProfile -File $script -FixtureRoot $FixtureRoot -OutputPath $OutputPath -FailOnNotReady *> $null
+    $arguments = @("-NoProfile", "-File", $script, "-FixtureRoot", $FixtureRoot, "-OutputPath", $OutputPath)
+    if ($FailOnSetupNotReady) {
+        $arguments += "-FailOnSetupNotReady"
+    } else {
+        $arguments += "-FailOnNotReady"
+    }
+    & $powerShellExe @arguments *> $null
     return $LASTEXITCODE
 }
 
@@ -134,8 +141,10 @@ Janky frames: 4 (2.0%)
 
 $severeOutput = Join-Path $root "severe.json"
 $severeExitCode = Invoke-ReadinessExitCode -FixtureRoot $severeFixture -OutputPath $severeOutput
+$severeSetupExitCode = Invoke-ReadinessExitCode -FixtureRoot $severeFixture -OutputPath (Join-Path $root "severe-setup.json") -FailOnSetupNotReady
 $severe = Get-Content -LiteralPath $severeOutput -Raw | ConvertFrom-Json
 Assert-Equal -Actual $severeExitCode -Expected 31 -Message "Severe thermal fixture should fail final readiness."
+Assert-Equal -Actual $severeSetupExitCode -Expected 32 -Message "FailOnSetupNotReady should exit 32 for a setup-blocked fixture."
 Assert-Equal -Actual $severe.readyForWatchedCapture -Expected $false -Message "Severe fixture should not be ready for watched capture."
 Assert-Equal -Actual $severe.readyForSetupCapture -Expected $false -Message "Severe fixture should not be ready for setup capture."
 Assert-True -Condition ((@($severe.setupIssues) -join "`n").Contains("setup threshold")) -Message "Severe fixture should report a setup threshold issue."

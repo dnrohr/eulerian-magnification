@@ -105,14 +105,19 @@ try {
     "# 3. Guarded Commands: requested validation evidence." | Set-Content -LiteralPath $artifactA -Encoding utf8
     "## Guarded Commands" | Set-Content -LiteralPath $artifactB -Encoding utf8
     "# OPERATOR REQUIRED: .\tools\capture_live_validation_evidence.ps1 -Label ""live-linear-pulse-final"" -RequireFinalVisualEvidence" | Set-Content -LiteralPath $commandsBaseArtifact -Encoding utf8
+    $setupReadinessCommand = '.\tools\export_pixel_session_readiness.ps1 -DeviceSerial "PIXEL-VERIFY-TEST" -OutputPath "pixel_setup_readiness_preflight.json" -FailOnSetupNotReady'
     $sessionReadinessCommand = '.\tools\export_pixel_session_readiness.ps1 -DeviceSerial "PIXEL-VERIFY-TEST" -OutputPath "pixel_session_readiness_preflight.json" -FailOnNotReady'
     @(
-        "# 2. Snapshot session readiness before watched capture.",
+        "# 2. Snapshot setup readiness before non-final setup captures.",
+        $setupReadinessCommand,
+        "# 2a. Snapshot session readiness before watched capture.",
         $sessionReadinessCommand,
         "# 3. Guarded Commands: requested validation evidence."
     ) | Set-Content -LiteralPath $artifactA -Encoding utf8
     @(
         "## Thermal Preflight",
+        ('- Setup readiness command: `{0}`' -f $setupReadinessCommand),
+        $setupReadinessCommand,
         ('- Session readiness command: `{0}`' -f $sessionReadinessCommand),
         $sessionReadinessCommand,
         "## Guarded Commands"
@@ -146,6 +151,10 @@ try {
         )
         allowOperatorCommands = $false
         allowFinalCommands = $false
+        setupReadiness = [ordered]@{
+            command = $setupReadinessCommand
+            outputPath = "pixel_setup_readiness_preflight.json"
+        }
         sessionReadiness = [ordered]@{
             command = $sessionReadinessCommand
             outputPath = "pixel_session_readiness_preflight.json"
@@ -165,7 +174,7 @@ try {
     Assert-Equal -Actual $result.expectedDeviceConnected -Expected $true -Message "Valid handoff should find the expected device serial."
     Assert-Equal -Actual @($result.artifactChecks).Count -Expected 3 -Message "Verifier should report every manifest artifact."
     Assert-Equal -Actual @($result.source.checks).Count -Expected 3 -Message "Verifier should report source checks."
-    Assert-Equal -Actual @($result.handoffConsistencyChecks).Count -Expected 8 -Message "Verifier should report ROI helper, command guard, section label, and session readiness consistency checks."
+    Assert-Equal -Actual @($result.handoffConsistencyChecks).Count -Expected 9 -Message "Verifier should report ROI helper, command guard, section label, setup readiness, and session readiness consistency checks."
     Assert-True -Condition (($result.artifactChecks | Where-Object { $_.name -eq "runbook" }).passed -eq $true) -Message "Runbook artifact should pass hash verification."
 
     $validExitCode = Invoke-VerifierExitCode -ManifestPath $manifestPath -SourceRoot $repoRoot -AdbPath $fakeAdb -FailOnArtifactMismatch -FailOnSourceMismatch -FailOnDeviceUnavailable -FailOnHandoffConsistencyMismatch
@@ -178,11 +187,15 @@ try {
     $sourceRelativeHandoff = Join-Path $sourceRelativeBundleRoot "pixel_validation_handoff.md"
     "# OPERATOR REQUIRED: .\tools\capture_live_validation_evidence.ps1 -Label ""live-linear-pulse-final"" -RequireFinalVisualEvidence" | Set-Content -LiteralPath $sourceRelativeCommands -Encoding utf8
     @(
-        "# 2. Snapshot session readiness before watched capture.",
+        "# 2. Snapshot setup readiness before non-final setup captures.",
+        $setupReadinessCommand,
+        "# 2a. Snapshot session readiness before watched capture.",
         $sessionReadinessCommand,
         "# 3. Guarded Commands: requested validation evidence."
     ) | Set-Content -LiteralPath $sourceRelativeRunbook -Encoding utf8
     @(
+        ('- Setup readiness command: `{0}`' -f $setupReadinessCommand),
+        $setupReadinessCommand,
         ('- Session readiness command: `{0}`' -f $sessionReadinessCommand),
         $sessionReadinessCommand,
         "## Guarded Commands"
@@ -203,6 +216,10 @@ try {
         )
         allowOperatorCommands = $false
         allowFinalCommands = $false
+        setupReadiness = [ordered]@{
+            command = $setupReadinessCommand
+            outputPath = "pixel_setup_readiness_preflight.json"
+        }
         sessionReadiness = [ordered]@{
             command = $sessionReadinessCommand
             outputPath = "pixel_session_readiness_preflight.json"
@@ -228,7 +245,9 @@ try {
     Assert-Equal -Actual $artifactMismatchExitCode -Expected 31 -Message "Artifact mismatch gate should exit 31."
 
     @(
-        "# 2. Snapshot session readiness before watched capture.",
+        "# 2. Snapshot setup readiness before non-final setup captures.",
+        $setupReadinessCommand,
+        "# 2a. Snapshot session readiness before watched capture.",
         $sessionReadinessCommand,
         "# 3. Guarded Commands: requested validation evidence."
     ) | Set-Content -LiteralPath $artifactA -Encoding utf8
@@ -327,6 +346,10 @@ try {
         )
         allowOperatorCommands = $false
         allowFinalCommands = $false
+        setupReadiness = [ordered]@{
+            command = $setupReadinessCommand
+            outputPath = "pixel_setup_readiness_preflight.json"
+        }
         sessionReadiness = [ordered]@{
             command = $sessionReadinessCommand
             outputPath = "pixel_session_readiness_preflight.json"
@@ -338,7 +361,8 @@ try {
         -SourceRoot $repoRoot `
         -AdbPath $fakeAdb `
         -Json | ConvertFrom-Json
-    Assert-Equal -Actual $staleReadinessResult.handoffConsistencyMismatchCount -Expected 1 -Message "Missing session readiness guidance should produce one consistency mismatch."
+    Assert-Equal -Actual $staleReadinessResult.handoffConsistencyMismatchCount -Expected 2 -Message "Missing setup and session readiness guidance should produce two consistency mismatches."
+    Assert-True -Condition (($staleReadinessResult.handoffConsistencyChecks | Where-Object { $_.name -eq "setupReadinessCommandMatchesManifest" }).passed -eq $false) -Message "Setup readiness check should fail for stale handoffs."
     Assert-True -Condition (($staleReadinessResult.handoffConsistencyChecks | Where-Object { $_.name -eq "sessionReadinessCommandMatchesManifest" }).passed -eq $false) -Message "Session readiness check should fail for stale handoffs."
     $staleReadinessExitCode = Invoke-VerifierExitCode -ManifestPath $staleReadinessManifestPath -SourceRoot $repoRoot -AdbPath $fakeAdb -FailOnHandoffConsistencyMismatch
     Assert-Equal -Actual $staleReadinessExitCode -Expected 34 -Message "Stale session readiness guidance should exit 34."
@@ -460,12 +484,16 @@ try {
     Assert-Equal -Actual $rawTemplateExitCode -Expected 34 -Message "Runnable ROI final template gate should exit 34."
 
     @(
-        "# 2. Snapshot session readiness before watched capture.",
+        "# 2. Snapshot setup readiness before non-final setup captures.",
+        $setupReadinessCommand,
+        "# 2a. Snapshot session readiness before watched capture.",
         $sessionReadinessCommand,
         "# 3. Guarded Commands: requested validation evidence."
     ) | Set-Content -LiteralPath $artifactA -Encoding utf8
     @(
         "## Thermal Preflight",
+        ('- Setup readiness command: `{0}`' -f $setupReadinessCommand),
+        $setupReadinessCommand,
         ('- Session readiness command: `{0}`' -f $sessionReadinessCommand),
         $sessionReadinessCommand,
         "## Guarded Commands"

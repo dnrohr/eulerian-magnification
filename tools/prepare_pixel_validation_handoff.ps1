@@ -41,6 +41,7 @@ $runbookPath = Join-Path $OutputRoot "pixel_validation_runbook.txt"
 $reviewQueuePath = Join-Path $OutputRoot "live_validation_review_queue.json"
 $reviewCommandsPath = Join-Path $OutputRoot "live_validation_review_commands.txt"
 $reviewDashboardPath = Join-Path $OutputRoot "live_validation_review_dashboard.html"
+$setupReadinessPath = Join-Path $OutputRoot "pixel_setup_readiness_preflight.json"
 $sessionReadinessPath = Join-Path $OutputRoot "pixel_session_readiness_preflight.json"
 $handoffPath = Join-Path $OutputRoot "pixel_validation_handoff.md"
 $manifestPath = Join-Path $OutputRoot "pixel_validation_handoff_manifest.json"
@@ -306,6 +307,17 @@ if (-not [string]::IsNullOrWhiteSpace($AdbPath)) {
     $sessionReadinessCommandParts = @($sessionReadinessCommandParts[0], "-AdbPath $(Format-CommandArgument $AdbPath)") + @($sessionReadinessCommandParts | Select-Object -Skip 1)
 }
 $sessionReadinessCommand = $sessionReadinessCommandParts -join " "
+$setupReadinessCommandParts = @(
+    ".\tools\export_pixel_session_readiness.ps1",
+    "-DeviceSerial $(Format-CommandArgument $DeviceSerial)",
+    "-OutputPath $(Format-CommandArgument $setupReadinessPath)",
+    "-FailOnSetupNotReady"
+)
+if (-not [string]::IsNullOrWhiteSpace($AdbPath)) {
+    $setupReadinessCommandParts = @($setupReadinessCommandParts[0], "-AdbPath $(Format-CommandArgument $AdbPath)") + @($setupReadinessCommandParts | Select-Object -Skip 1)
+}
+$setupReadinessCommand = $setupReadinessCommandParts -join " "
+$setupReadinessNote = "Run before non-final setup captures. In the JSON, readyForSetupCapture gates setup work and setupIssues explain blockers such as severe thermal state or the app not being focused."
 $sessionReadinessNote = "Run after install and before watched capture. In the JSON, readyForWatchedCapture gates final visual acceptance, readyForSetupCapture gates non-final setup captures, setupIssues explain setup blockers, and recommendedActions describe cooling/focus/charging/jank next steps."
 $captureCommandSectionTitle = if ($AllowOperatorCommands) { "Runnable Commands" } else { "Guarded Commands" }
 $captureCommandSectionNote = if ($AllowOperatorCommands) {
@@ -330,10 +342,13 @@ $runbookLines = @(
     "# 1. Install and launch the current debug build.",
     $installCommand,
     "",
-    "# 2. Snapshot session readiness before watched capture.",
+    "# 2. Snapshot setup readiness before non-final setup captures.",
+    $setupReadinessCommand,
+    "",
+    "# 2a. Snapshot session readiness before watched capture.",
     $sessionReadinessCommand,
     "",
-    "# 2a. Wait for a cool enough device before watched capture.",
+    "# 2b. Wait for a cool enough device before watched capture.",
     $plan.thermalReadiness.command,
     "",
     $(if (@($roiFinalHelperCommands).Count -gt 0) { "# 3. ${captureCommandSectionTitle}: setup and non-ROI-placeholder evidence." } else { "# 3. ${captureCommandSectionTitle}: requested validation evidence." }),
@@ -383,6 +398,7 @@ $handoffLines = @(
     "- Connected device serials: $(@($deviceAvailability.connectedSerials) -join ', ')",
     "- Device availability note: $($deviceAvailability.note)",
     ('- Install command: `{0}`' -f $installCommand),
+    ('- Setup readiness command: `{0}`' -f $setupReadinessCommand),
     ('- Session readiness command: `{0}`' -f $sessionReadinessCommand),
     "",
     "## Artifacts",
@@ -431,6 +447,12 @@ $handoffLines += @(
     "",
     '```powershell',
     $installCommand,
+    '```',
+    "",
+    "Snapshot setup readiness before non-final setup captures. This fails when ``readyForSetupCapture`` is false so severe thermal state or a backgrounded app does not waste setup time:",
+    "",
+    '```powershell',
+    $setupReadinessCommand,
     '```',
     "",
     "Snapshot device readiness after install and before watched capture. This records thermal status, focus, battery temperature, and graphics frame stats so a hot or nearly frozen preview is caught before visual judgment. In the JSON, ``readyForWatchedCapture`` gates final visual acceptance, ``readyForSetupCapture`` gates non-final setup captures, ``setupIssues`` explain setup blockers, and ``recommendedActions`` describe cooling/focus/charging/jank next steps:",
@@ -549,6 +571,11 @@ $manifest = [pscustomobject]@{
         ffmpegPath = $FfmpegPath
     }
     thermalReadiness = $plan.thermalReadiness
+    setupReadiness = [pscustomobject]@{
+        command = $setupReadinessCommand
+        outputPath = $setupReadinessPath
+        note = $setupReadinessNote
+    }
     sessionReadiness = [pscustomobject]@{
         command = $sessionReadinessCommand
         outputPath = $sessionReadinessPath
@@ -590,6 +617,11 @@ $result = [pscustomobject]@{
     allowOperatorCommands = [bool]$AllowOperatorCommands
     allowFinalCommands = [bool]$AllowFinalCommands
     thermalReadiness = $plan.thermalReadiness
+    setupReadiness = [pscustomobject]@{
+        command = $setupReadinessCommand
+        outputPath = $setupReadinessPath
+        note = $setupReadinessNote
+    }
     sessionReadiness = [pscustomobject]@{
         command = $sessionReadinessCommand
         outputPath = $sessionReadinessPath
@@ -628,6 +660,7 @@ if ($Json) {
     Write-Output "Expected device connected: $($result.deviceAvailability.connected)"
     Write-Output "Device availability note: $($result.deviceAvailability.note)"
     Write-Output "Install command: $($result.installCommand)"
+    Write-Output "Setup readiness command: $($result.setupReadiness.command)"
     Write-Output "Session readiness command: $($result.sessionReadiness.command)"
     Write-Output "Plan: $($result.planPath)"
     Write-Output "Closeout: $($result.closeoutPath)"
