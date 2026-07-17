@@ -379,9 +379,11 @@ directly.
 The planner and handoff also include
 a `wait_for_device_thermal_ready.ps1` preflight command; run it before watched
 phone validation when the device is warm, FPS is low, or the preview looks
-nearly frozen. Generated Pixel validation commands wait below thermal status
-`3` (`severe`) so full-frame runs do not start in a state where the app will
-fall back to Auto ROI.
+nearly frozen. The session preflight and final Pixel validation commands wait
+below thermal status `2` (`moderate`) so final no-warning evidence is not
+blocked by thermal warnings; setup captures wait below status `3` (`severe`) so
+exploratory captures do not start in a state where the app will fall back to
+Auto ROI.
 
 After a connected Pixel validation pass, summarize which accepted evidence
 bundles are ready to close the remaining roadmap items. The summary includes

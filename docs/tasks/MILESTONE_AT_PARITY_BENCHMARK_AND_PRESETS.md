@@ -583,6 +583,10 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - Live full-frame reconstruction and Full frame ROI fallback now treat Android
   `severe` thermal state as too hot, not only `critical` or worse, so a hot
   phone should recover to Auto ROI before the preview appears frozen.
+- Final Pixel validation commands now wait below thermal status `2`
+  (`moderate`) while setup commands continue to wait below `3` (`severe`), so
+  final no-warning evidence cannot start in a state that is already expected to
+  produce thermal warnings.
 - Pixel validation planner final capture commands now explicitly include the
   screenrecord, thermal-readiness, camera-FPS, and focused-app gates alongside
   `-RequireFinalVisualEvidence`, so final bundles cannot be produced from a

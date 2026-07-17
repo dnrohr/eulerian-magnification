@@ -73,10 +73,10 @@ Assert-Equal -Actual $plan.roadmap.total -Expected 47 -Message "Roadmap total mi
 Assert-Equal -Actual $plan.roadmap.complete -Expected 41 -Message "Complete milestone count mismatch."
 Assert-Equal -Actual $plan.roadmap.inProgress -Expected 6 -Message "In-progress milestone count mismatch."
 Assert-Equal -Actual $plan.deviceSerial -Expected "47091JEKB05516" -Message "Pixel validation plan should default to the connected Pixel 8a serial."
-Assert-Equal -Actual $plan.thermalReadiness.readyBelowThermalStatus -Expected 3 -Message "Thermal preflight should wait below severe thermal status."
+Assert-Equal -Actual $plan.thermalReadiness.readyBelowThermalStatus -Expected 2 -Message "Thermal preflight should wait below moderate thermal status for final evidence."
 Assert-Equal -Actual $plan.thermalReadiness.requiredReadySamples -Expected 2 -Message "Thermal preflight should require consecutive ready samples."
 Assert-True -Condition ($plan.thermalReadiness.command.Contains("wait_for_device_thermal_ready.ps1")) -Message "Validation plan should include a thermal readiness command."
-Assert-True -Condition ($plan.thermalReadiness.command.Contains("-ReadyBelowThermalStatus 3")) -Message "Thermal readiness command should wait below severe thermal status."
+Assert-True -Condition ($plan.thermalReadiness.command.Contains("-ReadyBelowThermalStatus 2")) -Message "Thermal readiness command should wait below moderate thermal status for final evidence."
 Assert-True -Condition ($plan.thermalReadiness.command.Contains('-DeviceSerial "47091JEKB05516"')) -Message "Thermal readiness command should target the Pixel 8a serial."
 Assert-True -Condition ($plan.thermalReadiness.command.Contains("thermal_ready_wait_preflight.json")) -Message "Thermal readiness command should write a reusable preflight artifact."
 Assert-Equal -Actual @($plan.missingMilestones).Count -Expected 0 -Message "Every in-progress milestone should have validation-plan coverage."
@@ -267,14 +267,15 @@ $capturePlanCommands = @($groups | ForEach-Object { $_.commands } | Where-Object
 foreach ($command in $capturePlanCommands) {
     Assert-True -Condition ($command.command.Contains('-DeviceSerial "47091JEKB05516"')) -Message "Capture command '$($command.name)' should target the Pixel 8a by serial."
     Assert-True -Condition ($command.command.Contains('-RequireDeviceSerial "47091JEKB05516"')) -Message "Capture command '$($command.name)' should require summaries from the Pixel 8a serial."
-    Assert-True -Condition ($command.command.Contains("-ThermalReadyBelowStatus 3")) -Message "Capture command '$($command.name)' should wait below severe thermal status."
     $isSetup = $command.name.EndsWith("-setup") -or $command.name.EndsWith("-target")
     $isFinal = $command.name.EndsWith("-final")
     if ($isSetup) {
+        Assert-True -Condition ($command.command.Contains("-ThermalReadyBelowStatus 3")) -Message "Setup command '$($command.name)' should wait below severe thermal status."
         Assert-True -Condition ($command.command.Contains("-RequireEvidenceVerdict target_visible_unvalidated")) -Message "Setup command '$($command.name)' should stop at target_visible_unvalidated."
         Assert-True -Condition (-not $command.command.Contains("-RequireFinalVisualEvidence")) -Message "Setup command '$($command.name)' must not use final visual evidence gates."
     }
     if ($isFinal) {
+        Assert-True -Condition ($command.command.Contains("-ThermalReadyBelowStatus 2")) -Message "Final command '$($command.name)' should wait below moderate thermal status for no-warning evidence."
         Assert-True -Condition ($command.command.Contains("-RequireFinalVisualEvidence")) -Message "Final command '$($command.name)' should use final visual evidence gates."
         Assert-True -Condition (-not $command.command.Contains("-RequireEvidenceVerdict target_visible_unvalidated")) -Message "Final command '$($command.name)' must not use the setup-only verdict gate."
         Assert-True -Condition ($command.command.Contains('-VisualValidated $true')) -Message "Final command '$($command.name)' should mark operator visual validation true."
