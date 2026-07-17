@@ -153,9 +153,9 @@ if ($DryRun) {
 }
 
 if ($Build) {
-    $build = Invoke-CommandCapture -FilePath ".\gradlew.bat" -Arguments @("assembleDebug")
-    if ($build.exitCode -ne 0) {
-        throw "assembleDebug failed: $($build.output -join "`n")"
+    $buildResult = Invoke-CommandCapture -FilePath ".\gradlew.bat" -Arguments @("assembleDebug")
+    if ($buildResult.exitCode -ne 0) {
+        throw "assembleDebug failed: $($buildResult.output -join "`n")"
     }
 }
 
