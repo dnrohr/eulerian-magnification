@@ -212,16 +212,19 @@ For quick visual review of a captured screenrecord, generate a contact sheet:
 ```powershell
 .\tools\export_live_validation_review_sheet.ps1 `
   -BundlePath sample-videos\exports\live-validation\<bundle> `
-  -FfmpegPath <path-to-ffmpeg.exe>
+  -FfmpegPath <path-to-ffmpeg.exe> `
+  -RefreshSummary
 ```
 
 The helper writes `review_contact_sheet.jpg` and a
 `review_contact_sheet_manifest.json` hash manifest beside the bundle. It helps
-inspect motion/ROI evidence quickly; rerun the evidence summary afterward so
-`artifacts.reviewContactSheet` and the closeout `artifactNote` can cite the
-contact sheet hash. `-RequireReviewContactSheet` makes the summary fail unless
-the contact-sheet manifest exists and its screenrecord SHA-256 matches the
-current `screenrecord.mp4`. It does not replace the strict final evidence gates.
+inspect motion/ROI evidence quickly. Pass `-RefreshSummary` so the helper
+immediately rewrites `evidence_summary.json`, preserves any existing required
+gates, adds the review-contact-sheet gate, and records the sheet under
+`artifacts.reviewContactSheet` for the closeout `artifactNote`.
+`-RequireReviewContactSheet` makes the summary fail unless the contact-sheet
+manifest exists and its screenrecord SHA-256 matches the current
+`screenrecord.mp4`. It does not replace the strict final evidence gates.
 
 If `ffmpeg` is not available, omit `-FfmpegPath` and the helper will try a
 browser fallback through `npx playwright screenshot` using local Chrome. Pass
@@ -240,7 +243,8 @@ manifest, run:
 Use `-OutputPath sample-videos\exports\live-validation\review_queue.json` when
 you want to preserve the queue for a device-session handoff. Pending entries
 include a `reviewSheetIssue` reason such as `missingContactSheet`,
-`missingManifest`, or `screenrecordHashMismatch`.
+`missingManifest`, or `screenrecordHashMismatch`. Command output includes
+`-RefreshSummary` so regenerated sheets are visible to closeout immediately.
 
 If `ffmpeg` is not available yet, generate a local dashboard for manual review:
 

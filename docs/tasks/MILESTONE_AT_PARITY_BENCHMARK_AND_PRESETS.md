@@ -648,6 +648,9 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   `evidence_summary.json` after generating a review contact sheet, preserving
   previously required summary gates and adding the review-sheet gate. Review
   queue commands include this flag so closeout sees freshly generated sheets.
+- The main operator docs and task README now show `-RefreshSummary` in review
+  sheet commands, and the protocol-doc self-test keeps that handoff guidance in
+  sync with the tooling.
 - Pixel validation planner JSON now exposes compact
   `recommendedCaptureCount`, `commandCount`, and `closeoutBlockerCount` fields
   so phone-session handoff audits can check the queue size without recalculating

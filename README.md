@@ -416,13 +416,16 @@ For screenrecord review, generate a contact sheet beside a captured bundle:
 ```powershell
 .\tools\export_live_validation_review_sheet.ps1 `
   -BundlePath sample-videos\exports\live-validation\<bundle> `
-  -FfmpegPath <path-to-ffmpeg.exe>
+  -FfmpegPath <path-to-ffmpeg.exe> `
+  -RefreshSummary
 ```
 
 The helper writes `review_contact_sheet.jpg` and
 `review_contact_sheet_manifest.json` with hashes for the source screenrecord and
-contact sheet. The next `evidence_summary.json` records the contact sheet under
-`artifacts.reviewContactSheet`, and closeout includes its hash in `artifactNote`
+contact sheet. Pass `-RefreshSummary` so the helper immediately rewrites
+`evidence_summary.json`, preserves any existing required gates, adds the
+review-contact-sheet gate, and records the sheet under
+`artifacts.reviewContactSheet`. Closeout includes its hash in `artifactNote`
 when present. `-RequireReviewContactSheet` makes the summary fail unless the
 contact-sheet manifest exists and its screenrecord SHA-256 matches the current
 `screenrecord.mp4`. This is a review aid only; accepted final evidence still
@@ -444,7 +447,8 @@ To see which captured bundles still need review sheets, run:
 The queue reports screenrecord bundles with missing, manifest-less, or
 hash-mismatched review sheets and can save JSON with `-OutputPath`. Pending
 entries include a `reviewSheetIssue` reason such as `missingContactSheet`,
-`missingManifest`, or `screenrecordHashMismatch`.
+`missingManifest`, or `screenrecordHashMismatch`. Command output includes
+`-RefreshSummary` so regenerated sheets are visible to closeout immediately.
 
 When `ffmpeg` is not installed, create a local review dashboard instead. It
 does not satisfy the review contact sheet gate, but it gives one browser page
