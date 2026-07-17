@@ -644,6 +644,10 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - `capture_live_validation_evidence.ps1` now exposes and forwards
   `-RequireReviewContactSheet` to the evidence summary, matching the documented
   capture-time gate for rerun summaries after contact sheets are generated.
+- `export_live_validation_review_sheet.ps1 -RefreshSummary` now rewrites
+  `evidence_summary.json` after generating a review contact sheet, preserving
+  previously required summary gates and adding the review-sheet gate. Review
+  queue commands include this flag so closeout sees freshly generated sheets.
 - Pixel validation planner JSON now exposes compact
   `recommendedCaptureCount`, `commandCount`, and `closeoutBlockerCount` fields
   so phone-session handoff audits can check the queue size without recalculating

@@ -108,10 +108,12 @@ try {
     Assert-Equal -Actual (@($result.bundles | Where-Object { $_.label -eq "complete-review" })[0].screenrecordSha256Matches) -Expected $true -Message "Matching screenrecord hash should be reported."
     Assert-Equal -Actual (@($result.bundles | Where-Object { $_.label -eq "complete-review" })[0].contactSheetSha256Matches) -Expected $true -Message "Matching contact sheet hash should be reported."
     Assert-True -Condition ($pendingReview.command.Contains("export_live_validation_review_sheet.ps1")) -Message "Pending queue should include export command."
+    Assert-True -Condition ($pendingReview.command.Contains("-RefreshSummary")) -Message "Pending queue should refresh evidence_summary.json after exporting a review sheet."
 
     $commands = @(& (Join-Path $PSScriptRoot "show_live_validation_review_queue.ps1") -EvidenceRoot $root -CommandsOnly -FfmpegPath "C:\ffmpeg\bin\ffmpeg.exe")
     Assert-Equal -Actual @($commands).Count -Expected 3 -Message "CommandsOnly should output one command per pending review sheet."
     Assert-True -Condition ($commands[0].Contains("-FfmpegPath")) -Message "CommandsOnly should include explicit ffmpeg path."
+    Assert-True -Condition ($commands[0].Contains("-RefreshSummary")) -Message "CommandsOnly should include summary refresh."
 
     $outputPath = Join-Path $root "review_queue.json"
     $outputExitCode = Invoke-ReviewQueue -EvidenceRoot $root -OutputPath $outputPath

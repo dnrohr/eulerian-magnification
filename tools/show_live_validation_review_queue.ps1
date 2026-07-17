@@ -84,7 +84,7 @@ foreach ($directory in $bundleDirectories) {
     }
 
     $label = if ($summary -and $summary.PSObject.Properties.Name -contains "label") { $summary.label } else { $directory.Name }
-    $command = ".\tools\export_live_validation_review_sheet.ps1 -BundlePath $(Format-QuotedArgument $directory.FullName)"
+    $command = ".\tools\export_live_validation_review_sheet.ps1 -BundlePath $(Format-QuotedArgument $directory.FullName) -RefreshSummary"
     if (-not [string]::IsNullOrWhiteSpace($FfmpegPath)) {
         $command += " -FfmpegPath $(Format-QuotedArgument $FfmpegPath)"
     }

@@ -30,6 +30,7 @@ function Invoke-ReviewSheet {
         [string]$NpxPath = "",
         [string]$OutputPath = "",
         [switch]$NoBrowserFallback,
+        [switch]$RefreshSummary,
         [switch]$Force
     )
 
@@ -49,6 +50,9 @@ function Invoke-ReviewSheet {
     }
     if ($NoBrowserFallback) {
         $args.NoBrowserFallback = $true
+    }
+    if ($RefreshSummary) {
+        $args.RefreshSummary = $true
     }
     if ($Force) {
         $args.Force = $true
@@ -103,6 +107,26 @@ exit 0
 
     $forceExitCode = Invoke-ReviewSheet -BundlePath $bundle -FfmpegPath $fakeFfmpeg -Force
     Assert-Equal -Actual $forceExitCode -Expected 0 -Message "Force should allow overwriting an existing review sheet."
+
+    $refreshBundle = Join-Path $root "refresh-summary"
+    New-Item -ItemType Directory -Path $refreshBundle -Force | Out-Null
+    [System.IO.File]::WriteAllBytes((Join-Path $refreshBundle "screenrecord.mp4"), [byte[]](0, 0, 0, 24, 102, 116, 121, 112, 109, 112, 52, 50))
+    [ordered]@{
+        label = "refresh-summary"
+        manifest = [ordered]@{}
+        requiredGates = [ordered]@{
+            screenrecord = [ordered]@{ required = $true }
+            evidenceVerdict = [ordered]@{ required = $true; expected = "runtime_smoke_only" }
+        }
+        uiTextAssertions = [ordered]@{ required = @() }
+    } | ConvertTo-Json -Depth 6 | Out-File -LiteralPath (Join-Path $refreshBundle "evidence_summary.json") -Encoding utf8
+    $refreshExitCode = Invoke-ReviewSheet -BundlePath $refreshBundle -FfmpegPath $fakeFfmpeg -RefreshSummary
+    Assert-Equal -Actual $refreshExitCode -Expected 0 -Message "RefreshSummary should regenerate evidence_summary.json after writing a contact sheet."
+    $refreshedSummary = Get-Content -LiteralPath (Join-Path $refreshBundle "evidence_summary.json") -Raw | ConvertFrom-Json
+    Assert-Equal -Actual $refreshedSummary.requiredGates.screenrecord.required -Expected $true -Message "RefreshSummary should preserve existing screenrecord gate requirement."
+    Assert-Equal -Actual $refreshedSummary.requiredGates.reviewContactSheet.required -Expected $true -Message "RefreshSummary should require the review contact sheet gate."
+    Assert-Equal -Actual $refreshedSummary.requiredGates.reviewContactSheet.passed -Expected $true -Message "RefreshSummary should pass the matching review contact sheet gate."
+    Assert-Equal -Actual $refreshedSummary.artifacts.reviewContactSheet.screenrecordSha256Matches -Expected $true -Message "RefreshSummary should record the contact sheet/screenrecord hash match."
 
     $missingBundle = Join-Path $root "missing-screenrecord"
     New-Item -ItemType Directory -Path $missingBundle -Force | Out-Null

@@ -10,6 +10,7 @@ param(
     [string]$NpxPath = "",
     [string]$BrowserChannel = "chrome",
     [switch]$NoBrowserFallback,
+    [switch]$RefreshSummary,
     [switch]$Force
 )
 
@@ -65,6 +66,75 @@ function ConvertTo-FileUri {
     param([string]$Path)
 
     return ([System.Uri](Resolve-Path -LiteralPath $Path).Path).AbsoluteUri
+}
+
+function Add-BooleanGateArg {
+    param(
+        [hashtable]$Arguments,
+        $Summary,
+        [string]$Gate,
+        [string]$ParameterName
+    )
+
+    if ($Summary -and
+        $Summary.requiredGates -and
+        ($Summary.requiredGates.PSObject.Properties.Name -contains $Gate) -and
+        $Summary.requiredGates.$Gate.required -eq $true) {
+        $Arguments[$ParameterName] = $true
+    }
+}
+
+function Invoke-SummaryRefresh {
+    param([string]$BundlePath)
+
+    $summaryScript = Join-Path $PSScriptRoot "summarize_live_validation_evidence.ps1"
+    if (-not (Test-Path -LiteralPath $summaryScript)) {
+        Write-Output "Summary refresh requested, but summarize_live_validation_evidence.ps1 was not found."
+        return 6
+    }
+
+    $summaryPath = Join-Path $BundlePath "evidence_summary.json"
+    $existingSummary = if (Test-Path -LiteralPath $summaryPath) {
+        Get-Content -LiteralPath $summaryPath -Raw | ConvertFrom-Json
+    } else {
+        $null
+    }
+
+    $summaryArgs = @{
+        BundlePath = $BundlePath
+        RequireReviewContactSheet = $true
+    }
+    Add-BooleanGateArg -Arguments $summaryArgs -Summary $existingSummary -Gate "cleanSource" -ParameterName "RequireCleanSource"
+    Add-BooleanGateArg -Arguments $summaryArgs -Summary $existingSummary -Gate "visualValidation" -ParameterName "RequireVisualValidation"
+    Add-BooleanGateArg -Arguments $summaryArgs -Summary $existingSummary -Gate "roiMeasurement" -ParameterName "RequireRoiMeasurement"
+    Add-BooleanGateArg -Arguments $summaryArgs -Summary $existingSummary -Gate "screenrecord" -ParameterName "RequireScreenrecord"
+    Add-BooleanGateArg -Arguments $summaryArgs -Summary $existingSummary -Gate "thermalReady" -ParameterName "RequireThermalReady"
+    Add-BooleanGateArg -Arguments $summaryArgs -Summary $existingSummary -Gate "cameraFps" -ParameterName "RequireCameraFps"
+    Add-BooleanGateArg -Arguments $summaryArgs -Summary $existingSummary -Gate "focusedApp" -ParameterName "RequireFocusedApp"
+    Add-BooleanGateArg -Arguments $summaryArgs -Summary $existingSummary -Gate "rendererDiagnostics" -ParameterName "RequireRendererDiagnostics"
+    Add-BooleanGateArg -Arguments $summaryArgs -Summary $existingSummary -Gate "phaseDiagnostics" -ParameterName "RequirePhaseDiagnostics"
+    Add-BooleanGateArg -Arguments $summaryArgs -Summary $existingSummary -Gate "noWarnings" -ParameterName "RequireNoWarnings"
+
+    if ($existingSummary -and $existingSummary.uiTextAssertions -and @($existingSummary.uiTextAssertions.required).Count -gt 0) {
+        $summaryArgs.RequireUiText = @($existingSummary.uiTextAssertions.required)
+    }
+    if ($existingSummary -and
+        $existingSummary.requiredGates -and
+        ($existingSummary.requiredGates.PSObject.Properties.Name -contains "deviceSerial") -and
+        $existingSummary.requiredGates.deviceSerial.required -eq $true -and
+        -not [string]::IsNullOrWhiteSpace($existingSummary.requiredGates.deviceSerial.expected)) {
+        $summaryArgs.RequireDeviceSerial = [string]$existingSummary.requiredGates.deviceSerial.expected
+    }
+    if ($existingSummary -and
+        $existingSummary.requiredGates -and
+        ($existingSummary.requiredGates.PSObject.Properties.Name -contains "evidenceVerdict") -and
+        $existingSummary.requiredGates.evidenceVerdict.required -eq $true -and
+        -not [string]::IsNullOrWhiteSpace($existingSummary.requiredGates.evidenceVerdict.expected)) {
+        $summaryArgs.RequireEvidenceVerdict = [string]$existingSummary.requiredGates.evidenceVerdict.expected
+    }
+
+    & $summaryScript @summaryArgs
+    return $LASTEXITCODE
 }
 
 function Write-BrowserContactSheet {
@@ -285,6 +355,17 @@ $manifest = [ordered]@{
 $manifestPath = Join-Path $bundle "review_contact_sheet_manifest.json"
 $manifest | ConvertTo-Json -Depth 6 | Out-File -LiteralPath $manifestPath -Encoding utf8
 
+if ($RefreshSummary) {
+    $summaryExitCode = Invoke-SummaryRefresh -BundlePath $bundle
+    if ($summaryExitCode -ne 0) {
+        Write-Output "Review sheet was written, but summary refresh failed with exit code $summaryExitCode."
+        exit $summaryExitCode
+    }
+}
+
 Write-Output "Live validation review sheet written: $($outputItem.FullName)"
 Write-Output "Manifest: $manifestPath"
+if ($RefreshSummary) {
+    Write-Output "Summary refreshed: $(Join-Path $bundle "evidence_summary.json")"
+}
 exit 0
