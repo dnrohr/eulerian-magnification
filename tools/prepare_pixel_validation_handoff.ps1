@@ -214,9 +214,12 @@ if (@($Slot).Count -gt 0) {
 $commands = @(& $planner @commandsArgs)
 Set-Content -LiteralPath $commandsPath -Value ([string]::Join([Environment]::NewLine, $commands)) -Encoding utf8
 $commandText = @($commands) -join "`n"
+$operatorRequiredPrefix = "# OPERATOR REQUIRED: "
 $operatorRequiredFinalPrefix = "# OPERATOR REQUIRED FINAL: "
 $uncommentedCommands = @($commands | ForEach-Object {
-    if ($_.StartsWith($operatorRequiredFinalPrefix)) {
+    if ($_.StartsWith($operatorRequiredPrefix)) {
+        $_.Substring($operatorRequiredPrefix.Length)
+    } elseif ($_.StartsWith($operatorRequiredFinalPrefix)) {
         $_.Substring($operatorRequiredFinalPrefix.Length)
     } else {
         $_

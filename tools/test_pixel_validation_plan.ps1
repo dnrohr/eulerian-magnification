@@ -57,8 +57,11 @@ $pulseOnlyText = & (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1
 $setupOnlyPlan = & (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1") -EvidenceRoot $missingCloseoutRoot -CaptureStage Setup -Json | ConvertFrom-Json
 $finalOnlyPlan = & (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1") -EvidenceRoot $missingCloseoutRoot -CaptureStage Final -Json | ConvertFrom-Json
 $finalOnlyText = & (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1") -EvidenceRoot $missingCloseoutRoot -CaptureStage Final -NextOnly
+$pulseSetupCommandsOnly = @(& (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1") -EvidenceRoot $missingCloseoutRoot -Slot pulseLinear -CaptureStage Setup -CommandsOnly)
+$pulseSetupCommandsAllowed = @(& (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1") -EvidenceRoot $missingCloseoutRoot -Slot pulseLinear -CaptureStage Setup -CommandsOnly -AllowOperatorCommands)
 $pulseFinalCommandsOnly = @(& (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1") -EvidenceRoot $missingCloseoutRoot -Slot pulseLinear -CaptureStage Final -CommandsOnly)
-$pulseFinalCommandsAllowed = @(& (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1") -EvidenceRoot $missingCloseoutRoot -Slot pulseLinear -CaptureStage Final -CommandsOnly -AllowFinalCommands)
+$pulseFinalOperatorOnly = @(& (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1") -EvidenceRoot $missingCloseoutRoot -Slot pulseLinear -CaptureStage Final -CommandsOnly -AllowOperatorCommands)
+$pulseFinalCommandsAllowed = @(& (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1") -EvidenceRoot $missingCloseoutRoot -Slot pulseLinear -CaptureStage Final -CommandsOnly -AllowOperatorCommands -AllowFinalCommands)
 $invalidSlotPlan = & (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1") -EvidenceRoot $missingCloseoutRoot -Slot notARealSlot -Json | ConvertFrom-Json
 $invalidSlotText = & (Join-Path $PSScriptRoot "show_next_pixel_validation_plan.ps1") -EvidenceRoot $missingCloseoutRoot -Slot notARealSlot -NextOnly
 $validSlotExitCode = Invoke-PlanExitCode -EvidenceRoot $missingCloseoutRoot -Slot pulseLinear -FailOnInvalidSlot
@@ -98,6 +101,7 @@ Assert-Equal -Actual $plan.recommendedCaptureCount -Expected 6 -Message "Plan sh
 Assert-Equal -Actual $plan.commandCount -Expected 12 -Message "Plan should expose a compact command template count."
 Assert-Equal -Actual $plan.operatorRequiredCommandCount -Expected 12 -Message "Every capture command should require a watched target/operator context."
 Assert-Equal -Actual $plan.finalVisualAcceptanceCommandCount -Expected 6 -Message "Every final capture command should require explicit visual acceptance."
+Assert-Equal -Actual $plan.allowOperatorCommands -Expected $false -Message "Validation plan should guard operator CommandsOnly output by default."
 Assert-Equal -Actual $plan.allowFinalCommands -Expected $false -Message "Validation plan should guard final CommandsOnly output by default."
 Assert-Equal -Actual $plan.recommendedCaptures[0].slot -Expected "manualRoi" -Message "First recommended capture should map to the manual ROI slot."
 Assert-Equal -Actual $plan.recommendedCaptures[0].commands[0].name -Expected "manual-roi-known-target-setup" -Message "Recommended manual ROI capture should start with setup evidence."
@@ -120,6 +124,7 @@ Assert-True -Condition (($planText -join "`n").Contains("Recommended captures: 6
 Assert-True -Condition (($planText -join "`n").Contains("Command templates: 12")) -Message "Text plan should print command template count."
 Assert-True -Condition (($planText -join "`n").Contains("Operator-required commands: 12")) -Message "Text plan should print operator-required command count."
 Assert-True -Condition (($planText -join "`n").Contains("Final visual-acceptance commands: 6")) -Message "Text plan should print final visual-acceptance command count."
+Assert-True -Condition (($planText -join "`n").Contains("Operator command guard:")) -Message "Text plan should explain the operator command guard."
 Assert-True -Condition (($planText -join "`n").Contains("Final command guard:")) -Message "Text plan should explain the final command guard."
 Assert-True -Condition (($planText -join "`n").Contains("Thermal readiness command:")) -Message "Text plan should print the thermal readiness command."
 Assert-True -Condition (($planText -join "`n").Contains("Next manualRoi: manual-roi-known-target-setup")) -Message "Text plan should print next commands from missing closeout slots."
@@ -151,15 +156,22 @@ Assert-True -Condition (($finalOnlyText -join "`n").Contains("Capture stage: Fin
 Assert-True -Condition (-not (($finalOnlyText -join "`n").Contains("manual-roi-known-target-setup:"))) -Message "Final-only text should omit setup commands."
 Assert-True -Condition (($finalOnlyText -join "`n").Contains("manual-roi-known-target-final:")) -Message "Final-only text should include final commands."
 Assert-True -Condition (($finalOnlyText -join "`n").Contains("Operator required: final visual acceptance")) -Message "Final-only text should warn that final captures require operator acceptance."
+Assert-Equal -Actual @($pulseSetupCommandsOnly).Count -Expected 1 -Message "Setup CommandsOnly should respect slot and stage filters."
+Assert-True -Condition ($pulseSetupCommandsOnly[0].StartsWith("# OPERATOR REQUIRED: .\tools\capture_live_validation_evidence.ps1")) -Message "Setup CommandsOnly should comment target-visible setup commands by default."
+Assert-Equal -Actual @($pulseSetupCommandsAllowed).Count -Expected 1 -Message "AllowOperatorCommands should preserve filtered setup command count."
+Assert-True -Condition ($pulseSetupCommandsAllowed[0].StartsWith(".\tools\capture_live_validation_evidence.ps1")) -Message "AllowOperatorCommands should emit paste-ready setup commands."
+Assert-True -Condition (-not $pulseSetupCommandsAllowed[0].StartsWith("# OPERATOR REQUIRED:")) -Message "AllowOperatorCommands should remove the setup comment guard."
 Assert-Equal -Actual @($pulseFinalCommandsOnly).Count -Expected 1 -Message "CommandsOnly should respect slot and stage filters."
-Assert-True -Condition ($pulseFinalCommandsOnly[0].StartsWith("# OPERATOR REQUIRED FINAL: .\tools\capture_live_validation_evidence.ps1")) -Message "CommandsOnly should comment final visual commands by default."
+Assert-True -Condition ($pulseFinalCommandsOnly[0].StartsWith("# OPERATOR REQUIRED: .\tools\capture_live_validation_evidence.ps1")) -Message "CommandsOnly should comment final visual commands by default until the operator is ready."
 Assert-True -Condition ($pulseFinalCommandsOnly[0].Contains('-DeviceSerial "47091JEKB05516"')) -Message "CommandsOnly output should target the Pixel 8a by serial."
 Assert-True -Condition ($pulseFinalCommandsOnly[0].Contains('-RequireDeviceSerial "47091JEKB05516"')) -Message "CommandsOnly output should require evidence from the Pixel 8a serial."
 Assert-True -Condition ($pulseFinalCommandsOnly[0].Contains('live-linear-pulse-final')) -Message "CommandsOnly output should include the requested final command."
 Assert-True -Condition (-not ($pulseFinalCommandsOnly[0].Contains("Recommended captures"))) -Message "CommandsOnly output should omit headings."
+Assert-Equal -Actual @($pulseFinalOperatorOnly).Count -Expected 1 -Message "AllowOperatorCommands alone should preserve filtered final command count."
+Assert-True -Condition ($pulseFinalOperatorOnly[0].StartsWith("# OPERATOR REQUIRED FINAL: .\tools\capture_live_validation_evidence.ps1")) -Message "AllowOperatorCommands alone should keep final visual commands guarded."
 Assert-Equal -Actual @($pulseFinalCommandsAllowed).Count -Expected 1 -Message "AllowFinalCommands should preserve filtered final command count."
-Assert-True -Condition ($pulseFinalCommandsAllowed[0].StartsWith(".\tools\capture_live_validation_evidence.ps1")) -Message "AllowFinalCommands should emit paste-ready final commands."
-Assert-True -Condition (-not $pulseFinalCommandsAllowed[0].StartsWith("# OPERATOR REQUIRED FINAL:")) -Message "AllowFinalCommands should remove the final command comment guard."
+Assert-True -Condition ($pulseFinalCommandsAllowed[0].StartsWith(".\tools\capture_live_validation_evidence.ps1")) -Message "AllowOperatorCommands plus AllowFinalCommands should emit paste-ready final commands."
+Assert-True -Condition (-not $pulseFinalCommandsAllowed[0].StartsWith("# OPERATOR REQUIRED")) -Message "AllowOperatorCommands plus AllowFinalCommands should remove final command guards."
 Assert-Equal -Actual @($invalidSlotPlan.recommendedCaptures).Count -Expected 0 -Message "Unknown slot filter should not recommend captures."
 Assert-Equal -Actual @($invalidSlotPlan.invalidRequestedSlots).Count -Expected 1 -Message "Unknown slot filter should be reported as invalid."
 Assert-Equal -Actual $invalidSlotPlan.invalidRequestedSlots[0] -Expected "notARealSlot" -Message "Invalid slot report should preserve the requested slot id."

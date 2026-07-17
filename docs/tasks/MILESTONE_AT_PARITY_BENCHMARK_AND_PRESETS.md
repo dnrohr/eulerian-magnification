@@ -455,10 +455,11 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   `target_visible_unvalidated` and final captures on `-RequireFinalVisualEvidence`
   with accepted operator validation.
 - Added operator-required metadata to Pixel validation planner commands.
-  `-CommandsOnly` now comments final visual-acceptance commands by default, and
-  `-AllowFinalCommands` is required to emit paste-ready final commands during a
-  watched session. This keeps unattended handoffs from accidentally claiming
-  final visual evidence.
+  `-CommandsOnly` now comments setup and final target-visible capture commands
+  by default. `-AllowOperatorCommands` is required once the target is physically
+  set up, and `-AllowFinalCommands` is additionally required to emit paste-ready
+  final commands during a watched session. This keeps unattended handoffs from
+  accidentally claiming target visibility or final visual evidence.
 - Added the one-shot closeout and preset-doc gates directly to the
   `preset-parity-closeout` planner command, with self-test coverage that keeps
   doc updates after those readiness checks.

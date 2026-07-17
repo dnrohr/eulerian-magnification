@@ -6,6 +6,7 @@ param(
     [string]$CaptureStage = "All",
     [switch]$NextOnly,
     [switch]$CommandsOnly,
+    [switch]$AllowOperatorCommands,
     [switch]$AllowFinalCommands,
     [switch]$FailOnInvalidSlot,
     [switch]$FailOnEmptyQueue,
@@ -379,6 +380,7 @@ $result = [pscustomobject]@{
     commandCount = @($recommendedCaptures | ForEach-Object { $_.commands } | Where-Object { -not [string]::IsNullOrWhiteSpace($_.command) }).Count
     operatorRequiredCommandCount = @($recommendedCaptures | ForEach-Object { $_.commands } | Where-Object { $_.operatorRequired }).Count
     finalVisualAcceptanceCommandCount = @($recommendedCaptures | ForEach-Object { $_.commands } | Where-Object { $_.finalVisualAcceptanceRequired }).Count
+    allowOperatorCommands = [bool]$AllowOperatorCommands
     allowFinalCommands = [bool]$AllowFinalCommands
     recommendedCaptures = $recommendedCaptures
     validationGroups = $validationGroups
@@ -413,7 +415,9 @@ if ($CommandsOnly) {
     foreach ($capture in @($result.recommendedCaptures)) {
         foreach ($command in @($capture.commands)) {
             if (-not [string]::IsNullOrWhiteSpace($command.command)) {
-                if ($command.finalVisualAcceptanceRequired -and -not $AllowFinalCommands) {
+                if ($command.operatorRequired -and -not $AllowOperatorCommands) {
+                    Write-Output "# OPERATOR REQUIRED: $($command.command)"
+                } elseif ($command.finalVisualAcceptanceRequired -and -not $AllowFinalCommands) {
                     Write-Output "# OPERATOR REQUIRED FINAL: $($command.command)"
                 } else {
                     Write-Output $command.command
@@ -434,7 +438,8 @@ Write-Output "Command templates: $($result.commandCount)"
 Write-Output "Operator-required commands: $($result.operatorRequiredCommandCount)"
 Write-Output "Final visual-acceptance commands: $($result.finalVisualAcceptanceCommandCount)"
 if ($result.finalVisualAcceptanceCommandCount -gt 0) {
-    Write-Output "Final command guard: -CommandsOnly comments final visual-acceptance commands unless -AllowFinalCommands is passed."
+    Write-Output "Operator command guard: -CommandsOnly comments target-visible capture commands unless -AllowOperatorCommands is passed."
+    Write-Output "Final command guard: final visual-acceptance commands also require -AllowFinalCommands."
 }
 Write-Output "Thermal readiness command: $($result.thermalReadiness.command)"
 if (@($result.availableSlots).Count -gt 0) {
