@@ -256,6 +256,7 @@ foreach ($expected in @(
 }
 
 $phaseCommandText = @($phase.commands | ForEach-Object { $_.command }) -join "`n"
+Assert-True -Condition ($phaseCommandText.Contains("live-phase-object-setup")) -Message "Phase commands should include explicit Object setup label."
 Assert-True -Condition ($phaseCommandText.Contains("live-phase-object-final")) -Message "Phase commands should include explicit Object final label."
 Assert-True -Condition ($phaseCommandText.Contains("live-phase-fast-tremor-final")) -Message "Phase commands should include explicit Fast tremor final label."
 Assert-True -Condition ($phaseCommandText.Contains("fast tremor target")) -Message "Fast tremor command should carry a distinct target description."
