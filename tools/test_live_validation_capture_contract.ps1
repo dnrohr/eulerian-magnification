@@ -115,6 +115,9 @@ foreach ($expectedParameter in @("AdbPath", "DeviceSerial")) {
 if (-not $command.Parameters.ContainsKey("RequireDeviceSerial")) {
     throw "Capture script must expose -RequireDeviceSerial."
 }
+if (-not $command.Parameters.ContainsKey("RequireReviewContactSheet")) {
+    throw "Capture script must expose -RequireReviewContactSheet."
+}
 
 Assert-SequenceEqual `
     -Actual (Get-ValidateSetValues -Command $command -ParameterName "Mode") `
@@ -188,6 +191,15 @@ foreach ($expectedSourceContract in @(
 )) {
     if (-not $captureScriptContent.Contains($expectedSourceContract)) {
         throw "Capture script must preserve source reachability contract: missing '$expectedSourceContract'."
+    }
+}
+
+foreach ($expectedSummaryGateContract in @(
+    "RequireReviewContactSheet",
+    "summaryArgs.RequireReviewContactSheet"
+)) {
+    if (-not $captureScriptContent.Contains($expectedSummaryGateContract)) {
+        throw "Capture script must preserve summary gate contract: missing '$expectedSummaryGateContract'."
     }
 }
 

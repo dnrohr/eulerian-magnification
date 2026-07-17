@@ -641,6 +641,9 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - The generated `preset-parity-closeout` planner command and MIT parity closeout
   recipe now include `-FailOnDomainGateMismatch`, so the operator handoff uses
   the same strict gate as the closeout script.
+- `capture_live_validation_evidence.ps1` now exposes and forwards
+  `-RequireReviewContactSheet` to the evidence summary, matching the documented
+  capture-time gate for rerun summaries after contact sheets are generated.
 - Pixel validation planner JSON now exposes compact
   `recommendedCaptureCount`, `commandCount`, and `closeoutBlockerCount` fields
   so phone-session handoff audits can check the queue size without recalculating

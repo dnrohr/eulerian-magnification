@@ -56,6 +56,7 @@ param(
     [switch]$RequireFocusedApp,
     [switch]$RequireRendererDiagnostics,
     [switch]$RequirePhaseDiagnostics,
+    [switch]$RequireReviewContactSheet,
     [string]$RequireDeviceSerial = "",
     [ValidateSet("", "runtime_smoke_only", "visual_validated", "target_visible_unvalidated", "visual_claim_without_target", "ui_assertion_failed", "screenshot_blank", "wrong_orientation", "runtime_failed", "thermal_preflight_aborted")]
     [string]$RequireEvidenceVerdict = ""
@@ -420,6 +421,9 @@ function Invoke-EvidenceSummary {
     }
     if ($RequirePhaseDiagnostics) {
         $summaryArgs.RequirePhaseDiagnostics = $true
+    }
+    if ($RequireReviewContactSheet) {
+        $summaryArgs.RequireReviewContactSheet = $true
     }
     if (-not [string]::IsNullOrWhiteSpace($RequireDeviceSerial)) {
         $summaryArgs.RequireDeviceSerial = $RequireDeviceSerial
