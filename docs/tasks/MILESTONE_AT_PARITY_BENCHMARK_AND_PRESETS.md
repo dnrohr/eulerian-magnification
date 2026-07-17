@@ -638,6 +638,9 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
   for live linear slots, and phase diagnostics for live phase slots. This keeps
   a correctly named watched bundle from closing the roadmap if the required
   diagnostic gate was omitted.
+- The generated `preset-parity-closeout` planner command and MIT parity closeout
+  recipe now include `-FailOnDomainGateMismatch`, so the operator handoff uses
+  the same strict gate as the closeout script.
 - Pixel validation planner JSON now exposes compact
   `recommendedCaptureCount`, `commandCount`, and `closeoutBlockerCount` fields
   so phone-session handoff audits can check the queue size without recalculating
