@@ -169,7 +169,9 @@ paired with the generated ROI final-command helper guidance, and any ROI final
 placeholder in the runbook or Markdown handoff must be commented
 `# TEMPLATE ONLY:` instead of pasteable. The same consistency check verifies
 that guarded handoffs keep target-visible capture commands commented unless the
-manifest explicitly records `-AllowOperatorCommands` / `-AllowFinalCommands`.
+manifest explicitly records `-AllowOperatorCommands` / `-AllowFinalCommands`,
+and that the session readiness command in the runbook/Markdown handoff matches
+the manifest.
 Run it before the phone session starts.
 When ROI final captures are included, the runbook and Markdown handoff add a
 `prepare_roi_final_capture_command.ps1` helper step after setup capture. Measure

@@ -105,6 +105,18 @@ try {
     "# 3. Guarded Commands: requested validation evidence." | Set-Content -LiteralPath $artifactA -Encoding utf8
     "## Guarded Commands" | Set-Content -LiteralPath $artifactB -Encoding utf8
     "# OPERATOR REQUIRED: .\tools\capture_live_validation_evidence.ps1 -Label ""live-linear-pulse-final"" -RequireFinalVisualEvidence" | Set-Content -LiteralPath $commandsBaseArtifact -Encoding utf8
+    $sessionReadinessCommand = '.\tools\export_pixel_session_readiness.ps1 -DeviceSerial "PIXEL-VERIFY-TEST" -OutputPath "pixel_session_readiness_preflight.json" -FailOnNotReady'
+    @(
+        "# 2. Snapshot session readiness before watched capture.",
+        $sessionReadinessCommand,
+        "# 3. Guarded Commands: requested validation evidence."
+    ) | Set-Content -LiteralPath $artifactA -Encoding utf8
+    @(
+        "## Thermal Preflight",
+        ('- Session readiness command: `{0}`' -f $sessionReadinessCommand),
+        $sessionReadinessCommand,
+        "## Guarded Commands"
+    ) | Set-Content -LiteralPath $artifactB -Encoding utf8
 
     $fakeAdb = Join-Path $root "fake-adb.cmd"
     Set-Content -LiteralPath $fakeAdb -Encoding ascii -Value @(
@@ -134,6 +146,10 @@ try {
         )
         allowOperatorCommands = $false
         allowFinalCommands = $false
+        sessionReadiness = [ordered]@{
+            command = $sessionReadinessCommand
+            outputPath = "pixel_session_readiness_preflight.json"
+        }
     }
     $manifest | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $manifestPath -Encoding utf8
 
@@ -149,7 +165,7 @@ try {
     Assert-Equal -Actual $result.expectedDeviceConnected -Expected $true -Message "Valid handoff should find the expected device serial."
     Assert-Equal -Actual @($result.artifactChecks).Count -Expected 3 -Message "Verifier should report every manifest artifact."
     Assert-Equal -Actual @($result.source.checks).Count -Expected 3 -Message "Verifier should report source checks."
-    Assert-Equal -Actual @($result.handoffConsistencyChecks).Count -Expected 7 -Message "Verifier should report ROI helper, command guard, and section label consistency checks."
+    Assert-Equal -Actual @($result.handoffConsistencyChecks).Count -Expected 8 -Message "Verifier should report ROI helper, command guard, section label, and session readiness consistency checks."
     Assert-True -Condition (($result.artifactChecks | Where-Object { $_.name -eq "runbook" }).passed -eq $true) -Message "Runbook artifact should pass hash verification."
 
     $validExitCode = Invoke-VerifierExitCode -ManifestPath $manifestPath -SourceRoot $repoRoot -AdbPath $fakeAdb -FailOnArtifactMismatch -FailOnSourceMismatch -FailOnDeviceUnavailable -FailOnHandoffConsistencyMismatch
@@ -161,8 +177,16 @@ try {
     $sourceRelativeRunbook = Join-Path $sourceRelativeBundleRoot "pixel_validation_runbook.txt"
     $sourceRelativeHandoff = Join-Path $sourceRelativeBundleRoot "pixel_validation_handoff.md"
     "# OPERATOR REQUIRED: .\tools\capture_live_validation_evidence.ps1 -Label ""live-linear-pulse-final"" -RequireFinalVisualEvidence" | Set-Content -LiteralPath $sourceRelativeCommands -Encoding utf8
-    "# 3. Guarded Commands: requested validation evidence." | Set-Content -LiteralPath $sourceRelativeRunbook -Encoding utf8
-    "## Guarded Commands" | Set-Content -LiteralPath $sourceRelativeHandoff -Encoding utf8
+    @(
+        "# 2. Snapshot session readiness before watched capture.",
+        $sessionReadinessCommand,
+        "# 3. Guarded Commands: requested validation evidence."
+    ) | Set-Content -LiteralPath $sourceRelativeRunbook -Encoding utf8
+    @(
+        ('- Session readiness command: `{0}`' -f $sessionReadinessCommand),
+        $sessionReadinessCommand,
+        "## Guarded Commands"
+    ) | Set-Content -LiteralPath $sourceRelativeHandoff -Encoding utf8
     $sourceRelativeManifestPath = Join-Path $sourceRelativeBundleRoot "pixel_validation_handoff_manifest.json"
     $sourceRelativeManifest = [ordered]@{
         deviceSerial = "PIXEL-VERIFY-TEST"
@@ -179,6 +203,10 @@ try {
         )
         allowOperatorCommands = $false
         allowFinalCommands = $false
+        sessionReadiness = [ordered]@{
+            command = $sessionReadinessCommand
+            outputPath = "pixel_session_readiness_preflight.json"
+        }
     }
     $sourceRelativeManifest | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $sourceRelativeManifestPath -Encoding utf8
     $sourceRelativeResult = & (Join-Path $PSScriptRoot "verify_pixel_validation_handoff.ps1") `
@@ -199,7 +227,11 @@ try {
     $artifactMismatchExitCode = Invoke-VerifierExitCode -ManifestPath $manifestPath -SourceRoot $repoRoot -AdbPath $fakeAdb -FailOnArtifactMismatch
     Assert-Equal -Actual $artifactMismatchExitCode -Expected 31 -Message "Artifact mismatch gate should exit 31."
 
-    "# 3. Guarded Commands: requested validation evidence." | Set-Content -LiteralPath $artifactA -Encoding utf8
+    @(
+        "# 2. Snapshot session readiness before watched capture.",
+        $sessionReadinessCommand,
+        "# 3. Guarded Commands: requested validation evidence."
+    ) | Set-Content -LiteralPath $artifactA -Encoding utf8
     Push-Location -LiteralPath $repoRoot
     try {
         "dirty" | Set-Content -LiteralPath (Join-Path $repoRoot "dirty.txt") -Encoding utf8
@@ -276,6 +308,40 @@ try {
         -AdbPath $fakeAdb `
         -Json | ConvertFrom-Json
     Assert-Equal -Actual $allowedResult.handoffConsistencyMismatchCount -Expected 0 -Message "Allowed runnable commands should pass guard consistency checks."
+
+    "# 3. Guarded Commands: requested validation evidence." | Set-Content -LiteralPath $artifactA -Encoding utf8
+    "## Guarded Commands" | Set-Content -LiteralPath $artifactB -Encoding utf8
+    $staleReadinessManifestPath = Join-Path $bundleRoot "stale_session_readiness_manifest.json"
+    $staleReadinessManifest = [ordered]@{
+        deviceSerial = "PIXEL-VERIFY-TEST"
+        source = [ordered]@{
+            branch = "main"
+            commit = $sourceCommit
+            clean = $true
+            commitReachableFromOriginMain = $true
+        }
+        artifacts = @(
+            New-ArtifactRecord -Name "commands" -Path $commandsBaseArtifact
+            New-ArtifactRecord -Name "runbook" -Path $artifactA
+            New-ArtifactRecord -Name "handoff" -Path $artifactB
+        )
+        allowOperatorCommands = $false
+        allowFinalCommands = $false
+        sessionReadiness = [ordered]@{
+            command = $sessionReadinessCommand
+            outputPath = "pixel_session_readiness_preflight.json"
+        }
+    }
+    $staleReadinessManifest | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $staleReadinessManifestPath -Encoding utf8
+    $staleReadinessResult = & (Join-Path $PSScriptRoot "verify_pixel_validation_handoff.ps1") `
+        -ManifestPath $staleReadinessManifestPath `
+        -SourceRoot $repoRoot `
+        -AdbPath $fakeAdb `
+        -Json | ConvertFrom-Json
+    Assert-Equal -Actual $staleReadinessResult.handoffConsistencyMismatchCount -Expected 1 -Message "Missing session readiness guidance should produce one consistency mismatch."
+    Assert-True -Condition (($staleReadinessResult.handoffConsistencyChecks | Where-Object { $_.name -eq "sessionReadinessCommandMatchesManifest" }).passed -eq $false) -Message "Session readiness check should fail for stale handoffs."
+    $staleReadinessExitCode = Invoke-VerifierExitCode -ManifestPath $staleReadinessManifestPath -SourceRoot $repoRoot -AdbPath $fakeAdb -FailOnHandoffConsistencyMismatch
+    Assert-Equal -Actual $staleReadinessExitCode -Expected 34 -Message "Stale session readiness guidance should exit 34."
 
     "# 3. Guarded Commands: requested validation evidence." | Set-Content -LiteralPath $artifactA -Encoding utf8
     "## Guarded Commands" | Set-Content -LiteralPath $artifactB -Encoding utf8
@@ -393,8 +459,17 @@ try {
     $rawTemplateExitCode = Invoke-VerifierExitCode -ManifestPath $rawTemplateManifestPath -SourceRoot $repoRoot -AdbPath $fakeAdb -FailOnHandoffConsistencyMismatch
     Assert-Equal -Actual $rawTemplateExitCode -Expected 34 -Message "Runnable ROI final template gate should exit 34."
 
-    "# 3. Guarded Commands: requested validation evidence." | Set-Content -LiteralPath $artifactA -Encoding utf8
-    "## Guarded Commands" | Set-Content -LiteralPath $artifactB -Encoding utf8
+    @(
+        "# 2. Snapshot session readiness before watched capture.",
+        $sessionReadinessCommand,
+        "# 3. Guarded Commands: requested validation evidence."
+    ) | Set-Content -LiteralPath $artifactA -Encoding utf8
+    @(
+        "## Thermal Preflight",
+        ('- Session readiness command: `{0}`' -f $sessionReadinessCommand),
+        $sessionReadinessCommand,
+        "## Guarded Commands"
+    ) | Set-Content -LiteralPath $artifactB -Encoding utf8
 
     $text = & (Join-Path $PSScriptRoot "verify_pixel_validation_handoff.ps1") `
         -ManifestPath $manifestPath `

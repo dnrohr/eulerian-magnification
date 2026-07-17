@@ -281,6 +281,32 @@ $finalCommandGuardPassed = if ($allowFinalCommands) {
 }
 $guardedLabelPresent = $runbookText.Contains("Guarded Commands") -and $handoffText.Contains("Guarded Commands")
 $runnableLabelPresent = $runbookText.Contains("Runnable Commands") -and $handoffText.Contains("Runnable Commands")
+$sessionReadinessCommand = if ($manifest.PSObject.Properties.Name -contains "sessionReadiness" -and
+    $manifest.sessionReadiness -and
+    $manifest.sessionReadiness.PSObject.Properties.Name -contains "command") {
+    [string]$manifest.sessionReadiness.command
+} else {
+    ""
+}
+$sessionReadinessOutputPath = if ($manifest.PSObject.Properties.Name -contains "sessionReadiness" -and
+    $manifest.sessionReadiness -and
+    $manifest.sessionReadiness.PSObject.Properties.Name -contains "outputPath") {
+    [string]$manifest.sessionReadiness.outputPath
+} else {
+    ""
+}
+$sessionReadinessExpected = -not [string]::IsNullOrWhiteSpace($sessionReadinessCommand)
+$sessionReadinessRunbookPresent = (-not $sessionReadinessExpected) -or (
+    $runbookText.Contains($sessionReadinessCommand) -and
+    $runbookText.Contains("Snapshot session readiness")
+)
+$sessionReadinessHandoffPresent = (-not $sessionReadinessExpected) -or (
+    $handoffText.Contains($sessionReadinessCommand) -and
+    $handoffText.Contains("Session readiness command")
+)
+$sessionReadinessOutputPresent = (-not $sessionReadinessExpected) -or
+    [string]::IsNullOrWhiteSpace($sessionReadinessOutputPath) -or
+    ($runbookText.Contains($sessionReadinessOutputPath) -and $handoffText.Contains($sessionReadinessOutputPath))
 $handoffConsistencyChecks = @(
     New-Check -Name "manualRoiFinalHelper" -Passed (-not $manualRoiPlaceholderPresent -or ($roiHelperText.Contains("-Slot manualRoi") -and $helperTextPresent)) -Message $(if (-not $manualRoiPlaceholderPresent) { "manual ROI final command has no placeholder" } elseif ($roiHelperText.Contains("-Slot manualRoi") -and $helperTextPresent) { "manual ROI placeholder is paired with final-command helper guidance" } else { "manual ROI placeholder is missing final-command helper guidance" }) -Details ([pscustomobject]@{ placeholderPresent = $manualRoiPlaceholderPresent; helperCommandPresent = $roiHelperText.Contains("-Slot manualRoi"); helperTextPresent = $helperTextPresent })
     New-Check -Name "autoRoiFinalHelper" -Passed (-not $autoRoiPlaceholderPresent -or ($roiHelperText.Contains("-Slot autoRoi") -and $helperTextPresent)) -Message $(if (-not $autoRoiPlaceholderPresent) { "automatic ROI final command has no placeholder" } elseif ($roiHelperText.Contains("-Slot autoRoi") -and $helperTextPresent) { "automatic ROI placeholder is paired with final-command helper guidance" } else { "automatic ROI placeholder is missing final-command helper guidance" }) -Details ([pscustomobject]@{ placeholderPresent = $autoRoiPlaceholderPresent; helperCommandPresent = $roiHelperText.Contains("-Slot autoRoi"); helperTextPresent = $helperTextPresent })
@@ -289,6 +315,7 @@ $handoffConsistencyChecks = @(
     New-Check -Name "operatorCommandGuardMatchesManifest" -Passed $operatorCommandGuardPassed -Message $(if ($operatorCommandGuardPassed) { "operator command guard matches manifest" } else { "operator command guard does not match manifest" }) -Details ([pscustomobject]@{ allowOperatorCommands = $allowOperatorCommands; captureCommandCount = @($captureCommandLines).Count; guardedCommandCount = @($guardedCommandLines).Count; unguardedCommandCount = @($unguardedCommandLines).Count })
     New-Check -Name "finalCommandGuardMatchesManifest" -Passed $finalCommandGuardPassed -Message $(if ($finalCommandGuardPassed) { "final command guard matches manifest" } else { "final command guard does not match manifest" }) -Details ([pscustomobject]@{ allowOperatorCommands = $allowOperatorCommands; allowFinalCommands = $allowFinalCommands; finalCommandCount = @($finalCommandLines).Count; guardedFinalCommandCount = @($guardedFinalCommandLines).Count; unguardedFinalCommandCount = @($unguardedFinalCommandLines).Count })
     New-Check -Name "commandSectionLabelMatchesManifest" -Passed $(if ($allowOperatorCommands) { $runnableLabelPresent } else { $guardedLabelPresent }) -Message $(if ($allowOperatorCommands) { if ($runnableLabelPresent) { "runbook and handoff label commands runnable" } else { "runbook or handoff missing runnable command label" } } else { if ($guardedLabelPresent) { "runbook and handoff label commands guarded" } else { "runbook or handoff missing guarded command label" } }) -Details ([pscustomobject]@{ allowOperatorCommands = $allowOperatorCommands; guardedLabelPresent = $guardedLabelPresent; runnableLabelPresent = $runnableLabelPresent })
+    New-Check -Name "sessionReadinessCommandMatchesManifest" -Passed ($sessionReadinessRunbookPresent -and $sessionReadinessHandoffPresent -and $sessionReadinessOutputPresent) -Message $(if (-not $sessionReadinessExpected) { "session readiness command is not recorded in manifest" } elseif ($sessionReadinessRunbookPresent -and $sessionReadinessHandoffPresent -and $sessionReadinessOutputPresent) { "session readiness command matches manifest" } else { "session readiness command does not match manifest" }) -Details ([pscustomobject]@{ expected = $sessionReadinessExpected; command = $sessionReadinessCommand; outputPath = $sessionReadinessOutputPath; runbookPresent = $sessionReadinessRunbookPresent; handoffPresent = $sessionReadinessHandoffPresent; outputPathPresent = $sessionReadinessOutputPresent })
 )
 
 $currentBranch = Invoke-GitValue -Root $SourceRoot -Arguments @("rev-parse", "--abbrev-ref", "HEAD")
