@@ -124,7 +124,11 @@ closeout slot id to focus the recommended capture queue on one validation target
 the plan prints available missing slots when a slot filter does not match. Use
 `-CaptureStage Setup` or `-CaptureStage Final` to print only pre-inspection or
 closing evidence commands, and add `-CommandsOnly` when you want paste-ready
-command templates without the surrounding checklist. Add `-FailOnInvalidSlot`
+command templates without the surrounding checklist. Final visual-acceptance
+commands are commented by default in `-CommandsOnly` output because they must
+not be run unattended; pass `-AllowFinalCommands` only during a watched session
+after the target is physically set up and the operator is ready to inspect the
+result. Add `-FailOnInvalidSlot`
 in scripted runs so a mistyped slot filter exits nonzero instead of producing
 an empty capture queue, or `-FailOnEmptyQueue` when automation should require
 at least one recommended capture. Add `-FailOnPendingReviewSheets` when a

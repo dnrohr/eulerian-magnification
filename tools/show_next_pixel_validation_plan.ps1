@@ -6,6 +6,7 @@ param(
     [string]$CaptureStage = "All",
     [switch]$NextOnly,
     [switch]$CommandsOnly,
+    [switch]$AllowFinalCommands,
     [switch]$FailOnInvalidSlot,
     [switch]$FailOnEmptyQueue,
     [string]$OutputPath = "",
@@ -204,12 +205,15 @@ $commandLookup = @{}
 foreach ($group in $validationGroups) {
     foreach ($command in @($group.commands)) {
         $stage = if ($command.name.EndsWith("-final")) { "Final" } else { "Setup" }
+        $isCaptureCommand = $command.command.StartsWith(".\tools\capture_live_validation_evidence.ps1")
         $commandLookup[$command.name] = [pscustomobject]@{
             groupId = $group.id
             groupTitle = $group.title
             protocol = $group.protocol
             name = $command.name
             captureStage = $stage
+            operatorRequired = $isCaptureCommand
+            finalVisualAcceptanceRequired = ($isCaptureCommand -and $stage -eq "Final")
             purpose = $command.purpose
             command = $command.command
         }
@@ -314,6 +318,8 @@ foreach ($missingSlot in @($missingSlotBlocker.items)) {
                 protocol = $missingSlot.protocol
                 name = $_
                 captureStage = $null
+                operatorRequired = $false
+                finalVisualAcceptanceRequired = $false
                 purpose = "Missing command template."
                 command = $null
             }
@@ -371,6 +377,9 @@ $result = [pscustomobject]@{
     closeoutBlockerCount = @($closeout.closeoutBlockers).Count
     recommendedCaptureCount = @($recommendedCaptures).Count
     commandCount = @($recommendedCaptures | ForEach-Object { $_.commands } | Where-Object { -not [string]::IsNullOrWhiteSpace($_.command) }).Count
+    operatorRequiredCommandCount = @($recommendedCaptures | ForEach-Object { $_.commands } | Where-Object { $_.operatorRequired }).Count
+    finalVisualAcceptanceCommandCount = @($recommendedCaptures | ForEach-Object { $_.commands } | Where-Object { $_.finalVisualAcceptanceRequired }).Count
+    allowFinalCommands = [bool]$AllowFinalCommands
     recommendedCaptures = $recommendedCaptures
     validationGroups = $validationGroups
 }
@@ -404,7 +413,11 @@ if ($CommandsOnly) {
     foreach ($capture in @($result.recommendedCaptures)) {
         foreach ($command in @($capture.commands)) {
             if (-not [string]::IsNullOrWhiteSpace($command.command)) {
-                Write-Output $command.command
+                if ($command.finalVisualAcceptanceRequired -and -not $AllowFinalCommands) {
+                    Write-Output "# OPERATOR REQUIRED FINAL: $($command.command)"
+                } else {
+                    Write-Output $command.command
+                }
             }
         }
     }
@@ -418,6 +431,11 @@ Write-Output "Capture stage: $($result.captureStage)"
 Write-Output "Current closeout blockers: $($result.closeoutBlockerCount)"
 Write-Output "Recommended captures: $($result.recommendedCaptureCount)"
 Write-Output "Command templates: $($result.commandCount)"
+Write-Output "Operator-required commands: $($result.operatorRequiredCommandCount)"
+Write-Output "Final visual-acceptance commands: $($result.finalVisualAcceptanceCommandCount)"
+if ($result.finalVisualAcceptanceCommandCount -gt 0) {
+    Write-Output "Final command guard: -CommandsOnly comments final visual-acceptance commands unless -AllowFinalCommands is passed."
+}
 Write-Output "Thermal readiness command: $($result.thermalReadiness.command)"
 if (@($result.availableSlots).Count -gt 0) {
     Write-Output "Available missing slots: $($result.availableSlots -join ', ')"
@@ -448,6 +466,11 @@ if (@($result.recommendedCaptures).Count -gt 0) {
         }
         foreach ($command in @($capture.commands)) {
             Write-Output "    $($command.name): $($command.purpose)"
+            if ($command.finalVisualAcceptanceRequired) {
+                Write-Output "      Operator required: final visual acceptance must be based on inspected target-visible video; do not run unattended."
+            } elseif ($command.operatorRequired) {
+                Write-Output "      Operator required: target setup must be physically present and visually inspectable."
+            }
             if (-not [string]::IsNullOrWhiteSpace($command.command)) {
                 Write-Output "      $($command.command)"
             }

@@ -214,7 +214,15 @@ if (@($Slot).Count -gt 0) {
 $commands = @(& $planner @commandsArgs)
 Set-Content -LiteralPath $commandsPath -Value ([string]::Join([Environment]::NewLine, $commands)) -Encoding utf8
 $commandText = @($commands) -join "`n"
-$roiFinalTemplateCommands = @($commands | Where-Object {
+$operatorRequiredFinalPrefix = "# OPERATOR REQUIRED FINAL: "
+$uncommentedCommands = @($commands | ForEach-Object {
+    if ($_.StartsWith($operatorRequiredFinalPrefix)) {
+        $_.Substring($operatorRequiredFinalPrefix.Length)
+    } else {
+        $_
+    }
+})
+$roiFinalTemplateCommands = @($uncommentedCommands | Where-Object {
     $_.Contains("<visible-target-bounds-in-screenshot-space>") -or
     $_.Contains("<visible-face-or-skin-target-bounds-in-screenshot-space>")
 })
