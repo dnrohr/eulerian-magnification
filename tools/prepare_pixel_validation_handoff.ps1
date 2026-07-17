@@ -306,6 +306,7 @@ if (-not [string]::IsNullOrWhiteSpace($AdbPath)) {
     $sessionReadinessCommandParts = @($sessionReadinessCommandParts[0], "-AdbPath $(Format-CommandArgument $AdbPath)") + @($sessionReadinessCommandParts | Select-Object -Skip 1)
 }
 $sessionReadinessCommand = $sessionReadinessCommandParts -join " "
+$sessionReadinessNote = "Run after install and before watched capture. In the JSON, readyForWatchedCapture gates final visual acceptance, readyForSetupCapture gates non-final setup captures, setupIssues explain setup blockers, and recommendedActions describe cooling/focus/charging/jank next steps."
 $captureCommandSectionTitle = if ($AllowOperatorCommands) { "Runnable Commands" } else { "Guarded Commands" }
 $captureCommandSectionNote = if ($AllowOperatorCommands) {
     "# Operator commands were explicitly allowed when this handoff was generated."
@@ -432,7 +433,7 @@ $handoffLines += @(
     $installCommand,
     '```',
     "",
-    "Snapshot device readiness after install and before watched capture. This records thermal status, focus, battery temperature, and graphics frame stats so a hot or nearly frozen preview is caught before visual judgment:",
+    "Snapshot device readiness after install and before watched capture. This records thermal status, focus, battery temperature, and graphics frame stats so a hot or nearly frozen preview is caught before visual judgment. In the JSON, ``readyForWatchedCapture`` gates final visual acceptance, ``readyForSetupCapture`` gates non-final setup captures, ``setupIssues`` explain setup blockers, and ``recommendedActions`` describe cooling/focus/charging/jank next steps:",
     "",
     '```powershell',
     $sessionReadinessCommand,
@@ -551,7 +552,7 @@ $manifest = [pscustomobject]@{
     sessionReadiness = [pscustomobject]@{
         command = $sessionReadinessCommand
         outputPath = $sessionReadinessPath
-        note = "Run after install and before watched capture to snapshot thermal, focused-app, battery, and gfxinfo jank state."
+        note = $sessionReadinessNote
     }
     deviceAvailability = $deviceAvailability
     installCommand = $installCommand
@@ -592,7 +593,7 @@ $result = [pscustomobject]@{
     sessionReadiness = [pscustomobject]@{
         command = $sessionReadinessCommand
         outputPath = $sessionReadinessPath
-        note = "Run after install and before watched capture to snapshot thermal, focused-app, battery, and gfxinfo jank state."
+        note = $sessionReadinessNote
     }
     deviceAvailability = $deviceAvailability
     installCommand = $installCommand

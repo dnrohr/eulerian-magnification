@@ -660,6 +660,9 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - Session readiness now distinguishes final watched-capture readiness from
   non-final setup readiness and emits recommended actions for thermal, focus,
   charging-heat, and graphics-jank conditions.
+- Pixel handoffs now explain how to interpret `readyForWatchedCapture`,
+  `readyForSetupCapture`, `setupIssues`, and `recommendedActions` at the
+  readiness command site.
 - Pixel validation planner JSON now exposes compact
   `recommendedCaptureCount`, `commandCount`, and `closeoutBlockerCount` fields
   so phone-session handoff audits can check the queue size without recalculating

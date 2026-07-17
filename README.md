@@ -401,7 +401,9 @@ install/launch and before watched capture to catch a hot or nearly frozen
 preview before spending operator attention on visual acceptance. Its JSON
 separates stricter `readyForWatchedCapture` final-readiness from
 `readyForSetupCapture`, and includes `recommendedActions` such as cooling,
-focusing the app, or reducing charging heat.
+focusing the app, or reducing charging heat. Treat `setupIssues` as blockers
+for non-final setup captures too; if only `issues` are present, setup may still
+be possible while final visual acceptance waits.
 
 After a connected Pixel validation pass, summarize which accepted evidence
 bundles are ready to close the remaining roadmap items. The summary includes
