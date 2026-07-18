@@ -13,9 +13,9 @@ Goal: make ROI behavior predictable enough that users can trust what region is b
 ## Completed Slice
 
 - Live auto ROI now holds the last detected region instead of predicting/extrapolating movement between face-detection passes.
-- Empty detection results increment a missed-detection counter and show `Frozen ROI` while the app keeps using the last good region.
+- Empty detection results increment a missed-detection counter and show `Held ROI` while the app keeps using the last good region.
 - After sustained missed detections, the app resets the tracker/smoother and falls back to `Center ROI`.
-- Compact preview labels now show `Manual ROI`, `Tracking`, `Frozen ROI`, or `Center ROI`.
+- Compact preview labels now show `Manual ROI`, `Tracking`, `Held ROI`, or `Center ROI`.
 - Added tracker tests for freeze and reset behavior.
 
 ## Done When

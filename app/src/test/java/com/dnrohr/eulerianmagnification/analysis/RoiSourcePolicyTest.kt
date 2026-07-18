@@ -27,6 +27,7 @@ class RoiSourcePolicyTest {
     @Test
     fun labelsSelectedSourcePlainly() {
         assertEquals("Tracking", RoiSourcePolicy.labelFor(RoiSource.Auto, RoiState.Tracking))
+        assertEquals("Held ROI", RoiSourcePolicy.labelFor(RoiSource.Auto, RoiState.Frozen))
         assertEquals("Full frame", RoiSourcePolicy.labelFor(RoiSource.FullFrame, RoiState.Tracking))
         assertEquals("Manual ROI", RoiSourcePolicy.labelFor(RoiSource.Manual, RoiState.Tracking))
     }

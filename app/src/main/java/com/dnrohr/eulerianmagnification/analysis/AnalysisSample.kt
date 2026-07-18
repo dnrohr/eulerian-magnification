@@ -20,7 +20,7 @@ enum class RoiState(val label: String) {
     Manual("Manual ROI"),
     FullFrame("Full frame"),
     Tracking("Tracking"),
-    Frozen("Frozen ROI"),
+    Frozen("Held ROI"),
     Center("Center ROI"),
 }
 

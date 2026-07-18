@@ -219,14 +219,14 @@ The default screen is intentionally compact so the preview remains visible.
 - `Output`: expanded-controls label that spells out the active pipeline:
   `Color amplification`, `Breathing signal`, or
   `Experimental fast-motion analysis`.
-- `Manual ROI`, `Full frame`, `Tracking`, `Frozen ROI`, `Center ROI`: compact
+- `Manual ROI`, `Full frame`, `Tracking`, `Held ROI`, `Center ROI`: compact
   status label showing whether the app is using your selected region, the whole
   frame, an actively detected face region, the last good detected region, or the
   center fallback.
 
 Only one ROI outline should be visible when a manual ROI is set. If automatic
 tracking briefly loses the face, the app holds the last good region and labels it
-`Frozen ROI` instead of immediately jumping to the center. If the automatic ROI
+`Held ROI` instead of immediately jumping to the center. If the automatic ROI
 appears far from the visible face for a sustained period, that likely indicates a
 preview-to-analysis coordinate mapping issue rather than a good target choice.
 

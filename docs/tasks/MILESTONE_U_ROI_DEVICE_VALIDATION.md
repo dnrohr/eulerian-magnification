@@ -348,6 +348,15 @@ Goal: prove that automatic and manual ROI coordinates align with the live previe
 - Handoff/verifier self-tests cover the generated command, device serial, text
   output, and stale-guidance failure.
 
+## Supporting Slice: ROI Hold Label Clarity
+
+- Renamed the compact automatic missed-detection state from `Frozen ROI` to
+  `Held ROI` so it cannot be mistaken for the separate `Camera frozen` quality
+  warning.
+- Live evidence summaries now extract `Held ROI` as an ROI label while keeping
+  `Camera frozen` under quality warnings.
+- Updated README and ROI validation instructions to use the clearer label.
+
 ## Done When
 
 - Manual and automatic ROI overlays align with the visible target on device.

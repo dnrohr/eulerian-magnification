@@ -247,7 +247,7 @@ function Parse-UiDumpSummary {
         text = $texts
         qualityLabels = @($texts | Where-Object { $_ -match $qualityPattern })
         rendererLabels = @($texts | Where-Object { $_ -match 'Renderer:|Preview:|GL renderer:|Pyramid:|Benchmark:' })
-        roiLabels = @($texts | Where-Object { $_ -match 'Auto ROI|Full frame|Manual ROI|Tracking|Center ROI|Frozen' })
+        roiLabels = @($texts | Where-Object { $_ -match 'Auto ROI|Full frame|Manual ROI|Tracking|Center ROI|Held ROI|Frozen ROI' })
         phaseLabels = @($texts | Where-Object { $_ -match $phasePattern })
         staleCameraFrameLabels = @($texts | Where-Object { $_ -match $staleCameraFramePattern })
     }

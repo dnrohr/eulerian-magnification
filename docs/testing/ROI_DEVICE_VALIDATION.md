@@ -142,9 +142,9 @@ manual ROI task.
 1. Install the latest debug APK.
 2. Launch the app in portrait orientation with the front camera facing a visible face.
 3. Use `Pulse` mode.
-4. Wait for the compact ROI label to change from `Center ROI` or `Frozen ROI` to `Tracking`.
+4. Wait for the compact ROI label to change from `Center ROI` or `Held ROI` to `Tracking`.
 5. Confirm the automatic ROI outline lands on the visible face/skin region rather than the room, shoulder, or center fallback.
-6. Move slightly and confirm short detection misses show `Frozen ROI` without visible wandering.
+6. Move slightly and confirm short detection misses show `Held ROI` without visible wandering.
 7. If the ROI remains far from the face while `Tracking`, capture non-sensitive evidence and inspect `PreviewRoiMapper`.
 
 Use the same screenshot analyzer for the green automatic ROI outline:
@@ -194,7 +194,7 @@ For the final accepted automatic ROI run, repeat the command from a clean
 committed source tree with `-VisualValidated $true`, keep
 `-RequireRoiMeasurement`, and replace the exploratory verdict gate with
 `-RequireFinalVisualEvidence`. Do not mark automatic ROI as validated from a
-`Center ROI`, `Frozen ROI`, or fallback measurement unless the milestone note
+`Center ROI`, `Held ROI`, or fallback measurement unless the milestone note
 explicitly says the run was only an overlay smoke test.
 The generated summary must show `source.dirty=false` and
 `source.commitReachableFromOriginMain=true` before the evidence can close the

@@ -527,7 +527,7 @@ Current Battery Service state:
 
     $staleCameraBundle = Join-Path $root "stale-camera-diagnostics"
     Copy-Item -LiteralPath $visualGateBundle -Destination $staleCameraBundle -Recurse
-    "<hierarchy><node text=`"Renderer: Live linear EVM reconstruction`" /><node text=`"Pyramid: 0 levels / n/a / fallback stale camera frame`" /><node text=`"Camera frozen`" /></hierarchy>" |
+    "<hierarchy><node text=`"Renderer: Live linear EVM reconstruction`" /><node text=`"Pyramid: 0 levels / n/a / fallback stale camera frame`" /><node text=`"Camera frozen`" /><node text=`"Held ROI`" /></hierarchy>" |
         Out-File -LiteralPath (Join-Path $staleCameraBundle "ui_dump.xml") -Encoding utf8
     $staleCameraExitCode = Invoke-Summary -BundlePath $staleCameraBundle -RequireCleanSource -RequireRendererDiagnostics -RequireNoWarnings
     $staleCameraSummary = Get-Content -LiteralPath (Join-Path $staleCameraBundle "evidence_summary.json") -Raw | ConvertFrom-Json
@@ -535,6 +535,7 @@ Current Battery Service state:
     Assert-Equal -Actual $staleCameraSummary.requiredGates.rendererDiagnostics.passed -Expected $true -Message "Stale camera bundle should still have renderer diagnostics."
     Assert-True -Condition ("Pyramid: 0 levels / n/a / fallback stale camera frame" -in @($staleCameraSummary.uiDump.staleCameraFrameLabels)) -Message "Stale camera diagnostic label missing."
     Assert-True -Condition ("Camera frozen" -in @($staleCameraSummary.uiDump.qualityLabels)) -Message "Camera frozen quality label missing."
+    Assert-True -Condition ("Held ROI" -in @($staleCameraSummary.uiDump.roiLabels)) -Message "Held ROI label missing."
     Assert-True -Condition ("UI diagnostics reported stale camera frame; restart/recover the preview before judging visual evidence" -in @($staleCameraSummary.warnings)) -Message "Stale camera warning missing."
     Assert-True -Condition ("UI quality reported Camera frozen; restart/recover the preview before judging visual evidence" -in @($staleCameraSummary.warnings)) -Message "Camera frozen warning missing."
 

@@ -18,7 +18,7 @@ Date: 2026-07-05
 - Added a `Clean` preview state that hides the compact status/control bar and leaves only a way back to `Controls`.
 - Added compact Raw/Amp/Diff/Split controls so view validation does not require opening the full diagnostics panel.
 - Changed live auto ROI to freeze the last good detection across missed detection passes instead of extrapolating movement.
-- Added compact ROI-state labels: `Manual ROI`, `Tracking`, `Frozen ROI`, and `Center ROI`.
+- Added compact ROI-state labels: `Manual ROI`, `Tracking`, `Held ROI`, and `Center ROI`.
 - Added `signal_timeline.csv` and richer metadata to app-native selected-video exports.
 - Added mode-specific setup recipes in expanded controls for Pulse, Breathing, and Fast Motion.
 - Selecting `Split` now automatically uses GL preview for live raw-left/processed-right comparison; verified on Pixel device `47091JEKB05516` in portrait with a non-sensitive room target.
