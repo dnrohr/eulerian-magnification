@@ -10,6 +10,7 @@ enum class LivePhaseFallbackReason(
     UnsupportedGl("GL phase resources unavailable"),
     MemoryBudgetExceeded("phase ROI exceeds memory budget"),
     TimingUnhealthy("preview timing unhealthy"),
+    StaleCameraFrame("stale camera frame"),
     LowAmplitude("phase amplitude too low"),
     RendererError("phase renderer disabled after GL error"),
 }

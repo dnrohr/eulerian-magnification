@@ -132,4 +132,16 @@ class GlFrameTimerTest {
             fallback.summary(),
         )
     }
+
+    @Test
+    fun summarizesStaleCameraFrameFallback() {
+        val diagnostics = GlReconstructionDiagnostics(
+            fallbackReason = GlReconstructionFallbackReason.StaleCameraFrame,
+        )
+
+        assertEquals(
+            "Pyramid: 0 levels / n/a / fallback stale camera frame",
+            diagnostics.summary(),
+        )
+    }
 }

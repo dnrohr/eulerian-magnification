@@ -56,6 +56,10 @@ restart the preview or app and confirm the live image is moving before accepting
 setup or final evidence.
 When `Camera frozen` appears in expanded controls, the `Restart Preview` button
 forces the live camera preview to rebind without changing persisted settings.
+The GL reconstruction paths also require a fresh camera texture before updating
+their temporal state. If controls or CPU analysis request a redraw while the
+camera texture is stale, Debug reports `stale camera frame` and keeps the last
+processed image instead of recomputing a color-only change from old pixels.
 
 Lighting diagnostics use a rolling average-green history. The app reports:
 

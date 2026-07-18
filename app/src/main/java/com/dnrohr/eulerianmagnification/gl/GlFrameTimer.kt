@@ -156,5 +156,6 @@ enum class GlReconstructionFallbackReason(val label: String) {
     HalfFloatUnsupported("half-float unsupported"),
     MissingRenderTargets("missing targets"),
     IncompletePyramid("incomplete pyramid"),
+    StaleCameraFrame("stale camera frame"),
     GlError("GL error"),
 }

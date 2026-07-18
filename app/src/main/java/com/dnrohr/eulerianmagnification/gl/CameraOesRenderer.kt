@@ -265,15 +265,17 @@ class CameraOesRenderer(
     override fun onDrawFrame(gl: GL10?) {
         timer.beginFrame(System.nanoTime())
         GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT)
-        val texture = surfaceTexture
-        if (texture != null && hasNewFrame) {
-            texture.updateTexImage()
-            texture.getTransformMatrix(transformMatrix)
-            hasNewFrame = false
+        val updatedCameraFrame = updateCameraTextureIfAvailable()
+        if (updatedCameraFrame) {
+            renderCameraTextureToRgb()
         }
-        renderCameraTextureToRgb()
         val reconstructionRequested = liveReconstructionRequested(colorUniforms)
-        val reconstructionRenderPath = if (renderLivePyramidReconstruction()) {
+        val reconstructionRenderPath = if (reconstructionRequested && !updatedCameraFrame) {
+            reconstructionDiagnostics = GlReconstructionDiagnostics(
+                fallbackReason = GlReconstructionFallbackReason.StaleCameraFrame,
+            )
+            GlRenderPath.LiveReconstructionFallback
+        } else if (renderLivePyramidReconstruction()) {
             GlRenderPath.LiveReconstruction
         } else {
             renderColorMagnification()
@@ -283,7 +285,13 @@ class CameraOesRenderer(
                 GlRenderPath.ColorBridge
             }
         }
-        val phaseDiagnostics = prepareLivePhaseRoiState(colorUniforms, rgbRenderTarget, processedRenderTarget)
+        val phaseDiagnostics = if (updatedCameraFrame) {
+            prepareLivePhaseRoiState(colorUniforms, rgbRenderTarget, processedRenderTarget)
+        } else {
+            colorUniforms.livePhaseDiagnostics.takeIf { it.requested }?.copy(
+                fallbackReason = LivePhaseFallbackReason.StaleCameraFrame,
+            ) ?: LivePhaseDiagnostics(requested = false)
+        }
         val renderPath = if (phaseDiagnostics.requested && phaseDiagnostics.fallbackReason == null) {
             GlRenderPath.LivePhaseMotion
         } else {
@@ -301,6 +309,15 @@ class CameraOesRenderer(
                 phaseDiagnostics = phaseDiagnostics,
             )
         )
+    }
+
+    private fun updateCameraTextureIfAvailable(): Boolean {
+        val texture = surfaceTexture ?: return false
+        if (!hasNewFrame) return false
+        texture.updateTexImage()
+        texture.getTransformMatrix(transformMatrix)
+        hasNewFrame = false
+        return true
     }
 
     fun release() {

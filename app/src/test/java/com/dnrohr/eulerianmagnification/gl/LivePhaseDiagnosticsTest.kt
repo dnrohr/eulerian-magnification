@@ -28,6 +28,19 @@ class LivePhaseDiagnosticsTest {
     }
 
     @Test
+    fun staleCameraFallbackExplainsFrozenInput() {
+        val diagnostics = LivePhaseDiagnostics(
+            requested = true,
+            warmupStatus = LivePhaseWarmupStatus.Ready,
+            processingSize = GlTextureSize(160, 120),
+            fallbackReason = LivePhaseFallbackReason.StaleCameraFrame,
+        )
+
+        assertFalse(diagnostics.active)
+        assertEquals("phase fallback: stale camera frame", diagnostics.summary)
+    }
+
+    @Test
     fun readyWithoutFallbackIsActive() {
         val diagnostics = LivePhaseDiagnostics(
             requested = true,
