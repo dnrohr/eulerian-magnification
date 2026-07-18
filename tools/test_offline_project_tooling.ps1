@@ -6,6 +6,7 @@ $tests = @(
     "test_github_workflows.ps1",
     "test_debug_install_helper.ps1",
     "test_pixel_session_readiness.ps1",
+    "test_pixel_preview_recovery.ps1",
     "test_roi_bounds_converter.ps1",
     "test_roi_final_capture_command.ps1",
     "test_pixel_validation_plan.ps1",

@@ -416,6 +416,20 @@ heat. Treat `setupIssues` as blockers for non-final setup captures too; if only
 `issues` are present, setup may still be possible while final visual acceptance
 waits.
 
+When readiness reports recent Pixel camera frame-sync warnings, run the preview
+recovery helper before spending more watched-session time:
+
+```powershell
+.\tools\recover_pixel_preview_session.ps1 `
+  -DeviceSerial 47091JEKB05516
+```
+
+The helper force-stops the app, clears logcat, relaunches GL preview with a
+fresh `validation.cameraSession` token, waits briefly, and reruns
+`export_pixel_session_readiness.ps1`. Add `-RequireFinalReady` when the session
+must be ready for final visual acceptance rather than only setup. It never
+records evidence or bypasses thermal/camera readiness gates.
+
 After a connected Pixel validation pass, summarize which accepted evidence
 bundles are ready to close the remaining roadmap items. The summary includes
 source branch/commit plus screenshot and screenrecord SHA-256 values for each
