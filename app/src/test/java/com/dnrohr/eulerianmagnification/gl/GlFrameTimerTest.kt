@@ -31,6 +31,7 @@ class GlFrameTimerTest {
         assertEquals(2, stats.renderSampleCount)
         assertEquals(24.0, stats.averageFrameMillis, 0.001)
         assertEquals(30.303, stats.averageFps, 0.01)
+        assertEquals(66_000_000L, stats.lastCameraFrameNanos)
     }
 
     @Test

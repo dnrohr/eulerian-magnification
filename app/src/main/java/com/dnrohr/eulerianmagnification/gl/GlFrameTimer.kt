@@ -55,6 +55,7 @@ class GlFrameTimer(private val windowSize: Int = 60) {
             return GlFrameStats(
                 renderPath = renderPath,
                 surfaceSize = surfaceSize,
+                lastCameraFrameNanos = lastFrameAvailableNanos,
                 reconstructionDiagnostics = reconstructionDiagnostics,
                 phaseDiagnostics = phaseDiagnostics,
             )
@@ -66,6 +67,7 @@ class GlFrameTimer(private val windowSize: Int = 60) {
             averageFps = if (averageCadenceNanos <= 0.0) 0.0 else NANOS_PER_SECOND / averageCadenceNanos,
             sampleCount = frameIntervalsNanos.size,
             renderSampleCount = frameDurationsNanos.size,
+            lastCameraFrameNanos = lastFrameAvailableNanos,
             renderPath = renderPath,
             surfaceSize = surfaceSize,
             reconstructionDiagnostics = reconstructionDiagnostics,
@@ -86,6 +88,7 @@ data class GlFrameStats(
     val averageFps: Double = 0.0,
     val sampleCount: Int = 0,
     val renderSampleCount: Int = 0,
+    val lastCameraFrameNanos: Long? = null,
     val renderPath: GlRenderPath = GlRenderPath.Unknown,
     val surfaceSize: GlTextureSize? = null,
     val reconstructionDiagnostics: GlReconstructionDiagnostics = GlReconstructionDiagnostics(),

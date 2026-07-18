@@ -13,6 +13,7 @@ Current statuses:
 - `Low FPS`: close apps or reduce device load.
 - `Full frame slow`: switch to Auto ROI for live preview.
 - `Camera FPS low`: hide controls or use Auto ROI.
+- `Camera frozen`: restart the preview or app before validating.
 - `Timing unstable`: restart the preview if timing keeps jumping.
 - `Lighting flicker`: try daylight or a non-flickering lamp.
 - `Exposure unstable`: wait for exposure to settle, then lock AE/AWB.
@@ -46,6 +47,13 @@ from `SurfaceTexture` callbacks and is only shown after enough camera frames
 have arrived to avoid startup-settling false warnings. This separates a slow
 analysis path from a camera stream that is actually delivering frames too slowly
 for full-frame live magnification.
+
+`Camera frozen` is based on the age of the most recent GL `SurfaceTexture`
+camera-frame callback. It can appear even when the UI and renderer are still
+smooth, because the GL surface may keep drawing the last texture after the Pixel
+camera stack stops delivering fresh frames. Treat this as a validation blocker:
+restart the preview or app and confirm the live image is moving before accepting
+setup or final evidence.
 
 Lighting diagnostics use a rolling average-green history. The app reports:
 

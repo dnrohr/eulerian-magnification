@@ -14,6 +14,7 @@ class QualityEvaluator {
         lightingUnstable: Boolean = false,
         cameraFrameFps: Double? = null,
         cameraFrameSampleCount: Int = 0,
+        cameraFrameStalled: Boolean = false,
         roiSource: RoiSource = RoiSource.Auto,
         thermalStatus: String = THERMAL_STATUS_NONE,
     ): List<QualityStatus> {
@@ -31,6 +32,7 @@ class QualityEvaluator {
             ) {
                 add(QualityStatus.CameraFpsLow)
             }
+            if (cameraFrameStalled) add(QualityStatus.CameraFrozen)
             if (!sample.timestampMonotonic) add(QualityStatus.TimingUnstable)
             if (lightingFlickerLikely) add(QualityStatus.LightingFlicker)
             if (lightingUnstable) add(QualityStatus.LightingUnstable)
@@ -77,6 +79,7 @@ enum class QualityStatus(
     LowFps("Low FPS", "Close apps or reduce device load."),
     FullFrameSlow("Full frame slow", "Switch to Auto ROI for live preview."),
     CameraFpsLow("Camera FPS low", "Hide controls or use Auto ROI."),
+    CameraFrozen("Camera frozen", "Restart the preview or app before validating."),
     TimingUnstable("Timing unstable", "Restart the preview if timing keeps jumping."),
     LightingFlicker("Lighting flicker", "Try daylight or a non-flickering lamp."),
     LightingUnstable("Exposure unstable", "Wait for exposure to settle, then lock AE/AWB."),

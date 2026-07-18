@@ -18,6 +18,18 @@ Goal: replace terse quality labels with guidance that tells the user what to cha
 - README and quality architecture docs now explain the action behavior.
 - `QualityEvaluatorTest` verifies the user-facing guidance strings.
 
+## Follow-up Slice: Camera Frozen Warning
+
+- Added a `Camera frozen` quality status for GL sessions where the most recent
+  camera frame is stale even though the UI can still render.
+- The app polls the last GL `SurfaceTexture` frame timestamp while GL preview is
+  active, so a hard camera-frame stall can become visible without waiting for a
+  new frame callback.
+- README and quality docs now describe the difference between a slow UI, low
+  camera FPS, and a frozen camera texture.
+- JVM tests cover the GL frame timestamp, frozen-camera quality status, haptic
+  cue eligibility, and user-facing action text.
+
 ## Done When
 
 - Quality messages answer "what should I do next?"

@@ -87,6 +87,7 @@ object QualityCuePolicy {
             QualityStatus.LowFps,
             QualityStatus.FullFrameSlow,
             QualityStatus.CameraFpsLow,
+            QualityStatus.CameraFrozen,
             QualityStatus.TimingUnstable,
             QualityStatus.LightingFlicker,
             QualityStatus.LightingUnstable,
@@ -113,6 +114,7 @@ object QualityCuePolicy {
             QualityStatus.CameraMotion,
             QualityStatus.LightingFlicker,
             QualityStatus.ThermalHigh,
+            QualityStatus.CameraFrozen,
             -> 4
             QualityStatus.FaceMissing,
             QualityStatus.TooDark,

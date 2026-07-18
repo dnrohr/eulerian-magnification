@@ -140,4 +140,19 @@ class QualityCuePolicyTest {
         assertTrue(decision.shouldCue)
         assertEquals(QualityCueReason.QualityRegressed, decision.reason)
     }
+
+    @Test
+    fun cuesWhenCameraFramesFreeze() {
+        val decision = QualityCuePolicy.decide(
+            previousStatuses = listOf(QualityStatus.Good),
+            currentStatuses = listOf(QualityStatus.CameraFrozen),
+            state = QualityCueState(),
+            nowMillis = 10_000L,
+            enabled = true,
+            systemHapticsAllowed = true,
+        )
+
+        assertTrue(decision.shouldCue)
+        assertEquals(QualityCueReason.QualityRegressed, decision.reason)
+    }
 }

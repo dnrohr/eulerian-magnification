@@ -159,6 +159,25 @@ class QualityEvaluatorTest {
     }
 
     @Test
+    fun warnsWhenGlCameraFramesStopArriving() {
+        val statuses = QualityEvaluator().evaluate(
+            sample = AnalysisSample(
+                roi = NormalizedRect(0.1f, 0.1f, 0.3f, 0.3f),
+                averageGreen = 120.0,
+                bandpassedGreen = 0.2,
+                analysisFps = 30.0,
+                timestampMonotonic = true,
+            ),
+            cameraFrameFps = 30.0,
+            cameraFrameSampleCount = 30,
+            cameraFrameStalled = true,
+        )
+
+        assertTrue(QualityStatus.CameraFrozen in statuses)
+        assertTrue(QualityStatus.CameraFpsLow !in statuses)
+    }
+
+    @Test
     fun detectsWeakSignalWhenRoiAndFramesAreAvailable() {
         val statuses = QualityEvaluator().evaluate(
             AnalysisSample(
@@ -278,6 +297,7 @@ class QualityEvaluatorTest {
         assertEquals("Close apps or reduce device load.", QualityStatus.LowFps.action)
         assertEquals("Switch to Auto ROI for live preview.", QualityStatus.FullFrameSlow.action)
         assertEquals("Hide controls or use Auto ROI.", QualityStatus.CameraFpsLow.action)
+        assertEquals("Restart the preview or app before validating.", QualityStatus.CameraFrozen.action)
         assertEquals("Restart the preview if timing keeps jumping.", QualityStatus.TimingUnstable.action)
         assertEquals("Try daylight or a non-flickering lamp.", QualityStatus.LightingFlicker.action)
         assertEquals("Wait for exposure to settle, then lock AE/AWB.", QualityStatus.LightingUnstable.action)

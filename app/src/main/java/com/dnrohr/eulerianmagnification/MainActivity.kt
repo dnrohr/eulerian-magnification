@@ -133,6 +133,7 @@ import java.time.Instant
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import java.util.concurrent.Executors
+import kotlinx.coroutines.delay
 import kotlin.math.abs
 
 class MainActivity : ComponentActivity() {
@@ -224,6 +225,7 @@ private fun MainScreen(
     var overlaySample by remember { mutableStateOf(AnalysisSample()) }
     var overlayBreathingMotionSample by remember { mutableStateOf(BreathingMotionSample()) }
     var overlayGlFrameStats by remember { mutableStateOf(GlFrameStats()) }
+    var cameraFrameStalled by remember { mutableStateOf(false) }
     var overlayLightingDiagnostic by remember { mutableStateOf<LightingDiagnostic?>(null) }
     var overlayQualityStatuses by remember { mutableStateOf(listOf(QualityStatus.Good)) }
     var lastOverlayTelemetryMillis by remember { mutableStateOf(0L) }
@@ -301,6 +303,19 @@ private fun MainScreen(
                     validationRunning = false
                 }
             }
+        }
+    }
+
+    LaunchedEffect(usingGlPreview, glFrameStats.lastCameraFrameNanos) {
+        if (!usingGlPreview) {
+            cameraFrameStalled = false
+            return@LaunchedEffect
+        }
+        while (true) {
+            val lastCameraFrameNanos = glFrameStats.lastCameraFrameNanos
+            cameraFrameStalled = lastCameraFrameNanos != null &&
+                System.nanoTime() - lastCameraFrameNanos >= CAMERA_FRAME_STALL_NANOS
+            delay(CAMERA_FRAME_STALL_POLL_MILLIS)
         }
     }
 
@@ -434,6 +449,7 @@ private fun MainScreen(
         lightingUnstable = lightingDiagnostic?.status == LightingDiagnosticStatus.ExposurePumping,
         cameraFrameFps = glFrameStats.averageFps.takeIf { usingGlPreview },
         cameraFrameSampleCount = if (usingGlPreview) glFrameStats.sampleCount else 0,
+        cameraFrameStalled = usingGlPreview && cameraFrameStalled,
         roiSource = roiSource,
         thermalStatus = liveThermalStatus,
     )
@@ -2290,3 +2306,5 @@ private fun SignalWaveform(
 
 private const val SIGNAL_HISTORY_SIZE = 120
 private const val UI_TELEMETRY_INTERVAL_MILLIS = 250L
+private const val CAMERA_FRAME_STALL_POLL_MILLIS = 500L
+private const val CAMERA_FRAME_STALL_NANOS = 1_500_000_000L
