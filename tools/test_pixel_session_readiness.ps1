@@ -67,6 +67,9 @@ Total frames rendered: 120
 Janky frames: 5 (4.2%)
 95th percentile: 32ms
 "@ | Out-File -LiteralPath (Join-Path $readyFixture "gfxinfo.txt") -Encoding utf8
+@"
+Camera FPS: 30.0
+"@ | Out-File -LiteralPath (Join-Path $readyFixture "logcat_tail.txt") -Encoding utf8
 
 $readyOutput = Join-Path $root "ready.json"
 $readyText = & (Join-Path $PSScriptRoot "export_pixel_session_readiness.ps1") -FixtureRoot $readyFixture -OutputPath $readyOutput
@@ -83,6 +86,8 @@ Assert-Equal -Actual $ready.battery.temperatureC -Expected 32.5 -Message "Ready 
 Assert-Equal -Actual $ready.focusedApp.packageVisible -Expected $true -Message "Ready fixture should report focused app."
 Assert-Equal -Actual $ready.gfxinfo.jankyPercent -Expected 4.2 -Message "Ready fixture janky percent mismatch."
 Assert-Equal -Actual $ready.gfxinfo.frameP95Ms -Expected 32 -Message "Ready fixture p95 frame time mismatch."
+Assert-Equal -Actual $ready.cameraLogHealth.syncWarningLineCount -Expected 0 -Message "Ready fixture should not report camera sync warnings."
+Assert-Equal -Actual $ready.thresholds.cameraLogSampleSeconds -Expected 3 -Message "Readiness output should document the camera log sample window."
 
 @"
 Thermal Status: 2
@@ -101,6 +106,9 @@ Total frames rendered: 200
 Janky frames: 50 (25.0%)
 95th percentile: 80ms
 "@ | Out-File -LiteralPath (Join-Path $hotFixture "gfxinfo.txt") -Encoding utf8
+@"
+Camera FPS: 30.0
+"@ | Out-File -LiteralPath (Join-Path $hotFixture "logcat_tail.txt") -Encoding utf8
 
 $hotOutput = Join-Path $root "hot.json"
 $hotExitCode = Invoke-ReadinessExitCode -FixtureRoot $hotFixture -OutputPath $hotOutput
@@ -138,6 +146,9 @@ Total frames rendered: 200
 Janky frames: 4 (2.0%)
 95th percentile: 15ms
 "@ | Out-File -LiteralPath (Join-Path $severeFixture "gfxinfo.txt") -Encoding utf8
+@"
+Camera FPS: 30.0
+"@ | Out-File -LiteralPath (Join-Path $severeFixture "logcat_tail.txt") -Encoding utf8
 
 $severeOutput = Join-Path $root "severe.json"
 $severeExitCode = Invoke-ReadinessExitCode -FixtureRoot $severeFixture -OutputPath $severeOutput
@@ -149,5 +160,42 @@ Assert-Equal -Actual $severe.readyForWatchedCapture -Expected $false -Message "S
 Assert-Equal -Actual $severe.readyForSetupCapture -Expected $false -Message "Severe fixture should not be ready for setup capture."
 Assert-True -Condition ((@($severe.setupIssues) -join "`n").Contains("setup threshold")) -Message "Severe fixture should report a setup threshold issue."
 Assert-True -Condition ((@($severe.recommendedActions) -join "`n").Contains("Stop live preview")) -Message "Severe fixture should recommend stopping preview while cooling."
+
+$frozenFixture = Join-Path $root "frozen"
+New-Item -ItemType Directory -Path $frozenFixture -Force | Out-Null
+@"
+Thermal Status: 0
+Temperature{mValue=29.0, mType=0, mName=skin, mStatus=1}
+"@ | Out-File -LiteralPath (Join-Path $frozenFixture "thermalservice.txt") -Encoding utf8
+@"
+Current Battery Service state:
+  USB powered: true
+  temperature: 254
+"@ | Out-File -LiteralPath (Join-Path $frozenFixture "battery.txt") -Encoding utf8
+@"
+mCurrentFocus=Window{abc u0 com.dnrohr.eulerianmagnification/com.dnrohr.eulerianmagnification.MainActivity}
+"@ | Out-File -LiteralPath (Join-Path $frozenFixture "window_focus.txt") -Encoding utf8
+@"
+Total frames rendered: 2044
+Janky frames: 35 (1.71%)
+95th percentile: 13ms
+"@ | Out-File -LiteralPath (Join-Path $frozenFixture "gfxinfo.txt") -Encoding utf8
+@"
+07-18 11:45:23.385  1057 32038 W Lyric   : shutter_notification_manager.cc:254: 2 calls in 10 sec(s): re-sync SOF and vsync events. counter offset: 0 timestamp drift: -195494ns at frame count: 1892
+07-18 11:45:26.030  1057 32038 W Lyric   : shutter_notification_manager.cc:269: 50 calls in 5 sec(s): vsync timeout for frame 1971
+"@ | Out-File -LiteralPath (Join-Path $frozenFixture "logcat_tail.txt") -Encoding utf8
+
+$frozenOutput = Join-Path $root "frozen.json"
+$frozenExitCode = Invoke-ReadinessExitCode -FixtureRoot $frozenFixture -OutputPath $frozenOutput
+$frozenSetupExitCode = Invoke-ReadinessExitCode -FixtureRoot $frozenFixture -OutputPath (Join-Path $root "frozen-setup.json") -FailOnSetupNotReady
+$frozen = Get-Content -LiteralPath $frozenOutput -Raw | ConvertFrom-Json
+Assert-Equal -Actual $frozenExitCode -Expected 31 -Message "Camera sync warnings should fail final readiness."
+Assert-Equal -Actual $frozenSetupExitCode -Expected 32 -Message "Camera sync warnings should fail setup readiness."
+Assert-Equal -Actual $frozen.readyForWatchedCapture -Expected $false -Message "Frozen fixture should not be ready for watched capture."
+Assert-Equal -Actual $frozen.readyForSetupCapture -Expected $false -Message "Frozen fixture should not be ready for setup capture."
+Assert-Equal -Actual $frozen.cameraLogHealth.syncWarningLineCount -Expected 2 -Message "Frozen fixture should count camera sync warning lines."
+Assert-True -Condition ((@($frozen.issues) -join "`n").Contains("preview may be frozen")) -Message "Frozen fixture should flag preview freeze risk."
+Assert-True -Condition ((@($frozen.setupIssues) -join "`n").Contains("preview may be frozen")) -Message "Frozen fixture should flag setup freeze risk."
+Assert-True -Condition ((@($frozen.recommendedActions) -join "`n").Contains("Restart the app")) -Message "Frozen fixture should recommend restarting the app."
 
 Write-Output "Pixel session readiness self-test passed."

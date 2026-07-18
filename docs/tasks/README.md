@@ -194,15 +194,22 @@ The handoff also includes `export_pixel_session_readiness.ps1`. The setup
 command writes `pixel_setup_readiness_preflight.json` and uses
 `-FailOnSetupNotReady`; the final session command writes
 `pixel_session_readiness_preflight.json` and uses `-FailOnNotReady`. Both
-record thermal status, focused-app state, battery temperature, and `gfxinfo`
-jank/frame-time signals. Run setup readiness before non-final setup captures,
-then run session readiness after install/launch and before watched capture to
-catch a hot or nearly frozen preview before spending operator attention on
-visual acceptance. Its JSON separates stricter `readyForWatchedCapture`
+record thermal status, focused-app state, battery temperature, `gfxinfo`
+jank/frame-time signals, and `cameraLogHealth` from recent logcat. Run setup
+readiness before non-final setup captures, then run session readiness after
+install/launch and before watched capture to catch a hot, unfocused, janky, or
+camera-frame-sync-stalled preview before spending operator attention on visual
+acceptance. The readiness probe clears logcat and samples a fresh short window
+before checking camera logs, so stale warnings from a previous app session do
+not keep blocking a restarted preview. Pixel camera log lines such as `vsync
+timeout` or `re-sync SOF` fail readiness because the UI can keep rendering
+smoothly while the visible camera image is frozen. Its JSON separates stricter
+`readyForWatchedCapture`
 final-readiness from `readyForSetupCapture`, and includes `recommendedActions`
-such as cooling, focusing the app, or reducing charging heat. Treat
-`setupIssues` as blockers for non-final setup captures too; if only `issues`
-are present, setup may still be possible while final visual acceptance waits.
+such as cooling, focusing the app, restarting the app, or reducing charging
+heat. Treat `setupIssues` as blockers for non-final setup captures too; if only
+`issues` are present, setup may still be possible while final visual acceptance
+waits.
 
 After a connected Pixel session, summarize which accepted evidence bundles are
 ready to close roadmap items. The closeout summary includes the accepted

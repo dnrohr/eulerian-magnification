@@ -10,6 +10,8 @@ param(
     [double]$WarnBatteryTemperatureC = 38.0,
     [double]$WarnFrameP95Ms = 45.0,
     [double]$WarnJankyPercent = 10.0,
+    [int]$MaxCameraSyncWarningLines = 0,
+    [int]$CameraLogSampleSeconds = 3,
     [switch]$FailOnNotReady,
     [switch]$FailOnSetupNotReady
 )
@@ -190,15 +192,61 @@ function Parse-GfxInfoSummary {
     }
 }
 
+function Parse-CameraLogHealth {
+    param([string]$Text)
+
+    $syncWarningLines = @()
+    foreach ($line in ($Text -split "`r?`n")) {
+        $trimmed = $line.Trim()
+        if ([string]::IsNullOrWhiteSpace($trimmed)) {
+            continue
+        }
+
+        if ($trimmed -match '(?i)(vsync timeout|re-sync SOF|camera.*frame.*timeout|frame.*timeout|dropped.*camera.*frame)') {
+            $syncWarningLines += $trimmed
+        }
+    }
+
+    return [ordered]@{
+        present = -not [string]::IsNullOrWhiteSpace($Text)
+        syncWarningLineCount = @($syncWarningLines).Count
+        syncWarningLines = @($syncWarningLines | Select-Object -First 8)
+    }
+}
+
+function Read-FreshLogcatSample {
+    param(
+        [int]$SampleSeconds,
+        [string[]]$AdbArguments
+    )
+
+    if (-not [string]::IsNullOrWhiteSpace($FixtureRoot)) {
+        return Read-DeviceText -Name "logcat_tail.txt" -AdbArguments $AdbArguments
+    }
+
+    $adb = Find-Adb -ExplicitPath $AdbPath
+    $deviceArgs = if ([string]::IsNullOrWhiteSpace($DeviceSerial)) { @() } else { @("-s", $DeviceSerial) }
+    & $adb @deviceArgs logcat -c *> $null
+    if ($LASTEXITCODE -ne 0) {
+        throw "adb logcat -c failed with exit code ${LASTEXITCODE}"
+    }
+    if ($SampleSeconds -gt 0) {
+        Start-Sleep -Seconds $SampleSeconds
+    }
+    return Read-DeviceText -Name "logcat_tail.txt" -AdbArguments $AdbArguments
+}
+
 $thermalText = Read-DeviceText -Name "thermalservice.txt" -AdbArguments @("shell", "dumpsys", "thermalservice")
 $batteryText = Read-DeviceText -Name "battery.txt" -AdbArguments @("shell", "dumpsys", "battery")
 $focusText = Read-DeviceText -Name "window_focus.txt" -AdbArguments @("shell", "dumpsys", "window")
 $gfxText = Read-DeviceText -Name "gfxinfo.txt" -AdbArguments @("shell", "dumpsys", "gfxinfo", $Package)
+$logcatText = Read-FreshLogcatSample -SampleSeconds $CameraLogSampleSeconds -AdbArguments @("logcat", "-d", "-t", "300")
 
 $thermal = Parse-ThermalSummary $thermalText
 $battery = Parse-BatterySummary $batteryText
 $focusedApp = Parse-FocusedAppSummary -Text $focusText -ExpectedPackage $Package
 $gfxinfo = Parse-GfxInfoSummary $gfxText
+$cameraLogHealth = Parse-CameraLogHealth $logcatText
 $maxThermalStatus = Get-MaxThermalStatus $thermal
 
 $issues = @()
@@ -250,6 +298,16 @@ if ($gfxinfo.present) {
     $warnings += "gfxinfo output unavailable; frame jank could not be checked"
 }
 
+if ($cameraLogHealth.present) {
+    if ($cameraLogHealth.syncWarningLineCount -gt $MaxCameraSyncWarningLines) {
+        $issues += "recent camera frame-sync warnings suggest the preview may be frozen"
+        $setupIssues += "recent camera frame-sync warnings suggest the preview may be frozen"
+        $recommendedActions += "Restart the app and confirm the camera image is moving before setup or final visual capture."
+    }
+} else {
+    $warnings += "logcat output unavailable; camera frame-sync warnings could not be checked"
+}
+
 if (@($recommendedActions).Count -eq 0) {
     $recommendedActions += "Device looks ready; proceed only when the watched target is physically set up."
 }
@@ -266,6 +324,8 @@ $result = [ordered]@{
         warnBatteryTemperatureC = $WarnBatteryTemperatureC
         warnFrameP95Ms = $WarnFrameP95Ms
         warnJankyPercent = $WarnJankyPercent
+        maxCameraSyncWarningLines = $MaxCameraSyncWarningLines
+        cameraLogSampleSeconds = $CameraLogSampleSeconds
     }
     readyForWatchedCapture = (@($issues).Count -eq 0)
     readyForSetupCapture = (@($setupIssues).Count -eq 0)
@@ -277,6 +337,7 @@ $result = [ordered]@{
     battery = $battery
     focusedApp = $focusedApp
     gfxinfo = $gfxinfo
+    cameraLogHealth = $cameraLogHealth
 }
 
 if (-not [string]::IsNullOrWhiteSpace($OutputPath)) {

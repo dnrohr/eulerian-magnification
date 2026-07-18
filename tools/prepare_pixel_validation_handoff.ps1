@@ -318,7 +318,7 @@ if (-not [string]::IsNullOrWhiteSpace($AdbPath)) {
 }
 $setupReadinessCommand = $setupReadinessCommandParts -join " "
 $setupReadinessNote = "Run before non-final setup captures. In the JSON, readyForSetupCapture gates setup work and setupIssues explain blockers such as severe thermal state or the app not being focused."
-$sessionReadinessNote = "Run after install and before watched capture. In the JSON, readyForWatchedCapture gates final visual acceptance, readyForSetupCapture gates non-final setup captures, setupIssues explain setup blockers, and recommendedActions describe cooling/focus/charging/jank next steps."
+$sessionReadinessNote = "Run after install and before watched capture. In the JSON, readyForWatchedCapture gates final visual acceptance, readyForSetupCapture gates non-final setup captures, setupIssues explain setup blockers, cameraLogHealth reports fresh camera frame-sync timeout evidence, and recommendedActions describe cooling/focus/charging/restart/jank next steps."
 $captureCommandSectionTitle = if ($AllowOperatorCommands) { "Runnable Commands" } else { "Guarded Commands" }
 $captureCommandSectionNote = if ($AllowOperatorCommands) {
     "# Operator commands were explicitly allowed when this handoff was generated."
@@ -455,7 +455,7 @@ $handoffLines += @(
     $setupReadinessCommand,
     '```',
     "",
-    "Snapshot device readiness after install and before watched capture. This records thermal status, focus, battery temperature, and graphics frame stats so a hot or nearly frozen preview is caught before visual judgment. In the JSON, ``readyForWatchedCapture`` gates final visual acceptance, ``readyForSetupCapture`` gates non-final setup captures, ``setupIssues`` explain setup blockers, and ``recommendedActions`` describe cooling/focus/charging/jank next steps:",
+    "Snapshot device readiness after install and before watched capture. This records thermal status, focus, battery temperature, graphics frame stats, and fresh camera frame-sync log health so a hot, frozen, or nearly frozen preview is caught before visual judgment. Smooth ``gfxinfo`` UI frames can coexist with a frozen camera image; ``cameraLogHealth`` reports Pixel camera ``vsync timeout`` or ``re-sync SOF`` lines from the fresh sample. In the JSON, ``readyForWatchedCapture`` gates final visual acceptance, ``readyForSetupCapture`` gates non-final setup captures, ``setupIssues`` explain setup blockers, and ``recommendedActions`` describe cooling/focus/charging/restart/jank next steps:",
     "",
     '```powershell',
     $sessionReadinessCommand,
