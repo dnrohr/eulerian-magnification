@@ -213,6 +213,7 @@ function Parse-UiDumpSummary {
             rendererLabels = @()
             roiLabels = @()
             phaseLabels = @()
+            staleCameraFrameLabels = @()
         }
     }
 
@@ -234,11 +235,13 @@ function Parse-UiDumpSummary {
             rendererLabels = @()
             roiLabels = @()
             phaseLabels = @()
+            staleCameraFrameLabels = @()
         }
     }
 
-    $qualityPattern = 'Good|Face missing|Too dark|Thermal high|Low FPS|Full frame slow|Camera FPS low|Timing unstable|Lighting flicker|Exposure unstable|ROI motion|Mode motion risk|Amplification risk|Signal weak'
+    $qualityPattern = 'Good|Face missing|Too dark|Thermal high|Low FPS|Full frame slow|Camera FPS low|Camera frozen|Timing unstable|Lighting flicker|Exposure unstable|ROI motion|Mode motion risk|Amplification risk|Signal weak'
     $phasePattern = 'phase:|phase fallback|phase warmup|phase ready'
+    $staleCameraFramePattern = 'stale camera frame'
     return [ordered]@{
         present = $true
         text = $texts
@@ -246,6 +249,7 @@ function Parse-UiDumpSummary {
         rendererLabels = @($texts | Where-Object { $_ -match 'Renderer:|Preview:|GL renderer:|Pyramid:|Benchmark:' })
         roiLabels = @($texts | Where-Object { $_ -match 'Auto ROI|Full frame|Manual ROI|Tracking|Center ROI|Frozen' })
         phaseLabels = @($texts | Where-Object { $_ -match $phasePattern })
+        staleCameraFrameLabels = @($texts | Where-Object { $_ -match $staleCameraFramePattern })
     }
 }
 
@@ -805,6 +809,14 @@ if (-not $rendererDiagnosticsPassed) {
 $phaseDiagnosticsPassed = (-not [bool]$RequirePhaseDiagnostics) -or (@($uiDumpSummary.phaseLabels).Count -gt 0)
 if (-not $phaseDiagnosticsPassed) {
     $warnings += "phase diagnostics required but no phase labels were found in the UI dump"
+}
+$staleCameraFrameLabelCount = @($uiDumpSummary.staleCameraFrameLabels).Count
+if ($staleCameraFrameLabelCount -gt 0) {
+    $warnings += "UI diagnostics reported stale camera frame; restart/recover the preview before judging visual evidence"
+}
+$cameraFrozenLabelCount = @($uiDumpSummary.qualityLabels | Where-Object { $_ -match 'Camera frozen' }).Count
+if ($cameraFrozenLabelCount -gt 0) {
+    $warnings += "UI quality reported Camera frozen; restart/recover the preview before judging visual evidence"
 }
 $screenrecordPassed = (-not [bool]$RequireScreenrecord) -or ($screenrecordInfo.present -and $screenrecordInfo.nonEmpty -and $screenrecordInfo.mp4Signature)
 $warningCountBeforeNoWarningsGate = $warnings.Count

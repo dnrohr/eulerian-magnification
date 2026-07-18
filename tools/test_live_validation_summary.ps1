@@ -525,6 +525,19 @@ Current Battery Service state:
     Assert-Equal -Actual $rendererDiagnosticsSummary.requiredGates.rendererDiagnostics.passed -Expected $true -Message "Renderer diagnostics gate should pass."
     Assert-Equal -Actual $rendererDiagnosticsSummary.requiredGates.rendererDiagnostics.labelCount -Expected 1 -Message "Renderer diagnostics label count mismatch."
 
+    $staleCameraBundle = Join-Path $root "stale-camera-diagnostics"
+    Copy-Item -LiteralPath $visualGateBundle -Destination $staleCameraBundle -Recurse
+    "<hierarchy><node text=`"Renderer: Live linear EVM reconstruction`" /><node text=`"Pyramid: 0 levels / n/a / fallback stale camera frame`" /><node text=`"Camera frozen`" /></hierarchy>" |
+        Out-File -LiteralPath (Join-Path $staleCameraBundle "ui_dump.xml") -Encoding utf8
+    $staleCameraExitCode = Invoke-Summary -BundlePath $staleCameraBundle -RequireCleanSource -RequireRendererDiagnostics -RequireNoWarnings
+    $staleCameraSummary = Get-Content -LiteralPath (Join-Path $staleCameraBundle "evidence_summary.json") -Raw | ConvertFrom-Json
+    Assert-Equal -Actual $staleCameraExitCode -Expected 7 -Message "Stale camera diagnostics should fail the no-warnings gate."
+    Assert-Equal -Actual $staleCameraSummary.requiredGates.rendererDiagnostics.passed -Expected $true -Message "Stale camera bundle should still have renderer diagnostics."
+    Assert-True -Condition ("Pyramid: 0 levels / n/a / fallback stale camera frame" -in @($staleCameraSummary.uiDump.staleCameraFrameLabels)) -Message "Stale camera diagnostic label missing."
+    Assert-True -Condition ("Camera frozen" -in @($staleCameraSummary.uiDump.qualityLabels)) -Message "Camera frozen quality label missing."
+    Assert-True -Condition ("UI diagnostics reported stale camera frame; restart/recover the preview before judging visual evidence" -in @($staleCameraSummary.warnings)) -Message "Stale camera warning missing."
+    Assert-True -Condition ("UI quality reported Camera frozen; restart/recover the preview before judging visual evidence" -in @($staleCameraSummary.warnings)) -Message "Camera frozen warning missing."
+
     $missingPhaseDiagnosticsExitCode = Invoke-Summary -BundlePath $visualGateBundle -RequireCleanSource -RequirePhaseDiagnostics
     $missingPhaseDiagnosticsSummary = Get-Content -LiteralPath (Join-Path $visualGateBundle "evidence_summary.json") -Raw | ConvertFrom-Json
     Assert-Equal -Actual $missingPhaseDiagnosticsExitCode -Expected 10 -Message "Missing phase diagnostics gate exit code mismatch."

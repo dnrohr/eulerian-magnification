@@ -203,6 +203,10 @@ expanded UI must expose renderer labels such as `Renderer:`,
 `phase:`, `phase fallback`, `phase warmup`, or `phase ready`. Missing required
 diagnostic categories add warnings and make the summary command exit with code
 `10`.
+If the UI dump contains `stale camera frame` or `Camera frozen`, the summary
+adds a warning because the renderer is no longer updating from fresh camera
+textures. Final runs that use `-RequireNoWarnings` therefore reject frozen-input
+evidence before visual review.
 
 For watched motion-validation runs, pass `-RequireScreenrecord` with a positive
 `-ScreenRecordSeconds` value when a still screenshot would not prove the visual
@@ -458,6 +462,8 @@ Available launch parameters:
   `uiDump.rendererLabels` contains at least one renderer diagnostic label.
 - `-RequirePhaseDiagnostics`: with `-Summarize`, fail the summary unless
   `uiDump.phaseLabels` contains at least one phase diagnostic label.
+- `-RequireNoWarnings`: with `-Summarize`, fail final evidence if the UI dump
+  reports `stale camera frame` or `Camera frozen`.
 - `-RequireReviewContactSheet`: with `-Summarize`, fail the summary unless
   `review_contact_sheet.jpg` exists with a manifest whose screenrecord SHA-256
   matches the current `screenrecord.mp4`.

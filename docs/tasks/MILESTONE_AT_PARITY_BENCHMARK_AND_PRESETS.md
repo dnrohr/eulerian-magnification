@@ -681,6 +681,9 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - Use `tools/capture_live_validation_evidence.ps1` for watched preset runs so
   each visual claim has a screenshot or recording plus logcat, gfxinfo, thermal,
   battery, focused-window, and manifest context.
+- Evidence summaries now warn when the UI dump reports `stale camera frame` or
+  `Camera frozen`, so final `-RequireNoWarnings` runs reject frozen-input
+  captures instead of allowing a color-only redraw to masquerade as motion.
 - Mark the README/parity docs as visually validated only after those watched
   target notes and artifacts exist.
 
