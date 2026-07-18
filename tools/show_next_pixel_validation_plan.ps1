@@ -29,7 +29,7 @@ $validationGroups = @(
         milestones = @("M", "U")
         protocol = "docs/testing/ROI_DEVICE_VALIDATION.md"
         setupEvidence = "Manual known target and automatic visible face/skin setup captures should stop at target_visible_unvalidated."
-        finalEvidence = "Final runs require -RequireRoiMeasurement plus -RequireFinalVisualEvidence from a clean source tree whose commit is reachable from origin/main."
+        finalEvidence = "Final runs require -RequireRoiMeasurement plus -RequireFinalVisualEvidence from a clean source tree whose commit is reachable from origin/main, with no warnings such as Camera frozen or stale camera frame."
         closes = @(
             "portrait/front-camera ROI mapping confidence",
             "manual ROI known-target alignment",
@@ -65,7 +65,7 @@ $validationGroups = @(
         milestones = @("AE", "AP")
         protocol = "docs/experiments/pixel8a_live_linear_validation.md"
         setupEvidence = "Pulse and Breathing setup captures should show renderer diagnostics and stop at target_visible_unvalidated."
-        finalEvidence = "Final Pulse and Breathing runs require -RequireRendererDiagnostics, explicit runtime gates, and -RequireFinalVisualEvidence from a clean source tree whose commit is reachable from origin/main."
+        finalEvidence = "Final Pulse and Breathing runs require -RequireRendererDiagnostics, explicit runtime gates, and -RequireFinalVisualEvidence from a clean source tree whose commit is reachable from origin/main, with no warnings such as Camera frozen or stale camera frame."
         closes = @(
             "portrait full-frame live EVM preview validation",
             "live linear reconstruction visual evidence",
@@ -101,7 +101,7 @@ $validationGroups = @(
         milestones = @("AR")
         protocol = "docs/experiments/pixel8a_live_phase_validation.md"
         setupEvidence = "Controlled high-contrast moving-edge setup should stop at target_visible_unvalidated."
-        finalEvidence = "Final Motion/Fast tremor runs require -RequirePhaseDiagnostics, explicit runtime gates, and -RequireFinalVisualEvidence from a clean source tree whose commit is reachable from origin/main."
+        finalEvidence = "Final Motion/Fast tremor runs require -RequirePhaseDiagnostics, explicit runtime gates, and -RequireFinalVisualEvidence from a clean source tree whose commit is reachable from origin/main, with no warnings such as Camera frozen or stale camera frame."
         closes = @(
             "controlled object-motion live phase validation",
             "Object vibration and Fast tremor preset visual parity inputs"
@@ -231,7 +231,7 @@ $slotGuidance = @{
         acceptanceChecks = @(
             "Exactly one manual ROI outline is visible.",
             "The ROI outline overlaps the selected target bounds.",
-            "The capture has valid screenrecord, thermal-ready, camera-FPS, focused-app, and ROI-measurement gates."
+            "The final capture has valid screenrecord, thermal-ready, camera-FPS, focused-app, ROI-measurement, and no-warning gates."
         )
     }
     autoRoi = [pscustomobject]@{
@@ -243,7 +243,7 @@ $slotGuidance = @{
         acceptanceChecks = @(
             "Exactly one automatic ROI outline is visible.",
             "The ROI outline follows the visible face or skin target, not the center fallback.",
-            "The capture has valid screenrecord, thermal-ready, camera-FPS, focused-app, and ROI-measurement gates."
+            "The final capture has valid screenrecord, thermal-ready, camera-FPS, focused-app, ROI-measurement, and no-warning gates."
         )
     }
     pulseLinear = [pscustomobject]@{
@@ -255,7 +255,7 @@ $slotGuidance = @{
         acceptanceChecks = @(
             "Split view shows full-frame live linear reconstruction, not an ROI-only tint.",
             "The target-visible change is localized enough to read as magnification, not whole-frame flashing.",
-            "Renderer diagnostics, valid screenrecord, thermal-ready, camera-FPS, and focused-app gates are present."
+            "Renderer diagnostics, valid screenrecord, thermal-ready, camera-FPS, focused-app, and no-warning gates are present."
         )
     }
     breathingLinear = [pscustomobject]@{
@@ -267,7 +267,7 @@ $slotGuidance = @{
         acceptanceChecks = @(
             "Split view shows reconstructed motion on the watched target rather than ROI-only tint.",
             "The recording does not show whole-frame flashing or a frozen camera stream.",
-            "Renderer diagnostics, valid screenrecord, thermal-ready, camera-FPS, and focused-app gates are present."
+            "Renderer diagnostics, valid screenrecord, thermal-ready, camera-FPS, focused-app, and no-warning gates are present."
         )
     }
     objectPhase = [pscustomobject]@{
@@ -279,7 +279,7 @@ $slotGuidance = @{
         acceptanceChecks = @(
             "Split view shows edge-localized amplified motion inside the ROI.",
             "The result is not uniform ROI flashing or a color-only change.",
-            "Phase diagnostics, valid screenrecord, thermal-ready, camera-FPS, and focused-app gates are present."
+            "Phase diagnostics, valid screenrecord, thermal-ready, camera-FPS, focused-app, and no-warning gates are present."
         )
     }
     fastTremorPhase = [pscustomobject]@{
@@ -291,7 +291,7 @@ $slotGuidance = @{
         acceptanceChecks = @(
             "Split view shows edge-localized amplified fast tremor.",
             "The result is not uniform ROI flashing, whole-frame flashing, or color-only change.",
-            "Phase diagnostics, valid screenrecord, thermal-ready, camera-FPS, and focused-app gates are present."
+            "Phase diagnostics, valid screenrecord, thermal-ready, camera-FPS, focused-app, and no-warning gates are present."
         )
     }
 }

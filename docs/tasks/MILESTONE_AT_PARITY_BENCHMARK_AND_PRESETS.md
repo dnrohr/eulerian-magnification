@@ -684,6 +684,10 @@ Goal: turn parity validation into supported app presets with Pixel 8a performanc
 - Evidence summaries now warn when the UI dump reports `stale camera frame` or
   `Camera frozen`, so final `-RequireNoWarnings` runs reject frozen-input
   captures instead of allowing a color-only redraw to masquerade as motion.
+- Pixel validation plans now repeat that final ROI, live-linear, and live-phase
+  acceptance requires no-warning gates, including no `Camera frozen` or `stale
+  camera frame` diagnostics, so operator-facing checklists match closeout
+  enforcement.
 - Mark the README/parity docs as visually validated only after those watched
   target notes and artifacts exist.
 
