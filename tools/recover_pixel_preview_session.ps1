@@ -138,6 +138,7 @@ $thermalReadyOutputPath = Join-Path $outputRootPath "pixel_preview_recovery_ther
 
 $commands = @()
 if ($WaitForThermalReady) {
+    $commands += "$adb shell am force-stop $Package"
     $thermalCommand = ".\tools\wait_for_device_thermal_ready.ps1 -DeviceSerial $DeviceSerial -ReadyBelowThermalStatus $ThermalReadyBelowStatus -RequiredReadySamples $ThermalReadySamples -TimeoutSeconds $ThermalReadyTimeoutSeconds -PollSeconds $ThermalReadyPollSeconds -OutputPath $thermalReadyOutputPath"
     if (-not [string]::IsNullOrWhiteSpace($AdbPath)) {
         $thermalCommand = ".\tools\wait_for_device_thermal_ready.ps1 -AdbPath $AdbPath -DeviceSerial $DeviceSerial -ReadyBelowThermalStatus $ThermalReadyBelowStatus -RequiredReadySamples $ThermalReadySamples -TimeoutSeconds $ThermalReadyTimeoutSeconds -PollSeconds $ThermalReadyPollSeconds -OutputPath $thermalReadyOutputPath"
@@ -196,8 +197,12 @@ $ready = $false
 $setupReady = $false
 $finalReady = $false
 $stoppedAfterFailure = $false
+$stoppedBeforeThermalWait = $false
+$stopBeforeThermalWait = $null
 $thermalReady = $null
 if ($WaitForThermalReady) {
+    $stopBeforeThermalWait = Invoke-CommandCapture -FilePath $adb -Arguments ($serialArgs + @("shell", "am", "force-stop", $Package))
+    $stoppedBeforeThermalWait = $stopBeforeThermalWait.exitCode -eq 0
     $thermalArgs = @(
         "-DeviceSerial", $device.serial,
         "-ReadyBelowThermalStatus", "$ThermalReadyBelowStatus",
@@ -236,6 +241,8 @@ if ($WaitForThermalReady) {
             requireFinalReady = [bool]$RequireFinalReady
             waitForThermalReady = [bool]$WaitForThermalReady
             thermalReady = $thermalReady
+            stoppedBeforeThermalWait = $stoppedBeforeThermalWait
+            stopBeforeThermalWaitExitCode = if ($stopBeforeThermalWait) { $stopBeforeThermalWait.exitCode } else { $null }
             leaveRunningOnFailure = [bool]$LeaveRunningOnFailure
             stoppedAfterFailure = $false
             recovered = $false
@@ -324,6 +331,8 @@ $result = [pscustomobject]@{
     requireFinalReady = [bool]$RequireFinalReady
     waitForThermalReady = [bool]$WaitForThermalReady
     thermalReady = $thermalReady
+    stoppedBeforeThermalWait = $stoppedBeforeThermalWait
+    stopBeforeThermalWaitExitCode = if ($stopBeforeThermalWait) { $stopBeforeThermalWait.exitCode } else { $null }
     leaveRunningOnFailure = [bool]$LeaveRunningOnFailure
     stoppedAfterFailure = $stoppedAfterFailure
     recovered = $ready

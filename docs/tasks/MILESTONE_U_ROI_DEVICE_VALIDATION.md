@@ -328,8 +328,9 @@ Goal: prove that automatic and manual ROI coordinates align with the live previe
   the default requires only setup readiness. Either way, the helper does not
   record evidence or bypass thermal/camera gates.
 - `-WaitForThermalReady` lets recovery wait below a chosen thermal status before
-  relaunching the camera. If the phone does not become cool enough before the
-  timeout, recovery exits before any relaunch attempt.
+  relaunching the camera. Recovery force-stops the app before the wait so the
+  camera pipeline is off during cooldown. If the phone does not become cool
+  enough before the timeout, recovery exits before any relaunch attempt.
 - Failed recovery now force-stops the app by default so a thermally blocked
   Pixel is not left running the camera while it needs to cool.
 - Added dry-run command-contract coverage in

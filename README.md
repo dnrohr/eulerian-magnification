@@ -432,8 +432,8 @@ records evidence or bypasses thermal/camera readiness gates. If all attempts
 fail, it force-stops the app so the phone can cool; pass
 `-LeaveRunningOnFailure` only when you need to inspect the failed app state.
 When the phone is warm, add `-WaitForThermalReady`; the generated Pixel handoff
-uses that safer form and waits below thermal status `3` (`severe`) before
-relaunching the camera.
+uses that safer form, stops the app before cooling, and waits below thermal
+status `3` (`severe`) before relaunching the camera.
 
 After a connected Pixel validation pass, summarize which accepted evidence
 bundles are ready to close the remaining roadmap items. The summary includes

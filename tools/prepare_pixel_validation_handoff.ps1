@@ -332,7 +332,7 @@ if (-not [string]::IsNullOrWhiteSpace($AdbPath)) {
     $previewRecoveryCommandParts = @($previewRecoveryCommandParts[0], "-AdbPath $(Format-CommandArgument $AdbPath)") + @($previewRecoveryCommandParts | Select-Object -Skip 1)
 }
 $previewRecoveryCommand = $previewRecoveryCommandParts -join " "
-$previewRecoveryNote = "Run only when setup/session readiness reports camera frame-sync warnings or the visible preview is frozen. The helper can wait for setup-level thermal readiness, restarts GL preview with fresh camera-session tokens, probes readiness again, and force-stops the app after failed recovery so the phone can cool."
+$previewRecoveryNote = "Run only when setup/session readiness reports camera frame-sync warnings or the visible preview is frozen. The helper stops the app before any thermal wait, restarts GL preview with fresh camera-session tokens after cooling, probes readiness again, and force-stops the app after failed recovery so the phone can cool."
 $captureCommandSectionTitle = if ($AllowOperatorCommands) { "Runnable Commands" } else { "Guarded Commands" }
 $captureCommandSectionNote = if ($AllowOperatorCommands) {
     "# Operator commands were explicitly allowed when this handoff was generated."

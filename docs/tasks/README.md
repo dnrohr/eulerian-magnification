@@ -226,8 +226,8 @@ fails, it force-stops the app so the phone can cool; pass
 `-LeaveRunningOnFailure` only when inspecting the failed app state matters more
 than cooling.
 Generated Pixel handoffs use `-WaitForThermalReady` and wait below thermal
-status `3` (`severe`) before relaunching the camera, so recovery does not keep
-hammering a hot phone.
+status `3` (`severe`) before relaunching the camera. Recovery stops the app
+before that wait so a hot phone is not left running the camera while it cools.
 
 After a connected Pixel session, summarize which accepted evidence bundles are
 ready to close roadmap items. The closeout summary includes the accepted
