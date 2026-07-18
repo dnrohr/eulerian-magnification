@@ -218,7 +218,7 @@ private fun MainScreen(
     }
     var controlsExpanded by remember { mutableStateOf(launchOverrides.controlsExpanded ?: false) }
     var cleanPreview by remember { mutableStateOf(launchOverrides.cleanPreview ?: false) }
-    val cameraSessionKey = launchOverrides.cameraSession ?: "default"
+    var cameraSessionKey by remember { mutableStateOf(launchOverrides.cameraSession ?: "default") }
     var manualRoi by remember { mutableStateOf<NormalizedRect?>(launchOverrides.manualRoi) }
     var manualRoiEditing by remember { mutableStateOf(false) }
     var glFrameStats by remember { mutableStateOf(GlFrameStats()) }
@@ -365,6 +365,7 @@ private fun MainScreen(
         launchOverrides.roiSource?.let { roiSource = it }
         launchOverrides.controlsExpanded?.let { controlsExpanded = it }
         launchOverrides.cleanPreview?.let { cleanPreview = it }
+        launchOverrides.cameraSession?.let { cameraSessionKey = it }
         if (launchOverrides.manualRoi != null || launchOverrides.roiSource == RoiSource.Manual) {
             manualRoi = launchOverrides.manualRoi
         }
@@ -620,6 +621,12 @@ private fun MainScreen(
             onEnterCleanPreview = {
                 controlsExpanded = false
                 cleanPreview = true
+            },
+            onRestartPreview = {
+                cameraSessionKey = "manual-${SystemClock.elapsedRealtime()}"
+                cameraFrameStalled = false
+                glFrameStats = GlFrameStats()
+                overlayGlFrameStats = GlFrameStats()
             },
             onToggleRecording = {
                 if (featureAvailability.processedRecordingAvailable) {
@@ -1259,6 +1266,7 @@ private fun StatusOverlay(
     onShowControls: () -> Unit,
     onHideControls: () -> Unit,
     onEnterCleanPreview: () -> Unit,
+    onRestartPreview: () -> Unit,
     onToggleRecording: () -> Unit,
     onShareRecording: () -> Unit,
     onShareRecordingPath: (String) -> Unit,
@@ -1342,7 +1350,10 @@ private fun StatusOverlay(
             color = Color(0xFFC8D3DC),
         )
         Spacer(modifier = Modifier.height(4.dp))
-        QualityStatusRow(qualityStatuses)
+        QualityStatusRow(
+            statuses = qualityStatuses,
+            onRestartPreview = onRestartPreview,
+        )
         Spacer(modifier = Modifier.height(8.dp))
         ExpandedPanelTabs(
             selectedPanel = selectedPanel,
@@ -1641,8 +1652,12 @@ private fun CleanPreviewOverlay(
 }
 
 @Composable
-private fun QualityStatusRow(statuses: List<QualityStatus>) {
+private fun QualityStatusRow(
+    statuses: List<QualityStatus>,
+    onRestartPreview: () -> Unit,
+) {
     val hasWarning = statuses != listOf(QualityStatus.Good)
+    val canRestartPreview = QualityStatus.CameraFrozen in statuses
     Column {
         Text(
             text = "Quality: ${statuses.joinToString { it.label }}",
@@ -1662,6 +1677,12 @@ private fun QualityStatusRow(statuses: List<QualityStatus>) {
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
+        if (canRestartPreview) {
+            Spacer(modifier = Modifier.height(6.dp))
+            Button(onClick = onRestartPreview) {
+                Text("Restart Preview")
+            }
+        }
     }
 }
 

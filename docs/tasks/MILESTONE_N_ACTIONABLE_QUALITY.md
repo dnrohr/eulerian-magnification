@@ -25,6 +25,9 @@ Goal: replace terse quality labels with guidance that tells the user what to cha
 - The app polls the last GL `SurfaceTexture` frame timestamp while GL preview is
   active, so a hard camera-frame stall can become visible without waiting for a
   new frame callback.
+- Expanded controls show `Restart Preview` when the frozen-camera status is
+  active. The button rotates the live camera session key and rebinds the
+  CameraX/GL preview without persisting a settings change.
 - README and quality docs now describe the difference between a slow UI, low
   camera FPS, and a frozen camera texture.
 - JVM tests cover the GL frame timestamp, frozen-camera quality status, haptic

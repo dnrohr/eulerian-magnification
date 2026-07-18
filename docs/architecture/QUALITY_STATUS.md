@@ -54,6 +54,8 @@ smooth, because the GL surface may keep drawing the last texture after the Pixel
 camera stack stops delivering fresh frames. Treat this as a validation blocker:
 restart the preview or app and confirm the live image is moving before accepting
 setup or final evidence.
+When `Camera frozen` appears in expanded controls, the `Restart Preview` button
+forces the live camera preview to rebind without changing persisted settings.
 
 Lighting diagnostics use a rolling average-green history. The app reports:
 

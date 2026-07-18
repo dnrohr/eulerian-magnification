@@ -559,7 +559,8 @@ The intended order is:
 - `Camera frozen` means the GL preview has not received a fresh camera frame
   recently. The UI can still look smooth while the camera texture is stale; do
   not use that session for setup or final validation until the preview/app has
-  been restarted and the image is visibly moving.
+  been restarted and the image is visibly moving. Expanded controls show
+  `Restart Preview` for this state; use it before a full app restart.
 - The debug MP4 is an app-owned processed visualization. Recorded-video
   processing now reconstructs full frames for `Amplified`/`Split`, while the
   live preview-matching camera/GPU recording path is still separate work.
