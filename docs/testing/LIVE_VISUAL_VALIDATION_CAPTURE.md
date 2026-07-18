@@ -417,6 +417,11 @@ Available launch parameters:
 - `-Clean`: opens or hides clean preview.
 - `-Panel`: when expanded controls are open, selects `Controls`, `Setup`,
   `Recording`, or `Debug`.
+- `-CameraSession`: optional nonce forwarded as `validation.cameraSession`.
+  If omitted, launched captures generate one from the bundle timestamp/label.
+  Use an explicit new value after a frozen-preview report to force the app's
+  camera preview/analyzer binding key to change without persisting any user
+  setting.
 - `-LockAeAwb`: requests locked exposure/white balance.
 - `-MeasureRoiExpected`: optional normalized screenshot-space
   `left,top,right,bottom` rectangle to check against the visible ROI overlay.
@@ -493,7 +498,8 @@ The same extras can be sent manually:
   --es validation.manualRoi 0.25,0.25,0.75,0.75 `
   --ez validation.glPreview true `
   --ez validation.controls true `
-  --es validation.panel Debug
+  --es validation.panel Debug `
+  --es validation.cameraSession retry-1
 ```
 
 ## When The Evidence Counts

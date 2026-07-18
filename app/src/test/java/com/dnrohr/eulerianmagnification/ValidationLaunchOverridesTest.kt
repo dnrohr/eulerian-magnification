@@ -24,6 +24,7 @@ class ValidationLaunchOverridesTest {
                 ValidationLaunchOverrides.EXTRA_CONTROLS to "true",
                 ValidationLaunchOverrides.EXTRA_CLEAN to "0",
                 ValidationLaunchOverrides.EXTRA_PANEL to "Debug",
+                ValidationLaunchOverrides.EXTRA_CAMERA_SESSION to "retry-1",
                 ValidationLaunchOverrides.EXTRA_PERSIST to "1",
             )
         )
@@ -41,6 +42,7 @@ class ValidationLaunchOverridesTest {
         assertEquals(true, overrides.controlsExpanded)
         assertEquals(false, overrides.cleanPreview)
         assertEquals(ExpandedPanelTab.Debug, overrides.expandedPanel)
+        assertEquals("retry-1", overrides.cameraSession)
         assertTrue(overrides.persistSettings)
         assertTrue(overrides.hasAnyOverride)
     }

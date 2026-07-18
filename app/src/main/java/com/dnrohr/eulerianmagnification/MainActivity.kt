@@ -136,8 +136,11 @@ import java.util.concurrent.Executors
 import kotlin.math.abs
 
 class MainActivity : ComponentActivity() {
+    private val launchOverridesState = mutableStateOf(ValidationLaunchOverrides())
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        launchOverridesState.value = ValidationLaunchOverrides.fromIntent(intent)
         val capabilityReporter = CapabilityReporter(this)
         val capabilityReport = capabilityReporter.buildReport()
         capabilityReporter.logSummary()
@@ -149,11 +152,17 @@ class MainActivity : ComponentActivity() {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     MainScreen(
                         featureAvailability = featureAvailability,
-                        launchOverrides = ValidationLaunchOverrides.fromIntent(intent),
+                        launchOverrides = launchOverridesState.value,
                     )
                 }
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        launchOverridesState.value = ValidationLaunchOverrides.fromIntent(intent)
     }
 }
 
@@ -208,6 +217,7 @@ private fun MainScreen(
     }
     var controlsExpanded by remember { mutableStateOf(launchOverrides.controlsExpanded ?: false) }
     var cleanPreview by remember { mutableStateOf(launchOverrides.cleanPreview ?: false) }
+    val cameraSessionKey = launchOverrides.cameraSession ?: "default"
     var manualRoi by remember { mutableStateOf<NormalizedRect?>(launchOverrides.manualRoi) }
     var manualRoiEditing by remember { mutableStateOf(false) }
     var glFrameStats by remember { mutableStateOf(GlFrameStats()) }
@@ -324,6 +334,27 @@ private fun MainScreen(
         }
     }
 
+    LaunchedEffect(launchOverrides) {
+        if (launchOverrides.mode != null ||
+            launchOverrides.viewMode != null ||
+            launchOverrides.amplification != null
+        ) {
+            analysisSettings = analysisSettings.copy(
+                mode = launchOverrides.mode ?: analysisSettings.mode,
+                viewMode = launchOverrides.viewMode ?: analysisSettings.viewMode,
+                amplification = launchOverrides.amplification ?: analysisSettings.amplification,
+            )
+        }
+        launchOverrides.requestedGlPreview?.let { showGlDebug = it }
+        launchOverrides.cameraControlsLocked?.let { cameraControlsLocked = it }
+        launchOverrides.roiSource?.let { roiSource = it }
+        launchOverrides.controlsExpanded?.let { controlsExpanded = it }
+        launchOverrides.cleanPreview?.let { cleanPreview = it }
+        if (launchOverrides.manualRoi != null || launchOverrides.roiSource == RoiSource.Manual) {
+            manualRoi = launchOverrides.manualRoi
+        }
+    }
+
     LaunchedEffect(analysisSettings, showGlDebug, cameraControlsLocked, qualityCuesEnabled, recordingOutputMode, roiSource) {
         if (!launchOverrides.hasAnyOverride || launchOverrides.persistSettings) {
             appSettingsStore.save(
@@ -430,7 +461,7 @@ private fun MainScreen(
     Box(modifier = Modifier.fillMaxSize()) {
         if (hasCameraPermission && featureAvailability.liveCameraAvailable) {
             if (usingGlPreview) {
-                key(analysisSettings, roiSource, manualRoi, cameraControlsLocked) {
+                key(analysisSettings, roiSource, manualRoi, cameraControlsLocked, cameraSessionKey) {
                     CameraGlPreview(
                         settings = analysisSettings,
                         roiSource = roiSource,
@@ -451,7 +482,7 @@ private fun MainScreen(
                         onProcessedFrame = { frame -> recordingSession?.record(frame) },
                     )
                 }
-            } else key(analysisSettings, roiSource, manualRoi, cameraControlsLocked) {
+            } else key(analysisSettings, roiSource, manualRoi, cameraControlsLocked, cameraSessionKey) {
                 CameraPreview(
                     settings = analysisSettings,
                     roiSource = roiSource,

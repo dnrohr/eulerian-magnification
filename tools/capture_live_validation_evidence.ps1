@@ -15,6 +15,7 @@ param(
     [string]$ManualRoi = "",
     [ValidateSet("", "Controls", "Setup", "Recording", "Debug")]
     [string]$Panel = "",
+    [string]$CameraSession = "",
     [Nullable[double]]$Amplification = $null,
     [Nullable[bool]]$GlPreview = $null,
     [Nullable[bool]]$Controls = $null,
@@ -289,6 +290,13 @@ $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
 $safeLabel = if ([string]::IsNullOrWhiteSpace($Label)) { "capture" } else { $Label -replace "[^A-Za-z0-9._-]", "-" }
 $outputDir = Join-Path $OutputRoot "$timestamp-$safeLabel"
 New-Item -ItemType Directory -Force -Path $outputDir | Out-Null
+$effectiveCameraSession = if ($SkipLaunch) {
+    $CameraSession
+} elseif ([string]::IsNullOrWhiteSpace($CameraSession)) {
+    "$timestamp-$safeLabel"
+} else {
+    $CameraSession
+}
 
 $artifacts = [ordered]@{}
 $warnings = @()
@@ -322,6 +330,7 @@ function Write-AbortedBundle {
             roiSource = $RoiSource
             manualRoi = $ManualRoi
             panel = $Panel
+            cameraSession = $effectiveCameraSession
             amplification = if ($scriptParameters.ContainsKey("Amplification")) { $Amplification } else { $null }
             glPreview = if ($scriptParameters.ContainsKey("GlPreview")) { $GlPreview } else { $null }
             controls = if ($scriptParameters.ContainsKey("Controls")) { $Controls } else { $null }
@@ -536,6 +545,9 @@ if (-not $SkipLaunch) {
     if (-not [string]::IsNullOrWhiteSpace($Panel)) {
         $launchArgs += @("--es", "validation.panel", $Panel)
     }
+    if (-not [string]::IsNullOrWhiteSpace($effectiveCameraSession)) {
+        $launchArgs += @("--es", "validation.cameraSession", $effectiveCameraSession)
+    }
     if ($PSBoundParameters.ContainsKey("Amplification")) {
         $launchArgs += @("--es", "validation.amplification", $Amplification.ToString([Globalization.CultureInfo]::InvariantCulture))
     }
@@ -732,6 +744,7 @@ $manifest = [ordered]@{
         roiSource = $RoiSource
         manualRoi = $ManualRoi
         panel = $Panel
+        cameraSession = $effectiveCameraSession
         amplification = if ($PSBoundParameters.ContainsKey("Amplification")) { $Amplification } else { $null }
         glPreview = if ($PSBoundParameters.ContainsKey("GlPreview")) { $GlPreview } else { $null }
         controls = if ($PSBoundParameters.ContainsKey("Controls")) { $Controls } else { $null }

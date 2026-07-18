@@ -99,6 +99,8 @@ function Assert-InvalidRoiArgument {
 
 $captureScript = Join-Path $PSScriptRoot "capture_live_validation_evidence.ps1"
 $thermalScript = Join-Path $PSScriptRoot "wait_for_device_thermal_ready.ps1"
+$repoRoot = Resolve-Path -LiteralPath (Join-Path $PSScriptRoot "..")
+$androidManifestPath = Join-Path $repoRoot "app\src\main\AndroidManifest.xml"
 $command = Get-Command $captureScript
 $thermalCommand = Get-Command $thermalScript
 $captureScriptContent = Get-Content -LiteralPath $captureScript -Raw
@@ -117,6 +119,9 @@ if (-not $command.Parameters.ContainsKey("RequireDeviceSerial")) {
 }
 if (-not $command.Parameters.ContainsKey("RequireReviewContactSheet")) {
     throw "Capture script must expose -RequireReviewContactSheet."
+}
+if (-not $command.Parameters.ContainsKey("CameraSession")) {
+    throw "Capture script must expose -CameraSession for forced camera rebind validation launches."
 }
 
 Assert-SequenceEqual `
@@ -187,7 +192,9 @@ foreach ($expectedSourceContract in @(
     "deviceSerial",
     "adbDeviceArgs",
     "-DeviceSerial",
-    "RequireDeviceSerial"
+    "RequireDeviceSerial",
+    "validation.cameraSession",
+    "cameraSession"
 )) {
     if (-not $captureScriptContent.Contains($expectedSourceContract)) {
         throw "Capture script must preserve source reachability contract: missing '$expectedSourceContract'."
@@ -211,6 +218,18 @@ foreach ($expectedThermalContract in @(
     if (-not $thermalScriptContent.Contains($expectedThermalContract)) {
         throw "Thermal wait helper must preserve device targeting contract: missing '$expectedThermalContract'."
     }
+}
+
+[xml]$androidManifest = Get-Content -LiteralPath $androidManifestPath -Raw
+$androidNamespace = "http://schemas.android.com/apk/res/android"
+$mainActivity = @($androidManifest.manifest.application.activity | Where-Object {
+    $_.GetAttribute("name", $androidNamespace) -eq ".MainActivity"
+} | Select-Object -First 1)
+if (@($mainActivity).Count -ne 1) {
+    throw "Android manifest must define .MainActivity exactly once."
+}
+if ($mainActivity[0].GetAttribute("launchMode", $androidNamespace) -ne "singleTop") {
+    throw "MainActivity must use android:launchMode='singleTop' so validation.cameraSession relaunches do not stack duplicate camera activities."
 }
 
 Write-Output "Live validation capture contract self-test passed."
