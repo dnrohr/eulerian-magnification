@@ -327,6 +327,9 @@ Goal: prove that automatic and manual ROI coordinates align with the live previe
 - `-RequireFinalReady` makes recovery require final watched-capture readiness;
   the default requires only setup readiness. Either way, the helper does not
   record evidence or bypass thermal/camera gates.
+- `-WaitForThermalReady` lets recovery wait below a chosen thermal status before
+  relaunching the camera. If the phone does not become cool enough before the
+  timeout, recovery exits before any relaunch attempt.
 - Failed recovery now force-stops the app by default so a thermally blocked
   Pixel is not left running the camera while it needs to cool.
 - Added dry-run command-contract coverage in
@@ -337,6 +340,8 @@ Goal: prove that automatic and manual ROI coordinates align with the live previe
 
 - Pixel validation handoff bundles now include a first-class preview recovery
   command in the runbook, Markdown handoff, JSON result, and manifest.
+- Generated recovery commands wait below thermal status `3` (`severe`) before
+  relaunching the camera.
 - `verify_pixel_validation_handoff.ps1` checks that recovery guidance matches
   the manifest so stale handoffs cannot omit the frozen-preview recovery step.
 - Handoff/verifier self-tests cover the generated command, device serial, text

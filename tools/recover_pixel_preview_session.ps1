@@ -7,6 +7,11 @@ param(
     [int]$SettleSeconds = 5,
     [string]$OutputRoot = "sample-videos\exports\live-validation",
     [switch]$RequireFinalReady,
+    [switch]$WaitForThermalReady,
+    [int]$ThermalReadyBelowStatus = 3,
+    [int]$ThermalReadySamples = 2,
+    [int]$ThermalReadyTimeoutSeconds = 300,
+    [int]$ThermalReadyPollSeconds = 15,
     [switch]$LeaveRunningOnFailure,
     [switch]$DryRun,
     [switch]$Json
@@ -107,6 +112,18 @@ if ($Attempts -lt 1) {
 if ($SettleSeconds -lt 0) {
     throw "SettleSeconds must be 0 or greater."
 }
+if ($ThermalReadyBelowStatus -lt 0) {
+    throw "ThermalReadyBelowStatus must be non-negative."
+}
+if ($ThermalReadySamples -lt 1) {
+    throw "ThermalReadySamples must be at least 1."
+}
+if ($ThermalReadyTimeoutSeconds -lt 0) {
+    throw "ThermalReadyTimeoutSeconds must be non-negative."
+}
+if ($ThermalReadyPollSeconds -lt 1) {
+    throw "ThermalReadyPollSeconds must be at least 1."
+}
 
 $adb = Find-Adb -ExplicitPath $AdbPath
 $outputRootPath = if ([System.IO.Path]::IsPathRooted($OutputRoot)) {
@@ -117,8 +134,16 @@ $outputRootPath = if ([System.IO.Path]::IsPathRooted($OutputRoot)) {
 $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
 $outputPath = Join-Path $outputRootPath "pixel_preview_recovery_$timestamp.json"
 $readinessOutputPath = Join-Path $outputRootPath "pixel_session_readiness_probe.json"
+$thermalReadyOutputPath = Join-Path $outputRootPath "pixel_preview_recovery_thermal_ready_$timestamp.json"
 
 $commands = @()
+if ($WaitForThermalReady) {
+    $thermalCommand = ".\tools\wait_for_device_thermal_ready.ps1 -DeviceSerial $DeviceSerial -ReadyBelowThermalStatus $ThermalReadyBelowStatus -RequiredReadySamples $ThermalReadySamples -TimeoutSeconds $ThermalReadyTimeoutSeconds -PollSeconds $ThermalReadyPollSeconds -OutputPath $thermalReadyOutputPath"
+    if (-not [string]::IsNullOrWhiteSpace($AdbPath)) {
+        $thermalCommand = ".\tools\wait_for_device_thermal_ready.ps1 -AdbPath $AdbPath -DeviceSerial $DeviceSerial -ReadyBelowThermalStatus $ThermalReadyBelowStatus -RequiredReadySamples $ThermalReadySamples -TimeoutSeconds $ThermalReadyTimeoutSeconds -PollSeconds $ThermalReadyPollSeconds -OutputPath $thermalReadyOutputPath"
+    }
+    $commands += $thermalCommand
+}
 for ($index = 1; $index -le $Attempts; $index++) {
     $session = "recovery-$timestamp-$index"
     $commands += "$adb shell am force-stop $Package"
@@ -139,6 +164,12 @@ if ($DryRun) {
         outputPath = $outputPath
         readinessOutputPath = $readinessOutputPath
         requireFinalReady = [bool]$RequireFinalReady
+        waitForThermalReady = [bool]$WaitForThermalReady
+        thermalReadyBelowStatus = $ThermalReadyBelowStatus
+        thermalReadySamples = $ThermalReadySamples
+        thermalReadyTimeoutSeconds = $ThermalReadyTimeoutSeconds
+        thermalReadyPollSeconds = $ThermalReadyPollSeconds
+        thermalReadyOutputPath = $thermalReadyOutputPath
         leaveRunningOnFailure = [bool]$LeaveRunningOnFailure
         commands = $commands
     }
@@ -165,6 +196,66 @@ $ready = $false
 $setupReady = $false
 $finalReady = $false
 $stoppedAfterFailure = $false
+$thermalReady = $null
+if ($WaitForThermalReady) {
+    $thermalArgs = @(
+        "-DeviceSerial", $device.serial,
+        "-ReadyBelowThermalStatus", "$ThermalReadyBelowStatus",
+        "-RequiredReadySamples", "$ThermalReadySamples",
+        "-TimeoutSeconds", "$ThermalReadyTimeoutSeconds",
+        "-PollSeconds", "$ThermalReadyPollSeconds",
+        "-OutputPath", $thermalReadyOutputPath
+    )
+    if (-not [string]::IsNullOrWhiteSpace($AdbPath)) {
+        $thermalArgs = @("-AdbPath", $adb) + $thermalArgs
+    }
+    & (Join-Path $PSScriptRoot "wait_for_device_thermal_ready.ps1") @thermalArgs | Out-Null
+    $thermalExitCode = $LASTEXITCODE
+    $thermalReadyJson = if (Test-Path -LiteralPath $thermalReadyOutputPath) {
+        Get-Content -LiteralPath $thermalReadyOutputPath -Raw | ConvertFrom-Json
+    } else {
+        $null
+    }
+    $thermalReady = [pscustomobject]@{
+        exitCode = $thermalExitCode
+        ready = ($thermalExitCode -eq 0)
+        outputPath = $thermalReadyOutputPath
+        result = $thermalReadyJson
+    }
+    if ($thermalExitCode -ne 0) {
+        $result = [pscustomobject]@{
+            dryRun = $false
+            createdAt = (Get-Date).ToString("o")
+            adb = $adb
+            package = $Package
+            activity = $Activity
+            deviceSerial = $device.serial
+            deviceDetails = $device.details
+            attemptsRequested = $Attempts
+            attemptsRun = 0
+            requireFinalReady = [bool]$RequireFinalReady
+            waitForThermalReady = [bool]$WaitForThermalReady
+            thermalReady = $thermalReady
+            leaveRunningOnFailure = [bool]$LeaveRunningOnFailure
+            stoppedAfterFailure = $false
+            recovered = $false
+            readyForSetupCapture = $false
+            readyForWatchedCapture = $false
+            outputPath = $outputPath
+            readinessOutputPath = $readinessOutputPath
+            attempts = @()
+        }
+        $result | ConvertTo-Json -Depth 10 | Out-File -LiteralPath $outputPath -Encoding utf8
+        if ($Json) {
+            $result | ConvertTo-Json -Depth 10
+        } else {
+            Write-Output "Pixel preview recovery: not ready"
+            Write-Output "Thermal wait did not become ready."
+            Write-Output "Output: $outputPath"
+        }
+        exit 34
+    }
+}
 
 for ($index = 1; $index -le $Attempts; $index++) {
     $session = "recovery-$timestamp-$index"
@@ -231,6 +322,8 @@ $result = [pscustomobject]@{
     attemptsRequested = $Attempts
     attemptsRun = @($attemptResults).Count
     requireFinalReady = [bool]$RequireFinalReady
+    waitForThermalReady = [bool]$WaitForThermalReady
+    thermalReady = $thermalReady
     leaveRunningOnFailure = [bool]$LeaveRunningOnFailure
     stoppedAfterFailure = $stoppedAfterFailure
     recovered = $ready

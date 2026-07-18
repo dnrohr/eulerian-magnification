@@ -321,13 +321,18 @@ $setupReadinessNote = "Run before non-final setup captures. In the JSON, readyFo
 $sessionReadinessNote = "Run after install and before watched capture. In the JSON, readyForWatchedCapture gates final visual acceptance, readyForSetupCapture gates non-final setup captures, setupIssues explain setup blockers, cameraLogHealth reports fresh camera frame-sync timeout evidence, and recommendedActions describe cooling/focus/charging/restart/jank next steps."
 $previewRecoveryCommandParts = @(
     ".\tools\recover_pixel_preview_session.ps1",
-    "-DeviceSerial $(Format-CommandArgument $DeviceSerial)"
+    "-DeviceSerial $(Format-CommandArgument $DeviceSerial)",
+    "-WaitForThermalReady",
+    "-ThermalReadyBelowStatus 3",
+    "-ThermalReadySamples 2",
+    "-ThermalReadyTimeoutSeconds 300",
+    "-ThermalReadyPollSeconds 15"
 )
 if (-not [string]::IsNullOrWhiteSpace($AdbPath)) {
     $previewRecoveryCommandParts = @($previewRecoveryCommandParts[0], "-AdbPath $(Format-CommandArgument $AdbPath)") + @($previewRecoveryCommandParts | Select-Object -Skip 1)
 }
 $previewRecoveryCommand = $previewRecoveryCommandParts -join " "
-$previewRecoveryNote = "Run only when setup/session readiness reports camera frame-sync warnings or the visible preview is frozen. The helper restarts GL preview with fresh camera-session tokens, probes readiness again, and force-stops the app after failed recovery so the phone can cool."
+$previewRecoveryNote = "Run only when setup/session readiness reports camera frame-sync warnings or the visible preview is frozen. The helper can wait for setup-level thermal readiness, restarts GL preview with fresh camera-session tokens, probes readiness again, and force-stops the app after failed recovery so the phone can cool."
 $captureCommandSectionTitle = if ($AllowOperatorCommands) { "Runnable Commands" } else { "Guarded Commands" }
 $captureCommandSectionNote = if ($AllowOperatorCommands) {
     "# Operator commands were explicitly allowed when this handoff was generated."

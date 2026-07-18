@@ -35,6 +35,11 @@ $result = & (Join-Path $PSScriptRoot "recover_pixel_preview_session.ps1") `
     -SettleSeconds 0 `
     -OutputRoot $root `
     -RequireFinalReady `
+    -WaitForThermalReady `
+    -ThermalReadyBelowStatus 3 `
+    -ThermalReadySamples 2 `
+    -ThermalReadyTimeoutSeconds 60 `
+    -ThermalReadyPollSeconds 5 `
     -DryRun `
     -Json | ConvertFrom-Json
 
@@ -44,9 +49,16 @@ Assert-Equal -Actual $result.deviceSerial -Expected "PIXEL123" -Message "Dry run
 Assert-Equal -Actual $result.attempts -Expected 2 -Message "Dry run should expose attempt count."
 Assert-Equal -Actual $result.settleSeconds -Expected 0 -Message "Dry run should expose settle seconds."
 Assert-Equal -Actual $result.requireFinalReady -Expected $true -Message "Dry run should expose final-readiness mode."
+Assert-Equal -Actual $result.waitForThermalReady -Expected $true -Message "Dry run should expose thermal-wait mode."
+Assert-Equal -Actual $result.thermalReadyBelowStatus -Expected 3 -Message "Dry run should expose thermal readiness threshold."
+Assert-Equal -Actual $result.thermalReadySamples -Expected 2 -Message "Dry run should expose thermal readiness sample count."
+Assert-Equal -Actual $result.thermalReadyTimeoutSeconds -Expected 60 -Message "Dry run should expose thermal readiness timeout."
+Assert-Equal -Actual $result.thermalReadyPollSeconds -Expected 5 -Message "Dry run should expose thermal readiness poll interval."
 Assert-Equal -Actual $result.leaveRunningOnFailure -Expected $false -Message "Dry run should default to stopping after failed recovery."
 
 $commands = @($result.commands) -join "`n"
+Assert-True -Condition ($commands.Contains("wait_for_device_thermal_ready.ps1")) -Message "Recovery should optionally wait for thermal readiness before launching."
+Assert-True -Condition ($commands.Contains("-ReadyBelowThermalStatus 3")) -Message "Recovery thermal wait should preserve the requested threshold."
 Assert-True -Condition ($commands.Contains("am force-stop com.dnrohr.eulerianmagnification")) -Message "Recovery should force-stop the app."
 Assert-True -Condition ($commands.Contains("logcat -c")) -Message "Recovery should clear logcat before launch."
 Assert-True -Condition ($commands.Contains("validation.cameraSession recovery-")) -Message "Recovery should launch with a fresh camera session token."
