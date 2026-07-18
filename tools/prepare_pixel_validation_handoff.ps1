@@ -479,7 +479,7 @@ $handoffLines += @(
     $sessionReadinessCommand,
     '```',
     "",
-    "If readiness reports camera frame-sync warnings or the visible preview is frozen, recover the preview before attempting setup or final evidence. This relaunches GL preview with fresh camera-session tokens, probes readiness again, and force-stops the app after failed recovery so the phone can cool:",
+    "If readiness reports camera frame-sync warnings or the visible preview is frozen, recover the preview before attempting setup or final evidence. This stops the app before any thermal wait, relaunches GL preview with fresh camera-session tokens after cooling, probes readiness again, and force-stops the app after failed recovery so the phone can cool:",
     "",
     '```powershell',
     $previewRecoveryCommand,
