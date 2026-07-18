@@ -309,6 +309,13 @@ $setupReadinessOutputPath = if ($manifest.PSObject.Properties.Name -contains "se
 } else {
     ""
 }
+$previewRecoveryCommand = if ($manifest.PSObject.Properties.Name -contains "previewRecovery" -and
+    $manifest.previewRecovery -and
+    $manifest.previewRecovery.PSObject.Properties.Name -contains "command") {
+    [string]$manifest.previewRecovery.command
+} else {
+    ""
+}
 $setupReadinessExpected = -not [string]::IsNullOrWhiteSpace($setupReadinessCommand)
 $setupReadinessRunbookPresent = (-not $setupReadinessExpected) -or (
     $runbookText.Contains($setupReadinessCommand) -and
@@ -333,6 +340,13 @@ $sessionReadinessHandoffPresent = (-not $sessionReadinessExpected) -or (
 $sessionReadinessOutputPresent = (-not $sessionReadinessExpected) -or
     [string]::IsNullOrWhiteSpace($sessionReadinessOutputPath) -or
     ($runbookText.Contains($sessionReadinessOutputPath) -and $handoffText.Contains($sessionReadinessOutputPath))
+$previewRecoveryExpected = -not [string]::IsNullOrWhiteSpace($previewRecoveryCommand)
+$previewRecoveryPresent = (-not $previewRecoveryExpected) -or (
+    $runbookText.Contains($previewRecoveryCommand) -and
+    $handoffText.Contains($previewRecoveryCommand) -and
+    $runbookText.Contains("Recover a frozen Pixel camera preview") -and
+    $handoffText.Contains("camera frame-sync warnings")
+)
 $handoffConsistencyChecks = @(
     New-Check -Name "manualRoiFinalHelper" -Passed (-not $manualRoiPlaceholderPresent -or ($roiHelperText.Contains("-Slot manualRoi") -and $helperTextPresent)) -Message $(if (-not $manualRoiPlaceholderPresent) { "manual ROI final command has no placeholder" } elseif ($roiHelperText.Contains("-Slot manualRoi") -and $helperTextPresent) { "manual ROI placeholder is paired with final-command helper guidance" } else { "manual ROI placeholder is missing final-command helper guidance" }) -Details ([pscustomobject]@{ placeholderPresent = $manualRoiPlaceholderPresent; helperCommandPresent = $roiHelperText.Contains("-Slot manualRoi"); helperTextPresent = $helperTextPresent })
     New-Check -Name "autoRoiFinalHelper" -Passed (-not $autoRoiPlaceholderPresent -or ($roiHelperText.Contains("-Slot autoRoi") -and $helperTextPresent)) -Message $(if (-not $autoRoiPlaceholderPresent) { "automatic ROI final command has no placeholder" } elseif ($roiHelperText.Contains("-Slot autoRoi") -and $helperTextPresent) { "automatic ROI placeholder is paired with final-command helper guidance" } else { "automatic ROI placeholder is missing final-command helper guidance" }) -Details ([pscustomobject]@{ placeholderPresent = $autoRoiPlaceholderPresent; helperCommandPresent = $roiHelperText.Contains("-Slot autoRoi"); helperTextPresent = $helperTextPresent })
@@ -343,6 +357,7 @@ $handoffConsistencyChecks = @(
     New-Check -Name "commandSectionLabelMatchesManifest" -Passed $(if ($allowOperatorCommands) { $runnableLabelPresent } else { $guardedLabelPresent }) -Message $(if ($allowOperatorCommands) { if ($runnableLabelPresent) { "runbook and handoff label commands runnable" } else { "runbook or handoff missing runnable command label" } } else { if ($guardedLabelPresent) { "runbook and handoff label commands guarded" } else { "runbook or handoff missing guarded command label" } }) -Details ([pscustomobject]@{ allowOperatorCommands = $allowOperatorCommands; guardedLabelPresent = $guardedLabelPresent; runnableLabelPresent = $runnableLabelPresent })
     New-Check -Name "setupReadinessCommandMatchesManifest" -Passed ($setupReadinessRunbookPresent -and $setupReadinessHandoffPresent -and $setupReadinessOutputPresent) -Message $(if (-not $setupReadinessExpected) { "setup readiness command is not recorded in manifest" } elseif ($setupReadinessRunbookPresent -and $setupReadinessHandoffPresent -and $setupReadinessOutputPresent) { "setup readiness command matches manifest" } else { "setup readiness command does not match manifest" }) -Details ([pscustomobject]@{ expected = $setupReadinessExpected; command = $setupReadinessCommand; outputPath = $setupReadinessOutputPath; runbookPresent = $setupReadinessRunbookPresent; handoffPresent = $setupReadinessHandoffPresent; outputPathPresent = $setupReadinessOutputPresent })
     New-Check -Name "sessionReadinessCommandMatchesManifest" -Passed ($sessionReadinessRunbookPresent -and $sessionReadinessHandoffPresent -and $sessionReadinessOutputPresent) -Message $(if (-not $sessionReadinessExpected) { "session readiness command is not recorded in manifest" } elseif ($sessionReadinessRunbookPresent -and $sessionReadinessHandoffPresent -and $sessionReadinessOutputPresent) { "session readiness command matches manifest" } else { "session readiness command does not match manifest" }) -Details ([pscustomobject]@{ expected = $sessionReadinessExpected; command = $sessionReadinessCommand; outputPath = $sessionReadinessOutputPath; runbookPresent = $sessionReadinessRunbookPresent; handoffPresent = $sessionReadinessHandoffPresent; outputPathPresent = $sessionReadinessOutputPresent })
+    New-Check -Name "previewRecoveryCommandMatchesManifest" -Passed $previewRecoveryPresent -Message $(if (-not $previewRecoveryExpected) { "preview recovery command is not recorded in manifest" } elseif ($previewRecoveryPresent) { "preview recovery command matches manifest" } else { "preview recovery command does not match manifest" }) -Details ([pscustomobject]@{ expected = $previewRecoveryExpected; command = $previewRecoveryCommand; present = $previewRecoveryPresent })
 )
 
 $currentBranch = Invoke-GitValue -Root $SourceRoot -Arguments @("rev-parse", "--abbrev-ref", "HEAD")

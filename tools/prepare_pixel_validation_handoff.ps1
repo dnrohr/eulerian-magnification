@@ -319,6 +319,15 @@ if (-not [string]::IsNullOrWhiteSpace($AdbPath)) {
 $setupReadinessCommand = $setupReadinessCommandParts -join " "
 $setupReadinessNote = "Run before non-final setup captures. In the JSON, readyForSetupCapture gates setup work and setupIssues explain blockers such as severe thermal state or the app not being focused."
 $sessionReadinessNote = "Run after install and before watched capture. In the JSON, readyForWatchedCapture gates final visual acceptance, readyForSetupCapture gates non-final setup captures, setupIssues explain setup blockers, cameraLogHealth reports fresh camera frame-sync timeout evidence, and recommendedActions describe cooling/focus/charging/restart/jank next steps."
+$previewRecoveryCommandParts = @(
+    ".\tools\recover_pixel_preview_session.ps1",
+    "-DeviceSerial $(Format-CommandArgument $DeviceSerial)"
+)
+if (-not [string]::IsNullOrWhiteSpace($AdbPath)) {
+    $previewRecoveryCommandParts = @($previewRecoveryCommandParts[0], "-AdbPath $(Format-CommandArgument $AdbPath)") + @($previewRecoveryCommandParts | Select-Object -Skip 1)
+}
+$previewRecoveryCommand = $previewRecoveryCommandParts -join " "
+$previewRecoveryNote = "Run only when setup/session readiness reports camera frame-sync warnings or the visible preview is frozen. The helper restarts GL preview with fresh camera-session tokens, probes readiness again, and force-stops the app after failed recovery so the phone can cool."
 $captureCommandSectionTitle = if ($AllowOperatorCommands) { "Runnable Commands" } else { "Guarded Commands" }
 $captureCommandSectionNote = if ($AllowOperatorCommands) {
     "# Operator commands were explicitly allowed when this handoff was generated."
@@ -348,7 +357,10 @@ $runbookLines = @(
     "# 2a. Snapshot session readiness before watched capture.",
     $sessionReadinessCommand,
     "",
-    "# 2b. Wait for a cool enough device before watched capture.",
+    "# 2b. Recover a frozen Pixel camera preview if readiness reports camera frame-sync warnings.",
+    $previewRecoveryCommand,
+    "",
+    "# 2c. Wait for a cool enough device before watched capture.",
     $plan.thermalReadiness.command,
     "",
     $(if (@($roiFinalHelperCommands).Count -gt 0) { "# 3. ${captureCommandSectionTitle}: setup and non-ROI-placeholder evidence." } else { "# 3. ${captureCommandSectionTitle}: requested validation evidence." }),
@@ -400,6 +412,7 @@ $handoffLines = @(
     ('- Install command: `{0}`' -f $installCommand),
     ('- Setup readiness command: `{0}`' -f $setupReadinessCommand),
     ('- Session readiness command: `{0}`' -f $sessionReadinessCommand),
+    ('- Preview recovery command: `{0}`' -f $previewRecoveryCommand),
     "",
     "## Artifacts",
     "",
@@ -459,6 +472,12 @@ $handoffLines += @(
     "",
     '```powershell',
     $sessionReadinessCommand,
+    '```',
+    "",
+    "If readiness reports camera frame-sync warnings or the visible preview is frozen, recover the preview before attempting setup or final evidence. This relaunches GL preview with fresh camera-session tokens, probes readiness again, and force-stops the app after failed recovery so the phone can cool:",
+    "",
+    '```powershell',
+    $previewRecoveryCommand,
     '```',
     "",
     "Run this before a watched phone validation session if the device may be warm, the camera preview looks frozen, or FPS is low:",
@@ -581,6 +600,10 @@ $manifest = [pscustomobject]@{
         outputPath = $sessionReadinessPath
         note = $sessionReadinessNote
     }
+    previewRecovery = [pscustomobject]@{
+        command = $previewRecoveryCommand
+        note = $previewRecoveryNote
+    }
     deviceAvailability = $deviceAvailability
     installCommand = $installCommand
     allowOperatorCommands = [bool]$AllowOperatorCommands
@@ -627,6 +650,10 @@ $result = [pscustomobject]@{
         outputPath = $sessionReadinessPath
         note = $sessionReadinessNote
     }
+    previewRecovery = [pscustomobject]@{
+        command = $previewRecoveryCommand
+        note = $previewRecoveryNote
+    }
     deviceAvailability = $deviceAvailability
     installCommand = $installCommand
     source = [pscustomobject]@{
@@ -662,6 +689,7 @@ if ($Json) {
     Write-Output "Install command: $($result.installCommand)"
     Write-Output "Setup readiness command: $($result.setupReadiness.command)"
     Write-Output "Session readiness command: $($result.sessionReadiness.command)"
+    Write-Output "Preview recovery command: $($result.previewRecovery.command)"
     Write-Output "Plan: $($result.planPath)"
     Write-Output "Closeout: $($result.closeoutPath)"
     Write-Output "Commands: $($result.commandsPath)"

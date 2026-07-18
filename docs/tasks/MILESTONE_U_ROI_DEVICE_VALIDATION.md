@@ -333,6 +333,15 @@ Goal: prove that automatic and manual ROI coordinates align with the live previe
   `tools/test_pixel_preview_recovery.ps1` and included it in the offline
   project tooling suite.
 
+## Supporting Slice: Recovery Command In Pixel Handoff
+
+- Pixel validation handoff bundles now include a first-class preview recovery
+  command in the runbook, Markdown handoff, JSON result, and manifest.
+- `verify_pixel_validation_handoff.ps1` checks that recovery guidance matches
+  the manifest so stale handoffs cannot omit the frozen-preview recovery step.
+- Handoff/verifier self-tests cover the generated command, device serial, text
+  output, and stale-guidance failure.
+
 ## Done When
 
 - Manual and automatic ROI overlays align with the visible target on device.

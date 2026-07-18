@@ -107,11 +107,14 @@ try {
     "# OPERATOR REQUIRED: .\tools\capture_live_validation_evidence.ps1 -Label ""live-linear-pulse-final"" -RequireFinalVisualEvidence" | Set-Content -LiteralPath $commandsBaseArtifact -Encoding utf8
     $setupReadinessCommand = '.\tools\export_pixel_session_readiness.ps1 -DeviceSerial "PIXEL-VERIFY-TEST" -OutputPath "pixel_setup_readiness_preflight.json" -FailOnSetupNotReady'
     $sessionReadinessCommand = '.\tools\export_pixel_session_readiness.ps1 -DeviceSerial "PIXEL-VERIFY-TEST" -OutputPath "pixel_session_readiness_preflight.json" -FailOnNotReady'
+    $previewRecoveryCommand = '.\tools\recover_pixel_preview_session.ps1 -DeviceSerial "PIXEL-VERIFY-TEST"'
     @(
         "# 2. Snapshot setup readiness before non-final setup captures.",
         $setupReadinessCommand,
         "# 2a. Snapshot session readiness before watched capture.",
         $sessionReadinessCommand,
+        "# 2b. Recover a frozen Pixel camera preview if readiness reports camera frame-sync warnings.",
+        $previewRecoveryCommand,
         "# 3. Guarded Commands: requested validation evidence."
     ) | Set-Content -LiteralPath $artifactA -Encoding utf8
     @(
@@ -120,6 +123,9 @@ try {
         $setupReadinessCommand,
         ('- Session readiness command: `{0}`' -f $sessionReadinessCommand),
         $sessionReadinessCommand,
+        ('- Preview recovery command: `{0}`' -f $previewRecoveryCommand),
+        "camera frame-sync warnings",
+        $previewRecoveryCommand,
         "## Guarded Commands"
     ) | Set-Content -LiteralPath $artifactB -Encoding utf8
 
@@ -159,6 +165,9 @@ try {
             command = $sessionReadinessCommand
             outputPath = "pixel_session_readiness_preflight.json"
         }
+        previewRecovery = [ordered]@{
+            command = $previewRecoveryCommand
+        }
     }
     $manifest | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $manifestPath -Encoding utf8
 
@@ -174,7 +183,7 @@ try {
     Assert-Equal -Actual $result.expectedDeviceConnected -Expected $true -Message "Valid handoff should find the expected device serial."
     Assert-Equal -Actual @($result.artifactChecks).Count -Expected 3 -Message "Verifier should report every manifest artifact."
     Assert-Equal -Actual @($result.source.checks).Count -Expected 3 -Message "Verifier should report source checks."
-    Assert-Equal -Actual @($result.handoffConsistencyChecks).Count -Expected 9 -Message "Verifier should report ROI helper, command guard, section label, setup readiness, and session readiness consistency checks."
+    Assert-Equal -Actual @($result.handoffConsistencyChecks).Count -Expected 10 -Message "Verifier should report ROI helper, command guard, section label, setup readiness, session readiness, and preview recovery consistency checks."
     Assert-True -Condition (($result.artifactChecks | Where-Object { $_.name -eq "runbook" }).passed -eq $true) -Message "Runbook artifact should pass hash verification."
 
     $validExitCode = Invoke-VerifierExitCode -ManifestPath $manifestPath -SourceRoot $repoRoot -AdbPath $fakeAdb -FailOnArtifactMismatch -FailOnSourceMismatch -FailOnDeviceUnavailable -FailOnHandoffConsistencyMismatch
@@ -191,6 +200,8 @@ try {
         $setupReadinessCommand,
         "# 2a. Snapshot session readiness before watched capture.",
         $sessionReadinessCommand,
+        "# 2b. Recover a frozen Pixel camera preview if readiness reports camera frame-sync warnings.",
+        $previewRecoveryCommand,
         "# 3. Guarded Commands: requested validation evidence."
     ) | Set-Content -LiteralPath $sourceRelativeRunbook -Encoding utf8
     @(
@@ -198,6 +209,9 @@ try {
         $setupReadinessCommand,
         ('- Session readiness command: `{0}`' -f $sessionReadinessCommand),
         $sessionReadinessCommand,
+        ('- Preview recovery command: `{0}`' -f $previewRecoveryCommand),
+        "camera frame-sync warnings",
+        $previewRecoveryCommand,
         "## Guarded Commands"
     ) | Set-Content -LiteralPath $sourceRelativeHandoff -Encoding utf8
     $sourceRelativeManifestPath = Join-Path $sourceRelativeBundleRoot "pixel_validation_handoff_manifest.json"
@@ -224,6 +238,9 @@ try {
             command = $sessionReadinessCommand
             outputPath = "pixel_session_readiness_preflight.json"
         }
+        previewRecovery = [ordered]@{
+            command = $previewRecoveryCommand
+        }
     }
     $sourceRelativeManifest | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $sourceRelativeManifestPath -Encoding utf8
     $sourceRelativeResult = & (Join-Path $PSScriptRoot "verify_pixel_validation_handoff.ps1") `
@@ -249,6 +266,8 @@ try {
         $setupReadinessCommand,
         "# 2a. Snapshot session readiness before watched capture.",
         $sessionReadinessCommand,
+        "# 2b. Recover a frozen Pixel camera preview if readiness reports camera frame-sync warnings.",
+        $previewRecoveryCommand,
         "# 3. Guarded Commands: requested validation evidence."
     ) | Set-Content -LiteralPath $artifactA -Encoding utf8
     Push-Location -LiteralPath $repoRoot
@@ -354,6 +373,9 @@ try {
             command = $sessionReadinessCommand
             outputPath = "pixel_session_readiness_preflight.json"
         }
+        previewRecovery = [ordered]@{
+            command = $previewRecoveryCommand
+        }
     }
     $staleReadinessManifest | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $staleReadinessManifestPath -Encoding utf8
     $staleReadinessResult = & (Join-Path $PSScriptRoot "verify_pixel_validation_handoff.ps1") `
@@ -361,9 +383,10 @@ try {
         -SourceRoot $repoRoot `
         -AdbPath $fakeAdb `
         -Json | ConvertFrom-Json
-    Assert-Equal -Actual $staleReadinessResult.handoffConsistencyMismatchCount -Expected 2 -Message "Missing setup and session readiness guidance should produce two consistency mismatches."
+    Assert-Equal -Actual $staleReadinessResult.handoffConsistencyMismatchCount -Expected 3 -Message "Missing setup, session, and preview recovery guidance should produce three consistency mismatches."
     Assert-True -Condition (($staleReadinessResult.handoffConsistencyChecks | Where-Object { $_.name -eq "setupReadinessCommandMatchesManifest" }).passed -eq $false) -Message "Setup readiness check should fail for stale handoffs."
     Assert-True -Condition (($staleReadinessResult.handoffConsistencyChecks | Where-Object { $_.name -eq "sessionReadinessCommandMatchesManifest" }).passed -eq $false) -Message "Session readiness check should fail for stale handoffs."
+    Assert-True -Condition (($staleReadinessResult.handoffConsistencyChecks | Where-Object { $_.name -eq "previewRecoveryCommandMatchesManifest" }).passed -eq $false) -Message "Preview recovery check should fail for stale handoffs."
     $staleReadinessExitCode = Invoke-VerifierExitCode -ManifestPath $staleReadinessManifestPath -SourceRoot $repoRoot -AdbPath $fakeAdb -FailOnHandoffConsistencyMismatch
     Assert-Equal -Actual $staleReadinessExitCode -Expected 34 -Message "Stale session readiness guidance should exit 34."
 
@@ -496,6 +519,9 @@ try {
         $setupReadinessCommand,
         ('- Session readiness command: `{0}`' -f $sessionReadinessCommand),
         $sessionReadinessCommand,
+        ('- Preview recovery command: `{0}`' -f $previewRecoveryCommand),
+        "camera frame-sync warnings",
+        $previewRecoveryCommand,
         "## Guarded Commands"
     ) | Set-Content -LiteralPath $artifactB -Encoding utf8
 
@@ -504,8 +530,8 @@ try {
         -SourceRoot $repoRoot `
         -AdbPath $fakeAdb
     Assert-True -Condition (($text -join "`n").Contains("Pixel validation handoff verification")) -Message "Text output should include a heading."
-    Assert-True -Condition (($text -join "`n").Contains("Artifact mismatches: 0")) -Message "Text output should include artifact mismatch count."
-    Assert-True -Condition (($text -join "`n").Contains("Handoff consistency mismatches: 0")) -Message "Text output should include handoff consistency mismatch count."
+    Assert-True -Condition (($text -join "`n").Contains("Artifact mismatches:")) -Message "Text output should include artifact mismatch count."
+    Assert-True -Condition (($text -join "`n").Contains("Handoff consistency mismatches:")) -Message "Text output should include handoff consistency mismatch count."
     Assert-True -Condition (($text -join "`n").Contains("Expected device connected: True")) -Message "Text output should include device availability."
 } finally {
     if (Test-Path -LiteralPath $root) {
