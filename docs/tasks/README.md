@@ -221,7 +221,10 @@ If readiness reports recent Pixel camera frame-sync warnings, run
 The helper force-stops the app, clears logcat, relaunches GL preview with a
 fresh `validation.cameraSession` token, waits briefly, and probes readiness
 again. Add `-RequireFinalReady` when final no-warning evidence is required. It
-does not record evidence or bypass thermal/camera readiness gates.
+does not record evidence or bypass thermal/camera readiness gates. If recovery
+fails, it force-stops the app so the phone can cool; pass
+`-LeaveRunningOnFailure` only when inspecting the failed app state matters more
+than cooling.
 
 After a connected Pixel session, summarize which accepted evidence bundles are
 ready to close roadmap items. The closeout summary includes the accepted

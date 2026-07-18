@@ -7,6 +7,7 @@ param(
     [int]$SettleSeconds = 5,
     [string]$OutputRoot = "sample-videos\exports\live-validation",
     [switch]$RequireFinalReady,
+    [switch]$LeaveRunningOnFailure,
     [switch]$DryRun,
     [switch]$Json
 )
@@ -138,6 +139,7 @@ if ($DryRun) {
         outputPath = $outputPath
         readinessOutputPath = $readinessOutputPath
         requireFinalReady = [bool]$RequireFinalReady
+        leaveRunningOnFailure = [bool]$LeaveRunningOnFailure
         commands = $commands
     }
     if ($Json) {
@@ -162,6 +164,7 @@ $attemptResults = @()
 $ready = $false
 $setupReady = $false
 $finalReady = $false
+$stoppedAfterFailure = $false
 
 for ($index = 1; $index -le $Attempts; $index++) {
     $session = "recovery-$timestamp-$index"
@@ -212,6 +215,11 @@ for ($index = 1; $index -le $Attempts; $index++) {
     }
 }
 
+if (-not $ready -and -not $LeaveRunningOnFailure) {
+    $stopAfterFailure = Invoke-CommandCapture -FilePath $adb -Arguments ($serialArgs + @("shell", "am", "force-stop", $Package))
+    $stoppedAfterFailure = $stopAfterFailure.exitCode -eq 0
+}
+
 $result = [pscustomobject]@{
     dryRun = $false
     createdAt = (Get-Date).ToString("o")
@@ -223,6 +231,8 @@ $result = [pscustomobject]@{
     attemptsRequested = $Attempts
     attemptsRun = @($attemptResults).Count
     requireFinalReady = [bool]$RequireFinalReady
+    leaveRunningOnFailure = [bool]$LeaveRunningOnFailure
+    stoppedAfterFailure = $stoppedAfterFailure
     recovered = $ready
     readyForSetupCapture = $setupReady
     readyForWatchedCapture = $finalReady

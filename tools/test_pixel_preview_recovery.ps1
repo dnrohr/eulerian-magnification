@@ -44,6 +44,7 @@ Assert-Equal -Actual $result.deviceSerial -Expected "PIXEL123" -Message "Dry run
 Assert-Equal -Actual $result.attempts -Expected 2 -Message "Dry run should expose attempt count."
 Assert-Equal -Actual $result.settleSeconds -Expected 0 -Message "Dry run should expose settle seconds."
 Assert-Equal -Actual $result.requireFinalReady -Expected $true -Message "Dry run should expose final-readiness mode."
+Assert-Equal -Actual $result.leaveRunningOnFailure -Expected $false -Message "Dry run should default to stopping after failed recovery."
 
 $commands = @($result.commands) -join "`n"
 Assert-True -Condition ($commands.Contains("am force-stop com.dnrohr.eulerianmagnification")) -Message "Recovery should force-stop the app."

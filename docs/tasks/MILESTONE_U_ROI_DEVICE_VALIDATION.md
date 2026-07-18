@@ -327,6 +327,8 @@ Goal: prove that automatic and manual ROI coordinates align with the live previe
 - `-RequireFinalReady` makes recovery require final watched-capture readiness;
   the default requires only setup readiness. Either way, the helper does not
   record evidence or bypass thermal/camera gates.
+- Failed recovery now force-stops the app by default so a thermally blocked
+  Pixel is not left running the camera while it needs to cool.
 - Added dry-run command-contract coverage in
   `tools/test_pixel_preview_recovery.ps1` and included it in the offline
   project tooling suite.

@@ -428,7 +428,9 @@ The helper force-stops the app, clears logcat, relaunches GL preview with a
 fresh `validation.cameraSession` token, waits briefly, and reruns
 `export_pixel_session_readiness.ps1`. Add `-RequireFinalReady` when the session
 must be ready for final visual acceptance rather than only setup. It never
-records evidence or bypasses thermal/camera readiness gates.
+records evidence or bypasses thermal/camera readiness gates. If all attempts
+fail, it force-stops the app so the phone can cool; pass
+`-LeaveRunningOnFailure` only when you need to inspect the failed app state.
 
 After a connected Pixel validation pass, summarize which accepted evidence
 bundles are ready to close the remaining roadmap items. The summary includes
